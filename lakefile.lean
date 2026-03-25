@@ -17,3 +17,6 @@ lean_lib «OSforGFF» where
 
 lean_lib «DependencyExtractor» where
   -- Dependency extraction metaprogram
+
+lean_lib «OSforGFFin3D» where
+  -- 3D version of OSforGFF library

@@ -9,7 +9,7 @@ import Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
 import Mathlib.Topology.Algebra.Module.Multilinear.Basic
 import Mathlib.Analysis.Complex.OperatorNorm
 
-import OSforGFF.Basic
+import OSforGFFin3D.Basic
 
 /-!
 ## Complex Test Function Linearity

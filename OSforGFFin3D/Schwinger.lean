@@ -14,9 +14,9 @@ import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
 import Mathlib.Algebra.Order.Group.Unbundled.Abs
 
-import OSforGFF.Basic
-import OSforGFF.FunctionalAnalysis
-import OSforGFF.ComplexTestFunction
+import OSforGFFin3D.Basic
+import OSforGFFin3D.FunctionalAnalysis
+import OSforGFFin3D.ComplexTestFunction
 
 /-!
 ## Schwinger Functions for AQFT

@@ -38,8 +38,8 @@ import Mathlib.Analysis.Normed.Module.RCLike.Real
 
 --import Mathlib.LinearAlgebra.TensorAlgebra.Basic
 
-import OSforGFF.Basic
-import OSforGFF.Euclidean
+import OSforGFFin3D.Basic
+import OSforGFFin3D.Euclidean
 
 /-!
 ## Discrete Symmetries for AQFT

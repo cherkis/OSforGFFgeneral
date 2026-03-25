@@ -1,0 +1,6 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "grep": true,
+        "head": true
+    }
+}

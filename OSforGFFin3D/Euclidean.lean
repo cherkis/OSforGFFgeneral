@@ -21,7 +21,7 @@ import Mathlib.MeasureTheory.Measure.CharacteristicFunction
 import Mathlib.Topology.MetricSpace.Isometry
 import Mathlib.MeasureTheory.Function.LpSpace.ContinuousCompMeasurePreserving
 
-import OSforGFF.Basic
+import OSforGFFin3D.Basic
 
 /-!
 ## Euclidean Group Actions for AQFT
@@ -457,4 +457,3 @@ lemma euclidean_actions_unified (g : E) :
   · use euclidean_action_L2 g
     intro f
     rfl  -- by definition of euclidean_action_L2
-

@@ -36,7 +36,7 @@ import Mathlib.LinearAlgebra.Matrix.SpecialLinearGroup
 import Mathlib.GroupTheory.GroupAction.Basic
 
 -- Import our functional analysis utilities
-import OSforGFF.FunctionalAnalysis
+import OSforGFFin3D.FunctionalAnalysis
 
 /-!
 ## AQFT Basic Framework
@@ -47,9 +47,9 @@ implementing field configurations as tempered distributions and the associated g
 ### Key Definitions & Framework:
 
 **Spacetime Structure:**
-- `STDimension`: Spacetime dimension (4D)
-- `SpaceTime`: Euclidean 4-space using EuclideanSpace
-- `getTimeComponent`: Extracts time coordinate (t = x₄)
+- `STDimension`: Spacetime dimension (3D)
+- `SpaceTime`: Euclidean 3-space using EuclideanSpace
+- `getTimeComponent`: Extracts time coordinate (t = x₃)
 - `μ`: Standard Lebesgue measure on spacetime
 
 **Test Function Spaces:**
@@ -105,10 +105,10 @@ Design notes (possible future changes):
   Minlos/characteristic functionals are formulated.
 -/
 
-/-- Spacetime dimension. Currently set to 4 (Euclidean ℝ⁴).
+/-- Spacetime dimension. Here set to 3 (Euclidean ℝ⁴).
     Changing this value requires corresponding changes throughout the project;
     see `docs/dimension_dependence.md` for a detailed inventory. -/
-abbrev STDimension := 4
+abbrev STDimension := 3
 abbrev SpaceTime := EuclideanSpace ℝ (Fin STDimension)
 
 noncomputable instance : InnerProductSpace ℝ SpaceTime := by infer_instance
