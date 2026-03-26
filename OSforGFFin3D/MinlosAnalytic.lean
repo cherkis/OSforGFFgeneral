@@ -59,6 +59,17 @@ structure CovarianceForm where
   gaussian_cf_pd : IsPositiveDefinite
     (fun f : TestFunction => Complex.exp (-(1/2 : ℂ) * (Q f f : ℂ)))
 
+lemma CovarianceForm.zero_diag (C : CovarianceForm) : C.Q 0 0 = 0 := by
+  simpa using C.smul_left 0 0 0
+
+lemma CovarianceForm.gaussianCharacteristicFunctional_continuous (C : CovarianceForm) :
+    Continuous (gaussian_characteristic_functional C.Q) :=
+  gaussian_characteristic_functional_continuous C.Q C.cont_diag
+
+lemma CovarianceForm.gaussianCharacteristicFunctional_zero (C : CovarianceForm) :
+    gaussian_characteristic_functional C.Q 0 = 1 :=
+  gaussian_characteristic_functional_zero C.Q C.zero_diag
+
 /-- The negation map on field configurations: T(ω) = -ω -/
 def negMap : FieldConfiguration → FieldConfiguration := fun ω => -ω
 
@@ -166,10 +177,10 @@ lemma integral_neg_invariance
   -- Derive continuity and normalization of the Gaussian CF from CovarianceForm
   have h_cf_cont : Continuous
       (fun f : TestFunction => Complex.exp (-(1/2 : ℂ) * (C.Q f f : ℂ))) :=
-    continuous_exp.comp (continuous_const.mul (continuous_ofReal.comp C.cont_diag))
+    C.gaussianCharacteristicFunctional_continuous
   have h_cf_norm : (fun f : TestFunction =>
       Complex.exp (-(1/2 : ℂ) * (C.Q f f : ℂ))) 0 = 1 := by
-    simp [show C.Q 0 0 = 0 from by simpa using C.smul_left 0 0 0]
+    exact C.gaussianCharacteristicFunctional_zero
   have hμeq_prob : μneg_prob = μ := by
     simp only [distributionPairing] at hCF_equal h_realCF
     exact minlos_uniqueness h_cf_cont C.gaussian_cf_pd h_cf_norm

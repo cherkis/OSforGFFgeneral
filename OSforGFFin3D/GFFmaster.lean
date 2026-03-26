@@ -9,13 +9,13 @@ Final bundling of OS axioms for the free Gaussian Free Field (GFF).
 This file provides a "master theorem" that assembles OS0–OS4 for the
 measure `gaussianFreeField_free m`, reusing the individual results proved
 elsewhere:
-- OS0 is proved in `OSforGFF/OS0_GFF.lean` via the holomorphic integral theorem
+- OS0 is proved in `OSforGFFin3D/OS0_GFF.lean` via the holomorphic integral theorem
   (differentiation under the integral sign)
-- OS1 is proved in `OSforGFF/OS1_GFF.lean` via Fourier/momentum space methods
-- OS2 is proved in `OSforGFF/OS2_GFF.lean` via Euclidean invariance of the free covariance
-- OS3 is proved in `OSforGFF/OS3_GFF.lean` via the matrix/Schur–Hadamard argument
-- OS4 Clustering is proved in `OSforGFF/OS4_Clustering.lean` via Gaussian factorization and decay
-- OS4 Ergodicity is proved in `OSforGFF/OS4_Ergodicity.lean` via polynomial clustering → ergodicity
+- OS1 is proved in `OSforGFFin3D/OS1_GFF.lean` via Fourier/momentum space methods
+- OS2 is proved in `OSforGFFin3D/OS2_GFF.lean` via Euclidean invariance of the free covariance
+- OS3 is proved in `OSforGFFin3D/OS3_GFF.lean` via the matrix/Schur–Hadamard argument
+- OS4 Clustering is proved in `OSforGFFin3D/OS4_Clustering.lean` via Gaussian factorization and decay
+- OS4 Ergodicity is proved in `OSforGFFin3D/OS4_Ergodicity.lean` via polynomial clustering → ergodicity
 
 We expose an unconditional master theorem: all five OS axioms hold for the free GFF.
 -/

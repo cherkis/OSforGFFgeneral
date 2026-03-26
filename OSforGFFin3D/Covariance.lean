@@ -432,69 +432,80 @@ lemma freeCovarianceℂ_bilinear_slice_integrable
   rw [Measure.volume_eq_prod] at h
   exact h.prod_right_ae
 
+private def covarianceBilinearOuterIntegrand
+  (m : ℝ) (f g : TestFunctionℂ) (x : SpaceTime) : ℂ :=
+  ∫ y, (f x) * (freeCovariance m x y : ℂ) * (g y) ∂volume
+
+private lemma covarianceBilinearOuterIntegrable
+  (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ) :
+  Integrable (covarianceBilinearOuterIntegrand m f g) volume := by
+  exact freeCovarianceℂ_bilinear_inner_integrable m f g
+
+private lemma covarianceBilinearOuterAE_add_smul
+  (m : ℝ) [Fact (0 < m)] (c : ℂ) (f₁ f₂ g : TestFunctionℂ) :
+  covarianceBilinearOuterIntegrand m (c • f₁ + f₂) g
+    =ᵐ[volume] fun x =>
+      c * covarianceBilinearOuterIntegrand m f₁ g x
+        + covarianceBilinearOuterIntegrand m f₂ g x := by
+  have h_slice₁ := freeCovarianceℂ_bilinear_slice_integrable m f₁ g
+  have h_slice₂ := freeCovarianceℂ_bilinear_slice_integrable m f₂ g
+  refine (h_slice₁.and h_slice₂).mono ?_
+  intro x hx
+  rcases hx with ⟨hf₁x, hf₂x⟩
+  have hfun :
+      (fun y => ((c • f₁ + f₂) x) * (freeCovariance m x y : ℂ) * (g y))
+        = fun y =>
+            c * (f₁ x * (freeCovariance m x y : ℂ) * (g y))
+              + f₂ x * (freeCovariance m x y : ℂ) * (g y) := by
+    funext y
+    have h1 : (c • f₁ + f₂) x = c * f₁ x + f₂ x := rfl
+    rw [h1]
+    ring
+  calc
+    covarianceBilinearOuterIntegrand m (c • f₁ + f₂) g x
+        = ∫ y, ((c • f₁ + f₂) x) * (freeCovariance m x y : ℂ) * (g y) ∂volume := rfl
+    _ = ∫ y,
+          (c * (f₁ x * (freeCovariance m x y : ℂ) * (g y))
+            + f₂ x * (freeCovariance m x y : ℂ) * (g y)) ∂volume := by
+          rw [hfun]
+    _ = c * covarianceBilinearOuterIntegrand m f₁ g x
+          + covarianceBilinearOuterIntegrand m f₂ g x := by
+          have h_const_out :
+              ∫ y, c * (f₁ x * (freeCovariance m x y) * g y) ∂volume
+                = c * ∫ y, (f₁ x * (freeCovariance m x y) * g y) ∂volume := by
+            exact MeasureTheory.integral_const_mul c _
+          rw [integral_add, h_const_out]
+          · rfl
+          · exact Integrable.const_mul hf₁x c
+          · exact hf₂x
+
+private lemma freeCovarianceℂ_bilinear_zero_left
+  (m : ℝ) [Fact (0 < m)] (g : TestFunctionℂ) :
+  freeCovarianceℂ_bilinear m 0 g = 0 := by
+  unfold freeCovarianceℂ_bilinear
+  have h : ∀ x y, (0 : TestFunctionℂ) x * (freeCovariance m x y : ℂ) * g y = 0 := by
+    intro x y
+    have : (0 : TestFunctionℂ) x = 0 := rfl
+    rw [this]
+    simp only [zero_mul]
+  simp_rw [h]
+  rw [integral_zero, integral_zero]
+
 /-- Generalized bilinearity in the first argument: scalar multiplication and addition combined. -/
 theorem freeCovarianceℂ_bilinear_add_smul_left
   (m : ℝ) [Fact (0 < m)] (c : ℂ) (f₁ f₂ g : TestFunctionℂ) :
     freeCovarianceℂ_bilinear m (c • f₁ + f₂) g
       = c * freeCovarianceℂ_bilinear m f₁ g + freeCovarianceℂ_bilinear m f₂ g := by
   classical
-  -- Expand the definition and introduce convenient abbreviations for the
-  -- outer integrands that appear in the bilinear form.
   simp only [freeCovarianceℂ_bilinear]
-  set F := fun x : SpaceTime =>
-    ∫ y, ((c • f₁ + f₂) x) * (freeCovariance m x y : ℂ) * (g y) ∂volume
-  set F₁ := fun x : SpaceTime =>
-    ∫ y, f₁ x * (freeCovariance m x y : ℂ) * (g y) ∂volume
-  set F₂ := fun x : SpaceTime =>
-    ∫ y, f₂ x * (freeCovariance m x y : ℂ) * (g y) ∂volume
-  have hF : Integrable F volume :=
-    freeCovarianceℂ_bilinear_inner_integrable m (c • f₁ + f₂) g
-  have hF₁ : Integrable F₁ volume :=
-    freeCovarianceℂ_bilinear_inner_integrable m f₁ g
-  have hF₂ : Integrable F₂ volume :=
-    freeCovarianceℂ_bilinear_inner_integrable m f₂ g
-  -- For almost every x we can expand the inner integral using linearity.
-  have h_add_smul_ae :
-      F =ᵐ[volume] fun x => c * F₁ x + F₂ x := by
-    have h_slice₁ :=
-      freeCovarianceℂ_bilinear_slice_integrable m f₁ g
-    have h_slice₂ :=
-      freeCovarianceℂ_bilinear_slice_integrable m f₂ g
-    refine (h_slice₁.and h_slice₂).mono ?_
-    intro x hx
-    rcases hx with ⟨hf₁x, hf₂x⟩
-    have hfun :
-        (fun y => ((c • f₁ + f₂) x) * (freeCovariance m x y : ℂ) * (g y))
-          = fun y =>
-              c * (f₁ x * (freeCovariance m x y : ℂ) * (g y))
-                + f₂ x * (freeCovariance m x y : ℂ) * (g y) := by
-      funext y
-      -- (c • f₁ + f₂) x = c * f₁ x + f₂ x
-      have h1 : (c • f₁ + f₂) x = c * f₁ x + f₂ x := rfl
-      rw [h1]
-      ring
-    calc
-      F x
-          = ∫ y,
-              ((c • f₁ + f₂) x) * (freeCovariance m x y) * (g y) ∂volume := rfl
-      _ = ∫ y,
-            (c * (f₁ x * (freeCovariance m x y) * (g y)) +
-              f₂ x * (freeCovariance m x y) * (g y)) ∂volume := by
-            rw [hfun]
-      _ = c * F₁ x + F₂ x := by
-            have h_const_out : ∫ y, c * (f₁ x * (freeCovariance m x y) * (g y)) ∂volume
-                             = c * ∫ y, (f₁ x * (freeCovariance m x y) * (g y)) ∂volume := by
-              exact MeasureTheory.integral_const_mul c _
-            rw [integral_add, h_const_out]
-            · apply Integrable.const_mul
-              exact hf₁x
-            · exact hf₂x
+  let F := covarianceBilinearOuterIntegrand m (c • f₁ + f₂) g
+  let F₁ := covarianceBilinearOuterIntegrand m f₁ g
+  let F₂ := covarianceBilinearOuterIntegrand m f₂ g
+  have hF₁ : Integrable F₁ volume := covarianceBilinearOuterIntegrable m f₁ g
+  have hF₂ : Integrable F₂ volume := covarianceBilinearOuterIntegrable m f₂ g
   have h_int_eq : ∫ x, F x ∂volume = ∫ x, (c * F₁ x + F₂ x) ∂volume :=
-    integral_congr_ae h_add_smul_ae
-  -- Apply linearity of the outer integral.
-  have hF₁_smul : Integrable (fun x => c * F₁ x) volume := by
-    apply Integrable.const_mul
-    exact hF₁
+    integral_congr_ae (covarianceBilinearOuterAE_add_smul m c f₁ f₂ g)
+  have hF₁_smul : Integrable (fun x => c * F₁ x) volume := Integrable.const_mul hF₁ c
   have h_sum := integral_add hF₁_smul hF₂
   calc
     ∫ x, F x ∂volume
@@ -515,23 +526,9 @@ theorem freeCovarianceℂ_bilinear_add_left
 theorem freeCovarianceℂ_bilinear_smul_left
   (m : ℝ) [Fact (0 < m)] (c : ℂ) (f g : TestFunctionℂ) :
     freeCovarianceℂ_bilinear m (c • f) g = c * freeCovarianceℂ_bilinear m f g := by
-  -- Use the generalized lemma with f₁ = f and f₂ = 0
   have h := freeCovarianceℂ_bilinear_add_smul_left m c f 0 g
-  -- Simplify: c • f + 0 = c • f
   rw [add_zero] at h
-  -- Need to show freeCovarianceℂ_bilinear m 0 g = 0
-  have zero_bilinear : freeCovarianceℂ_bilinear m 0 g = 0 := by
-    unfold freeCovarianceℂ_bilinear
-    -- 0 x = 0, so the integrand becomes 0 * ... = 0
-    have h : ∀ x y, (0 : TestFunctionℂ) x * (freeCovariance m x y : ℂ) * g y = 0 := by
-      intro x y
-      -- (0 : TestFunctionℂ) x = 0
-      have : (0 : TestFunctionℂ) x = 0 := rfl
-      rw [this]
-      simp only [zero_mul]
-    simp_rw [h]
-    rw [integral_zero, integral_zero]
-  rw [zero_bilinear, add_zero] at h
+  rw [freeCovarianceℂ_bilinear_zero_left, add_zero] at h
   exact h
 
 /-- Symmetry of the complex bilinear form: swapping arguments gives the same result. -/
@@ -632,9 +629,9 @@ theorem freeCovarianceℂ_positive (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ
     The Parseval identity for the well-defined Bessel form of the covariance.
     This directly relates the position-space covariance integral to the momentum-space integral.
 
-    Note: Unlike the regulated form, this uses freeCovariance (Bessel K₁ form) which is
-    well-defined pointwise. The equality holds because the Bessel form equals the limit
-    of the regulated forms. -/
+  Note: Unlike the regulated form, this uses freeCovariance in its explicit 3D
+  `besselKhalf` representation, which is well-defined pointwise. The equality holds
+  because that Bessel form equals the limit of the regulated forms. -/
 theorem parseval_covariance_schwartz_bessel (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) :
     (freeCovarianceℂ m f f).re
     = ∫ k, ‖(SchwartzMap.fourierTransformCLM ℂ f) k‖^2 * freePropagatorMomentum_mathlib m k ∂volume := by

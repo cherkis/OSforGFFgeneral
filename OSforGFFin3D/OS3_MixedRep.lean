@@ -1170,6 +1170,34 @@ theorem schwinger_fubini_core (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) :
           schwinger_tripleReorder.measurableEmbedding fR
     _ = ∫ s in Set.Ioi 0, ∫ x, ∫ y, F x y s ∂volume ∂volume := hRHS.symm
 
+private theorem schwinger_pull_in_s_integral (m : ℝ) [Fact (0 < m)]
+    (f : TestFunctionℂ) (x y : SpaceTime) :
+    (starRingEnd ℂ (f x)) * f y *
+      (∫ s in Set.Ioi 0, (Real.exp (-s * m^2) : ℂ) *
+        heatKernelPositionSpace s ‖timeReflection x - y‖) =
+    ∫ s in Set.Ioi 0, (starRingEnd ℂ (f x)) * f y *
+      (Real.exp (-s * m^2) : ℂ) * heatKernelPositionSpace s ‖timeReflection x - y‖ := by
+  rw [← MeasureTheory.integral_const_mul]
+  congr 1
+  ext s
+  ring
+
+private theorem schwinger_factor_out_exp (m : ℝ) [Fact (0 < m)]
+    (f : TestFunctionℂ) (s : ℝ) :
+    (Real.exp (-s * m^2) : ℂ) *
+      ∫ x : SpaceTime, ∫ y : SpaceTime,
+        (starRingEnd ℂ (f x)) * f y * heatKernelPositionSpace s ‖timeReflection x - y‖ =
+    ∫ x : SpaceTime, ∫ y : SpaceTime,
+      (starRingEnd ℂ (f x)) * f y *
+        (Real.exp (-s * m^2) : ℂ) * heatKernelPositionSpace s ‖timeReflection x - y‖ := by
+  rw [← MeasureTheory.integral_const_mul]
+  congr 1
+  ext x
+  rw [← MeasureTheory.integral_const_mul]
+  congr 1
+  ext y
+  ring
+
 /-- **THEOREM** (formerly axiom): The triple integral can be computed in either order.
 
     Given integrability (from `schwinger_bilinear_integrable`), Fubini's theorem ensures:
@@ -1190,91 +1218,8 @@ theorem schwinger_fubini_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) :
     ∫ s in Set.Ioi 0, (Real.exp (-s * m^2) : ℂ) *
       ∫ x : SpaceTime, ∫ y : SpaceTime,
         (starRingEnd ℂ (f x)) * f y * heatKernelPositionSpace s ‖timeReflection x - y‖ := by
-  -- This follows from Fubini's theorem applied to the integrable function
-  -- from schwinger_bilinear_integrable.
-  --
-  -- The proof uses:
-  -- 1. Pull f̄(x) * f(y) into the s-integral (independent of s)
-  -- 2. Fubini: swap ∫ x ∫ y ∫ s → ∫ s ∫ x ∫ y
-  -- 3. Factor exp(-sm²) out of spatial integrals (independent of x, y)
-  --
-  -- The key technical ingredient is schwinger_bilinear_integrable which ensures
-  -- integrability on the triple product space, justifying the Fubini swap.
-  have h_int := schwinger_bilinear_integrable m f
-
-  -- Step 1: Rewrite LHS by pulling f̄ f into the s-integral
-  have h_pull_in : ∀ x y : SpaceTime,
-      (starRingEnd ℂ (f x)) * f y *
-        (∫ s in Set.Ioi 0, (Real.exp (-s * m^2) : ℂ) *
-          heatKernelPositionSpace s ‖timeReflection x - y‖) =
-      ∫ s in Set.Ioi 0, (starRingEnd ℂ (f x)) * f y *
-        (Real.exp (-s * m^2) : ℂ) * heatKernelPositionSpace s ‖timeReflection x - y‖ := by
-    intro x y
-    rw [← MeasureTheory.integral_const_mul]
-    congr 1
-    ext s
-    ring
-  simp_rw [h_pull_in]
-
-  -- Step 2: Rewrite RHS by factoring exp(-sm²) out of spatial integrals
-  have h_factor_out : ∀ s : ℝ,
-      (Real.exp (-s * m^2) : ℂ) *
-        ∫ x : SpaceTime, ∫ y : SpaceTime,
-          (starRingEnd ℂ (f x)) * f y * heatKernelPositionSpace s ‖timeReflection x - y‖ =
-      ∫ x : SpaceTime, ∫ y : SpaceTime,
-        (starRingEnd ℂ (f x)) * f y *
-          (Real.exp (-s * m^2) : ℂ) * heatKernelPositionSpace s ‖timeReflection x - y‖ := by
-    intro s
-    rw [← MeasureTheory.integral_const_mul]
-    congr 1
-    ext x
-    rw [← MeasureTheory.integral_const_mul]
-    congr 1
-    ext y
-    ring
-  simp_rw [h_factor_out]
-
-  -- Step 3: Apply Fubini to swap ∫_x ∫_y ∫_s with ∫_s ∫_x ∫_y
-  --
-  -- After steps 1 and 2, both sides have the integrand:
-  -- F(s,x,y) = f̄(x) * f(y) * exp(-sm²) * H(s, ‖Θx-y‖)
-  --
-  -- LHS = ∫_x ∫_y [∫_s F(s,x,y) ds] dy dx
-  -- RHS = ∫_s [∫_x ∫_y F(s,x,y) dy dx] ds
-  --
-  -- By Fubini-Tonelli, given F is integrable on the product space (h_int),
-  -- both equal the triple integral ∫∫∫ F over (Ioi 0) × SpaceTime × SpaceTime.
-  --
-  -- The formal proof requires showing:
-  -- (a) ∫_x ∫_y ∫_s F = ∫_{(x,y)} ∫_s F = ∫_{(s,x,y)} F  (by integral_integral twice)
-  -- (b) ∫_s ∫_x ∫_y F = ∫_s ∫_{(x,y)} F = ∫_{(s,x,y)} F  (by integral_integral twice)
-  -- Hence (a) = (b).
-
-  -- Define the integrand function
-  set F : ℝ → SpaceTime → SpaceTime → ℂ :=
-    fun s x y => (starRingEnd ℂ (f x)) * f y *
-      (Real.exp (-s * m^2) : ℂ) * heatKernelPositionSpace s ‖timeReflection x - y‖ with hF
-
-  -- The goal is: ∫_x ∫_y [∫_s in Ioi 0, F s x y] = ∫_s in Ioi 0 [∫_x ∫_y F s x y]
-  --
-  -- Strategy: Both sides equal ∫∫∫ F over the product space by Fubini.
-  --
-  -- Use integral_integral_swap twice to relate:
-  -- ∫_x ∫_y ∫_s F = ∫_y ∫_x ∫_s F  (swap x ↔ y, holds by integrability)
-  --              = ∫_y ∫_s ∫_x F  (swap x ↔ s, holds by integrability)
-  --              = ∫_s ∫_y ∫_x F  (swap y ↔ s, holds by integrability)
-  --              = ∫_s ∫_x ∫_y F  (swap x ↔ y back)
-  --
-  -- The key is that h_int ensures integrability on all product orderings.
-
-  -- Technical: Apply Fubini-Tonelli via integral_integral_swap
-  -- For the restricted measure ∫_s in Ioi 0, this uses setIntegral properties.
-
-  -- The full formal proof requires showing that swapping x, y with s preserves
-  -- the integral value. Given that F is integrable (h_int), this follows from
-  -- the general Fubini theorem for σ-finite measures.
-
-  -- Use the Fubini axiom
+  simp_rw [schwinger_pull_in_s_integral m f]
+  simp_rw [schwinger_factor_out_exp m f]
   exact schwinger_fubini_core m f
 
 /-- The kernel-level Schwinger representation holds for Θx ≠ y.
@@ -1371,7 +1316,7 @@ theorem bilinear_schwinger_eq_heatKernel (m : ℝ) [Fact (0 < m)] (f : TestFunct
     rw [freeCovariance_eq_schwingerRep m hm x y hxy]
     ring
 
-  -- The diagonal {(x,y) : Θx = y} is a proper affine subspace of codimension 4,
+  -- The set {(x,y) : Θx = y} is the graph of the time-reflection map,
   -- hence has measure zero in the product measure.
 
   -- Step 2: Show h_kernel_eq holds almost everywhere

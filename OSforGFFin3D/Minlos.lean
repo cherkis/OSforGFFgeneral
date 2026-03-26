@@ -26,7 +26,7 @@ import Mathlib.Analysis.InnerProductSpace.PiL2
 
 This file axiomatizes the Minlos theorem for nuclear spaces and builds the Gaussian measure
 construction on top of it. The nuclear space infrastructure (`NuclearSpace`, `schwartz_nuclear`)
-is in `OSforGFF.NuclearSpace`.
+is in `OSforGFFin3D.NuclearSpace`.
 
 ## Main declarations
 
@@ -51,8 +51,8 @@ This file declares one axiom (see `old/texts/axioms.md` for justification):
 - `minlos_theorem`: Minlos theorem (existence and uniqueness) for nuclear spaces
   (Gel'fand-Vilenkin Vol. 4, Billingsley)
 
-The nuclear space axiom `schwartz_nuclear` is declared in `OSforGFF.NuclearSpace`.
-The Gaussian RBF positive-definiteness is proved in `OSforGFF.GaussianRBF`.
+The nuclear space axiom `schwartz_nuclear` is declared in `OSforGFFin3D.NuclearSpace`.
+The Gaussian RBF positive-definiteness is proved in `OSforGFFin3D.GaussianRBF`.
 -/
 
 /-! ## Minlos Theorem -/
@@ -105,6 +105,23 @@ def gaussian_characteristic_functional
   (covariance_form : E → E → ℝ) (f : E) : ℂ :=
   Complex.exp (-(1/2 : ℂ) * (covariance_form f f))
 
+omit [AddCommGroup E] [Module ℝ E] in
+/-- Continuity of the Gaussian characteristic functional follows from continuity of
+    the diagonal quadratic form. -/
+lemma gaussian_characteristic_functional_continuous
+  (covariance_form : E → E → ℝ)
+  (h_continuous : Continuous (fun f => covariance_form f f)) :
+  Continuous (gaussian_characteristic_functional covariance_form) := by
+  exact continuous_exp.comp (continuous_const.mul (continuous_ofReal.comp h_continuous))
+
+omit [Module ℝ E] [TopologicalSpace E] in
+/-- Normalization of the Gaussian characteristic functional at the origin. -/
+lemma gaussian_characteristic_functional_zero
+  (covariance_form : E → E → ℝ)
+  (h_zero : covariance_form 0 0 = 0) :
+  gaussian_characteristic_functional covariance_form 0 = 1 := by
+  simp [gaussian_characteristic_functional, h_zero]
+
 /-- **Gaussian RBF kernel is positive definite on inner product spaces.**
 
     For an inner product space H, the function φ(h) = exp(-½‖h‖²) is positive definite.
@@ -122,7 +139,7 @@ def gaussian_characteristic_functional
     is positive definite on V iff V embeds isometrically into a Hilbert space
     (Schoenberg's theorem / Bretagnolle-Dacunha-Castelle-Krivine theorem).
 
-    **PROVEN** in `OSforGFF/GaussianRBF.lean` using:
+    **PROVEN** in `OSforGFFin3D/GaussianRBF.lean` using:
     - The inner product kernel is PD
     - Exponential preserves PD (via Hadamard series and Schur product theorem)
     - Factorization: exp(-½|x-y|²) = exp(-½|x|²)·exp(-½|y|²)·exp(⟨x,y⟩) -/
@@ -197,10 +214,10 @@ theorem minlos_gaussian_construction
               ∫ ω, Complex.exp (I * (ω f)) ∂μ.toMeasure) := by
   -- Prove the three Minlos hypotheses for the Gaussian CF
   have h_cf_cont : Continuous (gaussian_characteristic_functional covariance_form) := by
-    exact continuous_exp.comp (continuous_const.mul (continuous_ofReal.comp h_continuous))
+    exact gaussian_characteristic_functional_continuous covariance_form h_continuous
   have h_cf_pd := gaussian_positive_definite_via_embedding T covariance_form h_eq
   have h_cf_norm : gaussian_characteristic_functional covariance_form 0 = 1 := by
-    simp [gaussian_characteristic_functional, h_zero]
+    exact gaussian_characteristic_functional_zero covariance_form h_zero
   -- Extract existence from ∃!
   obtain ⟨μ, hchar, _⟩ := minlos_theorem
     (gaussian_characteristic_functional covariance_form)

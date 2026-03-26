@@ -87,6 +87,24 @@ noncomputable def SchwingerTwoPointFunction_GFF (m : ℝ) [Fact (0 < m)] (x : Sp
 theorem schwingerTwoPoint_eq_freeCovarianceKernel (m : ℝ) [Fact (0 < m)] (x : SpaceTime) :
   SchwingerTwoPointFunction_GFF m x = freeCovarianceKernel m x := rfl
 
+private lemma freeCovariance_eq_freeCovarianceKernel_sub (m : ℝ) (u v : SpaceTime) :
+    freeCovariance m u v = freeCovarianceKernel m (u - v) := by
+  simp only [freeCovarianceKernel, freeCovariance, freeCovarianceBessel, zero_sub, norm_neg]
+
+private theorem schwingerFunction₂_eq_freeCovarianceKernel_integral (m : ℝ) [Fact (0 < m)]
+    (f g : TestFunction) :
+    SchwingerFunction₂ (gaussianFreeField_free m) f g =
+      ∫ u, ∫ v, f u * freeCovarianceKernel m (u - v) * g v := by
+  rw [schwinger_eq_covariance]
+  simp only [distributionPairing]
+  rw [GFFIsGaussian.schwinger_eq_covariance_real m f g]
+  unfold freeCovarianceFormR
+  congr 1
+  ext u
+  congr 1
+  ext v
+  rw [freeCovariance_eq_freeCovarianceKernel_sub]
+
 /-- Compatibility: The abstract SchwingerTwoPointFunction agrees with the concrete
     definition for the GFF. This uses the limit-based definition of SchwingerTwoPointFunction
     and the double mollifier convergence theorem via `schwingerTwoPointFunction_eq_kernel`.
@@ -98,36 +116,10 @@ theorem schwingerTwoPoint_eq_freeCovarianceKernel (m : ℝ) [Fact (0 < m)] (x : 
     Both are standard properties of the GFF; the sorries encode these standard facts. -/
 theorem schwingerTwoPointFunction_eq_GFF (m : ℝ) [Fact (0 < m)] (x : SpaceTime) (hx : x ≠ 0) :
   SchwingerTwoPointFunction (gaussianFreeField_free m) x = SchwingerTwoPointFunction_GFF m x := by
-  -- Use schwingerTwoPointFunction_eq_kernel
   have h_cont : ContinuousOn (freeCovarianceKernel m) {y : SpaceTime | y ≠ 0} :=
-    freeCovarianceKernel_continuousOn m (Fact.elim ‹Fact (0 < m)›)
-  have h_S₂ : ∀ (f g : TestFunction),
-      SchwingerFunction₂ (gaussianFreeField_free m) f g =
-      ∫ u, ∫ v, f u * freeCovarianceKernel m (u - v) * g v := by
-    -- Chain: S₂(f,g) = ∫ω (ωf)(ωg) dμ = freeCovarianceFormR m f g = ∫∫ f(u) C(u,v) g(v)
-    -- where C(u,v) = freeCovarianceKernel m (u-v) by translation invariance
-    intro f g
-    -- Step 1: S₂ = ∫ω (ωf)(ωg) via schwinger_eq_covariance
-    rw [schwinger_eq_covariance]
-    -- Unfold distributionPairing to ω f
-    simp only [distributionPairing]
-    -- Step 2: For GFF, ∫ω (ωf)(ωg) = freeCovarianceFormR via schwinger_eq_covariance_real
-    rw [GFFIsGaussian.schwinger_eq_covariance_real m f g]
-    -- Step 3: freeCovarianceFormR = ∫∫ f(u) * freeCovariance(u,v) * g(v)
-    unfold freeCovarianceFormR
-    -- Step 4: freeCovariance(x,y) = freeCovarianceKernel(x-y) by translation invariance
-    congr 1
-    ext u
-    congr 1
-    ext v
-    -- The kernel is translation invariant
-    have h_transl : freeCovariance m u v = freeCovarianceKernel m (u - v) := by
-      simp only [freeCovarianceKernel, freeCovariance, freeCovarianceBessel, zero_sub, norm_neg]
-    rw [h_transl]
-  -- Apply the general kernel theorem
+    freeCovarianceKernel_continuousOn m Fact.out
   rw [schwingerTwoPointFunction_eq_kernel (gaussianFreeField_free m) x hx
-        (freeCovarianceKernel m) h_cont h_S₂]
-  -- By definition of SchwingerTwoPointFunction_GFF
+        (freeCovarianceKernel m) h_cont (schwingerFunction₂_eq_freeCovarianceKernel_integral m)]
   rfl
 
 /-- The abstract SchwingerTwoPointFunction equals freeCovarianceKernel for the GFF.
@@ -139,9 +131,10 @@ theorem schwingerTwoPointFunction_eq_freeCovarianceKernel (m : ℝ) [Fact (0 < m
   rw [schwingerTwoPointFunction_eq_GFF m x hx, schwingerTwoPoint_eq_freeCovarianceKernel]
 
 /-- The GFF two-point Schwinger function satisfies a polynomial decay bound.
-    For the free field, this follows from the Bessel function asymptotics:
-    - Near origin: K₁(mr) ~ 1/(mr), giving decay like 1/r²
-    - Far from origin: K₁(mr) ~ exp(-mr), which is even faster decay -/
+    For the free field, this follows from the 3D `besselKhalf` bounds used in
+    `freeCovarianceKernel_decay_bound`:
+    - Near origin: `besselKhalf (mr) ≤ (cosh (1/2) + 2) / (mr)`, giving decay like `1 / r²`
+    - Far from origin: `besselKhalf (mr)` decays exponentially, which is even faster -/
 theorem schwinger_two_point_decay_bound_GFF (m : ℝ) [Fact (0 < m)] :
   ∃ C : ℝ, C > 0 ∧
     ∀ x y : SpaceTime,
@@ -188,24 +181,18 @@ theorem schwinger_two_point_decay_bound (m : ℝ) [Fact (0 < m)] :
     The functions agree on the complement of {0}, which has full measure. -/
 theorem schwingerTwoPoint_measurable (m : ℝ) [Fact (0 < m)] :
     AEStronglyMeasurable (fun x => SchwingerTwoPointFunction (gaussianFreeField_free m) x) volume := by
-  -- Use that the abstract and concrete definitions agree except possibly at 0
-  -- Since {0} is a null set in Lebesgue measure, AE strong measurability follows from
-  -- the measurability of freeCovarianceKernel and the fact that the functions differ
-  -- only on a null set
   have h_kernel_meas := (freeCovarianceKernel_integrable m (Fact.out)).aestronglyMeasurable
-  -- The abstract definition agrees with the kernel on {x ≠ 0}
-  have h_ae_eq : (fun x => SchwingerTwoPointFunction (gaussianFreeField_free m) x) =ᶠ[ae volume]
-                 freeCovarianceKernel m := by
-    -- {0} has measure zero in Lebesgue measure
+  have h_ae_eq :
+      (fun x => SchwingerTwoPointFunction (gaussianFreeField_free m) x) =ᶠ[ae volume]
+        freeCovarianceKernel m := by
     have h_singleton_null : (volume : Measure SpaceTime) {(0 : SpaceTime)} = 0 :=
       MeasureTheory.measure_singleton (0 : SpaceTime)
-    -- The complement of {0} has full measure, so {x ≠ 0} ∈ ae volume
     have h_mem : {x : SpaceTime | x ≠ 0} ∈ ae volume := by
       rw [MeasureTheory.mem_ae_iff]
       simp only [ne_eq, Set.compl_setOf, not_not]
       exact h_singleton_null
-    -- The functions agree on this set
-    exact Filter.eventuallyEq_of_mem h_mem (fun x hx => schwingerTwoPointFunction_eq_freeCovarianceKernel m x hx)
+    exact Filter.eventuallyEq_of_mem h_mem fun x hx =>
+      schwingerTwoPointFunction_eq_freeCovarianceKernel m x hx
   exact AEStronglyMeasurable.congr h_kernel_meas h_ae_eq.symm
 
 /-! ## GFF Exponential Bound
@@ -520,6 +507,14 @@ integrability of the two-point function, we verify OS1 as stated in
 
 open MeasureTheory
 
+private lemma gaussianFreeField_OS1_constant_pos (m : ℝ) [Fact (0 < m)] : 0 < 1 / (2 * m^2) := by
+  have hm2pos : 0 < m^2 := sq_pos_of_pos Fact.out
+  have hdenpos : 0 < 2 * m^2 := by nlinarith
+  exact one_div_pos.mpr hdenpos
+
+private lemma gaussianFreeField_OS1_constant_nonneg (m : ℝ) [Fact (0 < m)] : 0 ≤ 1 / (2 * m^2) :=
+  le_of_lt (gaussianFreeField_OS1_constant_pos m)
+
 /-- The Gaussian free field satisfies OS1 regularity with `p = 2` and
     `c = 1/(2 m^2)`. This uses `gff_generating_L2_bound` and
     `gff_two_point_locally_integrable` established above.
@@ -529,12 +524,8 @@ open MeasureTheory
 theorem gaussianFreeField_satisfies_OS1_revised (m : ℝ) [Fact (0 < m)] :
   OS1_Regularity (gaussianFreeField_free m) := by
   -- Choose parameters p = 2 and c = 1/(2 m^2)
-  refine ⟨(2 : ℝ), (1 / (2 * m^2)), by norm_num, by norm_num, ?cpos, ?bound, ?tpInt⟩
-  · -- c > 0
-    have hmpos : 0 < m := Fact.out
-    have hm2pos : 0 < m^2 := by exact sq_pos_of_pos hmpos
-    have hdenpos : 0 < 2 * m^2 := by nlinarith
-    exact one_div_pos.mpr hdenpos
+  refine ⟨(2 : ℝ), (1 / (2 * m^2)), by norm_num, by norm_num,
+    gaussianFreeField_OS1_constant_pos m, ?bound, ?tpInt⟩
   · -- Exponential bound: |Z[f]| ≤ exp(c(∫|f| + ∫|f|^2))
     intro f
     -- Start from the established L² bound
@@ -559,11 +550,7 @@ theorem gaussianFreeField_satisfies_OS1_revised (m : ℝ) [Fact (0 < m)] :
         have hpt : ∀ x, 0 ≤ ‖f x‖ := by intro x; exact norm_nonneg _
         -- `integral_nonneg` is applicable to nonnegative functions over `volume`
         exact integral_nonneg hpt
-      have hcpos : 0 ≤ (1 / (2 * m^2)) := by
-        have hmpos : 0 < m := Fact.out
-        have hm2pos : 0 < m^2 := by exact sq_pos_of_pos hmpos
-        have hdenpos : 0 < 2 * m^2 := by nlinarith
-        exact le_of_lt (one_div_pos.mpr hdenpos)
+      have hcpos : 0 ≤ (1 / (2 * m^2)) := gaussianFreeField_OS1_constant_nonneg m
       -- Use `add_nonneg` and rearrange
       have hadd : (1 / (2 * m^2)) * ∫ x, ‖f x‖ ∂volume ≥ 0 := by
         exact mul_nonneg hcpos hI1_nonneg

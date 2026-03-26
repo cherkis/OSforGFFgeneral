@@ -4,24 +4,26 @@ The free massive scalar field propagator $C(x, y)$ and its properties. The const
 
 ## Mathematical Background
 
-The free Euclidean propagator for a massive scalar field with mass $m > 0$ in $d = 4$ dimensions is defined in momentum space as:
+The free Euclidean propagator for a massive scalar field with mass $m > 0$ in $d = 3$
+spacetime dimensions is defined in momentum space as:
 
 $$\hat{C}(k) = \frac{1}{\|k\|^2 + m^2}$$
 
 The position-space kernel is obtained by inverse Fourier transform:
 
-$$C(x - y) = \frac{1}{(2\pi)^4} \int_{\mathbb{R}^4} \frac{e^{ik\cdot(x-y)}}{\|k\|^2 + m^2}\  d^4k$$
+$$C(x - y) = \frac{1}{(2\pi)^3} \int_{\mathbb{R}^3} \frac{e^{ik\cdot(x-y)}}{\|k\|^2 + m^2}\  d^3k$$
 
-In 4D, this evaluates to the Bessel function representation:
+In this 3D branch, this is written in Bessel form as:
 
-$$C(x, y) = \frac{m}{4\pi^2 \|x - y\|} K_1(m\|x - y\|)$$
+$$C(x, y) = \frac{1}{(4\pi)^{3/2}} \cdot 2 \left(\frac{2m}{\|x-y\|}\right)^{1/2} K_{1/2}(m\|x-y\|)$$
 
-where $K_1$ is the modified Bessel function of the second kind. Key properties:
+where $K_{1/2}$ is represented in code by `besselKhalf`. Equivalently,
+$C(x,y) = e^{-m\|x-y\|}/(4\pi \|x-y\|)$. Key properties:
 - **Positivity:** $C(x, y) > 0$ for $x \ne y$
 - **Symmetry:** $C(x, y) = C(y, x)$
-- **Euclidean invariance:** $C(gx, gy) = C(x, y)$ for all $g \in E(4)$
-- **Singularity:** $C(x, y) \sim \text{const}/\|x-y\|^2$ as $x \to y$
-- **Exponential decay:** $C(x, y) \sim \text{const} \cdot e^{-m\|x-y\|}/\|x-y\|^{3/2}$ as $\|x-y\| \to \infty$
+- **Euclidean invariance:** $C(gx, gy) = C(x, y)$ for all Euclidean motions $g$
+- **Singularity:** $C(x, y) \sim \text{const}/\|x-y\|$ as $x \to y$
+- **Exponential decay:** $C(x, y) \sim \text{const} \cdot e^{-m\|x-y\|}/\|x-y\|$ as $\|x-y\| \to \infty$
 
 ## Proof Strategy
 
@@ -37,7 +39,7 @@ Performing the Fourier transform under the proper-time integral yields the **hea
 
 $$C(x, y) = \int_0^{\infty} e^{-tm^2} H_t(\|x-y\|)\  dt$$
 
-where $H_t(r) = \frac{1}{16\pi^2 t^2} e^{-r^2/(4t)}$ is the 4D heat kernel.
+where $H_t(r) = \frac{1}{(4\pi t)^{3/2}} e^{-r^2/(4t)}$ is the 3D heat kernel.
 
 ### 2. Regularization Strategy
 
@@ -49,7 +51,7 @@ This makes all integrals absolutely convergent. The true covariance is recovered
 
 ### 3. Bilinear Form and Parseval Identity
 
-For test functions $f, g \in \mathcal{S}(\mathbb{R}^4, \mathbb{C})$, the bilinear covariance form is:
+For test functions $f, g \in \mathcal{S}(\mathbb{R}^3, \mathbb{C})$, the bilinear covariance form is:
 
 $$\langle f, Cg\rangle = \iint \overline{f(x)}\  C(x-y)\  g(y)\  dx\  dy$$
 
@@ -81,14 +83,14 @@ Then $C(f, f) = \|Tf\|^2$, establishing the Hilbert space embedding required by 
 | [`freePropagator_smooth`](../OSforGFF/CovarianceMomentum.lean#L2059) | $\hat{C}$ is smooth |
 | [`freeCovariance_regulated`](../OSforGFF/CovarianceMomentum.lean#L168) | Gaussian-regulated propagator $C_\alpha(x,y)$ in position space |
 | [`freeCovariance`](../OSforGFF/CovarianceMomentum.lean#L468) | The covariance $C(x,y)$ (limit of $C_\alpha$) |
-| [`freeCovarianceBessel`](../OSforGFF/CovarianceMomentum.lean#L462) | Bessel representation: $C(x,y) = \frac{m}{4\pi^2 r} K_1(mr)$ |
+| [`freeCovarianceBessel`](../OSforGFFin3D/CovarianceMomentum.lean) | Bessel representation using `besselKhalf` |
 | [`freeCovarianceKernel`](../OSforGFF/CovarianceMomentum.lean#L1689) | Translation-invariant kernel $C(x-y)$ |
 | [`schwingerIntegrand`](../OSforGFF/CovarianceMomentum.lean#L201) | Schwinger integrand $e^{-t(\lVert k\rVert^2+m^2)}$ |
 | [`schwinger_representation`](../OSforGFF/CovarianceMomentum.lean#L220) | $\int_0^\infty e^{-t(\lVert k\rVert^2+m^2)}\ dt = 1/(\lVert k\rVert^2+m^2)$ |
-| [`heatKernelPositionSpace`](../OSforGFF/CovarianceMomentum.lean#L236) | 4D heat kernel $H_t(r)$ |
+| [`heatKernelPositionSpace`](../OSforGFFin3D/CovarianceMomentum.lean) | 3D heat kernel $H_t(r)$ |
 | [`heatKernelPositionSpace_integral_eq_one`](../OSforGFF/CovarianceMomentum.lean#L372) | $\int H_t = 1$ |
 | [`covarianceSchwingerRep`](../OSforGFF/CovarianceMomentum.lean#L412) | Schwinger representation of covariance |
-| [`covarianceSchwingerRep_eq_besselFormula`](../OSforGFF/CovarianceMomentum.lean#L437) | $C^{\text{Schwinger}} = \frac{m}{4\pi^2 r} K_1(mr)$ |
+| [`covarianceSchwingerRep_eq_besselFormula`](../OSforGFFin3D/CovarianceMomentum.lean) | $C^{\text{Schwinger}}$ equals the `besselKhalf` covariance formula |
 | [`momentumWeight`](../OSforGFF/CovarianceMomentum.lean#L2158) | $\lVert k\rVert^2 + m^2$ as a weight function |
 | [`momentumWeightSqrt`](../OSforGFF/CovarianceMomentum.lean#L2167) | $\sqrt{1/(\lVert k\rVert^2 + m^2)}$ |
 | [`momentumWeightSqrt_mul_CLM`](../OSforGFF/CovarianceMomentum.lean#L2289) | Multiplication by $\sqrt{\hat{C}(k)}$ as CLM on $L^2$ |
@@ -130,7 +132,7 @@ Then $C(f, f) = \|Tf\|^2$, establishing the Hilbert space embedding required by 
 | [`freeCovarianceℂ_bilinear_integrable`](../OSforGFF/Covariance.lean#L205) | $f(x)\ C(x,y)\ g(y)$ is integrable for Schwartz $f, g$ |
 | [`freeCovarianceℂ_positive`](../OSforGFF/Covariance.lean#L630) | $\mathrm{Re}\langle f, Cf\rangle \ge 0$ |
 | [`parseval_covariance_schwartz_bessel`](../OSforGFF/Covariance.lean#L657) | $\mathrm{Re}\langle f, Cf\rangle = \int |\hat{f}|^2 \hat{C}\ dk$ (final form) |
-| [`freeCovariance_euclidean_invariant`](../OSforGFF/Covariance.lean#L403) | $C(gx, gy) = C(x, y)$ for $g \in E(4)$ |
+| [`freeCovariance_euclidean_invariant`](../OSforGFFin3D/Covariance.lean) | $C(gx, gy) = C(x, y)$ for Euclidean motions $g$ |
 | [`covariance_timeReflection_invariant`](../OSforGFF/Covariance.lean#L424) | $C(\Theta x, \Theta y) = C(x, y)$ |
 | [`freeCovarianceℂ_bilinear_symm`](../OSforGFF/Covariance.lean#L557) | $\langle f, Cg\rangle = \langle g, Cf\rangle$ |
 | [`freeCovarianceℂ_bilinear_add_left`](../OSforGFF/Covariance.lean#L524) | Additivity in first argument |

@@ -270,6 +270,27 @@ lemma heatKernelPositionSpace_continuous_at (t : ℝ) (ht : 0 < t) (r : ℝ) :
     · exact continuousAt_const.mul continuousAt_id
     · simp; exact ht.ne'
 
+private lemma heatKernelPositionSpace_denominator_split (s : ℝ) (hs : 0 < s) :
+    1 / ((4 * Real.pi * s) ^ (3 / 2 : ℝ)) =
+      (1 / ((4 * Real.pi) ^ (3 / 2 : ℝ))) * (1 / s ^ (3 / 2 : ℝ)) := by
+  have hpow : (4 * Real.pi * s) ^ (3 / 2 : ℝ) =
+      (4 * Real.pi) ^ (3 / 2 : ℝ) * s ^ (3 / 2 : ℝ) := by
+    rw [show 4 * Real.pi * s = (4 * Real.pi) * s by ring]
+    rw [Real.mul_rpow (by positivity : 0 ≤ 4 * Real.pi) (le_of_lt hs)]
+  have hconst_ne : ((4 * Real.pi) ^ (3 / 2 : ℝ)) ≠ 0 := by
+    exact ne_of_gt (Real.rpow_pos_of_pos (by positivity) _)
+  have hs_pow_ne : s ^ (3 / 2 : ℝ) ≠ 0 := by
+    exact ne_of_gt (Real.rpow_pos_of_pos hs _)
+  rw [hpow]
+  field_simp [hconst_ne, hs_pow_ne]
+
+private lemma inv_rpow_three_halves (s : ℝ) (hs : 0 < s) :
+    (1 / s : ℝ) ^ (3 / 2 : ℝ) = 1 / s ^ (3 / 2 : ℝ) := by
+  calc
+    (1 / s : ℝ) ^ (3 / 2 : ℝ) = (s⁻¹) ^ (3 / 2 : ℝ) := by simp [one_div]
+    _ = (s ^ (3 / 2 : ℝ))⁻¹ := by rw [Real.inv_rpow (le_of_lt hs)]
+    _ = 1 / s ^ (3 / 2 : ℝ) := by simp [one_div]
+
 /-- The heat kernel is bounded by a constant depending only on r > 0.
     Maximum of H(s,r) = (4πs)^{-d/2} exp(-r²/(4s)) occurs at s = r²/(2d). -/
 lemma heatKernelPositionSpace_bounded (r : ℝ) (hr : 0 < r) :
@@ -326,32 +347,19 @@ lemma heatKernelPositionSpace_bounded (r : ℝ) (hr : 0 < r) :
   have h_repr : ∀ s > 0, heatKernelPositionSpace s r = const * g (1 / s) := by
     intro s hs
     rw [heatKernelPositionSpace_3D s hs r]
-    have hpow : (4 * Real.pi * s) ^ (3 / 2 : ℝ) =
-        (4 * Real.pi) ^ (3 / 2 : ℝ) * s ^ (3 / 2 : ℝ) := by
-      rw [show 4 * Real.pi * s = (4 * Real.pi) * s by ring]
-      rw [Real.mul_rpow (by positivity : 0 ≤ 4 * Real.pi) (le_of_lt hs)]
-    have hconst_ne : ((4 * Real.pi) ^ (3 / 2 : ℝ)) ≠ 0 := by
-      exact ne_of_gt (Real.rpow_pos_of_pos (by positivity) _)
-    have hs_pow_ne : s ^ (3 / 2 : ℝ) ≠ 0 := by
-      exact ne_of_gt (Real.rpow_pos_of_pos hs _)
-    have h_invpow : (1 / s : ℝ) ^ (3 / 2 : ℝ) = 1 / s ^ (3 / 2 : ℝ) := by
-      calc
-        (1 / s : ℝ) ^ (3 / 2 : ℝ) = (s⁻¹) ^ (3 / 2 : ℝ) := by simp [one_div]
-        _ = (s ^ (3 / 2 : ℝ))⁻¹ := by rw [Real.inv_rpow (le_of_lt hs)]
-        _ = 1 / s ^ (3 / 2 : ℝ) := by simp [one_div]
     have h_exp_arg : -r^2 / (4 * s) = -(r^2 / 4) * (1 / s) := by
       field_simp [hs.ne']
     have h_exp : Real.exp (-r^2 / (4 * s)) = Real.exp (-(r^2 / 4) * (1 / s)) := by
       rw [h_exp_arg]
-    rw [hpow, h_exp]
+    rw [h_exp, heatKernelPositionSpace_denominator_split s hs]
     calc
-      1 / ((4 * Real.pi) ^ (3 / 2 : ℝ) * s ^ (3 / 2 : ℝ)) *
+      (1 / ((4 * Real.pi) ^ (3 / 2 : ℝ))) * (1 / s ^ (3 / 2 : ℝ)) *
           Real.exp (-(r ^ 2 / 4) * (1 / s))
           = (1 / ((4 * Real.pi) ^ (3 / 2 : ℝ))) *
               ((1 / s ^ (3 / 2 : ℝ)) * Real.exp (-(r ^ 2 / 4) * (1 / s))) := by
-                field_simp [hconst_ne, hs_pow_ne]
+                ring
       _ = const * (((1 / s : ℝ) ^ (3 / 2 : ℝ)) * Real.exp (-(r ^ 2 / 4) * (1 / s))) := by
-        rw [h_invpow]
+        rw [inv_rpow_three_halves s hs]
       _ = const * g (1 / s) := by
         unfold g
         rfl
@@ -371,14 +379,6 @@ lemma heatKernelPositionSpace_bounded (r : ℝ) (hr : 0 < r) :
       exact hbound.trans (le_max_left _ _)
     · have hs_gt : 1 < s := lt_of_not_ge hs1
       rw [heatKernelPositionSpace_3D s hs r]
-      have hpow : (4 * Real.pi * s) ^ (3 / 2 : ℝ) =
-          (4 * Real.pi) ^ (3 / 2 : ℝ) * s ^ (3 / 2 : ℝ) := by
-        rw [show 4 * Real.pi * s = (4 * Real.pi) * s by ring]
-        rw [Real.mul_rpow (by positivity : 0 ≤ 4 * Real.pi) (le_of_lt hs)]
-      have hconst_ne : ((4 * Real.pi) ^ (3 / 2 : ℝ)) ≠ 0 := by
-        exact ne_of_gt (Real.rpow_pos_of_pos (by positivity) _)
-      have hs_pow_ne : s ^ (3 / 2 : ℝ) ≠ 0 := by
-        exact ne_of_gt (Real.rpow_pos_of_pos hs _)
       have h_exp_le : Real.exp (-r^2 / (4 * s)) ≤ 1 := by
         have hden_pos : 0 < 4 * s := by positivity
         have hnum_nonpos : -r^2 ≤ 0 := by nlinarith [sq_nonneg r]
@@ -394,9 +394,9 @@ lemma heatKernelPositionSpace_bounded (r : ℝ) (hr : 0 < r) :
             ≤ 1 / ((4 * Real.pi * s) ^ (3 / 2 : ℝ)) * 1 := by
                   gcongr
         _ = const * (1 / s ^ (3 / 2 : ℝ)) := by
-              rw [hpow]
-              unfold const
-              field_simp [hconst_ne, hs_pow_ne]
+          rw [heatKernelPositionSpace_denominator_split s hs]
+          unfold const
+          ring
         _ ≤ const * 1 := by
               exact mul_le_mul_of_nonneg_left hs_invpow_le_one hconst_pos.le
         _ = const := by ring
@@ -2118,7 +2118,8 @@ lemma freeCovarianceKernel_decay_bound (m : ℝ) (hm : 0 < m) :
 
     This combines:
     - The covariance formula expressed using `besselKhalf`
-    - The Bessel asymptotic: `besselKhalf z ≤ (sinh 1 + 2) · e^{-z}` for z ≥ 1
+  - The sharp half-order asymptotic: `besselKhalf z ≤ (2 * sinh (1/2) + 2) · e^{-z}` for z ≥ 1,
+    followed by the weaker bound `(sinh 1 + 2) · e^{-z}` used in this proof
     - The separation condition `m‖u-v‖ ≥ 1`, which converts the prefactor into a uniform mass-dependent constant. -/
 lemma freeCovariance_exponential_bound (m : ℝ) (hm : 0 < m) (u v : SpaceTime)
     (h_sep : 1 ≤ m * ‖u - v‖) :

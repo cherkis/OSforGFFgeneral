@@ -111,6 +111,15 @@ lemma spacetime_inner_decompose (k z : SpaceTime) :
   -- The sums are definitionally equal after unfolding
   congr 1
 
+/-- `spatialPart` is continuous as a coordinate projection followed by the standard equivalence. -/
+lemma continuous_spatialPart : Continuous spatialPart := by
+  unfold spatialPart
+  apply (EuclideanSpace.equiv (Fin (STDimension - 1)) ℝ).symm.continuous.comp
+  apply continuous_pi
+  intro i
+  have h : i.val + 1 < STDimension := by simp [STDimension]; omega
+  exact PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) (⟨i.val + 1, h⟩ : Fin STDimension)
+
 /-! ### Integral Decomposition for SpaceTime -/
 
 /-- Auxiliary: The weighted Laplace-Fourier transform appearing in reflection positivity.
@@ -199,12 +208,11 @@ theorem heatKernel_eq_gaussianFT (s : ℝ) (hs : 0 < s) (z : SpaceTime) :
     congr 1
     ext k
     ring_nf
-  have h_norm_ne : ((2 * Real.pi) ^ STDimension : ℝ) ≠ 0 := by positivity
   calc
     (heatKernelPositionSpace s ‖z‖ : ℂ)
         = ((((2 * Real.pi) ^ STDimension : ℝ)⁻¹ : ℂ) *
             (((2 * Real.pi) ^ STDimension : ℝ) * (heatKernelPositionSpace s ‖z‖ : ℂ))) := by
-              simp [h_norm_ne]
+              simp
     _ = (1 / (2 * π) ^ STDimension : ℝ) *
         ∫ k : SpaceTime, Complex.exp (-(s : ℂ) * ‖k‖^2) * Complex.exp (-Complex.I * ⟪k, z⟫_ℝ) := by
           rw [gaussianFT_eq_heatKernel_times_norm s hs z]
@@ -3017,6 +3025,110 @@ lemma s_xy_swap_bound_integrable (f : TestFunctionℂ) (m : ℝ) [Fact (0 < m)] 
     rw [h_sqrt, h_rpow]
     ring_nf
 
+/-- For fixed `s`, the `(x,y)` integrand used in `fubini_s_xy_swap` is integrable. -/
+lemma fubini_s_xy_fixed_integrand_integrable (m : ℝ) [Fact (0 < m)]
+    (f : TestFunctionℂ) (k_sp : SpatialCoords) (s : ℝ) :
+    Integrable
+      (fun xy : SpaceTime × SpaceTime =>
+        (starRingEnd ℂ (f xy.1)) * f xy.2 *
+          (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(xy.1 0) - xy.2 0)^2 / (4 * s) : ℝ)) *
+          Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
+          Complex.exp (-Complex.I * spatialDot k_sp (spatialPart xy.1 - spatialPart xy.2)))
+      (volume.prod volume) := by
+  by_cases hs : 0 < s
+  · have h_bound : Integrable (fun xy : SpaceTime × SpaceTime =>
+        Real.sqrt (π / s) * ‖f xy.1‖ * ‖f xy.2‖ * Real.exp (-s * m^2))
+        (volume.prod volume) := by
+      have h_prod := schwartz_norm_prod_integrable f
+      have h1 := h_prod.const_mul (Real.sqrt (π / s) * Real.exp (-s * m^2))
+      convert h1 using 1
+      ext ⟨x, y⟩
+      ring
+    apply h_bound.mono'
+    · have hf_cont : Continuous f := SchwartzMap.continuous f
+      have h1 : Continuous (fun xy : SpaceTime × SpaceTime => (starRingEnd ℂ) (f xy.1)) :=
+        continuous_star.comp (hf_cont.comp continuous_fst)
+      have h2 : Continuous (fun xy : SpaceTime × SpaceTime => f xy.2) :=
+        hf_cont.comp continuous_snd
+      have h3 : Continuous (fun _ : SpaceTime × SpaceTime => (Real.sqrt (π / s) : ℂ)) :=
+        continuous_const
+      have hcoord0_1 : Continuous (fun xy : SpaceTime × SpaceTime => xy.1 0) :=
+        (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp continuous_fst
+      have hcoord0_2 : Continuous (fun xy : SpaceTime × SpaceTime => xy.2 0) :=
+        (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp continuous_snd
+      have h4 : Continuous (fun xy : SpaceTime × SpaceTime =>
+          Complex.exp (-((-(xy.1 0) - xy.2 0)^2 / (4 * s) : ℝ))) := by
+        apply Complex.continuous_exp.comp
+        apply Continuous.neg
+        apply continuous_ofReal.comp
+        apply Continuous.div_const
+        exact (hcoord0_1.neg.sub hcoord0_2).pow 2
+      have h5 : Continuous (fun _ : SpaceTime × SpaceTime =>
+          Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2))) := continuous_const
+      have h6 : Continuous (fun xy : SpaceTime × SpaceTime =>
+          Complex.exp (-Complex.I * spatialDot k_sp (spatialPart xy.1 - spatialPart xy.2))) := by
+        apply Complex.continuous_exp.comp
+        apply Continuous.mul continuous_const
+        apply continuous_ofReal.comp
+        unfold spatialDot
+        apply continuous_finset_sum
+        intro i _
+        have hv_i : Continuous (fun xy : SpaceTime × SpaceTime =>
+            (spatialPart xy.1 - spatialPart xy.2) i) :=
+          (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp
+            ((continuous_spatialPart.comp continuous_fst).sub
+             (continuous_spatialPart.comp continuous_snd))
+        exact continuous_const.mul hv_i
+      exact ((((h1.mul h2).mul h3).mul h4).mul h5).mul h6 |>.aestronglyMeasurable
+    · filter_upwards with ⟨x, y⟩
+      have h_star : ‖star (f x)‖ = ‖f x‖ := norm_star _
+      have h_sqrt : ‖(Real.sqrt (π / s) : ℂ)‖ = Real.sqrt (π / s) := by
+        simp [abs_of_nonneg (Real.sqrt_nonneg _)]
+      have h_exp1 : ‖Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ))‖ ≤ 1 := by
+        rw [Complex.norm_exp]
+        simp only [neg_re, Complex.ofReal_re]
+        exact Real.exp_le_one_iff.mpr (neg_nonpos.mpr (div_nonneg (sq_nonneg _) (by linarith)))
+      have h_exp2 : ‖Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2))‖ ≤ Real.exp (-s * m^2) := by
+        rw [Complex.norm_exp]
+        apply Real.exp_le_exp.mpr
+        simp only [neg_mul, neg_re, mul_re, Complex.ofReal_re, Complex.ofReal_im]
+        have h_im : (↑‖k_sp‖ ^ 2 + ↑m ^ 2 : ℂ).im = 0 := by simp [sq, Complex.add_im]
+        have h_re : (↑‖k_sp‖ ^ 2 + ↑m ^ 2 : ℂ).re = ‖k_sp‖^2 + m^2 := by
+          simp only [Complex.add_re, sq, Complex.mul_re, Complex.ofReal_re,
+            Complex.ofReal_im, mul_zero, sub_zero]
+        simp only [h_im, h_re, mul_zero, sub_zero]
+        nlinarith [sq_nonneg ‖k_sp‖]
+      have h_exp3 : ‖Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y))‖ = 1 := by
+        exact norm_exp_neg_I_mul_real _
+      calc ‖(starRingEnd ℂ (f x)) * f y * (Real.sqrt (π / s) : ℂ) *
+            Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
+            Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
+            Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y))‖
+          ≤ ‖star (f x)‖ * ‖f y‖ * ‖(Real.sqrt (π / s) : ℂ)‖ *
+            ‖Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ))‖ *
+            ‖Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2))‖ *
+            ‖Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y))‖ := by
+              simp only [norm_mul, starRingEnd_apply, le_refl]
+        _ ≤ ‖f x‖ * ‖f y‖ * Real.sqrt (π / s) * 1 * Real.exp (-s * m^2) * 1 := by
+            rw [h_star, h_sqrt, h_exp3]
+            gcongr
+        _ = Real.sqrt (π / s) * ‖f x‖ * ‖f y‖ * Real.exp (-s * m^2) := by ring
+  · simp only [not_lt] at hs
+    have h_sqrt_zero : Real.sqrt (π / s) = 0 := by
+      apply Real.sqrt_eq_zero'.mpr
+      exact div_nonpos_of_nonneg_of_nonpos Real.pi_nonneg hs
+    have h_zero :
+        (fun xy : SpaceTime × SpaceTime =>
+          (starRingEnd ℂ (f xy.1)) * f xy.2 *
+            (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(xy.1 0) - xy.2 0)^2 / (4 * s) : ℝ)) *
+            Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
+            Complex.exp (-Complex.I * spatialDot k_sp (spatialPart xy.1 - spatialPart xy.2))) =
+        0 := by
+      funext xy
+      simp [h_sqrt_zero]
+    rw [h_zero]
+    exact integrable_zero (SpaceTime × SpaceTime) ℂ (volume.prod volume)
+
 /-- **THEOREM** (formerly axiom): Fubini swap for s ↔ (x,y) integrals (for fixed k_sp).
 
     For fixed k_sp, swaps integration order:
@@ -3036,42 +3148,37 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) (k_sp : 
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
         Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
         Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y)) := by
-  -- Define the full integrand
   let F : ℝ × SpaceTime × SpaceTime → ℂ := fun ⟨s, x, y⟩ =>
     (starRingEnd ℂ (f x)) * f y *
       (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
       Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
       Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y))
 
-  -- The integrand is bounded by s_xy_swap_bound, which is integrable
   have h_int : Integrable F ((volume.restrict (Set.Ioi 0)).prod (volume.prod volume)) := by
     have h_bound := s_xy_swap_bound_integrable f m
-    -- Use Integrable.of_norm with the bound
     apply h_bound.mono'
-    · -- F is AEStronglyMeasurable (product of continuous/measurable functions)
-      -- The integrand is built from continuous Schwartz functions and exponentials
-      -- Rewrite the product measure as a restriction to show continuity on the support
-      have h_measure : ((volume : Measure ℝ).restrict (Set.Ioi (0 : ℝ))).prod
+    · have h_measure : ((volume : Measure ℝ).restrict (Set.Ioi (0 : ℝ))).prod
           ((volume : Measure SpaceTime).prod (volume : Measure SpaceTime)) =
           ((volume : Measure ℝ).prod ((volume : Measure SpaceTime).prod (volume : Measure SpaceTime))).restrict
             ((Set.Ioi (0 : ℝ)) ×ˢ Set.univ) := Measure.restrict_prod_eq_prod_univ (Set.Ioi (0 : ℝ))
       rw [h_measure]
       have hf_cont : Continuous f := SchwartzMap.continuous f
-      have h1 : ContinuousOn (fun (p : ℝ × SpaceTime × SpaceTime) => (starRingEnd ℂ) (f p.2.1))
+      have h1 : ContinuousOn (fun p : ℝ × SpaceTime × SpaceTime => (starRingEnd ℂ) (f p.2.1))
           (Set.Ioi 0 ×ˢ Set.univ) := (continuous_star.comp (hf_cont.comp continuous_snd.fst)).continuousOn
-      have h2 : ContinuousOn (fun (p : ℝ × SpaceTime × SpaceTime) => f p.2.2)
+      have h2 : ContinuousOn (fun p : ℝ × SpaceTime × SpaceTime => f p.2.2)
           (Set.Ioi 0 ×ˢ Set.univ) := (hf_cont.comp continuous_snd.snd).continuousOn
-      have h3 : ContinuousOn (fun (p : ℝ × SpaceTime × SpaceTime) => (Real.sqrt (π / p.1) : ℂ))
+      have h3 : ContinuousOn (fun p : ℝ × SpaceTime × SpaceTime => (Real.sqrt (π / p.1) : ℂ))
           (Set.Ioi 0 ×ˢ Set.univ) := by
         apply ContinuousOn.comp continuous_ofReal.continuousOn _ (Set.mapsTo_univ _ _)
         apply ContinuousOn.sqrt
         apply ContinuousOn.div continuousOn_const continuousOn_fst
-        intro ⟨s, _⟩ ⟨hs, _⟩; exact ne_of_gt hs
-      have hcoord0_1 : Continuous (fun (p : ℝ × SpaceTime × SpaceTime) => p.2.1 0) :=
+        intro ⟨s, _⟩ ⟨hs, _⟩
+        exact ne_of_gt hs
+      have hcoord0_1 : Continuous (fun p : ℝ × SpaceTime × SpaceTime => p.2.1 0) :=
         (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp continuous_snd.fst
-      have hcoord0_2 : Continuous (fun (p : ℝ × SpaceTime × SpaceTime) => p.2.2 0) :=
+      have hcoord0_2 : Continuous (fun p : ℝ × SpaceTime × SpaceTime => p.2.2 0) :=
         (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp continuous_snd.snd
-      have h4 : ContinuousOn (fun (p : ℝ × SpaceTime × SpaceTime) =>
+      have h4 : ContinuousOn (fun p : ℝ × SpaceTime × SpaceTime =>
           Complex.exp (-((-(p.2.1 0) - p.2.2 0)^2 / (4 * p.1) : ℝ))) (Set.Ioi 0 ×ˢ Set.univ) := by
         apply Complex.continuous_exp.comp_continuousOn
         apply ContinuousOn.neg
@@ -3079,21 +3186,22 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) (k_sp : 
         apply ContinuousOn.div
         · exact ((hcoord0_1.neg.sub hcoord0_2).pow 2).continuousOn
         · exact (continuous_const.mul continuous_fst).continuousOn
-        · intro ⟨s, _⟩ ⟨hs, _⟩; simp; exact ne_of_gt hs
-      have h5 : ContinuousOn (fun (p : ℝ × SpaceTime × SpaceTime) =>
+        · intro ⟨s, _⟩ ⟨hs, _⟩
+          simp
+          exact ne_of_gt hs
+      have h5 : ContinuousOn (fun p : ℝ × SpaceTime × SpaceTime =>
           Complex.exp (-(p.1 : ℂ) * (‖k_sp‖^2 + m^2))) (Set.Ioi 0 ×ˢ Set.univ) := by
         apply Complex.continuous_exp.comp_continuousOn
         apply ContinuousOn.mul
         · exact (continuous_ofReal.comp continuous_fst).neg.continuousOn
         · exact continuousOn_const
-      have h6 : ContinuousOn (fun (p : ℝ × SpaceTime × SpaceTime) =>
+      have h6 : ContinuousOn (fun p : ℝ × SpaceTime × SpaceTime =>
           Complex.exp (-Complex.I * spatialDot k_sp (spatialPart p.2.1 - spatialPart p.2.2)))
           (Set.Ioi 0 ×ˢ Set.univ) := by
         apply Complex.continuous_exp.comp_continuousOn
         apply ContinuousOn.mul continuousOn_const
         apply ContinuousOn.comp continuous_ofReal.continuousOn _ (Set.mapsTo_univ _ _)
         unfold spatialDot
-        -- spatialPart is continuous (projection followed by continuous linear equiv)
         have h_spatialPart_cont : Continuous spatialPart := by
           unfold spatialPart
           apply (EuclideanSpace.equiv (Fin (STDimension - 1)) ℝ).symm.continuous.comp
@@ -3102,10 +3210,10 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) (k_sp : 
           have h : i.val + 1 < STDimension := by simp [STDimension]; omega
           exact PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) (⟨i.val + 1, h⟩ : Fin STDimension)
         have h_sum : Continuous (fun p : ℝ × SpaceTime × SpaceTime =>
-            ∑ i, k_sp i * (spatialPart p.2.1 - spatialPart p.2.2) i) := by
+          ∑ i, k_sp i * (spatialPart p.2.1 - spatialPart p.2.2) i) := by
           apply continuous_finset_sum
           intro i _
-          have hv_i : Continuous (fun (p : ℝ × SpaceTime × SpaceTime) =>
+          have hv_i : Continuous (fun p : ℝ × SpaceTime × SpaceTime =>
               (spatialPart p.2.1 - spatialPart p.2.2) i) :=
             (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp
               ((h_spatialPart_cont.comp continuous_snd.fst).sub
@@ -3116,20 +3224,13 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) (k_sp : 
       have h_meas : MeasurableSet (Set.Ioi (0 : ℝ) ×ˢ (Set.univ : Set (SpaceTime × SpaceTime))) :=
         measurableSet_Ioi.prod MeasurableSet.univ
       exact h_cont.aestronglyMeasurable h_meas
-    · -- Norm bound: |F(s,x,y)| ≤ s_xy_swap_bound f m (s,x,y) a.e. on restricted measure
-      -- On the product measure (Ioi 0) × SpaceTime × SpaceTime, s > 0 a.e.
-      -- The first marginal is restricted to Ioi 0, so s > 0 holds a.e.
-      have h_ae : ∀ᵐ p : ℝ × SpaceTime × SpaceTime ∂(volume.restrict (Set.Ioi 0)).prod (volume.prod volume),
+    · have h_ae : ∀ᵐ p : ℝ × SpaceTime × SpaceTime ∂(volume.restrict (Set.Ioi 0)).prod (volume.prod volume),
           0 < p.1 := by
-        -- The first marginal is the restricted measure on (0, ∞)
-        -- The set {p | p.1 > 0} has full measure because its complement has measure 0
         rw [Filter.eventually_iff, MeasureTheory.mem_ae_iff]
-        -- Need: μ({p | 0 < p.1}ᶜ) = 0, i.e., μ({p | p.1 ≤ 0}) = 0
-        have h_compl : ({p : ℝ × SpaceTime × SpaceTime | 0 < p.1})ᶜ =
-            Prod.fst ⁻¹' Set.Iic 0 := by
-          ext p; simp only [Set.mem_compl_iff, Set.mem_setOf_eq, not_lt, Set.mem_preimage, Set.mem_Iic]
+        have h_compl : ({p : ℝ × SpaceTime × SpaceTime | 0 < p.1})ᶜ = Prod.fst ⁻¹' Set.Iic 0 := by
+          ext p
+          simp only [Set.mem_compl_iff, Set.mem_setOf_eq, not_lt, Set.mem_preimage, Set.mem_Iic]
         rw [h_compl]
-        -- Prod.fst ⁻¹' Iic 0 = Iic 0 ×ˢ univ
         have h_prod : (Prod.fst ⁻¹' Set.Iic (0 : ℝ) : Set (ℝ × SpaceTime × SpaceTime)) =
             Set.Iic 0 ×ˢ Set.univ := by
           ext ⟨s, xy⟩
@@ -3139,7 +3240,6 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) (k_sp : 
           Set.Iic_inter_Ioi, Set.Ioc_self, MeasureTheory.measure_empty, zero_mul]
       filter_upwards [h_ae] with ⟨s, x, y⟩ hs
       dsimp only [F, s_xy_swap_bound]
-      -- Need to bound each factor
       have h_star : ‖star (f x)‖ = ‖f x‖ := norm_star _
       have h_sqrt : ‖(Real.sqrt (π / s) : ℂ)‖ = Real.sqrt (π / s) := by
         simp only [Complex.norm_real]
@@ -3159,7 +3259,6 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) (k_sp : 
           simp only [Complex.add_re, sq, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
             mul_zero, sub_zero]
         simp only [h_im, h_re, mul_zero, sub_zero]
-        -- s > 0, so s * (‖k_sp‖² + m²) ≥ s * m² iff ‖k_sp‖² ≥ 0 ✓
         nlinarith [sq_nonneg ‖k_sp‖]
       have h_exp3 : ‖Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y))‖ = 1 :=
         norm_exp_neg_I_mul_real _
@@ -3177,142 +3276,17 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) (k_sp : 
             gcongr
         _ = Real.sqrt (π / s) * ‖f x‖ * ‖f y‖ * Real.exp (-s * m^2) := by ring
 
-  -- The goal is to swap s with (x, y).
-  -- h_int gives integrability on the product (Ioi 0) × (SpaceTime × SpaceTime)
-
-  -- Step 1: Rewrite LHS and RHS to use product integrals
-  -- LHS: ∫_s (∫_x (∫_y F)) = ∫_s (∫_{xy} F) by integral_prod on inner
-  -- RHS: ∫_x (∫_y (∫_s F)) = ∫_{xy} (∫_s F) by integral_prod on outer
-
-  -- Step 2: Apply integral_integral_swap to swap s ↔ xy
-  -- ∫_s (∫_{xy} F(s, xy)) = ∫_{xy} (∫_s F(s, xy))
-
-  -- The difficulty is that we have nested integrals ∫_x ∫_y, not a single product integral.
-  -- However, for sigma-finite measures, we can use transitivity through the product.
-
-  -- Direct approach: Use the fact that for sigma-finite measures,
-  -- ∫_x ∫_y ∫_z f = ∫_z ∫_x ∫_y f when f is integrable on the triple product.
-  -- This follows from two applications of Fubini.
-
-  -- By Fubini on (s, (x,y)):  ∫_s ∫_{(x,y)} F = ∫_{(x,y)} ∫_s F
-  -- The nested ∫_x ∫_y equals ∫_{(x,y)} by integral_prod
-
   calc ∫ s in Set.Ioi 0, ∫ x : SpaceTime, ∫ y : SpaceTime, F (s, x, y)
       = ∫ s in Set.Ioi 0, ∫ xy : SpaceTime × SpaceTime, F (s, xy.1, xy.2) := by
           congr 1 with s
-          -- ∫_x ∫_y g(x,y) = ∫_{xy} g(xy.1, xy.2) by integral_prod
           symm
-          have h_int_s : Integrable (fun xy : SpaceTime × SpaceTime => F (s, xy.1, xy.2))
-              (volume.prod volume) := by
-            -- For fixed s, F(s,x,y) is bounded by C(s) * |f(x)| * |f(y)|
-            -- where C(s) = √(π/s) * exp(-s*m²) (assuming s > 0)
-            by_cases hs : 0 < s
-            · -- When s > 0, the integrand is a product of bounded terms × Schwartz
-              have h_bound : Integrable (fun xy : SpaceTime × SpaceTime =>
-                  Real.sqrt (π / s) * ‖f xy.1‖ * ‖f xy.2‖ * Real.exp (-s * m^2))
-                  (volume.prod volume) := by
-                have h_prod := schwartz_norm_prod_integrable f
-                have h1 := h_prod.const_mul (Real.sqrt (π / s) * Real.exp (-s * m^2))
-                convert h1 using 1
-                ext ⟨x, y⟩; ring
-              apply h_bound.mono'
-              · -- AEStronglyMeasurable of F(s, ·, ·)
-                have hf_cont : Continuous f := SchwartzMap.continuous f
-                have h_spatialPart_cont : Continuous spatialPart := by
-                  unfold spatialPart
-                  apply (EuclideanSpace.equiv (Fin (STDimension - 1)) ℝ).symm.continuous.comp
-                  apply continuous_pi
-                  intro i
-                  have h : i.val + 1 < STDimension := by simp [STDimension]; omega
-                  exact PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) (⟨i.val + 1, h⟩)
-                have h1 : Continuous (fun (xy : SpaceTime × SpaceTime) => (starRingEnd ℂ) (f xy.1)) :=
-                  continuous_star.comp (hf_cont.comp continuous_fst)
-                have h2 : Continuous (fun (xy : SpaceTime × SpaceTime) => f xy.2) :=
-                  hf_cont.comp continuous_snd
-                have h3 : Continuous (fun (_ : SpaceTime × SpaceTime) => (Real.sqrt (π / s) : ℂ)) :=
-                  continuous_const
-                have hcoord0_1 : Continuous (fun (xy : SpaceTime × SpaceTime) => xy.1 0) :=
-                  (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp continuous_fst
-                have hcoord0_2 : Continuous (fun (xy : SpaceTime × SpaceTime) => xy.2 0) :=
-                  (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp continuous_snd
-                have h4 : Continuous (fun (xy : SpaceTime × SpaceTime) =>
-                    Complex.exp (-((-(xy.1 0) - xy.2 0)^2 / (4 * s) : ℝ))) := by
-                  apply Complex.continuous_exp.comp
-                  apply Continuous.neg
-                  apply continuous_ofReal.comp
-                  apply Continuous.div_const
-                  exact (hcoord0_1.neg.sub hcoord0_2).pow 2
-                have h5 : Continuous (fun (_ : SpaceTime × SpaceTime) =>
-                    Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2))) := continuous_const
-                have h6 : Continuous (fun (xy : SpaceTime × SpaceTime) =>
-                    Complex.exp (-Complex.I * spatialDot k_sp (spatialPart xy.1 - spatialPart xy.2))) := by
-                  apply Complex.continuous_exp.comp
-                  apply Continuous.mul continuous_const
-                  apply continuous_ofReal.comp
-                  unfold spatialDot
-                  apply continuous_finset_sum
-                  intro i _
-                  have hv_i : Continuous (fun (xy : SpaceTime × SpaceTime) =>
-                      (spatialPart xy.1 - spatialPart xy.2) i) :=
-                    (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp
-                      ((h_spatialPart_cont.comp continuous_fst).sub
-                       (h_spatialPart_cont.comp continuous_snd))
-                  exact continuous_const.mul hv_i
-                exact ((((h1.mul h2).mul h3).mul h4).mul h5).mul h6 |>.aestronglyMeasurable
-              · -- Norm bound
-                filter_upwards with ⟨x, y⟩
-                dsimp only [F]
-                have h_star : ‖star (f x)‖ = ‖f x‖ := norm_star _
-                have h_sqrt : ‖(Real.sqrt (π / s) : ℂ)‖ = Real.sqrt (π / s) := by
-                  simp [abs_of_nonneg (Real.sqrt_nonneg _)]
-                have h_exp1 : ‖Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ))‖ ≤ 1 := by
-                  rw [Complex.norm_exp]; simp only [neg_re, Complex.ofReal_re]
-                  exact Real.exp_le_one_iff.mpr (neg_nonpos.mpr (div_nonneg (sq_nonneg _) (by linarith)))
-                have h_exp2 : ‖Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2))‖ ≤ Real.exp (-s * m^2) := by
-                  rw [Complex.norm_exp]
-                  apply Real.exp_le_exp.mpr
-                  simp only [neg_mul, neg_re, mul_re, Complex.ofReal_re, Complex.ofReal_im]
-                  have h_im : (↑‖k_sp‖ ^ 2 + ↑m ^ 2 : ℂ).im = 0 := by simp [sq, Complex.add_im]
-                  have h_re : (↑‖k_sp‖ ^ 2 + ↑m ^ 2 : ℂ).re = ‖k_sp‖^2 + m^2 := by
-                    simp only [Complex.add_re, sq, Complex.mul_re, Complex.ofReal_re,
-                      Complex.ofReal_im, mul_zero, sub_zero]
-                  simp only [h_im, h_re, mul_zero, sub_zero]
-                  nlinarith [sq_nonneg ‖k_sp‖]
-                have h_exp3 : ‖Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y))‖ = 1 :=
-                  norm_exp_neg_I_mul_real _
-                calc ‖(starRingEnd ℂ (f x)) * f y * (Real.sqrt (π / s) : ℂ) *
-                      Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
-                      Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
-                      Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y))‖
-                    ≤ ‖star (f x)‖ * ‖f y‖ * ‖(Real.sqrt (π / s) : ℂ)‖ *
-                      ‖Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ))‖ *
-                      ‖Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2))‖ *
-                      ‖Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y))‖ := by
-                        simp only [norm_mul, starRingEnd_apply, le_refl]
-                  _ ≤ ‖f x‖ * ‖f y‖ * Real.sqrt (π / s) * 1 * Real.exp (-s * m^2) * 1 := by
-                      rw [h_star, h_sqrt, h_exp3]; gcongr
-                  _ = Real.sqrt (π / s) * ‖f x‖ * ‖f y‖ * Real.exp (-s * m^2) := by ring
-            · -- When s ≤ 0, √(π/s) = 0 (sqrt of non-positive is 0), so F(s,x,y) = 0
-              simp only [not_lt] at hs
-              have h_sqrt_zero : Real.sqrt (π / s) = 0 := by
-                apply Real.sqrt_eq_zero'.mpr
-                exact div_nonpos_of_nonneg_of_nonpos Real.pi_nonneg hs
-              have h_F_zero : ∀ xy : SpaceTime × SpaceTime, F (s, xy.1, xy.2) = 0 := by
-                intro ⟨x, y⟩
-                simp only [F, h_sqrt_zero, Complex.ofReal_zero, mul_zero, zero_mul]
-              simp_rw [h_F_zero]
-              exact integrable_zero (SpaceTime × SpaceTime) ℂ (volume.prod volume)
+          have h_int_s := fubini_s_xy_fixed_integrand_integrable m f k_sp s
           exact MeasureTheory.integral_prod _ h_int_s
     _ = ∫ xy : SpaceTime × SpaceTime, ∫ s in Set.Ioi 0, F (s, xy.1, xy.2) := by
           exact MeasureTheory.integral_integral_swap h_int
     _ = ∫ x : SpaceTime, ∫ y : SpaceTime, ∫ s in Set.Ioi 0, F (s, x, y) := by
-          -- ∫_{xy} g(xy) = ∫_x ∫_y g(x,y) by integral_prod
           have h_int_xy : Integrable (fun xy : SpaceTime × SpaceTime =>
               ∫ s in Set.Ioi 0, F (s, xy.1, xy.2)) (volume.prod volume) := by
-            -- From h_int : Integrable F ((volume.restrict (Ioi 0)).prod (volume.prod volume))
-            -- Integrable.integral_prod_right gives integrability of ∫ (second) ... on (first)
-            -- Here the product is s × (x,y), so integral_prod_right gives integrability
-            -- of (fun (x,y) => ∫ s, F(s,x,y)) on volume.prod volume
             exact h_int.integral_prod_right
           exact MeasureTheory.integral_prod _ h_int_xy
 /-! ## Fubini Helper Lemmas
@@ -3349,15 +3323,6 @@ lemma gaussian_integrable_spatialCoords (s : ℝ) (hs : 0 < s) :
   rw [h_eq] at h
   -- Integrable (ofReal ∘ g) implies Integrable g via .re since re(ofReal x) = x
   exact h.re
-
-/-- spatialPart is continuous (projection followed by continuous linear equiv). -/
-lemma continuous_spatialPart : Continuous spatialPart := by
-  unfold spatialPart
-  apply (EuclideanSpace.equiv (Fin (STDimension - 1)) ℝ).symm.continuous.comp
-  apply continuous_pi
-  intro i
-  have h : i.val + 1 < STDimension := by simp [STDimension]; omega
-  exact PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) (⟨i.val + 1, h⟩ : Fin STDimension)
 
 /-- **Key Lemma**: The integrand for fubini_ksp_xy_swap is absolutely integrable.
 

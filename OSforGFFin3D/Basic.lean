@@ -48,8 +48,8 @@ implementing field configurations as tempered distributions and the associated g
 
 **Spacetime Structure:**
 - `STDimension`: Spacetime dimension (3D)
-- `SpaceTime`: Euclidean 3-space using EuclideanSpace
-- `getTimeComponent`: Extracts time coordinate (t = x₃)
+- `SpaceTime`: Euclidean 3-space using `EuclideanSpace`
+- `getTimeComponent`: Extracts the distinguished time coordinate `x₀`
 - `μ`: Standard Lebesgue measure on spacetime
 
 **Test Function Spaces:**
@@ -83,10 +83,10 @@ This implements the distribution-based approach where:
 5. Measure theory is well-defined on the weak-* topology
 
 **Connection to Other Modules:**
-- Schwinger functions and correlations → `OSforGFF.Schwinger`
-- Osterwalder-Schrader axioms → `OSforGFF.OS_Axioms`
-- Gaussian measures and Minlos theorem → `OSforGFF.Minlos`, `OSforGFF.GFFMconstruct`
-- Euclidean group actions → `OSforGFF.Euclidean`
+- Schwinger functions and correlations → `OSforGFFin3D.Schwinger`
+- Osterwalder-Schrader axioms → `OSforGFFin3D.OS_Axioms`
+- Gaussian measures and Minlos theorem → `OSforGFFin3D.Minlos`, `OSforGFFin3D.GFFMconstruct`
+- Euclidean group actions → `OSforGFFin3D.Euclidean`
 
 This provides the mathematical foundation for constructive quantum field theory
 using the Osterwalder-Schrader framework.
@@ -105,7 +105,7 @@ Design notes (possible future changes):
   Minlos/characteristic functionals are formulated.
 -/
 
-/-- Spacetime dimension. Here set to 3 (Euclidean ℝ⁴).
+/-- Spacetime dimension. Here set to 3 (Euclidean ℝ³).
     Changing this value requires corresponding changes throughout the project;
     see `docs/dimension_dependence.md` for a detailed inventory. -/
 abbrev STDimension := 3

@@ -4,11 +4,12 @@ Construction of the Gaussian Free Field (GFF) measure on the space of distributi
 
 ## Mathematical Background
 
-The Gaussian Free Field measure $\mu_{\text{GFF}}$ is the probability measure on the space of tempered distributions $\mathcal{S}'(\mathbb{R}^4)$ characterized by its characteristic functional:
+The Gaussian Free Field measure $\mu_{\text{GFF}}$ is the probability measure on the space of tempered distributions $\mathcal{S}'(\mathbb{R}^3)$ characterized by its characteristic functional:
 
 $$\int e^{i\langle\omega,f\rangle}\ d\mu(\omega) = e^{-\frac{1}{2}C(f,f)}$$
 
-where $C(f, g) = \iint f(x)\ C(x-y)\ g(y)\ dx\ dy$ is the free covariance bilinear form with kernel $C(x-y) = \frac{m}{4\pi^2\|x\|}K_1(m\|x\|)$.
+where $C(f, g) = \iint f(x)\ C(x-y)\ g(y)\ dx\ dy$ is the free covariance bilinear form with kernel
+$$C(x-y) = \frac{1}{(4\pi)^{3/2}} \cdot 2 \left(\frac{2m}{\|x-y\|}\right)^{1/2} K_{1/2}(m\|x-y\|).$$
 
 The construction uses the **Minlos theorem**: a continuous, positive-definite functional on a nuclear space is the characteristic functional of a unique probability measure on the dual space.
 

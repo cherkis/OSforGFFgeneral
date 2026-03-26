@@ -163,8 +163,7 @@ lemma spacetimeOfTimeSpace_time (t : ℝ) (x : SpatialCoords3) :
     Mathematical fact: (spacetimeOfTimeSpace t x) (i+1) = x i -/
 lemma spacetimeOfTimeSpace_spatial (t : ℝ) (x : SpatialCoords3) (i : Fin (STDimension - 1)) :
     (spacetimeOfTimeSpace t x) i.succ = x i := by
-  simpa [spacetimeOfTimeSpace] using
-    (show (Fin.cons t (fun j => x.ofLp j)) i.succ = x.ofLp i by rfl)
+  simp [spacetimeOfTimeSpace]
 
 /-- The spatial part of `spacetimeOfTimeSpace t x` is `x`. -/
 lemma spatialPart_spacetimeOfTimeSpace (t : ℝ) (x : SpatialCoords3) :
@@ -238,6 +237,31 @@ lemma continuous_spacetimeOfTimeSpace_right (t : ℝ) : Continuous (spacetimeOfT
     continuous_const.add spatialEmbedCLM.continuous
   exact (continuous_congr h_decompose).mpr h_cont
 
+private lemma spatial_recip_one_add_norm_integrable (n : ℕ)
+    (h_dim : (Module.finrank ℝ SpatialCoords3 : ℝ) < n) :
+    Integrable (fun x : SpatialCoords3 => 1 / (1 + ‖x‖)^n) volume := by
+  have h_int := integrable_one_add_norm (E := SpatialCoords3) (μ := volume) (r := n) h_dim
+  convert h_int using 1
+  ext x
+  have h_pos : 0 < 1 + ‖x‖ := by linarith [norm_nonneg x]
+  calc
+    1 / (1 + ‖x‖) ^ n = ((1 + ‖x‖) ^ n)⁻¹ := by rw [one_div]
+    _ = (1 + ‖x‖) ^ (-(n : ℝ)) := by
+      rw [Real.rpow_neg (le_of_lt h_pos)]
+      congr 1
+      exact (Real.rpow_natCast (1 + ‖x‖) n).symm
+
+private lemma div_spacetime_decay_le_spatial_decay
+    (C : ℝ) (hC : 0 ≤ C) (t : ℝ) (x : SpatialCoords3) (n : ℕ) :
+    C / (1 + ‖spacetimeOfTimeSpace t x‖)^n ≤ C / (1 + ‖x‖)^n := by
+  have h_norm_ge : ‖spacetimeOfTimeSpace t x‖ ≥ ‖x‖ := spacetimeOfTimeSpace_norm_ge t x
+  have hx_nonneg : 0 ≤ 1 + ‖x‖ := by positivity
+  have hx_pos : 0 < (1 + ‖x‖)^n := pow_pos (by linarith [norm_nonneg x]) n
+  have h_pow : (1 + ‖x‖)^n ≤ (1 + ‖spacetimeOfTimeSpace t x‖)^n := by
+    apply pow_le_pow_left₀ hx_nonneg
+    linarith [h_norm_ge]
+  exact div_le_div_of_nonneg_left hC hx_pos h_pow
+
 /-- A Schwartz function restricted to a fixed time slice is integrable over `SpatialCoords`.
   Uses decay transfer: spacetime Schwartz decay implies spatial integrability via norm comparison. -/
 lemma schwartz_time_slice_integrable (f : TestFunctionℂ) (t : ℝ) :
@@ -264,17 +288,13 @@ lemma schwartz_time_slice_integrable (f : TestFunctionℂ) (t : ℝ) :
     have h_dim : (Module.finrank ℝ SpatialCoords3 : ℝ) < 5 := by
       simp only [finrank_euclideanSpace, Fintype.card_fin]
       norm_num
-    have h_int := integrable_one_add_norm (E := SpatialCoords3) (μ := volume) (r := 5) h_dim
-    -- Convert between (1+‖x‖)^(-5:ℝ) and C/(1+‖x‖)^5
-    have h_eq : ∀ x : SpatialCoords3, C / (1 + ‖x‖) ^ 5 = C * (1 + ‖x‖) ^ (-(5 : ℝ)) := by
-      intro x
-      have h_pos : 0 < 1 + ‖x‖ := by linarith [norm_nonneg x]
-      have h1 : ((1 + ‖x‖) ^ 5)⁻¹ = (1 + ‖x‖) ^ (-(5 : ℝ)) := by
-        rw [← Real.rpow_natCast (1 + ‖x‖) 5, ← Real.rpow_neg (le_of_lt h_pos)]
-        simp
-      rw [div_eq_mul_inv, h1]
-    simp_rw [h_eq]
-    exact h_int.const_mul C
+    have h_eq :
+        (fun x : SpatialCoords3 => C / (1 + ‖x‖)^5)
+          = (fun x : SpatialCoords3 => C * (1 / (1 + ‖x‖)^5)) := by
+      ext x
+      ring
+    rw [h_eq]
+    exact (spatial_recip_one_add_norm_integrable 5 h_dim).const_mul C
 
   -- Pointwise bound: |f(spacetimeOfTimeSpace t x)| ≤ C/(1+‖spacetimeOfTimeSpace t x‖)^5 ≤ C/(1+‖x‖)^5
   have h_bound : ∀ x : SpatialCoords3,
@@ -284,16 +304,10 @@ lemma schwartz_time_slice_integrable (f : TestFunctionℂ) (t : ℝ) :
     have h1 := hf_decay (spacetimeOfTimeSpace t x)
     -- Need: 1 + ‖spacetimeOfTimeSpace t x‖ ≥ 1 + ‖x‖
     -- This follows from ‖spacetimeOfTimeSpace t x‖ ≥ ‖x‖.
-    have h_norm_ge : ‖spacetimeOfTimeSpace t x‖ ≥ ‖x‖ :=
-      spacetimeOfTimeSpace_norm_ge t x
-    have h_bracket_ge : 1 + ‖spacetimeOfTimeSpace t x‖ ≥ 1 + ‖x‖ := by linarith
-    have h_bracket_pos : 0 < 1 + ‖x‖ := by linarith [norm_nonneg x]
-    have h_pow_le : (1 + ‖x‖)^5 ≤ (1 + ‖spacetimeOfTimeSpace t x‖)^5 := by
-      apply pow_le_pow_left₀ (by linarith [norm_nonneg x]) h_bracket_ge
     calc ‖f (spacetimeOfTimeSpace t x)‖
         ≤ C / (1 + ‖spacetimeOfTimeSpace t x‖)^5 := h1
       _ ≤ C / (1 + ‖x‖)^5 := by
-          apply div_le_div_of_nonneg_left (le_of_lt hC_pos) (by positivity) h_pow_le
+          exact div_spacetime_decay_le_spatial_decay C (le_of_lt hC_pos) t x 5
 
   -- Apply Integrable.mono
   apply Integrable.mono h_dom_integrable
@@ -443,16 +457,10 @@ lemma schwartz_vanishing_ftc_decay (f : TestFunctionℂ)
       ‖fderiv ℝ f (spacetimeOfTimeSpace s x_sp)‖ ≤ C / (1 + ‖x_sp‖)^4 := by
     intros s _ _
     have h_decay := h_fderiv_decay (spacetimeOfTimeSpace s x_sp)
-    have h_norm_ge : ‖spacetimeOfTimeSpace s x_sp‖ ≥ ‖x_sp‖ := spacetimeOfTimeSpace_norm_ge s x_sp
-    have h1x : 0 < 1 + ‖x_sp‖ := by linarith [norm_nonneg x_sp]
-    have h1x_pow : 0 < (1 + ‖x_sp‖)^4 := pow_pos h1x 4
-    have h_bracket : (1 + ‖spacetimeOfTimeSpace s x_sp‖)^4 ≥ (1 + ‖x_sp‖)^4 := by
-      apply pow_le_pow_left₀ (by linarith [norm_nonneg x_sp])
-      linarith [h_norm_ge]
     calc ‖fderiv ℝ f (spacetimeOfTimeSpace s x_sp)‖
         ≤ C / (1 + ‖spacetimeOfTimeSpace s x_sp‖)^4 := h_decay
       _ ≤ C / (1 + ‖x_sp‖)^4 := by
-          apply div_le_div_of_nonneg_left (le_of_lt hC_pos) h1x_pow h_bracket
+          exact div_spacetime_decay_le_spatial_decay C (le_of_lt hC_pos) s x_sp 4
 
   -- Step 3: Apply 1D MVT
   -- F(s) = f(spacetimeOfTimeSpace s x_sp), path is linear: ... + s • e₀
@@ -604,16 +612,7 @@ theorem spatialNormIntegral_linear_bound (f : TestFunctionℂ)
   have h_decay_int : Integrable (fun x : SpatialCoords3 => 1 / (1 + ‖x‖)^4) volume := by
     have h_dim : (Module.finrank ℝ SpatialCoords3 : ℝ) < (4 : ℝ) := by
       simpa [SpatialCoords3, SpatialCoords, STDimension] using (show (2 : ℝ) < 4 by norm_num)
-    have h_int := integrable_one_add_norm (E := SpatialCoords3) (μ := volume) (r := 4) h_dim
-    convert h_int using 1
-    ext x
-    have h_pos : 0 < 1 + ‖x‖ := by linarith [norm_nonneg x]
-    calc
-      1 / (1 + ‖x‖) ^ 4 = ((1 + ‖x‖) ^ 4)⁻¹ := by rw [one_div]
-      _ = (1 + ‖x‖) ^ (-4 : ℝ) := by
-        rw [Real.rpow_neg (le_of_lt h_pos)]
-        congr 1
-        exact (Real.rpow_natCast (1 + ‖x‖) 4).symm
+    exact spatial_recip_one_add_norm_integrable 4 h_dim
 
   -- Step 3: Define the constant K = ∫ 1/(1+‖x‖)^4 dx (finite by h_decay_int)
   let K := ∫ x : SpatialCoords3, 1 / (1 + ‖x‖)^4

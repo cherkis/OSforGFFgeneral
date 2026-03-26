@@ -26,14 +26,14 @@ import OSforGFFin3D.Basic
 /-!
 ## Euclidean Group Actions for AQFT
 
-This file implements the Euclidean group E(4) = ℝ⁴ ⋊ O(4) and its actions on function spaces,
+This file implements the Euclidean group E(d) = ℝ^d ⋊ O(d) and its actions on function spaces,
 providing the mathematical foundation for the OS-2 (Euclidean invariance) axiom in the
 Osterwalder-Schrader framework.
 
 ### Key Definitions & Structures:
 
 **Euclidean Group Structure:**
-- `O4`: The orthogonal group O(4) as linear isometries on spacetime
+- `O4`: The orthogonal group of `SpaceTime` (the legacy name is retained)
 - `E`: Euclidean group structure with rotation `R : O4` and translation `t : SpaceTime`
 - `act`: Group action `g • x = R(x) + t` on spacetime points
 - Group instances: `Mul`, `One`, `Inv`, `Div`, and complete `Group` structure
@@ -68,7 +68,7 @@ Osterwalder-Schrader framework.
 This implements the geometric principle that quantum fields should be invariant under
 Euclidean motions (rotations + translations). The key properties are:
 
-1. **Group Structure**: E(4) acts properly on spacetime
+1. **Group Structure**: E(d) acts properly on spacetime
 2. **Measure Preservation**: Euclidean transformations preserve integration
 3. **Function Space Compatibility**: Actions extend to Schwartz and L² spaces
 4. **Continuity**: All actions are continuous linear transformations
@@ -76,13 +76,13 @@ Euclidean motions (rotations + translations). The key properties are:
 
 **Connection to OS-2 Axiom:**
 This provides the mathematical foundation for OS-2 (Euclidean invariance):
-For any Euclidean transformation g ∈ E(4) and generating functional Z[J]:
+For any Euclidean transformation g ∈ E(d) and generating functional Z[J]:
 ```
 Z[g • J] = Z[J]
 ```
 
 **Integration with AQFT Framework:**
-- Spacetime structure from `OSforGFF.Basic`
+- Spacetime structure from `OSforGFFin3D.Basic`
 - Test function actions for OS axiom verification
 - L² actions for Hilbert space constructions
 - Measure preservation for probability measures on field configurations
@@ -103,13 +103,14 @@ open scoped Real InnerProductSpace SchwartzMap
 
 namespace QFT
 
-/-- Orthogonal linear isometries of ℝ⁴ (the group O(4)).
-LinearIsometry is an orthogonal linear map, ie an element of O(4)-/
+/-- Orthogonal linear isometries of `SpaceTime`.
+The declaration name `O4` is retained from the original branch, but in this 3D project it
+denotes the orthogonal group acting on `SpaceTime`. -/
 abbrev O4 : Type :=
   LinearIsometry (RingHom.id ℝ) SpaceTime SpaceTime
 
 /-!  Euclidean group -/
-/-- Euclidean motion = rotation / reflection + translation. E= R^4 x O(4)-/
+/-- Euclidean motion = rotation / reflection + translation on spacetime. -/
 structure E where
   R : O4
   t : SpaceTime
@@ -236,31 +237,32 @@ instance : Group E where
     · simp [mul_R, inv_R, one_R, LinearIsometry.inv_comp]
     · simp [mul_t, inv_t, one_t]
 
-/-theorem ---------------------------------------------
+/- theorem ---------------------------------------------
 
-     For all Euclidean motions g,h and every point x ∈ ℝ⁴ we have
-         act (g * h) x  =  act g (act h x).
-     In words: the `act` map is a group action of E on spacetime.
+   For all Euclidean motions g,h and every point x in spacetime we have
+     act (g * h) x = act g (act h x).
+   In words: the `act` map is a group action of E on spacetime.
 
-     We also prove the inverse law
-         act g⁻¹ (act g x) = x.
+   We also prove the inverse law
+     act g⁻¹ (act g x) = x.
 -/
 
-/-for all Euclidean motions g and h and any point x ∈ ℝ⁴, pulling x forward by the product g*h equals pulling by h first and then by g.
-This is precisely the group-action law(𝑔ℎ)⁣⋅𝑥=𝑔.(ℎ. 𝑥)(gh)⋅x=g⋅(h⋅x).-/
+/- For all Euclidean motions g and h and any point x in spacetime, pulling x forward by the
+product g*h equals pulling by h first and then by g. This is precisely the group-action law
+(gh) • x = g • (h • x). -/
 
 @[simp] lemma act_mul_general (g h : E) (x : SpaceTime) :
     act (g * h) x = act g (act h x) := by
   -- destructure g and h so Lean can see their components
-/-cases on g/h: expands each motion into its components
-gR : O4 the rotation, gt : ℝ⁴ the translation.
-hR, ht likewise. That lets Lean see the literal structure of g*h.-/
+/- cases on g/h: expands each motion into its components
+gR : O4 the orthogonal part, gt : SpaceTime the translation.
+hR, ht likewise. That lets Lean see the literal structure of g*h. -/
   cases g with
   | mk gR gt =>
     cases h with
     | mk hR ht =>
       -- unfold everything; `mul_R`, `mul_t` give the components of g*h
-      /-simp does it all:
+      /- simp does it all:
 
 act unfolds to R x + t.
 
@@ -268,12 +270,13 @@ mul_R, mul_t give formulas for the rotation/translation of g*h.
 
 A handful of commutativity/associativity lemmas reorganise 𝑔𝑅(ℎ𝑅𝑥+ℎ𝑡)+𝑔𝑡gR(hRx+ht)+g
 t into the desired form.
-→ Goal reduces to reflexive equality, proof finished.-/
+→ Goal reduces to reflexive equality, proof finished. -/
       simp [act, mul_R, mul_t, add_comm, add_left_comm]
 
-/-Statement: applying g to x and then applying the inverse motion g⁻¹ returns you to x.
-This is the inverse law of a group action.-/
-/-Result: we’ve established that act : E → (ℝ⁴ → ℝ⁴) is a homomorphism into the function-composition monoid—exactly what OS-2 needs for its pull-back action on fields.-/
+/- Statement: applying g to x and then applying the inverse motion g⁻¹ returns you to x.
+This is the inverse law of a group action. -/
+/- Result: we’ve established that act : E → (SpaceTime → SpaceTime) is a homomorphism into the
+function-composition monoid, exactly what OS-2 needs for its pull-back action on fields. -/
 
 @[simp] lemma act_inv_general (g : E) (x : SpaceTime) :
     act g⁻¹ (act g x) = x := by
@@ -281,7 +284,8 @@ This is the inverse law of a group action.-/
   | mk gR gt =>
       -- unfold act, inverse components, then use linearity of gR
       simp [act, inv_R, inv_t, add_comm, add_assoc]
-/-Result: confirms that act really is a faithful left action of the Euclidean group; no hidden sign or composition mistakes remain.-/
+    /- Result: confirms that act really is a faithful left action of the Euclidean group; no hidden
+    sign or composition mistakes remain. -/
 
 
 /-! ### Lebesgue measure is invariant under every Euclidean motion --------- -/

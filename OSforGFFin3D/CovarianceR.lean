@@ -91,25 +91,34 @@ noncomputable def sqrtPropagatorMap (m : ℝ) (f : TestFunction) : SpaceTime →
     (SchwartzMap.fourierTransformCLM ℂ (toComplex f)) k
       * momentumWeightSqrt_mathlib m k
 
+private def sqrtPropagatorFourierRep (f : TestFunction) : TestFunctionℂ :=
+  SchwartzMap.fourierTransformCLM ℂ (toComplex f)
+
+private lemma sqrtPropagatorMap_aestronglyMeasurable (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
+    AEStronglyMeasurable (sqrtPropagatorMap m f) volume := by
+  classical
+  let F := sqrtPropagatorFourierRep f
+  have hF_meas : AEStronglyMeasurable F volume := (F.memLp 2 volume).1
+  have h_weight_meas : AEStronglyMeasurable (momentumWeightSqrt_mathlib m) volume :=
+    (momentumWeightSqrt_mathlib_measurable (m := m)).aestronglyMeasurable
+  have h_weight_C : AEStronglyMeasurable (fun k => (momentumWeightSqrt_mathlib m k : ℂ)) volume :=
+    Complex.continuous_ofReal.comp_aestronglyMeasurable h_weight_meas
+  have h_mul : AEStronglyMeasurable (fun k => F k * (momentumWeightSqrt_mathlib m k : ℂ)) volume :=
+    hF_meas.mul h_weight_C
+  refine h_mul.congr ?_
+  filter_upwards with k
+  unfold F sqrtPropagatorFourierRep sqrtPropagatorMap
+  rfl
+
 /-- The sqrtPropagatorMap is square-integrable. -/
 lemma sqrtPropagatorMap_sq_integrable (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
     Integrable (fun k => ‖sqrtPropagatorMap m f k‖ ^ 2) volume := by
   classical
-  set F := SchwartzMap.fourierTransformCLM ℂ (toComplex f)
+  let F := sqrtPropagatorFourierRep f
   have hF_sq : Integrable (fun k => ‖F k‖ ^ 2) volume :=
     schwartz_L2_integrable F
-  have hF_meas : AEStronglyMeasurable F volume := (F.memLp 2 volume).1
-  have h_weight_meas : AEStronglyMeasurable (momentumWeightSqrt_mathlib m) volume :=
-    (momentumWeightSqrt_mathlib_measurable (m := m)).aestronglyMeasurable
-  have h_map_meas : AEStronglyMeasurable (sqrtPropagatorMap m f) volume := by
-    have h_weight_C : AEStronglyMeasurable (fun k => (momentumWeightSqrt_mathlib m k : ℂ)) volume :=
-      Complex.continuous_ofReal.comp_aestronglyMeasurable h_weight_meas
-    have : AEStronglyMeasurable (fun k => F k * (momentumWeightSqrt_mathlib m k : ℂ)) volume :=
-      hF_meas.mul h_weight_C
-    refine AEStronglyMeasurable.congr this ?_
-    filter_upwards with k
-    unfold sqrtPropagatorMap
-    rfl
+  have h_map_meas : AEStronglyMeasurable (sqrtPropagatorMap m f) volume :=
+    sqrtPropagatorMap_aestronglyMeasurable m f
   have h_sq_meas : AEStronglyMeasurable (fun k => ‖sqrtPropagatorMap m f k‖ ^ 2) volume :=
     (Continuous.comp_aestronglyMeasurable (by fun_prop) h_map_meas).pow 2
   have h_dom_integrable : Integrable (fun k => (1 / m) ^ 2 * ‖F k‖ ^ 2) volume := by
@@ -148,19 +157,8 @@ lemma sqrtPropagatorMap_sq_integrable (m : ℝ) [Fact (0 < m)] (f : TestFunction
 /-- The weighted Fourier representative lies in L². -/
 lemma sqrtPropagatorMap_memLp (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
     MemLp (sqrtPropagatorMap m f) 2 volume := by
-  classical
-  set F := SchwartzMap.fourierTransformCLM ℂ (toComplex f)
-  have hF_meas : AEStronglyMeasurable F volume := (F.memLp 2 volume).1
-  have h_weight_meas : AEStronglyMeasurable (momentumWeightSqrt_mathlib m) volume :=
-    (momentumWeightSqrt_mathlib_measurable (m := m)).aestronglyMeasurable
-  have h_weight_C : AEStronglyMeasurable (fun k => (momentumWeightSqrt_mathlib m k : ℂ)) volume :=
-    Complex.continuous_ofReal.comp_aestronglyMeasurable h_weight_meas
-  have h_meas_mul : AEStronglyMeasurable (fun k => F k * (momentumWeightSqrt_mathlib m k : ℂ)) volume :=
-    hF_meas.mul h_weight_C
   have h_meas : AEStronglyMeasurable (sqrtPropagatorMap m f) volume :=
-    h_meas_mul.congr <| Filter.Eventually.of_forall fun k => by
-      unfold sqrtPropagatorMap
-      rfl
+    sqrtPropagatorMap_aestronglyMeasurable m f
   have h_sq := sqrtPropagatorMap_sq_integrable (m := m) (f := f)
   exact (memLp_two_iff_integrable_sq_norm h_meas).2 h_sq
 
@@ -335,21 +333,9 @@ lemma embeddingMapCLM_apply (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
     (h_mul''.trans h_sqrt).trans h_lp.symm
   exact Lp.ext_iff.mpr h_ae
 
-/-- Existence of a linear embedding realizing the free covariance as a squared norm.
-    This is the theorem version (not axiom) of sqrtPropagatorEmbedding.
-    The target space H is an inner product space (L² is a Hilbert space).
-    Note: InnerProductSpace ℝ H implies NormedSpace ℝ H via InnerProductSpace.toNormedSpace. -/
-theorem sqrtPropagatorEmbedding (m : ℝ) [Fact (0 < m)] :
-  ∃ (H : Type) (_ : NormedAddCommGroup H) (_ : InnerProductSpace ℝ H)
-    (T : TestFunction →ₗ[ℝ] H),
-    ∀ f : TestFunction, freeCovarianceFormR m f f = ‖T f‖^2 := by
-  refine ⟨TargetHilbertSpace m, inferInstance, inferInstance, embeddingMap m, ?_⟩
-  intro f
-  rw [← sqrtPropagatorMap_norm_eq_covariance]
-  unfold sqrtPropagatorMap_norm_sq
-  symm
+private lemma embeddingMap_norm_sq_core (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
+    ‖embeddingMap m f‖ ^ 2 = ∫ (k : SpaceTime), ‖sqrtPropagatorMap m f k‖ ^ 2 ∂volume := by
   have h_memLp := sqrtPropagatorMap_memLp (m := m) (f := f)
-  show ‖embeddingMap m f‖ ^ 2 = ∫ (k : SpaceTime), ‖sqrtPropagatorMap m f k‖ ^ 2
   change ‖h_memLp.toLp (sqrtPropagatorMap m f)‖ ^ 2 = _
   have h_norm : ‖h_memLp.toLp (sqrtPropagatorMap m f)‖ = ENNReal.toReal (eLpNorm (sqrtPropagatorMap m f) 2 volume) :=
     MeasureTheory.Lp.norm_toLp (sqrtPropagatorMap m f) h_memLp
@@ -369,7 +355,10 @@ theorem sqrtPropagatorEmbedding (m : ℝ) [Fact (0 < m)] :
               = (eLpNorm (sqrtPropagatorMap m f) 2 volume) ^ (2 : ℝ) := h_pow_cast
             _ = ∫⁻ (x : SpaceTime), ‖sqrtPropagatorMap m f x‖ₑ ^ 2 := h_eq
             _ = ∫⁻ (k : SpaceTime), (‖sqrtPropagatorMap m f k‖₊ : ENNReal) ^ 2 := by
-              refine lintegral_congr_ae ?_; filter_upwards with k; simp only [enorm]; norm_cast
+              refine lintegral_congr_ae ?_
+              filter_upwards with k
+              simp only [enorm]
+              norm_cast
     _ = ∫ k, ‖sqrtPropagatorMap m f k‖ ^ 2 := by
           have h_ae_meas := h_integrable.aestronglyMeasurable
           have h_nonneg : ∀ᵐ k ∂volume, 0 ≤ ‖sqrtPropagatorMap m f k‖ ^ 2 :=
@@ -383,51 +372,27 @@ theorem sqrtPropagatorEmbedding (m : ℝ) [Fact (0 < m)] :
           conv_rhs => arg 1; rw [← coe_nnnorm, ENNReal.ofReal_coe_nnreal]
           conv_rhs => arg 2; rw [← coe_nnnorm, ENNReal.ofReal_coe_nnreal]
 
+/-- Existence of a linear embedding realizing the free covariance as a squared norm.
+    This is the theorem version (not axiom) of sqrtPropagatorEmbedding.
+    The target space H is an inner product space (L² is a Hilbert space).
+    Note: InnerProductSpace ℝ H implies NormedSpace ℝ H via InnerProductSpace.toNormedSpace. -/
+theorem sqrtPropagatorEmbedding (m : ℝ) [Fact (0 < m)] :
+  ∃ (H : Type) (_ : NormedAddCommGroup H) (_ : InnerProductSpace ℝ H)
+    (T : TestFunction →ₗ[ℝ] H),
+    ∀ f : TestFunction, freeCovarianceFormR m f f = ‖T f‖^2 := by
+  refine ⟨TargetHilbertSpace m, inferInstance, inferInstance, embeddingMap m, ?_⟩
+  intro f
+  rw [← sqrtPropagatorMap_norm_eq_covariance]
+  unfold sqrtPropagatorMap_norm_sq
+  symm
+  exact embeddingMap_norm_sq_core (m := m) (f := f)
+
 /-! ## Auxiliary Lemmas for Continuity -/
 
 /-- Squared L² norm of the embedded function in terms of the pointwise integral. -/
 lemma embeddingMap_norm_sq (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
     ‖embeddingMap m f‖ ^ 2 = ∫ (k : SpaceTime), ‖sqrtPropagatorMap m f k‖ ^ 2 ∂volume := by
-  have h_memLp := sqrtPropagatorMap_memLp (m := m) (f := f)
-  change ‖h_memLp.toLp (sqrtPropagatorMap m f)‖ ^ 2 = _
-  have h_norm : ‖h_memLp.toLp (sqrtPropagatorMap m f)‖
-      = ENNReal.toReal (eLpNorm (sqrtPropagatorMap m f) 2 volume) :=
-    MeasureTheory.Lp.norm_toLp (sqrtPropagatorMap m f) h_memLp
-  rw [h_norm]
-  have h_integrable := sqrtPropagatorMap_sq_integrable (m := m) (f := f)
-  have h_two_ne : (2 : NNReal) ≠ 0 := by norm_num
-  calc
-    (ENNReal.toReal (eLpNorm (sqrtPropagatorMap m f) 2 volume)) ^ 2
-        = ENNReal.toReal ((eLpNorm (sqrtPropagatorMap m f) 2 volume) ^ 2) := by
-            symm; exact ENNReal.toReal_pow _ 2
-    _ = ENNReal.toReal (∫⁻ k, (‖sqrtPropagatorMap m f k‖₊ : ENNReal) ^ 2) := by
-            congr 1
-            have h_eq := MeasureTheory.eLpNorm_nnreal_pow_eq_lintegral
-              (f := sqrtPropagatorMap m f) (p := 2) (μ := volume) h_two_ne
-            simp only [ENNReal.coe_ofNat, NNReal.coe_ofNat] at h_eq
-            have h_pow_cast : (eLpNorm (sqrtPropagatorMap m f) 2 volume) ^ (2 : ℕ)
-                = (eLpNorm (sqrtPropagatorMap m f) 2 volume) ^ (2 : ℝ) := by
-              simp [pow_two]
-            calc (eLpNorm (sqrtPropagatorMap m f) 2 volume) ^ (2 : ℕ)
-                = (eLpNorm (sqrtPropagatorMap m f) 2 volume) ^ (2 : ℝ) := h_pow_cast
-              _ = ∫⁻ (x : SpaceTime), ‖sqrtPropagatorMap m f x‖ₑ ^ 2 := h_eq
-              _ = ∫⁻ (k : SpaceTime), (‖sqrtPropagatorMap m f k‖₊ : ENNReal) ^ 2 := by
-                refine lintegral_congr_ae ?_
-                filter_upwards with k
-                simp only [enorm]
-                norm_cast
-    _ = ∫ k, ‖sqrtPropagatorMap m f k‖ ^ 2 := by
-            have h_ae_meas := h_integrable.aestronglyMeasurable
-            have h_nonneg : ∀ᵐ k ∂volume, 0 ≤ ‖sqrtPropagatorMap m f k‖ ^ 2 :=
-              Filter.Eventually.of_forall fun k => sq_nonneg _
-            rw [MeasureTheory.integral_eq_lintegral_of_nonneg_ae h_nonneg h_ae_meas]
-            congr 1
-            refine lintegral_congr_ae ?_
-            filter_upwards with k
-            rw [ENNReal.ofReal_pow (norm_nonneg _)]
-            simp only [pow_two]
-            conv_rhs => arg 1; rw [← coe_nnnorm, ENNReal.ofReal_coe_nnreal]
-            conv_rhs => arg 2; rw [← coe_nnnorm, ENNReal.ofReal_coe_nnreal]
+  exact embeddingMap_norm_sq_core (m := m) (f := f)
 
 lemma freeCovarianceFormR_eq_normSq (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
     freeCovarianceFormR m f f = ‖embeddingMap m f‖ ^ 2 := by

@@ -189,6 +189,45 @@ lemma setIntegral_L2_bound (μ : Measure Ω) [SFinite μ] (M_sq T : ℝ) (hT : T
         rw [setIntegral_const, Measure.real, Real.volume_Icc]
         simp [ENNReal.toReal_ofReal (le_of_lt hT), smul_eq_mul]
 
+private def timeSliceSqIntegrand (A : ℝ → Ω → ℂ) : ℝ × Ω → ℝ :=
+  fun p => ‖A p.1 p.2‖^2
+
+private lemma timeSliceSq_aestronglyMeasurable (μ : Measure Ω) [SFinite μ]
+    (A : ℝ → Ω → ℂ) (T : ℝ)
+    (h_joint_meas : AEStronglyMeasurable (Function.uncurry A)
+      ((volume.restrict (Icc 0 T)).prod μ)) :
+    AEStronglyMeasurable (timeSliceSqIntegrand A) ((volume.restrict (Icc 0 T)).prod μ) :=
+  h_joint_meas.norm.pow 2
+
+private lemma ae_integrableOn_timeSliceSq_of_prodIntegrable (μ : Measure Ω) [SFinite μ]
+    (A : ℝ → Ω → ℂ) (T : ℝ)
+    (h_joint_meas : AEStronglyMeasurable (Function.uncurry A)
+      ((volume.restrict (Icc 0 T)).prod μ))
+    (h_prod_int : Integrable (timeSliceSqIntegrand A) ((volume.restrict (Icc 0 T)).prod μ)) :
+    ∀ᵐ (ω : Ω) ∂μ, IntegrableOn (fun s => ‖A s ω‖^2) (Icc 0 T) volume := by
+  have h_sq_meas := timeSliceSq_aestronglyMeasurable μ A T h_joint_meas
+  have h_swap : Integrable (timeSliceSqIntegrand A ∘ Prod.swap)
+      (μ.prod (volume.restrict (Icc 0 T))) := h_prod_int.swap
+  rw [show timeSliceSqIntegrand A ∘ Prod.swap = fun p : Ω × ℝ => ‖A p.2 p.1‖^2 by
+    ext p
+    rfl] at h_swap
+  have h_meas_swap : AEStronglyMeasurable (fun p : Ω × ℝ => ‖A p.2 p.1‖^2)
+      (μ.prod (volume.restrict (Icc 0 T))) := h_sq_meas.prod_swap
+  exact ((integrable_prod_iff h_meas_swap).mp h_swap).1
+
+private lemma timeSliceSq_rightMarginal_integrable (μ : Measure Ω) [SFinite μ]
+    (A : ℝ → Ω → ℂ) (T c : ℝ)
+    (h_prod_int : Integrable (timeSliceSqIntegrand A) ((volume.restrict (Icc 0 T)).prod μ)) :
+    Integrable (fun ω => c * ∫ (s : ℝ) in Icc 0 T, ‖A s ω‖^2) μ := by
+  exact h_prod_int.integral_prod_right.const_mul c
+
+private lemma integrable_sq_norm_of_memLp_two (μ : Measure Ω) [SFinite μ]
+    (f : Ω → ℂ) (hf : MemLp f 2 μ) :
+    Integrable (fun ω => ‖f ω‖^2) μ := by
+  have h := hf.integrable_norm_rpow (by simp : (2 : ℝ≥0∞) ≠ 0) (by simp : (2 : ℝ≥0∞) ≠ ⊤)
+  convert h using 2
+  simp [ENNReal.toReal_ofNat]
+
 /-- **L² bound for time averages** (Theorem, was Axiom 3)
 
 For A : ℝ → Ω → ℂ with uniform L² bound ∫_Ω ‖A_s‖² dμ ≤ M_sq for all s ∈ [0,T],
@@ -227,24 +266,11 @@ theorem L2_time_average_bound (μ : Measure Ω) [SFinite μ]
   -/
   -- Setup integrability for integral_mono
   have h_rhs_int : Integrable (fun ω => (1/T : ℝ) * ∫ (s : ℝ) in Icc 0 T, ‖A s ω‖^2) μ := by
-    have h_margin := h_prod_int.integral_prod_right
-    exact h_margin.const_mul (1/T)
+    exact timeSliceSq_rightMarginal_integrable μ A T (1 / T) h_prod_int
 
   -- From product integrability, get a.e. slice integrability
-  have h_sq_meas : AEStronglyMeasurable (fun p : ℝ × Ω => ‖A p.1 p.2‖^2)
-      ((volume.restrict (Icc 0 T)).prod μ) := h_joint_meas.norm.pow 2
   have h_ae_slice_int : ∀ᵐ (ω : Ω) ∂μ, IntegrableOn (fun s => ‖A s ω‖^2) (Icc 0 T) volume := by
-    -- Use Integrable.swap to get integrability on the swapped product space
-    have h_swap : Integrable ((fun p : ℝ × Ω => ‖A p.1 p.2‖^2) ∘ Prod.swap)
-        (μ.prod (volume.restrict (Icc 0 T))) := h_prod_int.swap
-    -- The swapped function is (ω, s) ↦ ‖A s ω‖²
-    have h_eq : (fun p : ℝ × Ω => ‖A p.1 p.2‖^2) ∘ Prod.swap = fun p : Ω × ℝ => ‖A p.2 p.1‖^2 := rfl
-    rw [h_eq] at h_swap
-    -- Now apply integrable_prod_iff to get a.e. slice integrability
-    -- Note: prod_swap takes AEStronglyMeasurable f (ν.prod μ) to (f ∘ swap) on (μ.prod ν)
-    have h_meas_swap : AEStronglyMeasurable (fun p : Ω × ℝ => ‖A p.2 p.1‖^2)
-        (μ.prod (volume.restrict (Icc 0 T))) := h_sq_meas.prod_swap
-    exact ((integrable_prod_iff h_meas_swap).mp h_swap).1
+    exact ae_integrableOn_timeSliceSq_of_prodIntegrable μ A T h_joint_meas h_prod_int
 
   have h_lhs_int : Integrable (fun ω => ‖(1/T : ℂ) * ∫ (s : ℝ) in Icc 0 T, A s ω‖^2) μ := by
     have h_meas_sq := h_avg_meas.norm.pow 2
@@ -314,21 +340,19 @@ theorem memLp_prod_of_uniform_slicewise_bound (μ : Measure Ω) [SFinite μ]
      A constant function is integrable on bounded [0,T]
   -/
   -- First show ‖A‖² is integrable on product
-  have h_sq_int : Integrable (fun p : ℝ × Ω => ‖A p.1 p.2‖^2)
+  have h_sq_int : Integrable (timeSliceSqIntegrand A)
       ((volume.restrict (Icc 0 T)).prod μ) := by
-    have h_sq_meas : AEStronglyMeasurable (fun p : ℝ × Ω => ‖A p.1 p.2‖^2)
-        ((volume.restrict (Icc 0 T)).prod μ) := h_meas.norm.pow 2
+    have h_sq_meas := timeSliceSq_aestronglyMeasurable μ A T h_meas
     rw [integrable_prod_iff h_sq_meas]
     constructor
     · -- Slice integrability: ∀ᵐ s, Integrable (fun ω => ‖A s ω‖²) μ
       filter_upwards with s
-      have h := (h_memLp s).integrable_norm_rpow (by simp : (2 : ℝ≥0∞) ≠ 0) (by simp : (2 : ℝ≥0∞) ≠ ⊤)
-      convert h using 2
-      simp [ENNReal.toReal_ofNat]
+      exact integrable_sq_norm_of_memLp_two μ (A s) (h_memLp s)
     · -- Integral of slices is constant, hence integrable on bounded [0,T]
-      have h_eq : (fun s => ∫ (ω : Ω), ‖‖A s ω‖^2‖ ∂μ) = fun _ => ∫ ω, ‖A 0 ω‖^2 ∂μ := by
+      have h_eq : (fun s => ∫ (ω : Ω), ‖timeSliceSqIntegrand A (s, ω)‖ ∂μ) =
+          fun _ => ∫ ω, ‖A 0 ω‖^2 ∂μ := by
         ext s
-        simp only [Real.norm_of_nonneg (sq_nonneg _)]
+        simp only [timeSliceSqIntegrand, Real.norm_of_nonneg (sq_nonneg _)]
         exact h_uniform s
       rw [h_eq]
       have h_vol : (volume : Measure ℝ) (Icc 0 T) ≠ ⊤ := by
@@ -336,7 +360,7 @@ theorem memLp_prod_of_uniform_slicewise_bound (μ : Measure Ω) [SFinite μ]
       exact integrableOn_const h_vol
   -- Now use the integrability to get MemLp 2
   rw [memLp_two_iff_integrable_sq_norm h_meas]
-  exact h_sq_int
+  simpa [timeSliceSqIntegrand] using h_sq_int
 
 /-! ## Time Average is in L² (Theorem 2)
 
@@ -368,25 +392,15 @@ theorem time_average_memLp_two (μ : Measure Ω) [SFinite μ]
 
   -- 2. The RHS bound (1/T) * ∫ ‖A_s ω‖² is integrable (marginal of product)
   have h_rhs_int : Integrable (fun ω => (1/T : ℝ) * ∫ (s : ℝ) in Icc 0 T, ‖A s ω‖^2) μ := by
-    have h_margin := h_prod_int.integral_prod_right
-    exact h_margin.const_mul (1/T)
+    exact timeSliceSq_rightMarginal_integrable μ A T (1 / T) h_prod_int
 
   -- 3. Use Integrable.mono with the pointwise bound
   have h_meas_sq : AEStronglyMeasurable (fun ω => ‖(1/T : ℂ) * ∫ (s : ℝ) in Icc 0 T, A s ω‖^2) μ :=
     h_avg_meas.norm.pow 2
 
   -- From product integrability, get a.e. slice integrability via Fubini (in ω direction)
-  have h_sq_meas : AEStronglyMeasurable (fun p : ℝ × Ω => ‖A p.1 p.2‖^2)
-      ((volume.restrict (Icc 0 T)).prod μ) := h_joint_meas.norm.pow 2
   have h_ae_slice_int : ∀ᵐ (ω : Ω) ∂μ, IntegrableOn (fun s => ‖A s ω‖^2) (Icc 0 T) volume := by
-    -- Use Integrable.swap to get integrability on the swapped product space
-    have h_swap : Integrable ((fun p : ℝ × Ω => ‖A p.1 p.2‖^2) ∘ Prod.swap)
-        (μ.prod (volume.restrict (Icc 0 T))) := h_prod_int.swap
-    have h_eq : (fun p : ℝ × Ω => ‖A p.1 p.2‖^2) ∘ Prod.swap = fun p : Ω × ℝ => ‖A p.2 p.1‖^2 := rfl
-    rw [h_eq] at h_swap
-    have h_meas_swap : AEStronglyMeasurable (fun p : Ω × ℝ => ‖A p.2 p.1‖^2)
-        (μ.prod (volume.restrict (Icc 0 T))) := h_sq_meas.prod_swap
-    exact ((integrable_prod_iff h_meas_swap).mp h_swap).1
+    exact ae_integrableOn_timeSliceSq_of_prodIntegrable μ A T h_joint_meas h_prod_int
 
   apply h_rhs_int.mono h_meas_sq
   -- Use a.e. slice integrability for the pointwise bound

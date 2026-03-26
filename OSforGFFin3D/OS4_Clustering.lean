@@ -180,6 +180,38 @@ lemma gff_generating_norm_le_one_real (m : ℝ) [Fact (0 < m)] (f : TestFunction
       ≤ Real.exp 0 := by apply Real.exp_le_exp.mpr; nlinarith
     _ = 1 := Real.exp_zero
 
+private theorem freeCovarianceKernel_measurable_locallyIntegrable (m : ℝ) [Fact (0 < m)] :
+    Measurable (freeCovarianceKernel m) ∧
+      MeasureTheory.LocallyIntegrable (freeCovarianceKernel m) MeasureTheory.volume := by
+  have hm : 0 < m := Fact.out
+  constructor
+  · exact measurable_of_continuousOn_compl_singleton 0 (freeCovarianceKernel_continuousOn m hm)
+  · exact (freeCovarianceKernel_integrable m hm).locallyIntegrable
+
+private theorem freeCovarianceKernel_exponential_decay_data (m : ℝ) [Fact (0 < m)] :
+    ∃ C_exp > 0,
+      ContinuousOn (freeCovarianceKernel m) (Metric.closedBall (0 : SpaceTime) (1 / m))ᶜ ∧
+      ∀ z : SpaceTime, ‖z‖ ≥ 1 / m → |freeCovarianceKernel m z| ≤ C_exp * Real.exp (-m * ‖z‖) := by
+  have hm : 0 < m := Fact.out
+  let C_exp :=
+    ((1 / ((4 * Real.pi) ^ (3 / 2 : ℝ))) *
+      (2 * (2 * m^2) ^ (1 / 2 : ℝ)) *
+      (Real.sinh 1 + 2))
+  refine ⟨C_exp, ?_, ?_, ?_⟩
+  · simp only [C_exp]
+    positivity
+  · exact (freeCovarianceKernel_continuousOn m hm).mono fun z hz => by
+      simp only [Set.mem_compl_iff, Metric.mem_closedBall, dist_zero_right, not_le] at hz
+      exact norm_ne_zero_iff.mp (ne_of_gt (lt_of_lt_of_le (by positivity) (le_of_lt hz)))
+  · intro z hz
+    have hmz : m * ‖z‖ ≥ 1 := by
+      calc m * ‖z‖ ≥ m * (1 / m) := mul_le_mul_of_nonneg_left hz (le_of_lt hm)
+        _ = 1 := by field_simp
+    have h_norm_eq : ‖(0 : SpaceTime) - z‖ = ‖z‖ := by simp
+    have h := freeCovariance_exponential_bound m hm 0 z (by rw [h_norm_eq]; exact hmz)
+    simp only [freeCovarianceKernel, freeCovariance, h_norm_eq] at h ⊢
+    exact h
+
 /-! ## Technical Lemma for OS4 (Real Test Functions) -/
 
 /-- Technical lemma: OS4 bound from cross-term decay for real test functions.
@@ -353,12 +385,7 @@ theorem schwartz_cross_covariance_decay_real (m : ℝ) [Fact (0 < m)]
 
   -- Step 3: Apply the proven theorem for bilinear translation decay
   -- Note: measurability follows from continuity on {0}ᶜ
-  have hK_meas : Measurable (freeCovarianceKernel m) :=
-    measurable_of_continuousOn_compl_singleton 0 (freeCovarianceKernel_continuousOn m hm)
-
-  -- LocallyIntegrable: follows from global integrability
-  have hK_loc : MeasureTheory.LocallyIntegrable (freeCovarianceKernel m) MeasureTheory.volume :=
-    (freeCovarianceKernel_integrable m hm).locallyIntegrable
+  obtain ⟨hK_meas, hK_loc⟩ := freeCovarianceKernel_measurable_locallyIntegrable m
 
   -- ContinuousOn outside the R₀-ball (where R₀ = 1): follows from ContinuousOn {z ≠ 0}
   have hK_cont : ContinuousOn (freeCovarianceKernel m) (Metric.closedBall (0 : SpaceTime) 1)ᶜ := by
@@ -598,9 +625,11 @@ lemma timeTranslationSchwartzℂ_neg_eq_sub (s : ℝ) (g : TestFunctionℂ) (y :
 /-- freeCovariance is translation-invariant: C(x,y) = C(0, x-y) = freeCovarianceKernel(x-y). -/
 lemma freeCovariance_eq_kernel (m : ℝ) (x y : SpaceTime) :
     freeCovariance m x y = freeCovarianceKernel m (x - y) := by
-  -- freeCovariance m x y = freeCovarianceBessel m x y = (m / (4π²r)) K₁(mr) where r = ‖x - y‖
+  -- freeCovariance m x y = freeCovarianceBessel m x y
+  --   = (1 / ((4π)^(3/2))) * (2 * (2*m/r)^(1/2) * besselKhalf (m*r)) where r = ‖x - y‖
   -- freeCovarianceKernel m z = freeCovariance m 0 z = freeCovarianceBessel m 0 z
-  --   = (m / (4π²r')) K₁(mr') where r' = ‖0 - z‖ = ‖z‖
+  --   = (1 / ((4π)^(3/2))) * (2 * (2*m/r')^(1/2) * besselKhalf (m*r'))
+  --     where r' = ‖0 - z‖ = ‖z‖
   -- For z = x - y: r' = ‖x - y‖ = r
   unfold freeCovarianceKernel freeCovariance freeCovarianceBessel
   -- Goal: ‖x - y‖ = ‖0 - (x - y)‖
@@ -637,35 +666,10 @@ theorem gaussianFreeField_satisfies_OS4_PolynomialClustering (m : ℝ) [Fact (0 
   intro f g
   -- Step 1: Get kernel properties for applying the decay axiom
   have hm : 0 < m := Fact.out
-  have hK_meas : Measurable (freeCovarianceKernel m) :=
-    measurable_of_continuousOn_compl_singleton 0 (freeCovarianceKernel_continuousOn m hm)
-  have hK_loc : MeasureTheory.LocallyIntegrable (freeCovarianceKernel m) MeasureTheory.volume :=
-    (freeCovarianceKernel_integrable m hm).locallyIntegrable
+  obtain ⟨hK_meas, hK_loc⟩ := freeCovarianceKernel_measurable_locallyIntegrable m
 
   -- Step 2: Get exponential decay bound for the kernel
-  -- From freeCovariance_exponential_bound': |C(u,v)| ≤ c·e^{-m‖u-v‖} for m‖u-v‖ ≥ 1
-  -- The constant is the 3D prefactor from `freeCovariance_exponential_bound`.
-  let C_exp :=
-    ((1 / ((4 * Real.pi) ^ (3 / 2 : ℝ))) *
-      (2 * (2 * m^2) ^ (1 / 2 : ℝ)) *
-      (Real.sinh 1 + 2))
-  have hC_exp_pos : C_exp > 0 := by
-    simp only [C_exp]; positivity
-
-  have hK_cont : ContinuousOn (freeCovarianceKernel m) (Metric.closedBall (0 : SpaceTime) (1/m))ᶜ :=
-    (freeCovarianceKernel_continuousOn m hm).mono fun z hz => by
-      simp only [Set.mem_compl_iff, Metric.mem_closedBall, dist_zero_right, not_le] at hz
-      exact norm_ne_zero_iff.mp (ne_of_gt (lt_of_lt_of_le (by positivity) (le_of_lt hz)))
-
-  -- Convert exponential bound from freeCovariance to freeCovarianceKernel
-  have hK_decay : ∀ z : SpaceTime, ‖z‖ ≥ 1/m → |freeCovarianceKernel m z| ≤ C_exp * Real.exp (-m * ‖z‖) := by
-    intro z hz
-    have hmz : m * ‖z‖ ≥ 1 := by
-      calc m * ‖z‖ ≥ m * (1/m) := mul_le_mul_of_nonneg_left hz (le_of_lt hm)
-        _ = 1 := by field_simp
-    have h_norm_eq : ‖(0 : SpaceTime) - z‖ = ‖z‖ := by simp
-    have h := freeCovariance_exponential_bound m hm 0 z (by rw [h_norm_eq]; exact hmz)
-    simp only [freeCovarianceKernel, freeCovariance, h_norm_eq] at h ⊢; exact h
+  obtain ⟨C_exp, hC_exp_pos, hK_cont, hK_decay⟩ := freeCovarianceKernel_exponential_decay_data m
 
   -- Step 3: Apply the quantitative decay axiom
   have ⟨c_decay, hc_nonneg, hBound⟩ := schwartz_bilinear_translation_decay_polynomial_proof

@@ -2,7 +2,7 @@
 
 ## Mathematical Background
 
-The master theorem assembles the individual axiom proofs into a single statement: the Gaussian Free Field with mass $m > 0$ in 4-dimensional Euclidean spacetime satisfies all Osterwalder-Schrader axioms. This is the culmination of the formalization, establishing that the free scalar field defines a consistent Euclidean QFT that can be analytically continued to a physical relativistic quantum field theory via the OS reconstruction theorem.
+The master theorem assembles the individual axiom proofs into a single statement: the Gaussian Free Field with mass $m > 0$ in 3-dimensional Euclidean spacetime satisfies all Osterwalder-Schrader axioms. This is the culmination of the formalization, establishing that the free scalar field defines a consistent Euclidean QFT that can be analytically continued to a physical relativistic quantum field theory via the OS reconstruction theorem.
 
 ### Statement
 
@@ -10,7 +10,7 @@ For any mass parameter $m > 0$, the GFF probability measure $\mu_{\mathrm{GFF}}(
 
 - **OS0** (Analyticity): The generating functional is analytic in the test functions.
 - **OS1** (Regularity): The generating functional satisfies exponential bounds.
-- **OS2** (Euclidean Invariance): The measure is invariant under 4D Euclidean transformations.
+- **OS2** (Euclidean Invariance): The measure is invariant under Euclidean motions of the 3D spacetime branch.
 - **OS3** (Reflection Positivity): The quadratic form $\sum_{ij} c_i c_j\  \mathrm{Re}\left(Z[f_i - \Theta f_j]\right) \geq 0$.
 - **OS4** (Clustering): Distant test functions become statistically independent.
 - **OS4** (Ergodicity): Time averages of generating-function observables converge to ensemble averages.
@@ -19,13 +19,13 @@ For any mass parameter $m > 0$, the GFF probability measure $\mu_{\mathrm{GFF}}(
 
 | Declaration | File | Description |
 |-------------|------|-------------|
-| [`gaussianFreeField_satisfies_all_OS_axioms`](../OSforGFF/GFFmaster.lean#L48) | `GFFmaster.lean` | **Master theorem**: conjunction of all OS axioms |
-| [`QFT.gaussianFreeField_satisfies_OS0`](../OSforGFF/OS0_GFF.lean#L1120) | `OS0_GFF.lean` | OS0: $z \mapsto Z[\sum z_i J_i]$ analytic |
-| [`gaussianFreeField_satisfies_OS1_revised`](../OSforGFF/OS1_GFF.lean#L528) | `OS1_GFF.lean` | OS1: $\lvert Z[f]\rvert \le e^{c\lVert f\rVert_2^2}$ |
-| [`gaussian_satisfies_OS2`](../OSforGFF/GaussianFreeField.lean#L219) | `GaussianFreeField.lean` | OS2: $Z[g\cdot f] = Z[f]$ for $g \in E(4)$ |
-| [`QFT.gaussianFreeField_OS3_real`](../OSforGFF/OS3_GFF.lean#L509) | `OS3_GFF.lean` | OS3: $\sum c_ic_j\ \mathrm{Re}\left(Z[f_i-\Theta f_j]\right) \ge 0$ |
-| [`QFT.gaussianFreeField_satisfies_OS4`](../OSforGFF/OS4_Clustering.lean#L475) | `OS4_Clustering.lean` | OS4: $Z[f+T_ag] \to Z[f]Z[g]$ as $\lVert a\rVert\to\infty$ |
-| [`OS4_PolynomialClustering_implies_OS4_Ergodicity`](../OSforGFF/OS4_Ergodicity.lean#L1339) | `OS4_Ergodicity.lean` | OS4 Ergodicity: $\frac{1}{T}\int_0^T A(T_s\phi)\ ds \xrightarrow{L^2} \mathbb{E}[A]$ |
+| [`gaussianFreeField_satisfies_all_OS_axioms`](../OSforGFFin3D/GFFmaster.lean) | `GFFmaster.lean` | **Master theorem**: conjunction of all OS axioms |
+| [`QFT.gaussianFreeField_satisfies_OS0`](../OSforGFFin3D/OS0_GFF.lean) | `OS0_GFF.lean` | OS0: $z \mapsto Z[\sum z_i J_i]$ analytic |
+| [`gaussianFreeField_satisfies_OS1_revised`](../OSforGFFin3D/OS1_GFF.lean) | `OS1_GFF.lean` | OS1: $\lvert Z[f]\rvert \le e^{c\lVert f\rVert_2^2}$ |
+| [`gaussian_satisfies_OS2`](../OSforGFFin3D/GaussianFreeField.lean) | `GaussianFreeField.lean` | OS2: $Z[g\cdot f] = Z[f]$ for Euclidean motions $g$ |
+| [`QFT.gaussianFreeField_OS3_real`](../OSforGFFin3D/OS3_GFF.lean) | `OS3_GFF.lean` | OS3: $\sum c_ic_j\ \mathrm{Re}\left(Z[f_i-\Theta f_j]\right) \ge 0$ |
+| [`QFT.gaussianFreeField_satisfies_OS4`](../OSforGFFin3D/OS4_Clustering.lean) | `OS4_Clustering.lean` | OS4: $Z[f+T_ag] \to Z[f]Z[g]$ as $\lVert a\rVert\to\infty$ |
+| [`OS4_PolynomialClustering_implies_OS4_Ergodicity`](../OSforGFFin3D/OS4_Ergodicity.lean) | `OS4_Ergodicity.lean` | OS4 Ergodicity: $\frac{1}{T}\int_0^T A(T_s\phi)\ ds \xrightarrow{L^2} \mathbb{E}[A]$ |
 
 ## How Each Axiom Feeds In
 

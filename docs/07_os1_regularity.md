@@ -96,16 +96,21 @@ $$|Z[f]| \le \exp\left(\frac{1}{2m^2}\left(\|f\|_{L^1} + \|f\|_{L^2}^2\right)\ri
 ### Part 2: Two-Point Local Integrability
 
 **Step 5: Decay bound.**
-The GFF two-point function is $S_2^{\mathrm{GFF}}(x) = C_{\mathrm{free}}(x) = (m/(4\pi^2\|x\|))K_1(m\|x\|)$, where $K_1$ is the modified Bessel function of the second kind.
+The GFF two-point function is the free covariance kernel written in the 3D branch via
+`besselKhalf`, equivalently $S_2^{\mathrm{GFF}}(x) = e^{-m\|x\|}/(4\pi\|x\|)$ for $x \neq 0$.
 
-From Bessel function asymptotics ($K_1(z) \sim 1/z$ near the origin, exponential decay at infinity), there exists $C > 0$ such that $|S_2(x-y)| \le C\|x-y\|^{-2}$ for all $x, y$. This is proved in `schwinger_two_point_decay_bound_GFF` using `freeCovarianceKernel_decay_bound` from `CovarianceMomentum.lean`, which relies on `besselK1_near_origin_bound` and `besselK1_asymptotic`.
+Using the 3D `besselKhalf` bounds proved in `BesselFunction.lean`, there exists $C > 0$ such that
+$|S_2(x-y)| \le C\|x-y\|^{-2}$ for all $x, y$. This is proved in
+`schwinger_two_point_decay_bound_GFF` using `freeCovarianceKernel_decay_bound` from
+`CovarianceMomentum.lean`, which relies on the `besselKhalf` near-origin and asymptotic bounds.
 
 **Lean theorem**: `schwinger_two_point_decay_bound`
 
-**Step 6: Local integrability in 4D.**
-In $d$ dimensions, $\|x\|^{-\alpha}$ is locally integrable if and only if $\alpha < d$. For $d = 4$ and $\alpha = 2$, the function $\|x\|^{-2}$ is locally integrable:
+**Step 6: Local integrability in 3D.**
+In $d$ dimensions, $\|x\|^{-\alpha}$ is locally integrable if and only if $\alpha < d$. For
+$d = 3$ and $\alpha = 2$, the function $\|x\|^{-2}$ is locally integrable:
 
-$$\int_{\|x\| < R} \|x\|^{-2}\  dx = |S^3| \cdot \int_0^R r^{-2} \cdot r^3\  dr = 2\pi^2 \cdot R^2/2 < \infty$$
+$$\int_{\|x\| < R} \|x\|^{-2}\  dx = |S^2| \cdot \int_0^R r^{-2} \cdot r^2\  dr = 4\pi R < \infty$$
 
 Combined with the decay bound and measurability (`schwingerTwoPoint_measurable`), this establishes `TwoPointIntegrable`.
 

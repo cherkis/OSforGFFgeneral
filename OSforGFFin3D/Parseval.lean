@@ -217,6 +217,50 @@ lemma regulated_propagator_norm (α : ℝ) (m : ℝ) [Fact (0 < m)] (k : SpaceTi
     push_cast; ring
   rw [h, Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg hval_nonneg]
 
+private lemma diagonal_measure_zero_prod :
+    (volume.prod volume) {p : SpaceTime × SpaceTime | p.1 = p.2} = 0 := by
+  have h_meas : MeasurableSet {p : SpaceTime × SpaceTime | p.1 = p.2} := measurableSet_diagonal
+  rw [MeasureTheory.Measure.prod_apply h_meas]
+  simp only [Set.preimage_setOf_eq]
+  have h_slice : ∀ x, (volume : Measure SpaceTime) {y : SpaceTime | x = y} = 0 := by
+    intro x
+    have h_eq : {y : SpaceTime | x = y} = {x} := by
+      ext y
+      simp only [Set.mem_setOf_eq, Set.mem_singleton_iff, eq_comm]
+    rw [h_eq]
+    exact MeasureTheory.measure_singleton (μ := volume) x
+  simp only [h_slice, MeasureTheory.lintegral_zero]
+
+private lemma ae_off_diagonal_prod :
+  ∀ᵐ p : SpaceTime × SpaceTime ∂(volume.prod volume), p.1 ≠ p.2 := by
+  have h_diag_null : (volume.prod volume) {p : SpaceTime × SpaceTime | p.1 = p.2} = 0 :=
+    diagonal_measure_zero_prod
+  rw [MeasureTheory.measure_eq_zero_iff_ae_notMem] at h_diag_null
+  filter_upwards [h_diag_null] with p hp
+  exact fun h => hp (Set.mem_setOf.mpr h)
+
+private lemma conjugated_bilinear_aestronglyMeasurable
+    (f g : TestFunctionℂ) (C : SpaceTime → SpaceTime → ℂ)
+    (hC_meas : AEStronglyMeasurable
+      (fun p : SpaceTime × SpaceTime => C p.1 p.2) (volume.prod volume)) :
+    AEStronglyMeasurable
+      (fun p : SpaceTime × SpaceTime => f p.1 * C p.1 p.2 * starRingEnd ℂ (g p.2))
+      (volume.prod volume) := by
+  have hf_meas : StronglyMeasurable (fun p : SpaceTime × SpaceTime => f p.1) :=
+    (f.continuous.comp continuous_fst).stronglyMeasurable
+  have hg_meas : StronglyMeasurable
+      (fun p : SpaceTime × SpaceTime => starRingEnd ℂ (g p.2)) :=
+    ((Complex.continuous_conj.comp g.continuous).comp continuous_snd).stronglyMeasurable
+  exact (hf_meas.aestronglyMeasurable.mul hC_meas).mul hg_meas.aestronglyMeasurable
+
+private lemma integrable_conjugated_bilinear_of_norm_eq
+    {F G : SpaceTime × SpaceTime → ℂ}
+    (hF_int : Integrable F (volume.prod volume))
+    (hG_meas : AEStronglyMeasurable G (volume.prod volume))
+    (h_norm_eq : ∀ p : SpaceTime × SpaceTime, ‖F p‖ = ‖G p‖) :
+    Integrable G (volume.prod volume) := by
+  exact hF_int.congr' hG_meas (Filter.Eventually.of_forall h_norm_eq)
+
 /-- The inner product function is measurable. -/
 lemma measurable_inner_fixed (k : SpaceTime) : Measurable (fun x : SpaceTime => ⟪k, x⟫_ℝ) :=
   measurable_const.inner measurable_id
@@ -746,29 +790,7 @@ theorem bilinear_covariance_regulated_tendstoℂ (m : ℝ) [Fact (0 < m)] (f g :
   -- Pointwise convergence for a.e. (x, y) (diagonal has measure zero)
   have h_ae_tendsto : ∀ᵐ p ∂(volume.prod volume),
       Filter.Tendsto (fun α => F α p) (nhdsWithin 0 (Set.Ioi 0)) (nhds (F_limit p)) := by
-    -- The diagonal {(x,x)} has measure zero in SpaceTime × SpaceTime (volume.prod volume).
-    -- Use ae_prod_iff to reduce to: for a.e. x, for a.e. y, the statement holds.
-    -- For any fixed x, the set {x} has measure zero, so for a.e. y, x ≠ y.
-    -- Off-diagonal: freeCovariance_regulated_limit_eq_freeCovariance gives pointwise convergence.
-    -- For all (x, y) with x ≠ y, we have pointwise convergence.
-    -- The diagonal has measure zero, so this is a.e.
-    -- Strategy: filter_upwards with a criterion that holds a.e.
-    have h_diag_null : (volume.prod volume) {p : SpaceTime × SpaceTime | p.1 = p.2} = 0 := by
-      -- Use Fubini: ∫∫ 1_{x=y} dμ(x) dμ(y) = ∫ μ({y}) dμ(x) = ∫ 0 dμ(x) = 0
-      have h_meas : MeasurableSet {p : SpaceTime × SpaceTime | p.1 = p.2} := measurableSet_diagonal
-      rw [MeasureTheory.Measure.prod_apply h_meas]
-      simp only [Set.preimage_setOf_eq]
-      -- For each x, the slice {y | x = y} = {x} has measure 0
-      have h_slice : ∀ x, (volume : Measure SpaceTime) {y : SpaceTime | x = y} = 0 := by
-        intro x
-        have h_eq : {y : SpaceTime | x = y} = {x} := by
-          ext y; simp only [Set.mem_setOf_eq, Set.mem_singleton_iff, eq_comm]
-        rw [h_eq]
-        exact MeasureTheory.measure_singleton x
-      simp only [h_slice, MeasureTheory.lintegral_zero]
-    rw [MeasureTheory.measure_eq_zero_iff_ae_notMem] at h_diag_null
-    filter_upwards [h_diag_null] with p hp
-    have hxy : p.1 ≠ p.2 := fun h => hp (Set.mem_setOf.mpr h)
+    filter_upwards [ae_off_diagonal_prod] with p hxy
     -- Now p.1 ≠ p.2, so we can use freeCovariance_regulated_limit_eq_freeCovariance
     have hC := freeCovariance_regulated_limit_eq_freeCovariance m hm p.1 p.2 hxy
     -- F α p = f x * C_α(x,y) * conj(g y), and we need convergence of this
@@ -788,21 +810,7 @@ theorem bilinear_covariance_regulated_tendstoℂ (m : ℝ) [Fact (0 < m)] (f g :
       intro x ⟨hx_lt, hx_pos⟩
       exact ⟨hx_pos, hx_lt⟩
     filter_upwards [h_mem] with α ⟨hα_pos, hα_lt1⟩
-    -- Now α ∈ (0, 1), need to show a.e. bound
-    -- Diagonal has measure zero, use same argument as before
-    have h_diag_null : (volume.prod volume) {p : SpaceTime × SpaceTime | p.1 = p.2} = 0 := by
-      have h_meas : MeasurableSet {p : SpaceTime × SpaceTime | p.1 = p.2} := measurableSet_diagonal
-      rw [MeasureTheory.Measure.prod_apply h_meas]
-      simp only [Set.preimage_setOf_eq]
-      have h_slice : ∀ x, (volume : Measure SpaceTime) {y : SpaceTime | x = y} = 0 := by
-        intro x
-        have h_eq : {y : SpaceTime | x = y} = {x} := by
-          ext y; simp only [Set.mem_setOf_eq, Set.mem_singleton_iff, eq_comm]
-        rw [h_eq]; exact MeasureTheory.measure_singleton x
-      simp only [h_slice, MeasureTheory.lintegral_zero]
-    rw [MeasureTheory.measure_eq_zero_iff_ae_notMem] at h_diag_null
-    filter_upwards [h_diag_null] with p hp
-    have hxy : p.1 ≠ p.2 := fun h => hp (Set.mem_setOf.mpr h)
+    filter_upwards [ae_off_diagonal_prod] with p hxy
     -- Now use the covariance bound
     have h_cov_bound := freeCovariance_regulated_le_const_mul_freeCovariance m hm p.1 p.2 hxy α hα_pos (le_of_lt hα_lt1)
     -- ‖F α p‖ = ‖f(x)‖ × |C_reg| × ‖g(y)‖
@@ -820,19 +828,10 @@ theorem bilinear_covariance_regulated_tendstoℂ (m : ℝ) [Fact (0 < m)] (f g :
           rw [abs_of_nonneg (le_of_lt (freeCovarianceBessel_pos m hm p.1 p.2 hxy))]
   -- Each F α is AE strongly measurable
   have h_meas : ∀ᶠ α in nhdsWithin 0 (Set.Ioi 0), AEStronglyMeasurable (F α) (volume.prod volume) := by
-    -- F α p = f(p.1) * C_α(p.1, p.2) * conj(g(p.2))
-    -- Each factor is AEStronglyMeasurable, so their product is too
     filter_upwards [self_mem_nhdsWithin] with α hα
-    simp only [F]
-    -- f ∘ fst is strongly measurable (Schwartz is continuous)
-    have hf_meas : StronglyMeasurable (fun p : SpaceTime × SpaceTime => f p.1) :=
-      (f.continuous.comp continuous_fst).stronglyMeasurable
-    -- g ∘ snd is strongly measurable
-    have hg_meas : StronglyMeasurable (fun p : SpaceTime × SpaceTime => starRingEnd ℂ (g p.2)) :=
-      ((Complex.continuous_conj.comp g.continuous).comp continuous_snd).stronglyMeasurable
-    -- The regulated covariance is AEStronglyMeasurable
-    have hC_meas := aestronglyMeasurable_freeCovariance_regulated α (Set.mem_Ioi.mp hα) m hm
-    exact (hf_meas.aestronglyMeasurable.mul hC_meas).mul hg_meas.aestronglyMeasurable
+    exact conjugated_bilinear_aestronglyMeasurable f g
+      (fun x y => (freeCovariance_regulated α m x y : ℂ))
+      (aestronglyMeasurable_freeCovariance_regulated α (Set.mem_Ioi.mp hα) m hm)
   -- Apply DCT on product space
   have h_prod_tendsto := MeasureTheory.tendsto_integral_filter_of_dominated_convergence
     bound h_meas h_bound h_bound_int h_ae_tendsto
@@ -851,44 +850,29 @@ theorem bilinear_covariance_regulated_tendstoℂ (m : ℝ) [Fact (0 < m)] (f g :
       ∫ p, F α p ∂(volume.prod volume) =
         ∫ x, ∫ y, f x * (freeCovariance_regulated α m x y : ℂ) * starRingEnd ℂ (g y) := by
     filter_upwards [self_mem_nhdsWithin] with α hα
-    -- Integrability of F α follows from the non-conjugate version (norms are equal)
     have h_int := freeCovariance_regulated_bilinear_integrable α (Set.mem_Ioi.mp hα) m f g
-    -- The function F α differs from f*C*g only by conjugation of g, which preserves norms
-    -- Transfer integrability using norm equality ‖conj z‖ = ‖z‖
     have h_norm_eq : ∀ p : SpaceTime × SpaceTime,
         ‖f p.1 * (freeCovariance_regulated α m p.1 p.2 : ℂ) * g p.2‖ = ‖F α p‖ := fun p => by
       simp only [F, norm_mul, RCLike.norm_conj]
-    have hF_meas : AEStronglyMeasurable (F α) (volume.prod volume) := by
-      simp only [F]
-      have hf_meas : StronglyMeasurable (fun p : SpaceTime × SpaceTime => f p.1) :=
-        (f.continuous.comp continuous_fst).stronglyMeasurable
-      have hg_meas : StronglyMeasurable (fun p : SpaceTime × SpaceTime => starRingEnd ℂ (g p.2)) :=
-        ((Complex.continuous_conj.comp g.continuous).comp continuous_snd).stronglyMeasurable
-      have hC_meas := aestronglyMeasurable_freeCovariance_regulated α (Set.mem_Ioi.mp hα) m hm
-      exact (hf_meas.aestronglyMeasurable.mul hC_meas).mul hg_meas.aestronglyMeasurable
+    have hF_meas : AEStronglyMeasurable (F α) (volume.prod volume) :=
+      conjugated_bilinear_aestronglyMeasurable f g
+        (fun x y => (freeCovariance_regulated α m x y : ℂ))
+        (aestronglyMeasurable_freeCovariance_regulated α (Set.mem_Ioi.mp hα) m hm)
     have h_int_F : Integrable (F α) (volume.prod volume) :=
-      h_int.congr' hF_meas (Filter.Eventually.of_forall h_norm_eq)
-    -- Apply Fubini: ∫ F α ∂(prod) = ∫∫ F α (x,y) dy dx
+      integrable_conjugated_bilinear_of_norm_eq h_int hF_meas h_norm_eq
     exact MeasureTheory.integral_prod (F α) h_int_F
   have h_fubini_limit : ∫ p, F_limit p ∂(volume.prod volume) =
       ∫ x, ∫ y, f x * (freeCovariance m x y : ℂ) * starRingEnd ℂ (g y) := by
-    -- Same structure as h_fubini_reg: F_limit is integrable and Fubini applies
     have h_int := freeCovarianceℂ_bilinear_integrable' m f g
-    -- Transfer integrability using norm equality ‖conj z‖ = ‖z‖
     have h_norm_eq : ∀ p : SpaceTime × SpaceTime,
         ‖f p.1 * (freeCovariance m p.1 p.2 : ℂ) * g p.2‖ = ‖F_limit p‖ := fun p => by
       simp only [F_limit, norm_mul, RCLike.norm_conj]
-    have hF_meas : AEStronglyMeasurable F_limit (volume.prod volume) := by
-      simp only [F_limit]
-      have hf_meas : StronglyMeasurable (fun p : SpaceTime × SpaceTime => f p.1) :=
-        (f.continuous.comp continuous_fst).stronglyMeasurable
-      have hg_meas : StronglyMeasurable (fun p : SpaceTime × SpaceTime => starRingEnd ℂ (g p.2)) :=
-        ((Complex.continuous_conj.comp g.continuous).comp continuous_snd).stronglyMeasurable
-      have hC_meas := aestronglyMeasurable_freeCovariance m
-      exact (hf_meas.aestronglyMeasurable.mul hC_meas).mul hg_meas.aestronglyMeasurable
+    have hF_meas : AEStronglyMeasurable F_limit (volume.prod volume) :=
+      conjugated_bilinear_aestronglyMeasurable f g
+        (fun x y => (freeCovariance m x y : ℂ))
+        (aestronglyMeasurable_freeCovariance m)
     have h_int_F : Integrable F_limit (volume.prod volume) :=
-      h_int.congr' hF_meas (Filter.Eventually.of_forall h_norm_eq)
-    -- Apply Fubini: ∫ F_limit ∂(prod) = ∫∫ F_limit (x,y) dy dx
+      integrable_conjugated_bilinear_of_norm_eq h_int hF_meas h_norm_eq
     exact MeasureTheory.integral_prod F_limit h_int_F
   -- Combine: use Filter.Tendsto.congr
   rw [← h_fubini_limit]

@@ -4,41 +4,17 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 
-import Mathlib.Tactic  -- gives `ext` and `simp` power
 import Mathlib.Data.Complex.Basic
 import Mathlib.Analysis.Complex.Exponential
-import Mathlib.Algebra.Group.Support
-import Mathlib.Analysis.InnerProductSpace.LinearMap
-import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.Analytic.Basic
-import Mathlib.Analysis.Analytic.Constructions
-import Mathlib.Analysis.SpecialFunctions.Complex.Analytic
-import Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
-import Mathlib.Analysis.Calculus.BumpFunction.Convolution
-
-import Mathlib.Topology.Algebra.Module.LinearMapPiProd
-
-import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
-import Mathlib.MeasureTheory.Measure.Haar.OfBasis
+import Mathlib.MeasureTheory.Function.LocallyIntegrable
 import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
-import Mathlib.MeasureTheory.Function.LpSpace.Basic
-import Mathlib.MeasureTheory.Function.L2Space
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
-import Mathlib.MeasureTheory.Measure.CharacteristicFunction
-
-import Mathlib.Probability.Independence.Basic
-import Mathlib.Probability.Density
-
-import Mathlib.Analysis.RCLike.Basic
-import Mathlib.Analysis.Normed.Module.RCLike.Basic
-import Mathlib.Analysis.Normed.Module.RCLike.Real
-
 import Mathlib.Topology.Basic
 import Mathlib.Order.Filter.Basic
 
 import OSforGFFin3D.Basic
 import OSforGFFin3D.Schwinger
-import OSforGFFin3D.FunctionalAnalysis
 import OSforGFFin3D.Euclidean
 import OSforGFFin3D.DiscreteSymmetry
 import OSforGFFin3D.PositiveTimeTestFunction_real
@@ -62,12 +38,10 @@ Following Glimm-Jaffe formulation using probability measures on field configurat
 Glimm and Jaffe, Quantum Physics, pp. 89-90
 -/
 
-open MeasureTheory NNReal ENNReal
-open TopologicalSpace Measure QFT
-open DFunLike (coe)
+open MeasureTheory
 
 noncomputable section
-open scoped MeasureTheory Complex BigOperators SchwartzMap
+open scoped MeasureTheory BigOperators SchwartzMap
 
 /-- OS0 (Analyticity): The generating functional is analytic in the test functions. -/
 def OS0_Analyticity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
@@ -101,7 +75,7 @@ def OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration
   ∀ (n : ℕ) (f : Fin n → PositiveTimeTestFunction) (c : Fin n → ℝ),
     let reflection_matrix := fun i j : Fin n =>
       GJGeneratingFunctional dμ_config
-        ((f i).val - compTimeReflectionReal ((f j).val))
+        ((f i).val - QFT.compTimeReflectionReal ((f j).val))
     0 ≤ ∑ i, ∑ j, c i * c j * (reflection_matrix i j).re
 
 /-- OS4 (Clustering): Clustering via correlation decay.

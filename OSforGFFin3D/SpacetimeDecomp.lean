@@ -86,6 +86,16 @@ theorem spacetimeDecomp_measurePreserving :
 theorem spacetimeDecomp_apply (k : SpaceTime) :
     spacetimeDecomp k = (k 0, spatialPart k) := rfl
 
+/-- The inverse decomposition recovers the time coordinate as the first component. -/
+lemma spacetimeDecomp_symm_time (t : ℝ) (v : SpatialCoords) :
+    (spacetimeDecomp.symm (t, v)) 0 = t :=
+  congr_arg Prod.fst (spacetimeDecomp.apply_symm_apply (t, v))
+
+/-- The inverse decomposition recovers the spatial part as the second component. -/
+lemma spacetimeDecomp_symm_spatialPart (t : ℝ) (v : SpatialCoords) :
+    spatialPart (spacetimeDecomp.symm (t, v)) = v :=
+  congr_arg Prod.snd (spacetimeDecomp.apply_symm_apply (t, v))
+
 /-- `spacetimeDecomp.symm` equals `spacetimeOfTimeSpace` (from SchwartzProdIntegrable.lean).
     Both construct a SpaceTime point from time t and spatial coordinates v. -/
 lemma spacetimeDecomp_symm_eq_spacetimeOfTimeSpace (t : ℝ) (v : SpatialCoords) :
@@ -94,15 +104,11 @@ lemma spacetimeDecomp_symm_eq_spacetimeOfTimeSpace (t : ℝ) (v : SpatialCoords)
   ext i
   cases' i using Fin.cases with j
   · -- i = 0: time component
-    have h1 : (spacetimeDecomp.symm (t, v)) 0 = t :=
-      congr_arg Prod.fst (spacetimeDecomp.apply_symm_apply (t, v))
-    rw [h1, spacetimeOfTimeSpace_time]
+    rw [spacetimeDecomp_symm_time, spacetimeOfTimeSpace_time]
   · -- i = j + 1: spatial components
-    have h_spatial : spatialPart (spacetimeDecomp.symm (t, v)) = v :=
-      congr_arg Prod.snd (spacetimeDecomp.apply_symm_apply (t, v))
     -- spatialPart k (j) = k (j + 1) by definition
     have h_spatialPart_def : ∀ (k : SpaceTime), spatialPart k j = k j.succ := fun _ => rfl
-    rw [← h_spatialPart_def (spacetimeDecomp.symm (t, v)), h_spatial]
+    rw [← h_spatialPart_def (spacetimeDecomp.symm (t, v)), spacetimeDecomp_symm_spatialPart]
     symm
     exact spacetimeOfTimeSpace_spatial t v j
 
@@ -112,11 +118,16 @@ lemma spacetime_norm_sq_decompose (k : SpaceTime) :
   rw [EuclideanSpace.norm_sq_eq, Fin.sum_univ_succ, EuclideanSpace.norm_sq_eq]
   simp [spatialPart, STDimension, Real.norm_eq_abs, sq_abs]
 
+/-- Transfer an integral on `SpaceTime` to the product decomposition `ℝ × SpatialCoords`. -/
+lemma integral_spacetimeDecomp_comp (F : ℝ × SpatialCoords → ℂ) :
+    ∫ k : SpaceTime, F (spacetimeDecomp k) = ∫ p : ℝ × SpatialCoords, F p :=
+  spacetimeDecomp_measurePreserving.integral_comp' F
+
 /-- For a product-type integrand f(k₀) × g(k_sp), the integral decomposes as a product. -/
 lemma integral_spacetime_prod_split {f : ℝ → ℂ} {g : SpatialCoords → ℂ}
     (_hf : Integrable f) (_hg : Integrable g) :
     ∫ k : SpaceTime, f (k 0) * g (spatialPart k) =
     (∫ k₀ : ℝ, f k₀) * (∫ k_sp : SpatialCoords, g k_sp) := by
-  have h := spacetimeDecomp_measurePreserving.integral_comp' (fun p => f p.1 * g p.2)
+  have h := integral_spacetimeDecomp_comp (fun p => f p.1 * g p.2)
   simp only [spacetimeDecomp_apply] at h
-  rw [h]; exact integral_prod_mul f g
+  exact h.trans (integral_prod_mul f g)

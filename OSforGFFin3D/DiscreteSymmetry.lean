@@ -98,10 +98,10 @@ This provides the mathematical foundation for OS-3 reflection positivity:
 - Enables analytic continuation from Euclidean to Minkowski QFT
 
 **Integration with AQFT Framework:**
-- Spacetime structure from `OSforGFF.Basic`
-- Used in `OSforGFF.OS_Axioms` for OS-3 formulation
+- Spacetime structure from `OSforGFFin3D.Basic`
+- Used in `OSforGFFin3D.OS_Axioms` for OS-3 formulation
 - Function space actions for Schwartz test functions
-- Geometric foundation for positive-time test functions in `OSforGFF.PositiveTimeTestFunction`
+- Geometric foundation for positive-time test functions in `OSforGFFin3D.PositiveTimeTestFunction_real`
 
 **Technical Implementation:**
 - Complete mathematical rigor with all linearity and isometry proofs

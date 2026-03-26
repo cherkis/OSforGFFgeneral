@@ -65,9 +65,9 @@ of Mathlib.
 
 | File | Contents |
 |------|----------|
-| [LaplaceIntegral](OSforGFF/LaplaceIntegral.lean) | Laplace integral identity (Bessel K_{1/2}): ∫ s^{-1/2} e^{-a/s-bs} ds |
-| [FourierTransforms](OSforGFF/FourierTransforms.lean) | 1D Fourier identities: Lorentzian ↔ exponential decay, triple Fubini reorder (no project imports) |
-| [BesselFunction](OSforGFF/BesselFunction.lean) | Modified Bessel function K₁ via integral representation |
+| [LaplaceIntegral](OSforGFFin3D/LaplaceIntegral.lean) | Laplace integral identity underlying the half-order Bessel kernel |
+| [FourierTransforms](OSforGFFin3D/FourierTransforms.lean) | 1D Fourier identities: Lorentzian ↔ exponential decay, triple Fubini reorder (no project imports) |
+| [BesselFunction](OSforGFFin3D/BesselFunction.lean) | Modified Bessel function K and the special half-order kernel via integral representation |
 
 ---
 
@@ -169,17 +169,17 @@ The generating functional satisfies exponential bounds |Z[f]| ≤ exp(c(‖f‖�
 
 | File | Contents |
 |------|----------|
-| [OS1_GFF](OSforGFF/OS1_GFF.lean) | Proof via Fourier/momentum-space methods and Gaussian structure |
+| [OS1_GFF](OSforGFFin3D/OS1_GFF.lean) | Proof via Fourier/momentum-space methods and Gaussian structure |
 
 ---
 
 ### 8. [OS2 — Euclidean Invariance](docs/08_os2_euclidean_invariance.md)
 
-The measure μ is invariant under the Euclidean group E(4).
+The measure μ is invariant under the Euclidean group on 3D spacetime.
 
 | File | Contents |
 |------|----------|
-| [OS2_GFF](OSforGFF/OS2_GFF.lean) | Proof via Euclidean invariance of the free covariance kernel |
+| [OS2_GFF](OSforGFFin3D/OS2_GFF.lean) | Proof via Euclidean invariance of the free covariance kernel |
 
 ---
 

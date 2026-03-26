@@ -2,7 +2,7 @@
 
 ## Mathematical Background
 
-OS2 (Euclidean Invariance) requires that the quantum field theory has no preferred direction or origin in Euclidean spacetime. The generating functional must be invariant under the Euclidean group $E(4) = \mathbb{R}^4 \rtimes O(4)$, which comprises translations, rotations, and reflections.
+OS2 (Euclidean Invariance) requires that the quantum field theory has no preferred direction or origin in Euclidean spacetime. The generating functional must be invariant under the Euclidean motion group of the 3D spacetime branch, comprising translations, rotations, and reflections.
 
 This axiom is essential because:
 
@@ -10,13 +10,13 @@ This axiom is essential because:
 2. **Vacuum uniqueness**: The vacuum state respects all spacetime symmetries.
 3. **Correlation functions**: $n$-point functions depend only on relative positions and orientations, not absolute coordinates.
 
-**Theorem (OS2).** For all $g \in E(4)$ and $f \in \mathcal{S}(\mathbb{R}^4, \mathbb{C})$:
+**Theorem (OS2).** For all Euclidean motions $g$ and $f \in \mathcal{S}(\mathbb{R}^3, \mathbb{C})$:
 
 $$Z[g \cdot f] = Z[f]$$
 
 where $(g \cdot f)(x) = f(g^{-1} x)$ is the pullback action.
 
-The Euclidean group element $g = (R, t)$ with $R \in O(4)$ and $t \in \mathbb{R}^4$ acts on spacetime as $g \cdot x = Rx + t$, and on test functions by pullback: $(g \cdot f)(x) = f(R^{-1}(x - t))$.
+The Euclidean group element $g = (R, t)$ acts on spacetime as $g \cdot x = Rx + t$, and on test functions by pullback: $(g \cdot f)(x) = f(R^{-1}(x - t))$.
 
 ## Proof Strategy
 
@@ -35,14 +35,14 @@ This is the cleanest OS axiom proof: it requires **zero project-specific axioms*
 
 | Declaration | Description |
 |-------------|-------------|
-| [`CovarianceEuclideanInvariantℂ_μ_GFF`](../OSforGFF/OS2_GFF.lean#L151) | $C(gx, gy) = C(x, y)$ for all $g \in E(4)$ (GFF covariance) |
-| [`freeCovarianceℂ_bilinear_euclidean_invariant`](../OSforGFF/OS2_GFF.lean#L111) | $\langle g \cdot f, C(g \cdot h)\rangle = \langle f, Ch\rangle$ |
-| [`euclidean_action_apply`](../OSforGFF/OS2_GFF.lean#L46) | $(g \cdot f)(x) = f(g^{-1} \cdot x)$ |
-| [`euclidean_pullback_eq_inv_act`](../OSforGFF/OS2_GFF.lean#L53) | $g^{-1} \cdot x = \mathrm{act}(g^{-1}, x)$ |
-| [`euclidean_pullback_act`](../OSforGFF/OS2_GFF.lean#L57) | $g^{-1} \cdot (g \cdot y) = y$ |
-| [`act_euclidean_pullback`](../OSforGFF/OS2_GFF.lean#L62) | $g \cdot (g^{-1} \cdot x) = x$ |
-| [`actEquiv`](../OSforGFF/OS2_GFF.lean#L70) | $x \mapsto g \cdot x$ is a measurable equivalence on $\mathbb{R}^4$ |
-| [`measurePreserving_actEquiv`](../OSforGFF/OS2_GFF.lean#L79) | $(g_*)\lambda = \lambda$ for $g \in E(4)$ |
+| [`CovarianceEuclideanInvariantℂ_μ_GFF`](../OSforGFFin3D/OS2_GFF.lean) | $C(gx, gy) = C(x, y)$ for all Euclidean motions $g$ |
+| [`freeCovarianceℂ_bilinear_euclidean_invariant`](../OSforGFFin3D/OS2_GFF.lean) | $\langle g \cdot f, C(g \cdot h)\rangle = \langle f, Ch\rangle$ |
+| [`euclidean_action_apply`](../OSforGFFin3D/OS2_GFF.lean) | $(g \cdot f)(x) = f(g^{-1} \cdot x)$ |
+| [`euclidean_pullback_eq_inv_act`](../OSforGFFin3D/OS2_GFF.lean) | $g^{-1} \cdot x = \mathrm{act}(g^{-1}, x)$ |
+| [`euclidean_pullback_act`](../OSforGFFin3D/OS2_GFF.lean) | $g^{-1} \cdot (g \cdot y) = y$ |
+| [`act_euclidean_pullback`](../OSforGFFin3D/OS2_GFF.lean) | $g \cdot (g^{-1} \cdot x) = x$ |
+| [`actEquiv`](../OSforGFFin3D/OS2_GFF.lean) | $x \mapsto g \cdot x$ is a measurable equivalence on spacetime |
+| [`measurePreserving_actEquiv`](../OSforGFFin3D/OS2_GFF.lean) | $(g_*)\lambda = \lambda$ for Euclidean motions $g$ |
 
 The master theorem `gaussian_satisfies_OS2` in `GaussianFreeField.lean` derives OS2 from Gaussianity and covariance invariance. The file `OS2_GFF.lean` proves the GFF-specific covariance invariance.
 
@@ -50,9 +50,9 @@ The master theorem `gaussian_satisfies_OS2` in `GaussianFreeField.lean` derives 
 
 ### Step 1: Euclidean group structure
 
-The Euclidean group $E(4)$ is formalized as `QFT.E` with:
-- A rotation/reflection $R \in O(4)$ (formalized as a `LinearIsometry`)
-- A translation vector $t \in \mathbb{R}^4$
+The Euclidean group is formalized as `QFT.E` with:
+- A rotation/reflection `R : O4` on `SpaceTime`
+- A translation vector $t \in \mathbb{R}^3$
 
 The group operations are:
 - Multiplication: $(R_1, t_1) \cdot (R_2, t_2) = (R_1 R_2,\  R_1 t_2 + t_1)$
@@ -63,9 +63,9 @@ The pullback action on test functions is defined as `euclidean_action g f`, wher
 
 ### Step 2: Covariance kernel is radial
 
-The free covariance kernel is:
+The free covariance kernel is radial; in this branch it is expressed through `besselKhalf` as
 
-$$C(x, y) = \frac{m}{4\pi^2 \|x - y\|} K_1(m\|x - y\|)$$
+$$C(x, y) = \frac{1}{(4\pi)^{3/2}} \cdot 2 \left(\frac{2m}{\|x-y\|}\right)^{1/2} K_{1/2}(m\|x-y\|).$$
 
 This depends only on $\|x - y\|$. Since Euclidean transformations preserve distances:
 
@@ -75,7 +75,7 @@ we have $C(g \cdot x, g \cdot y) = C(x, y)$. This is the content of `freeCovaria
 
 ### Step 3: Measure preservation
 
-Lebesgue measure on $\mathbb{R}^4$ is invariant under Euclidean transformations. For translations, this is translation invariance of Lebesgue measure. For $R \in O(4)$, this follows from $|\det R| = 1$.
+Lebesgue measure on spacetime is invariant under Euclidean transformations. For translations, this is translation invariance of Lebesgue measure. For the orthogonal part, this follows from the isometric nature of the action.
 
 The proof constructs a `MeasurableEquiv` (`actEquiv g`) for each group element and proves it is measure-preserving (`measurePreserving_actEquiv`). This enables the change of variables in integration.
 

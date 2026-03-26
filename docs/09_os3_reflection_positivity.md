@@ -14,9 +14,11 @@ flips the time coordinate. It is an involution ($\Theta^2 = \mathrm{id}$) and pr
 
 **Positive-time test functions.** The space $\mathcal{S}_+$ consists of Schwartz functions supported on $\lbrace x : x_0 > 0\rbrace$.
 
-**Reflection positivity inner product.** For the free covariance $C(x,y) = \frac{m}{4\pi^2\lVert x-y\rVert} K_1(m\lVert x-y\rVert)$:
+**Reflection positivity inner product.** For the free covariance written through `besselKhalf`,
 
-$$\langle \Theta f, f \rangle_C := \int_{\mathbb{R}^4} \int_{\mathbb{R}^4} \overline{f(\Theta x)}\  C(x,y)\  f(y)\  dx\  dy$$
+$$C(x,y) = \frac{1}{(4\pi)^{3/2}} \cdot 2 \left(\frac{2m}{\lVert x-y\rVert}\right)^{1/2} K_{1/2}(m\lVert x-y\rVert),$$
+
+$$\langle \Theta f, f \rangle_C := \int_{\mathbb{R}^3} \int_{\mathbb{R}^3} \overline{f(\Theta x)}\  C(x,y)\  f(y)\  dx\  dy$$
 
 **OS3 axiom (Glimm-Jaffe form).** For positive-time test functions and real coefficients:
 

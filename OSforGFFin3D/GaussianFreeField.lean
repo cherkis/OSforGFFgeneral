@@ -89,7 +89,7 @@ The key insight is that for Gaussian measures, the generating functional
 Z[∑ᵢ zᵢJᵢ] = exp(-½⟨∑ᵢ zᵢJᵢ, C(∑ⱼ zⱼJ⟩) = exp(-½ ∑ᵢⱼ zᵢzⱼ⟨Jᵢ, CJ⟩)
 is the exponential of a polynomial in the complex variables zᵢ, hence entire.
 
-Note: The new proof via holomorphic integral theorem is in `OSforGFF/OS0_GFF.lean`.
+Note: The new proof via holomorphic integral theorem is in `OSforGFFin3D/OS0_GFF.lean`.
 -/
 
 namespace OS0_alt

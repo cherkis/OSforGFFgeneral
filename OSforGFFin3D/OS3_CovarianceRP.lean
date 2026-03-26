@@ -237,6 +237,31 @@ lemma yIntegralFactor_eq_neg (f : TestFunctionℂ) (k_sp : SpatialCoords) :
   · congr 1; ring_nf
   · congr 1; simp only [neg_mul_neg]
 
+private lemma integral_const_mul_spacetime (c : ℂ) (g : SpaceTime → ℂ) :
+    ∫ z : SpaceTime, c * g z = c * ∫ z, g z := by
+  simp_rw [← smul_eq_mul]
+  exact MeasureTheory.integral_smul c g
+
+private lemma double_integral_separable_const
+    (c : ℂ) (fx gy : SpaceTime → ℂ) :
+    ∫ x : SpaceTime, ∫ y : SpaceTime, c * fx x * gy y
+      = c * (∫ x, fx x) * (∫ y, gy y) := by
+  have h_inner : ∀ x,
+      ∫ y : SpaceTime, c * fx x * gy y = (c * fx x) * ∫ y, gy y := by
+    intro x
+    exact integral_const_mul_spacetime (c * fx x) gy
+  simp_rw [h_inner]
+  have h_comm : ∀ x, (c * fx x) * ∫ y, gy y = (∫ y, gy y) * (c * fx x) := by
+    intro x
+    ring
+  simp_rw [h_comm]
+  rw [integral_const_mul_spacetime, integral_const_mul_spacetime]
+  ring
+
+private lemma conj_mul_eq_normSq (A : ℂ) :
+    (starRingEnd ℂ A) * A = (Complex.normSq A : ℂ) := by
+  rw [← Complex.normSq_eq_conj_mul_self]
+
 /-! ## Part 6: Factorization to Squared Norm (Direct Approach) -/
 
 /-- **Direct factorization** from the mixed representation.
@@ -301,19 +326,6 @@ theorem factorization_to_squared_norm_direct (f : TestFunctionℂ) (k_sp : Spati
     xIntegralFactor_eq_conj_neg m f k_sp hf_support
   have hY : yIntegralFactor f ω k_sp = weightedLaplaceFourier m f (-k_sp) :=
     yIntegralFactor_eq_neg m f k_sp
-  have h_normSq : ∀ A : ℂ, (starRingEnd ℂ A) * A = (Complex.normSq A : ℂ) := by
-    intro A; rw [← Complex.normSq_eq_conj_mul_self]
-  have h_fubini : ∫ x : SpaceTime, ∫ y : SpaceTime, (↑(1 / ω) : ℂ) * fx x * gy y =
-      (↑(1 / ω) : ℂ) * (∫ x, fx x) * (∫ y, gy y) := by
-    have h_pull_const : ∀ (c : ℂ) (g : SpaceTime → ℂ),
-        ∫ z : SpaceTime, c * g z = c * ∫ z, g z := by
-      intro c g; simp_rw [← smul_eq_mul]; exact MeasureTheory.integral_smul c g
-    have h_inner : ∀ x, ∫ y : SpaceTime, (↑(1 / ω) : ℂ) * fx x * gy y =
-        (↑(1 / ω) * fx x) * ∫ y, gy y := fun x => h_pull_const (↑(1 / ω) * fx x) gy
-    simp_rw [h_inner]
-    have h_comm : ∀ x, (↑(1 / ω) * fx x) * ∫ y, gy y = (∫ y, gy y) * (↑(1 / ω) * fx x) := by
-      intro x; ring
-    simp_rw [h_comm]; rw [h_pull_const, h_pull_const]; ring
   have h_integrand_eq : ∀ x y : SpaceTime,
       (↑(1 / ω) : ℂ) *
         ((starRingEnd ℂ) (f x) * Complex.exp (-↑ω * ↑(x 0)) *
@@ -324,7 +336,8 @@ theorem factorization_to_squared_norm_direct (f : TestFunctionℂ) (k_sp : Spati
     intro x y; simp only [fx, gy, neg_mul]
   simp_rw [h_integrand_eq]
   calc ∫ x : SpaceTime, ∫ y : SpaceTime, (↑(1 / ω) : ℂ) * fx x * gy y
-      = (↑(1 / ω) : ℂ) * (∫ x, fx x) * (∫ y, gy y) := h_fubini
+      = (↑(1 / ω) : ℂ) * (∫ x, fx x) * (∫ y, gy y) :=
+        double_integral_separable_const (↑(1 / ω) : ℂ) fx gy
     _ = (↑(1 / ω) : ℂ) * xIntegralFactor f ω k_sp * yIntegralFactor f ω k_sp := by
         rw [hfx_eq, hgy_eq]
     _ = (↑(1 / ω) : ℂ) * starRingEnd ℂ (weightedLaplaceFourier m f (-k_sp)) *
@@ -332,7 +345,7 @@ theorem factorization_to_squared_norm_direct (f : TestFunctionℂ) (k_sp : Spati
     _ = (↑(1 / ω) : ℂ) * (starRingEnd ℂ (weightedLaplaceFourier m f (-k_sp)) *
           weightedLaplaceFourier m f (-k_sp)) := by ring
     _ = (↑(1 / ω) : ℂ) * (Complex.normSq (weightedLaplaceFourier m f (-k_sp)) : ℂ) := by
-        rw [h_normSq]
+      rw [conj_mul_eq_normSq]
     _ = ↑(1 / ω * Complex.normSq (weightedLaplaceFourier m f (-k_sp))) := by
         simp only [Complex.ofReal_mul]
 
@@ -399,7 +412,8 @@ end RPProof
 
 /-- **Bridge Lemma**: The QFT namespace rpInnerProduct equals the RPProof rpInnerProduct.
 
-    Both are defined using the same Bessel kernel C(x,y) = (m/(4π²r)) K₁(mr),
+  Both are defined using the same 3D Bessel kernel
+  C(x,y) = (1 / ((4π)^(3/2))) * (2 * (2*m/r)^(1/2) * besselKhalf (m*r)),
     so this equality holds by definition (rfl). -/
 lemma rpInnerProduct_eq_rpProof (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) :
     rpInnerProduct m f = RPProof.rpInnerProduct m f := by

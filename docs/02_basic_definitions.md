@@ -6,69 +6,73 @@ Core type definitions and infrastructure for the AQFT formalization: spacetime g
 
 ### Mathematical Background
 
-The spacetime is $\mathbb{R}^4$ with the standard Euclidean metric, modeled as `EuclideanSpace ℝ (Fin 4)`. The coordinate index 0 is the time direction. The Euclidean symmetry group $E(4) = O(4) \rtimes \mathbb{R}^4$ acts on spacetime by rotations and translations.
+The spacetime is $\mathbb{R}^3$ with the standard Euclidean metric, modeled as
+`EuclideanSpace ℝ (Fin 3)`. The coordinate index 0 is the distinguished time direction, so the
+spatial slice has dimension 2. The Euclidean symmetry group is the orthogonal group of
+`SpaceTime` acting together with translations.
 
 Key structures:
-- **Spacetime:** $\mathbb{R}^4$ with the standard Euclidean inner product.
+- **Spacetime:** $\mathbb{R}^3$ with the standard Euclidean inner product.
 - **Time coordinate:** The projection $x \mapsto x_0$.
-- **Euclidean group:** $E(4) = O(4) \rtimes \mathbb{R}^4$ acting on spacetime and test functions.
-- **Time reflection:** $\Theta: (t,\mathbf{x}) \mapsto (-t,\mathbf{x})$, a distinguished involution in $E(4)$.
-- **Spacetime decomposition:** The measurable equivalence $\mathbb{R}^4 \cong \mathbb{R} \times \mathbb{R}^3$ separating time and spatial coordinates.
-- **Positive time set:** The open half-space $\{x \in \mathbb{R}^4 : x_0 > 0\}$.
+- **Euclidean group:** Euclidean motions of `SpaceTime`, implemented in Lean by `QFT.E`.
+- **Time reflection:** $\Theta: (t,\mathbf{x}) \mapsto (-t,\mathbf{x})$, a distinguished involution.
+- **Spacetime decomposition:** The measurable equivalence $\mathbb{R}^3 \cong \mathbb{R} \times \mathbb{R}^2$ separating time and spatial coordinates.
+- **Positive time set:** The open half-space $\{x \in \mathbb{R}^3 : x_0 > 0\}$.
 
-### Key Declarations (`OSforGFF/Basic.lean`)
-
-| Declaration | Description |
-|-------------|-------------|
-| [`STDimension`](../OSforGFF/Basic.lean#L111) | Spacetime dimension ($= 4$) |
-| [`SpaceTime`](../OSforGFF/Basic.lean#L112) | $\mathbb{R}^4 =$ `EuclideanSpace ℝ (Fin 4)` |
-| [`getTimeComponent`](../OSforGFF/Basic.lean#L116) | $x \mapsto x_0$ |
-
-### Key Declarations (`OSforGFF/Euclidean.lean`)
+### Key Declarations (`OSforGFFin3D/Basic.lean`)
 
 | Declaration | Description |
 |-------------|-------------|
-| [`O4`](../OSforGFF/Euclidean.lean#L108) | Orthogonal group $O(4)$ |
-| [`QFT.E`](../OSforGFF/Euclidean.lean#L113) | Euclidean group $E(4) = O(4) \rtimes \mathbb{R}^4$ |
-| [`QFT.act`](../OSforGFF/Euclidean.lean#L119) | Group action of $E(4)$ on spacetime |
-| [`measurePreserving_act`](../OSforGFF/Euclidean.lean#L295) | $E(4)$ preserves Lebesgue measure |
+| [`STDimension`](../OSforGFFin3D/Basic.lean) | Spacetime dimension ($= 3$) |
+| [`SpaceTime`](../OSforGFFin3D/Basic.lean) | $\mathbb{R}^3 =$ `EuclideanSpace ℝ (Fin 3)` |
+| [`getTimeComponent`](../OSforGFFin3D/Basic.lean) | $x \mapsto x_0$ |
 
-### Key Declarations (`OSforGFF/DiscreteSymmetry.lean`)
-
-| Declaration | Description |
-|-------------|-------------|
-| [`QFT.timeReflection`](../OSforGFF/DiscreteSymmetry.lean#L120) | $\Theta: (t,\mathbf{x}) \mapsto (-t,\mathbf{x})$ |
-| [`QFT.timeReflectionMatrix`](../OSforGFF/DiscreteSymmetry.lean#L123) | Matrix representation of $\Theta$ |
-| [`QFT.timeReflectionLE`](../OSforGFF/DiscreteSymmetry.lean#L177) | $\Theta$ as a linear isometric equivalence |
-| [`QFT.timeReflection_measurePreserving`](../OSforGFF/DiscreteSymmetry.lean#L216) | $\Theta$ preserves Lebesgue measure |
-| [`QFT.compTimeReflection`](../OSforGFF/DiscreteSymmetry.lean#L230) | $f \mapsto f \circ \Theta$ on $\mathcal{S}(\mathbb{R}^4,\mathbb{C})$ |
-| [`QFT.compTimeReflectionReal`](../OSforGFF/DiscreteSymmetry.lean#L251) | $f \mapsto f \circ \Theta$ on $\mathcal{S}(\mathbb{R}^4,\mathbb{R})$ |
-
-### Key Declarations (`OSforGFF/Basic.lean` — Spatial Geometry)
+### Key Declarations (`OSforGFFin3D/Euclidean.lean`)
 
 | Declaration | Description |
 |-------------|-------------|
-| [`SpatialCoords`](../OSforGFF/Basic.lean#L323) | Spatial coordinates $\mathbb{R}^3$ |
-| [`spatialPart`](../OSforGFF/Basic.lean#L329) | Spatial projection $\mathbb{R}^4 \to \mathbb{R}^3$ |
-| [`E`](../OSforGFF/Euclidean.lean#L113) | Relativistic energy $E(m,k) = \sqrt{\lVert k\rVert^2 + m^2}$ |
+| [`O4`](../OSforGFFin3D/Euclidean.lean) | Orthogonal group of `SpaceTime` (legacy name retained) |
+| [`QFT.E`](../OSforGFFin3D/Euclidean.lean) | Euclidean motion group on spacetime |
+| [`QFT.act`](../OSforGFFin3D/Euclidean.lean) | Group action of `QFT.E` on spacetime |
+| [`measurePreserving_act`](../OSforGFFin3D/Euclidean.lean) | Euclidean motions preserve Lebesgue measure |
 
-### Key Declarations (`OSforGFF/SpacetimeDecomp.lean`)
-
-| Declaration | Description |
-|-------------|-------------|
-| [`spacetimeDecomp`](../OSforGFF/SpacetimeDecomp.lean#L49) | Measurable equivalence $\mathbb{R}^4 \cong \mathbb{R} \times \mathbb{R}^3$ |
-| [`spacetimeDecomp_measurePreserving`](../OSforGFF/SpacetimeDecomp.lean#L63) | The decomposition preserves Lebesgue measure |
-
-### Key Declarations (`OSforGFF/PositiveTimeTestFunction_real.lean`)
+### Key Declarations (`OSforGFFin3D/DiscreteSymmetry.lean`)
 
 | Declaration | Description |
 |-------------|-------------|
-| [`HasPositiveTime`](../OSforGFF/PositiveTimeTestFunction_real.lean#L42) | Predicate: $x_0 > 0$ |
-| [`positiveTimeSet`](../OSforGFF/PositiveTimeTestFunction_real.lean#L45) | $\{x \in \mathbb{R}^4 : x_0 > 0\}$ |
+| [`QFT.timeReflection`](../OSforGFFin3D/DiscreteSymmetry.lean) | $\Theta: (t,\mathbf{x}) \mapsto (-t,\mathbf{x})$ |
+| [`QFT.timeReflectionMatrix`](../OSforGFFin3D/DiscreteSymmetry.lean) | Matrix representation of $\Theta$ |
+| [`QFT.timeReflectionLE`](../OSforGFFin3D/DiscreteSymmetry.lean) | $\Theta$ as a linear isometric equivalence |
+| [`QFT.timeReflection_measurePreserving`](../OSforGFFin3D/DiscreteSymmetry.lean) | $\Theta$ preserves Lebesgue measure |
+| [`QFT.compTimeReflection`](../OSforGFFin3D/DiscreteSymmetry.lean) | $f \mapsto f \circ \Theta$ on $\mathcal{S}(\mathbb{R}^3,\mathbb{C})$ |
+| [`QFT.compTimeReflectionReal`](../OSforGFFin3D/DiscreteSymmetry.lean) | $f \mapsto f \circ \Theta$ on $\mathcal{S}(\mathbb{R}^3,\mathbb{R})$ |
+
+### Key Declarations (`OSforGFFin3D/Basic.lean` — Spatial Geometry)
+
+| Declaration | Description |
+|-------------|-------------|
+| [`SpatialCoords`](../OSforGFFin3D/Basic.lean) | Spatial coordinates $\mathbb{R}^2$ |
+| [`spatialPart`](../OSforGFFin3D/Basic.lean) | Spatial projection $\mathbb{R}^3 \to \mathbb{R}^2$ |
+| [`E`](../OSforGFFin3D/Basic.lean) | Relativistic energy $E(m,k) = \sqrt{\lVert k\rVert^2 + m^2}$ |
+
+### Key Declarations (`OSforGFFin3D/SpacetimeDecomp.lean`)
+
+| Declaration | Description |
+|-------------|-------------|
+| [`spacetimeDecomp`](../OSforGFFin3D/SpacetimeDecomp.lean) | Measurable equivalence $\mathbb{R}^3 \cong \mathbb{R} \times \mathbb{R}^2$ |
+| [`spacetimeDecomp_measurePreserving`](../OSforGFFin3D/SpacetimeDecomp.lean) | The decomposition preserves Lebesgue measure |
+
+### Key Declarations (`OSforGFFin3D/PositiveTimeTestFunction_real.lean`)
+
+| Declaration | Description |
+|-------------|-------------|
+| [`HasPositiveTime`](../OSforGFFin3D/PositiveTimeTestFunction_real.lean) | Predicate: $x_0 > 0$ |
+| [`positiveTimeSet`](../OSforGFFin3D/PositiveTimeTestFunction_real.lean) | $\{x \in \mathbb{R}^3 : x_0 > 0\}$ |
 
 ### Euclidean Group Structure
 
-The Euclidean group `QFT.E` is formalized as a structure containing an orthogonal matrix $R \in O(4)$ and a translation vector $t \in \mathbb{R}^4$. The group operations are:
+The Euclidean group `QFT.E` is formalized as a structure containing an orthogonal map on
+`SpaceTime` and a translation vector $t \in \mathbb{R}^3$. The group operations are:
 
 - **Multiplication:** $(R_1, t_1) \cdot (R_2, t_2) = (R_1 R_2,\  R_1 t_2 + t_1)$
 - **Identity:** $(I, 0)$
@@ -83,23 +87,25 @@ The file proves that this forms a `Group` and that the action preserves the Lebe
 
 ### Mathematical Background
 
-Test functions are Schwartz-class functions on $\mathbb{R}^4$, serving as the "smearing functions" that pair with distributional field configurations. The formalization uses Mathlib's `SchwartzMap` type.
+Test functions are Schwartz-class functions on $\mathbb{R}^3$, serving as the "smearing functions"
+that pair with distributional field configurations. The formalization uses Mathlib's
+`SchwartzMap` type.
 
 Key types:
-- **TestFunction:** $\mathcal{S}(\mathbb{R}^4, \mathbb{R})$
-- **TestFunctionℂ:** $\mathcal{S}(\mathbb{R}^4, \mathbb{C})$
+- **TestFunction:** $\mathcal{S}(\mathbb{R}^3, \mathbb{R})$
+- **TestFunctionℂ:** $\mathcal{S}(\mathbb{R}^3, \mathbb{C})$
 - **PositiveTimeTestFunction:** Real Schwartz functions supported in $\{x_0 > 0\}$
 - **FieldConfiguration:** The dual space of TestFunction, representing distributional field configurations
 
 The complex test function space carries additional structure: complex conjugation (`conjSchwartz`), a star operation (`starTestFunction`), and decomposition into real and imaginary parts.
 
-### Key Declarations (`OSforGFF/Basic.lean`)
+### Key Declarations (`OSforGFFin3D/Basic.lean`)
 
 | Declaration | Description |
 |-------------|-------------|
-| [`TestFunction`](../OSforGFF/Basic.lean#L133) | $\mathcal{S}(\mathbb{R}^4, \mathbb{R})$ |
-| [`TestFunctionℂ`](../OSforGFF/Basic.lean#L135) | $\mathcal{S}(\mathbb{R}^4, \mathbb{C})$ |
-| [`FieldConfiguration`](../OSforGFF/Basic.lean#L166) | $\mathrm{WeakDual}\ \mathbb{R}\ \mathrm{TestFunction}$ |
+| [`TestFunction`](../OSforGFFin3D/Basic.lean) | $\mathcal{S}(\mathbb{R}^3, \mathbb{R})$ |
+| [`TestFunctionℂ`](../OSforGFFin3D/Basic.lean) | $\mathcal{S}(\mathbb{R}^3, \mathbb{C})$ |
+| [`FieldConfiguration`](../OSforGFFin3D/Basic.lean) | $\mathrm{WeakDual}\ \mathbb{R}\ \mathrm{TestFunction}$ |
 | [`distributionPairing`](../OSforGFF/Basic.lean#L177) | $\langle\omega, f\rangle$ for $\omega :$ FieldConfiguration, $f :$ TestFunction |
 | [`distributionPairingCLM`](../OSforGFF/Basic.lean#L192) | The pairing as CLM: $\mathrm{TestFunction} \to \mathrm{FieldConfiguration} \to_L \mathbb{R}$ |
 | [`distributionPairingℂ_real`](../OSforGFF/Basic.lean#L304) | $\langle\omega, f\rangle_{\mathbb{C}}$ for $f : \mathcal{S}(\mathbb{R}^4,\mathbb{C})$ |
@@ -119,17 +125,17 @@ The complex test function space carries additional structure: complex conjugatio
 | Declaration | Description |
 |-------------|-------------|
 | [`PositiveTimeTestFunction`](../OSforGFF/PositiveTimeTestFunction_real.lean#L67) | Submodule of TestFunction supported in $\{t > 0\}$ |
-| [`starTestFunction`](../OSforGFF/PositiveTimeTestFunction_real.lean#L96) | Star operation on complex test functions |
+| [`starTestFunction`](../OSforGFFin3D/PositiveTimeTestFunction_real.lean) | Star operation on complex test functions |
 
-### Key Declarations (`OSforGFF/Euclidean.lean`)
+### Key Declarations (`OSforGFFin3D/Euclidean.lean`)
 
 | Declaration | Description |
 |-------------|-------------|
-| [`euclidean_action`](../OSforGFF/Euclidean.lean#L407) | $E(4)$ action on $\mathcal{S}(\mathbb{R}^4,\mathbb{C})$ |
-| [`euclidean_action_real`](../OSforGFF/Euclidean.lean#L415) | $E(4)$ action on $\mathcal{S}(\mathbb{R}^4,\mathbb{R})$ |
-| [`euclidean_action_CLM`](../OSforGFF/Euclidean.lean#L442) | Action as a continuous linear map |
+| [`euclidean_action`](../OSforGFFin3D/Euclidean.lean) | Euclidean action on $\mathcal{S}(\mathbb{R}^3,\mathbb{C})$ |
+| [`euclidean_action_real`](../OSforGFFin3D/Euclidean.lean) | Euclidean action on $\mathcal{S}(\mathbb{R}^3,\mathbb{R})$ |
+| [`euclidean_action_CLM`](../OSforGFFin3D/Euclidean.lean) | Action as a continuous linear map |
 
-### Time Translation (`OSforGFF/TimeTranslation.lean`)
+### Time Translation (`OSforGFFin3D/TimeTranslation.lean`)
 
 Time translation is the one-parameter subgroup of the Euclidean group that shifts the time coordinate. It is formalized in detail because of its role in the ergodicity axiom (OS4).
 
@@ -178,11 +184,11 @@ where $G_f(t) = \int_{\mathbb{R}^3} \|f(t, v)\|\ dv$ is the spatial marginal.
 |-------------|-------------|
 | [`schwartz_tonelli_spacetime`](../OSforGFF/SchwartzTonelli.lean#L113) | Tonelli factorization of spacetime double integrals |
 
-### Key Declarations (`OSforGFF/BesselFunction.lean`)
+### Key Declarations (`OSforGFFin3D/BesselFunction.lean`)
 
 | Declaration | Description |
 |-------------|-------------|
-| [`besselK1`](../OSforGFF/BesselFunction.lean#L47) | $K_1(z) = \int_0^\infty e^{-z\cosh t}\cosh t\ dt$ |
+| [`besselKhalf`](../OSforGFFin3D/BesselFunction.lean) | $K_{1/2}(z) = \int_0^\infty e^{-z\cosh t}\cosh(t/2)\ dt$ |
 
 ---
 
