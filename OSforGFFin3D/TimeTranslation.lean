@@ -29,10 +29,10 @@ and tempered distributions. These are fundamental for the OS4 (Ergodicity) axiom
 
 ## Notation
 
-We work in spacetime ℝ × ℝ³ where:
+We work in spacetime with one time coordinate and `STDimension - 1` spatial coordinates:
 - The first coordinate is time (index 0)
-- The remaining 3 coordinates are space (indices 1,2,3)
-- This matches STDimension = 4 from Basic.lean
+- The remaining coordinates are spatial
+- In the current branch, `STDimension = 3`, so there are two spatial coordinates
 
 ## Main Theorems
 
@@ -56,7 +56,7 @@ namespace TimeTranslation
 /-! ## Time Translation on Spacetime Points
 
 Definition 0.2 from the PDF: For any s ∈ ℝ, define the time translation operator.
-The time coordinate is index 0 in our 4D spacetime.
+The time coordinate is index 0 in our spacetime convention.
 -/
 
 /-- The time coordinate index in spacetime (index 0). -/
@@ -181,7 +181,7 @@ lemma timeShift_hasTemperateGrowth (s : ℝ) : Function.HasTemperateGrowth (time
 /-! ## Time Translation on Schwartz Functions
 
 Definition 0.2 from the PDF: For any s ∈ ℝ, define the time translation operator on
-Schwartz functions T_s : S(ℝ × ℝ³) → S(ℝ × ℝ³) by
+Schwartz functions `T_s : S(SpaceTime) → S(SpaceTime)` by
 
   (T_s f)(t, x) := f(t + s, x)
 
@@ -853,12 +853,12 @@ lemma continuous_timeTranslationSchwartz (f : TestFunction) :
 
 /-! ## Time Translation on Tempered Distributions
 
-Definition 0.2 from the PDF: For φ ∈ S'(ℝ × ℝ³) (tempered distribution), define T_s φ
+Definition 0.2 from the PDF: For `φ ∈ S'(SpaceTime)` (tempered distribution), define `T_s φ`
 by the pairing:
 
   ⟨T_s φ, f⟩ := ⟨φ, T_{-s} f⟩
 
-for all f ∈ S(ℝ × ℝ³).
+for all `f ∈ S(SpaceTime)`.
 -/
 
 /-- Time translation on tempered distributions (field configurations).

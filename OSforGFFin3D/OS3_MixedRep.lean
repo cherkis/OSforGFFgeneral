@@ -1458,10 +1458,10 @@ theorem heatKernel_bilinear_to_mixed_rep (m : ℝ) [Fact (0 < m)] (f : TestFunct
   PROOF OUTLINE:
 
   Step 1: Substitute `heatKernel_eq_gaussianFT` for H(s, |z|)
-    LHS becomes: ∫_s e^{-sm²} ∫_x ∫_y f̄(x) f(y) · (1/(2π)^4) · ∫_k e^{-ik·z} e^{-s|k|²}
+    LHS becomes: ∫_s e^{-sm²} ∫_x ∫_y f̄(x) f(y) · (1/(2π)^STDimension) · ∫_k e^{-ik·z} e^{-s|k|²}
     where z = Θx - y = (-x₀-y₀, x_sp - y_sp)
 
-  Step 2: Decompose k = (k₀, k_sp) ∈ ℝ × ℝ³
+  Step 2: Decompose k = (k₀, k_sp) ∈ ℝ × SpatialCoords
     k·z = k₀·(-x₀-y₀) + k_sp·(x_sp - y_sp) = -k₀·t + k_sp·r_sp
     where t = x₀ + y₀, r_sp = x_sp - y_sp
     This requires: lemma integral_spacetime_split
@@ -1697,7 +1697,8 @@ theorem heatKernel_bilinear_to_mixed_rep (m : ℝ) [Fact (0 < m)] (f : TestFunct
     2. **Heat kernel as Gaussian FT**: By `heatKernel_eq_gaussianFT` (AXIOM),
        H(s,r) = (1/(2π)^d) ∫_k exp(-ik·z) exp(-s|k|²) d^d k
 
-    3. **Decompose k = (k₀, k_sp)**: The 4D k-integral becomes product of 1D and 3D integrals
+     3. **Decompose k = (k₀, k_sp)**: The spacetime momentum integral becomes a product of
+       the 1D time-frequency integral and the spatial momentum integral
 
     4. **Do k₀ integral**: By `gaussian_fourier_1d` (PROVEN),
        ∫ exp(-ik₀t) exp(-sk₀²) dk₀ = √(π/s) exp(-t²/(4s))

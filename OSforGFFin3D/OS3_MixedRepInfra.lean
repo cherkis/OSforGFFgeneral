@@ -106,7 +106,7 @@ lemma spacetime_inner_decompose (k z : SpaceTime) :
   rw [PiLp.inner_apply]
   -- Convert inner products to multiplications
   simp only [real_inner_eq_mul]
-  -- The sum over Fin 4 decomposes into index 0 plus sum over indices 1,2,3
+  -- The spacetime sum decomposes into the time index 0 plus the spatial indices
   conv_lhs => rw [Fin.sum_univ_succ]
   -- The sums are definitionally equal after unfolding
   congr 1
@@ -141,8 +141,9 @@ lemma timeReflection_involutive (x : SpaceTime) :
 The key step in the reflection positivity proof is to convert the Bessel bilinear form
 to a momentum representation where the k₀ integral is innermost.
 
-**Important mathematical point**: The naive d⁴k momentum integral does NOT converge
-as a Lebesgue integral (it decays like 1/k² which is not integrable in 4D).
+**Important mathematical point**: The naive full momentum-space integral does NOT converge
+as a Lebesgue integral (it decays like 1/k², which is not integrable in the full
+spacetime momentum dimension).
 The correct procedure uses the "mixed representation" of the Bessel kernel:
 
     C(x,y) = (1/(2(2π)^{d-1})) ∫_{k_sp} (1/ω) exp(-ω|x₀-y₀|) exp(-i k_sp·(x_sp-y_sp))
@@ -374,7 +375,7 @@ lemma heatKernelPositionSpace_integral_translated (s : ℝ) (hs : 0 < s) (a : Sp
     rw [h_norm_eq y]
   rw [h_fun]
   -- Use translation invariance: ∫ f(y - a) dy = ∫ f(z) dz
-  -- SpaceTime = EuclideanSpace ℝ (Fin 4) has translation-invariant Lebesgue measure
+  -- SpaceTime carries translation-invariant Lebesgue measure
   have h_transl := @MeasureTheory.integral_sub_right_eq_self SpaceTime ℝ _ _ _
     (volume : Measure SpaceTime) _ _ _
     (fun z => heatKernelPositionSpace s ‖z‖) a
@@ -1913,7 +1914,7 @@ lemma heatKernelMoment_setIntegral_integrableOn (s : ℝ) (hs : 0 < s) (c : ℝ)
     heat kernel factor is bounded by K · s^{3/2} for some constant K > 0.
 
     **Proof strategy** (Tonelli factorization):
-    1. Use `spatialNormIntegral_linear_bound`: G(t) := ∫_{ℝ³} ‖f(t,x)‖ dx ≤ C_sp · t
+    1. Use `spatialNormIntegral_linear_bound`: G(t) := ∫_{SpatialCoords} ‖f(t,x_sp)‖ ≤ C_sp · t
     2. Factor via Tonelli: ∫∫_{SpaceTime²} = ∫_{time²} G(t₁)·G(t₂) · √(π/s)·exp(...)
     3. Bound: ≤ C_sp² · ∫_{time²} t₁·t₂ · √(π/s)·exp(-(t₁+t₂)²/(4s))
     4. Apply `heat_kernel_moment_integral_bound`: ≤ C_sp² · 10 · s^{3/2}
@@ -1935,7 +1936,7 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
   -- Step 2: For any s > 0, prove the bound
   intro s hs
 
-  -- We have the spatial integral bound: G(t) := ∫_{ℝ³} ‖f(t,x_sp)‖ dx_sp ≤ C_sp · t for t > 0
+  -- We have the spatial integral bound: G(t) := ∫_{SpatialCoords} ‖f(t,x_sp)‖ ≤ C_sp · t for t > 0
   -- (from h_spatial : spatialNormIntegral_linear_bound f hf_supp)
 
   -- The integrand is non-negative
@@ -1949,7 +1950,7 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
     · exact Real.exp_nonneg _
 
   -- The proof uses Tonelli factorization:
-  -- Step A: Decompose SpaceTime × SpaceTime ≃ₘ (ℝ × ℝ³) × (ℝ × ℝ³) ≃ₘ (ℝ × ℝ) × (ℝ³ × ℝ³)
+  -- Step A: Decompose SpaceTime × SpaceTime ≃ₘ (ℝ × SpatialCoords) × (ℝ × SpatialCoords)
   -- Step B: Apply Tonelli to swap to time-first: ∫_{time²} ∫_{space²}
   -- Step C: The spatial integrals factor: ∫_{space²} = G(t₁) · G(t₂)
   -- Step D: Apply h_spatial: G(t) ≤ C_sp · t when t > 0, G(t) = 0 when t ≤ 0
@@ -1957,7 +1958,8 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
 
   -- Mathematical argument (with references):
   -- ∫∫_{SpaceTime²} ‖f x‖·‖f y‖·√(π/s)·exp(-(t₁+t₂)²/(4s))
-  -- = ∫_{ℝ²} √(π/s)·exp(-(t₁+t₂)²/(4s)) · [∫_{ℝ³} ‖f(t₁,·)‖] · [∫_{ℝ³} ‖f(t₂,·)‖] dt  [Tonelli]
+  -- = ∫_{ℝ²} √(π/s)·exp(-(t₁+t₂)²/(4s)) · [∫_{SpatialCoords} ‖f(t₁,·)‖]
+  --     · [∫_{SpatialCoords} ‖f(t₂,·)‖] dt  [Tonelli]
   -- = ∫_{ℝ²} √(π/s)·exp(-(t₁+t₂)²/(4s)) · G(t₁) · G(t₂) dt                            [definition]
   -- = ∫_{(0,∞)²} ... (since G(t) = 0 for t ≤ 0 by hf_supp)
   -- ≤ C_sp² · ∫_{(0,∞)²} t₁·t₂·√(π/s)·exp(-(t₁+t₂)²/(4s)) dt                         [h_spatial]
@@ -2016,11 +2018,12 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
     mul_nonneg (Real.sqrt_nonneg _) (Real.exp_nonneg _)
 
   -- Step 2: The integrand factors as G(t₁) * G(t₂) * K(t₁, t₂) after Tonelli
-  -- This is the key Tonelli step: decompose SpaceTime × SpaceTime ≃ (ℝ × ℝ) × (ℝ³ × ℝ³)
+  -- This is the key Tonelli step: decompose SpaceTime × SpaceTime into time and spatial parts
   -- and factor the spatial integrals.
   --
   -- ∫∫_{SpaceTime²} ‖f x‖·‖f y‖·K(x₀,y₀) dx dy
-  -- = ∫∫_{ℝ²} K(t₁,t₂) · [∫_{ℝ³} ‖f(t₁,·)‖] · [∫_{ℝ³} ‖f(t₂,·)‖] dt₁ dt₂  [Tonelli]
+  -- = ∫∫_{ℝ²} K(t₁,t₂) · [∫_{SpatialCoords} ‖f(t₁,·)‖]
+  --     · [∫_{SpatialCoords} ‖f(t₂,·)‖] dt₁ dt₂  [Tonelli]
   -- = ∫∫_{ℝ²} K(t₁,t₂) · G(t₁) · G(t₂) dt₁ dt₂
 
   -- Step 3: Bound using G(t) ≤ C_sp * t for t > 0
@@ -2645,7 +2648,7 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFuncti
   --
   -- The formalization requires:
   -- (a) A refined pointwise bound keeping the heat kernel factor
-  -- (b) Decomposing SpaceTime = ℝ × ℝ³ via Fubini
+  -- (b) Decomposing SpaceTime into time × space via Fubini
   -- (c) Showing spatial integrals are bounded (Schwartz decay)
   -- (d) Applying heat_kernel_moment_integral to time integrals
   --
@@ -2786,7 +2789,7 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFuncti
 /-- **AXIOM**: Fubini swap for s ↔ p̄ integrals.
 
     Swaps integration order:
-    ∫₀^∞ ds ∫_ℝ³ d³p̄ F(s, p̄) = ∫_ℝ³ d³p̄ ∫₀^∞ ds F(s, p̄)
+    ∫₀^∞ ds ∫_{SpatialCoords} F(s, p̄) = ∫_{SpatialCoords} ∫₀^∞ ds F(s, p̄)
 
     where the integrand contains:
     - √(π/s) · exp(-t²/(4s)) from the k₀ Gaussian integral
@@ -2796,7 +2799,7 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFuncti
     **Justification:** Fubini applies because:
     1. The p̄-dependence is Schwartz (Fourier transform of Schwartz test functions)
     2. The s-integrand decays as exp(-s·ω²) where ω² = |p̄|² + m² > 0
-    3. Combined integrability on ℝ³ × (0,∞) follows from `Integrable.prod_mul`
+    3. Combined integrability on `SpatialCoords × (0,∞)` follows from `Integrable.prod_mul`
 
     **Note:** This is the most delicate axiom. Requires splitting the region into
     "small s" (UV, controlling 1/r² singularity) and "large s" (IR, using mass m).
@@ -2826,7 +2829,7 @@ theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ)
         Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
         Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y))
 
-  -- The key integrability: F is integrable on (0,∞) × ℝ³
+  -- The key integrability: F is integrable on `(0,∞) × SpatialCoords`
   have hm : 0 < m := Fact.out
   have hm2 : 0 < m^2 := sq_pos_of_pos hm
 
@@ -2841,7 +2844,7 @@ theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ)
 
   have h_int : Integrable F ((volume.restrict (Set.Ioi 0)).prod volume) := by
     /-
-    **Integrability of F on (0,∞) × ℝ³:**
+    **Integrability of F on `(0,∞) × SpatialCoords`:**
 
     The integrand F(s, k_sp) involves:
     - Heat kernel factor: √(π/s) · exp(-(x₀+y₀)²/(4s))
@@ -2866,8 +2869,8 @@ theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ)
     - s-integral: ∫₀^∞ s^{-1/2} · exp(-t_min²/(4s)) · exp(-s·m²) ds
       This converges at s→0 due to exp(-t_min²/(4s)) → 0 faster than any polynomial,
       and at s→∞ due to exp(-s·m²).
-    - k_sp-integral: ∫_{ℝ³} exp(-s·‖k_sp‖²) dk_sp = (π/s)^{3/2}
-      Combined with s^{-1/2} gives s^{-2}, still regularized by exp(-t_min²/(4s)).
+    - k_sp-integral: the Gaussian decay in `SpatialCoords` gives an explicit finite factor
+      for each `s > 0`, which is still regularized by `exp(-t_min²/(4s))` as `s → 0`.
     -/
 
     -- Step 1: Extract minimum time separation from support

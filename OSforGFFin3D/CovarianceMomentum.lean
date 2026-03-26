@@ -236,8 +236,8 @@ noncomputable def heatKernelPositionSpace (t : ℝ) (r : ℝ) : ℝ :=
   (4 * Real.pi * t) ^ (-(STDimension : ℝ) / 2) * Real.exp (-r^2 / (4 * t))
 
 /-- In the 3D spacetime branch, the heat kernel simplifies to
-`(4 π t)^(-3/2) * exp (-r² / (4 t))`. The theorem name is kept for compatibility. -/
-lemma heatKernelPositionSpace_4D (t : ℝ) (ht : 0 < t) (r : ℝ) :
+`(4 π t)^(-3/2) * exp (-r² / (4 t))`. -/
+lemma heatKernelPositionSpace_3D (t : ℝ) (ht : 0 < t) (r : ℝ) :
     heatKernelPositionSpace t r =
       1 / ((4 * Real.pi * t) ^ (3 / 2 : ℝ)) * Real.exp (-r^2 / (4 * t)) := by
   unfold heatKernelPositionSpace
@@ -325,7 +325,7 @@ lemma heatKernelPositionSpace_bounded (r : ℝ) (hr : 0 < r) :
       exact htail_u.le.trans (le_max_right _ _)
   have h_repr : ∀ s > 0, heatKernelPositionSpace s r = const * g (1 / s) := by
     intro s hs
-    rw [heatKernelPositionSpace_4D s hs r]
+    rw [heatKernelPositionSpace_3D s hs r]
     have hpow : (4 * Real.pi * s) ^ (3 / 2 : ℝ) =
         (4 * Real.pi) ^ (3 / 2 : ℝ) * s ^ (3 / 2 : ℝ) := by
       rw [show 4 * Real.pi * s = (4 * Real.pi) * s by ring]
@@ -370,7 +370,7 @@ lemma heatKernelPositionSpace_bounded (r : ℝ) (hr : 0 < r) :
         exact mul_le_mul_of_nonneg_left hsmall hconst_pos.le
       exact hbound.trans (le_max_left _ _)
     · have hs_gt : 1 < s := lt_of_not_ge hs1
-      rw [heatKernelPositionSpace_4D s hs r]
+      rw [heatKernelPositionSpace_3D s hs r]
       have hpow : (4 * Real.pi * s) ^ (3 / 2 : ℝ) =
           (4 * Real.pi) ^ (3 / 2 : ℝ) * s ^ (3 / 2 : ℝ) := by
         rw [show 4 * Real.pi * s = (4 * Real.pi) * s by ring]
@@ -449,10 +449,8 @@ noncomputable def covarianceSchwingerRep (m : ℝ) (r : ℝ) : ℝ :=
   ∫ t in Set.Ioi 0, Real.exp (-t * m^2) * heatKernelPositionSpace t r
 
 /-- In the 3D spacetime branch, the Schwinger representation of the covariance equals
-  `(1 / (4π)^(3/2)) ∫₀^∞ exp(-tm²) · t^(-3/2) · exp(-r²/(4t)) dt`.
-
-  The theorem name is kept for compatibility with the original 4D development. -/
-lemma covarianceSchwingerRep_4D (m : ℝ) (_hm : 0 < m) (r : ℝ) (_hr : 0 < r) :
+  `(1 / (4π)^(3/2)) ∫₀^∞ exp(-tm²) · t^(-3/2) · exp(-r²/(4t)) dt`. -/
+lemma covarianceSchwingerRep_3D (m : ℝ) (_hm : 0 < m) (r : ℝ) (_hr : 0 < r) :
     covarianceSchwingerRep m r =
     (1 / ((4 * Real.pi) ^ (3 / 2 : ℝ))) * ∫ t in Set.Ioi 0,
       Real.exp (-t * m^2) * (1 / t ^ (3 / 2 : ℝ)) * Real.exp (-r^2 / (4 * t)) := by
@@ -463,7 +461,7 @@ lemma covarianceSchwingerRep_4D (m : ℝ) (_hm : 0 < m) (r : ℝ) (_hr : 0 < r) 
         (Real.exp (-t * m^2) * (1 / t ^ (3 / 2 : ℝ)) * Real.exp (-r^2 / (4 * t))) := by
     intro t ht
     have ht_pos : 0 < t := Set.mem_Ioi.mp ht
-    rw [heatKernelPositionSpace_4D t ht_pos r]
+    rw [heatKernelPositionSpace_3D t ht_pos r]
     have hpow : (4 * Real.pi * t) ^ (3 / 2 : ℝ) =
         (4 * Real.pi) ^ (3 / 2 : ℝ) * t ^ (3 / 2 : ℝ) := by
       rw [show 4 * Real.pi * t = (4 * Real.pi) * t by ring]
@@ -488,7 +486,7 @@ theorem covarianceSchwingerRep_eq_besselFormula (m r : ℝ) (hm : 0 < m) (hr : 0
     covarianceSchwingerRep m r =
       (1 / ((4 * Real.pi) ^ (3 / 2 : ℝ))) *
         (2 * (2 * m / r) ^ (1 / 2 : ℝ) * besselKhalf (m * r)) := by
-  rw [covarianceSchwingerRep_4D m hm r hr]
+  rw [covarianceSchwingerRep_3D m hm r hr]
   have h_eq : ∫ t in Set.Ioi 0, Real.exp (-t * m^2) * (1 / t ^ (3 / 2 : ℝ)) * Real.exp (-r^2 / (4 * t)) =
       ∫ t in Set.Ioi 0, (1 / t ^ (3 / 2 : ℝ)) * Real.exp (-m^2 * t - r^2 / (4 * t)) := by
     apply setIntegral_congr_fun measurableSet_Ioi
@@ -603,7 +601,7 @@ lemma gaussianFT_eq_heatKernel_times_norm (s : ℝ) (hs : 0 < s) (z : SpaceTime)
     push_cast
     ring
   rw [h_exp_eq]
-  rw [heatKernelPositionSpace_4D s hs ‖z‖]
+  rw [heatKernelPositionSpace_3D s hs ‖z‖]
   have h_finrank : Module.finrank ℝ SpaceTime = 3 := finrank_euclideanSpace_fin
   rw [h_finrank]
   have h_exp_three_half : ((3 : ℕ) : ℂ) / 2 = (↑(3 / 2 : ℝ) : ℂ) := by norm_num

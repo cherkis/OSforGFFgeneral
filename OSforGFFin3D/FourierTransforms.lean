@@ -773,9 +773,9 @@ theorem fourier_lorentzian_1d_neg (μ : ℝ) (hμ : 0 < μ) (x : ℝ) :
 
 /-! ## Application to Free Field Propagator
 
-The free field propagator in d=4 Euclidean dimensions is:
+The free field propagator in Euclidean spacetime is:
 
-  C(x) = ∫ d⁴k/(2π)⁴ · e^{ik·x} / (k² + m²)
+  C(x) = ∫ d^d k/(2π)^d · e^{ik·x} / (k² + m²)
 
 We can split this into time and spatial parts. After integrating over the
 time component k₀, we get an exponential factor e^{-μ|x₀|} where
@@ -823,4 +823,3 @@ theorem fourier_lorentzian_1d_neg (μ : ℝ) (hμ : 0 < μ) (x : ℝ) :
 Then coerce to complex exponential and instantiate with μ = omega m k.
 -/
 /-! ## Integrability Lemmas -/
-

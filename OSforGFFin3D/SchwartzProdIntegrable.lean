@@ -26,7 +26,7 @@ end SchwartzLinearBound
 
 /-! ## SpaceTime-specialized version
 
-For SpaceTime = EuclideanSpace ℝ (Fin 4), the time coordinate is accessed via `x 0`.
+For the current spacetime type `SpaceTime`, the time coordinate is accessed via `x 0`.
 This specialized version matches the signature needed in OS3_MixedRepInfra.lean.
 -/
 
@@ -132,10 +132,10 @@ theorem schwartz_vanishing_linear_bound (f : TestFunctionℂ)
 
 /-! ## Integrate over space first (Fubini approach)
 
-The key insight is to decompose SpaceTime = ℝ × ℝ³ and integrate over spatial
+The key insight is to decompose SpaceTime into time × space and integrate over spatial
 coordinates first. For a Schwartz function f : SpaceTime → ℂ vanishing at t ≤ 0:
 
-1. Define G(t) = ∫_{ℝ³} ‖f(t, x)‖ dx  (the spatial integral of the norm)
+1. Define G(t) = ∫_{SpatialCoords} ‖f(t, x_sp)‖  (the spatial integral of the norm)
 2. G is well-defined and finite for all t (f is Schwartz)
 3. G(t) = 0 for t ≤ 0 (f vanishes there)
 4. G satisfies a linear bound: G(t) ≤ C·t for t > 0
@@ -199,8 +199,8 @@ lemma spacetimeOfTimeSpace_norm_ge (t : ℝ) (x : SpatialCoords3) :
   have hy : 0 ≤ ‖spacetimeOfTimeSpace t x‖ := norm_nonneg _
   exact (sq_le_sq₀ hx hy).mp hsq_le
 
-/-- Linear embedding of ℝ³ into ℝ⁴ as the spatial subspace at time 0.
-    This maps x ↦ (0, x₀, x₁, x₂), i.e., spacetimeOfTimeSpace 0 x. -/
+/-- Linear embedding of the spatial slice into SpaceTime as the subspace at time 0.
+  This maps `x` to `spacetimeOfTimeSpace 0 x`. -/
 noncomputable def spatialEmbed : SpatialCoords3 →ₗ[ℝ] SpaceTime where
   toFun := fun x => spacetimeOfTimeSpace 0 x
   map_add' := fun x y => by
@@ -238,24 +238,26 @@ lemma continuous_spacetimeOfTimeSpace_right (t : ℝ) : Continuous (spacetimeOfT
     continuous_const.add spatialEmbedCLM.continuous
   exact (continuous_congr h_decompose).mpr h_cont
 
-/-- A Schwartz function restricted to a fixed time slice is integrable over ℝ³.
-    Uses decay transfer: 4D Schwartz decay implies 3D integrability via norm comparison. -/
+/-- A Schwartz function restricted to a fixed time slice is integrable over `SpatialCoords`.
+  Uses decay transfer: spacetime Schwartz decay implies spatial integrability via norm comparison. -/
 lemma schwartz_time_slice_integrable (f : TestFunctionℂ) (t : ℝ) :
     Integrable (fun x : SpatialCoords3 => f (spacetimeOfTimeSpace t x)) volume := by
   -- Strategy: Show the function has rapid decay and use integrability of decay functions
   --
   -- Key facts:
   -- 1. f is Schwartz, so |f(y)| ≤ C/(1 + ‖y‖)^N for any N
-  -- 2. spacetimeOfTimeSpace t x = (t, x₁, x₂, x₃), so ‖spacetimeOfTimeSpace t x‖² = t² + ‖x‖²
+  -- 2. `spacetimeOfTimeSpace t x` has time component `t` and spatial part `x`, so
+  --    ‖spacetimeOfTimeSpace t x‖² = t² + ‖x‖²
   -- 3. For fixed t, ‖spacetimeOfTimeSpace t x‖ ≥ ‖x‖
-  -- 4. So |f(spacetimeOfTimeSpace t x)| ≤ C/(1 + ‖x‖)^N which is integrable on ℝ³ for N > 3
+  -- 4. So |f(spacetimeOfTimeSpace t x)| ≤ C/(1 + ‖x‖)^N which is integrable on the
+  --    spatial slice once N exceeds its dimension
   --
   -- Use Schwartz decay bound from FunctionalAnalysis
   have hST_dim : Module.finrank ℝ SpaceTime < 5 := by
     simp only [SpaceTime, finrank_euclideanSpace, Fintype.card_fin]
     norm_num
   obtain ⟨C, hC_pos, hf_decay⟩ := schwartz_integrable_decay f 5 hST_dim
-  -- Note: SpatialCoords3 has dimension 3, and we need N > dim, so N = 5 > 3 works
+  -- Note: we need `N` larger than the spatial dimension, and `N = 5` suffices here
 
   -- The dominator function: x ↦ C / (1 + ‖x‖)^5
   have h_dom_integrable : Integrable (fun x : SpatialCoords3 => C / (1 + ‖x‖)^5) volume := by
@@ -300,7 +302,7 @@ lemma schwartz_time_slice_integrable (f : TestFunctionℂ) (t : ℝ) :
   rw [Real.norm_of_nonneg (by positivity : 0 ≤ C / (1 + ‖x‖)^5)]
   exact h_bound x
 
-/-- The spatial integral G(t) = ∫_{ℝ³} ‖f(t, x)‖ dx. -/
+/-- The spatial integral `G(t) = ∫_{SpatialCoords} ‖f(t, x_sp)‖`. -/
 noncomputable def spatialNormIntegral (f : TestFunctionℂ) (t : ℝ) : ℝ :=
   ∫ x : SpatialCoords3, ‖f (spacetimeOfTimeSpace t x)‖
 

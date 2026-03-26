@@ -76,7 +76,7 @@ export OS4infra (
 We define intermediate formulations of OS4 that are easier to prove directly.
 -/
 
-/-- OS4' (Ergodicity on generating functions): For any f ∈ S(ℝ × ℝ³),
+/-- OS4' (Ergodicity on generating functions): For any `f ∈ S(SpaceTime)`,
     lim_{t→∞} (1/t) ∫₀ᵗ e^{⟨T_s φ, f⟩} ds → 𝔼_μ[e^{⟨φ,f⟩}] in L²(μ_GFF)
 -/
 def OS4'_Ergodicity_generating (m : ℝ) [Fact (0 < m)] : Prop :=

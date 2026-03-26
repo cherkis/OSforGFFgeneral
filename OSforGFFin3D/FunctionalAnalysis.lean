@@ -530,14 +530,14 @@ theorem locallyIntegrable_of_rpow_decay_real {d : ℕ} (hd : d ≥ 3)
   · -- IntegrableOn f (K \ ball 0 (1/2))
     exact integrableOn_compact_diff_ball hK hC (by norm_num : (0:ℝ) < 1/2) h_decay h_meas
 
-/-- **Polynomial decay is integrable in 3D**: The function 1/(1+‖x‖)^4 is integrable
-    over SpatialCoords = EuclideanSpace ℝ (Fin 3).
+/-- **Polynomial decay is spatially integrable**: The function `1/(1+‖x‖)^4` is integrable
+  over `SpatialCoords`.
 
-    This is a standard result: decay rate 4 > dimension 3 ensures integrability.
+  This is a standard result: decay rate `4` exceeds the spatial dimension in the
+  current branch.
 
-    **Mathematical content**: In ℝ³ with spherical coordinates,
-    ∫ 1/(1+r)^4 · r² dr dΩ = 4π ∫₀^∞ r²/(1+r)^4 dr < ∞
-    since the integrand decays as r⁻² for large r.
+  **Mathematical content**: In polar coordinates on the spatial slice, the tail is
+  integrable because the decay exponent is stronger than the volume growth.
 
     **Used by**: `spatialNormIntegral_linear_bound` and `F_norm_bound_via_linear_vanishing`
     to show that spatial integrals of Schwartz functions with linear time vanishing

@@ -485,7 +485,8 @@ Using the axioms above, we establish local integrability of the Schwinger functi
 
 /-- The two-point Schwinger function is locally integrable.
     This follows from the polynomial decay bound |S_2(x)| ≤ C|x|^{-2}.
-    In d=4 spacetime dimensions, |x|^{-2} is locally integrable since 2 < 4. -/
+    In the current branch `STDimension = 3`, so `|x|^{-2}` is locally integrable
+    because `2 < 3`. -/
 lemma gff_two_point_locally_integrable (m : ℝ) [Fact (0 < m)] :
   TwoPointIntegrable (gaussianFreeField_free m) := by
   unfold TwoPointIntegrable
@@ -494,11 +495,11 @@ lemma gff_two_point_locally_integrable (m : ℝ) [Fact (0 < m)] :
   -- Apply real version of the decay axiom
   refine locallyIntegrable_of_rpow_decay_real (d := STDimension) (C := C) (α := 2)
     ?hd ?hC ?hα ?h_decay ?h_meas
-  · -- hd: STDimension = 4 ≥ 3
+  · -- hd: `STDimension ≥ 3`
     norm_num [STDimension]
   · -- hC: C > 0
     exact hC_pos
-  · -- hα: 2 < STDimension (2 < 4)
+  · -- hα: `2 < STDimension`
     norm_num [STDimension]
   · -- h_decay: Decay bound holds: convert two-argument decay to single-argument
     intro x

@@ -96,8 +96,8 @@ open TopologicalSpace Measure
 
 noncomputable section
 
-/-OS2 R^d with d=4, where mu is the Lebegue measure.
-We know the OS2 dp must be Euclidean invariant -/
+/- OS2 on Euclidean spacetime with Lebesgue measure.
+We know the OS2 data must be Euclidean invariant. -/
 
 open scoped Real InnerProductSpace SchwartzMap
 
