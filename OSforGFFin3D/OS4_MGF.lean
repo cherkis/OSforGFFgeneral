@@ -19,16 +19,16 @@ import Mathlib.Tactic.Positivity
 import Mathlib.Analysis.Complex.Basic
 import Mathlib.Algebra.Order.Chebyshev
 
-import OSforGFF.Basic
-import OSforGFF.Schwinger
-import OSforGFF.GFFMconstruct
-import OSforGFF.GFFIsGaussian
-import OSforGFF.OS0_GFF
-import OSforGFF.OS2_GFF
-import OSforGFF.ComplexTestFunction
-import OSforGFF.TimeTranslation
-import OSforGFF.CovarianceMomentum
-import OSforGFF.OS_Axioms
+import OSforGFFin3D.Basic
+import OSforGFFin3D.Schwinger
+import OSforGFFin3D.GFFMconstruct
+import OSforGFFin3D.GFFIsGaussian
+import OSforGFFin3D.OS0_GFF
+import OSforGFFin3D.OS2_GFF
+import OSforGFFin3D.ComplexTestFunction
+import OSforGFFin3D.TimeTranslation
+import OSforGFFin3D.CovarianceMomentum
+import OSforGFFin3D.OS_Axioms
 
 /-!
 # OS4 Shared Infrastructure

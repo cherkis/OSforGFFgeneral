@@ -4,15 +4,15 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 
-import OSforGFF.Basic
-import OSforGFF.PositiveTimeTestFunction_real
-import OSforGFF.DiscreteSymmetry
-import OSforGFF.OS_Axioms
-import OSforGFF.GFFMconstruct
-import OSforGFF.HadamardExp
-import OSforGFF.CovarianceR
-import OSforGFF.OS3_CovarianceRP
-import OSforGFF.GFFIsGaussian
+import OSforGFFin3D.Basic
+import OSforGFFin3D.PositiveTimeTestFunction_real
+import OSforGFFin3D.DiscreteSymmetry
+import OSforGFFin3D.OS_Axioms
+import OSforGFFin3D.GFFMconstruct
+import OSforGFFin3D.HadamardExp
+import OSforGFFin3D.CovarianceR
+import OSforGFFin3D.OS3_CovarianceRP
+import OSforGFFin3D.GFFIsGaussian
 
 /-!
 ## Real Reflection Positivity for the Gaussian Free Field

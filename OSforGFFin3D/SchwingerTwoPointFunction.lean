@@ -10,8 +10,8 @@ import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 import Mathlib.MeasureTheory.Function.LocallyIntegrable
 import Mathlib.Order.Filter.Basic
 
-import OSforGFF.Basic
-import OSforGFF.Schwinger
+import OSforGFFin3D.Basic
+import OSforGFFin3D.Schwinger
 
 /-!
 ## Schwinger Two-Point Function

@@ -17,11 +17,11 @@ import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.MeasureTheory.Function.LpSpace.Basic
 
 
-import OSforGFF.Basic
-import OSforGFF.Schwinger
-import OSforGFF.OS_Axioms
-import OSforGFF.GFFMconstruct
-import OSforGFF.ComplexTestFunction
+import OSforGFFin3D.Basic
+import OSforGFFin3D.Schwinger
+import OSforGFFin3D.OS_Axioms
+import OSforGFFin3D.GFFMconstruct
+import OSforGFFin3D.ComplexTestFunction
 import Mathlib.MeasureTheory.Measure.Complex
 import Mathlib.Analysis.Complex.CauchyIntegral
 import Mathlib.Analysis.Complex.HasPrimitives

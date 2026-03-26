@@ -10,7 +10,7 @@ import Mathlib.Analysis.Calculus.LineDeriv.Basic
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
 import Mathlib.Tactic
 
-import OSforGFF.Basic
+import OSforGFFin3D.Basic
 
 /-!
 # Time Translation Operators

@@ -12,9 +12,9 @@ import Mathlib.Data.Finset.Basic
 import Mathlib.Data.ENNReal.Holder
 import Mathlib.MeasureTheory.Function.LpSeminorm.CompareExp
 
-import OSforGFF.Basic
-import OSforGFF.Schwinger
-import OSforGFF.GFFMconstruct
+import OSforGFFin3D.Basic
+import OSforGFFin3D.Schwinger
+import OSforGFFin3D.GFFMconstruct
 
 /-!
 ## Gaussian Moments and n-Point Integrability

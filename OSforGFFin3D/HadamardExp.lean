@@ -10,7 +10,7 @@ This module contains continuity properties, Hadamard powers, and the proof that
 the entrywise exponential preserves positive definiteness via Hadamard series.
 -/
 
-import OSforGFF.SchurProduct
+import OSforGFFin3D.SchurProduct
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.Normed.Algebra.Exponential
 import Mathlib.Analysis.Complex.TaylorSeries

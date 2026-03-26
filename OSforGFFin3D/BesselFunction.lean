@@ -425,9 +425,9 @@ lemma besselK_asymptotic (νpos : 0 < ν) (νle : ν ≤ 1) (z : ℝ) (hz : 1 �
             apply le_trans _ ht
             linarith
       have h_cosh_nu_le : cosh (ν * t) ≤ exp t := by
-        have h1 : cosh (ν * t) ≤ exp (ν * t) := h_cosh_le νpos
-        have h2 : exp (ν * t) ≤ exp t := exp_le_exp.mpr (by nlinarith)
-        exact le_trans h1 h2
+        calc
+          cosh (ν * t) ≤ exp (ν * t) := h_cosh_le νpos
+          _ ≤ exp t := exp_le_exp.mpr (by nlinarith)
       calc exp (-z * cosh t) * cosh (ν * t)
           ≤ exp (-z * (exp t / 2)) * cosh (ν * t) := by
               apply mul_le_mul_of_nonneg_right _ (cosh_pos (ν * t)).le
@@ -458,10 +458,7 @@ lemma besselK_asymptotic (νpos : 0 < ν) (νle : ν ≤ 1) (z : ℝ) (hz : 1 �
           tendsto_exp_atTop.const_mul_atTop (by linarith : 0 < z / 2)
         have h4 : Tendsto (fun t => -(z / 2 * exp t)) atTop atBot := Filter.tendsto_neg_atTop_atBot.comp h3
         convert h4 using 1; ext t; ring
-      have h2 : Tendsto (fun t => (-2/z) * exp (-z * exp t / 2)) atTop (nhds ((-2/z) * 0)) :=
-        h1.const_mul (-2/z)
-      simp only [mul_zero] at h2
-      convert h2 using 1
+      simpa [F] using h1.const_mul (-2 / z)
     have hg_int : IntegrableOn g (Ioi 1) := by
       apply integrableOn_Ioi_deriv_of_nonneg hF_cont (fun x _ => hF_deriv x) (fun x _ => hg_nonneg x) hF_tendsto
     have h_int_g : ∫ t in Ioi 1, g t = 2/z * exp (-z * exp 1 / 2) := by
@@ -562,13 +559,13 @@ lemma besselK_mul_self_le {ν : ℝ} (νpos : 0 < ν) (νle : ν ≤ 1) (z : ℝ
       have h_cosh_ge : cosh t ≥ exp t / 2 := by rw [cosh_eq]; linarith [exp_nonneg (-t)]
       -- cosh(νt) ≤ exp(νt) ≤ exp(t) since ν ≤ 1
       have h_cosh_nu_le : cosh (ν * t) ≤ exp t := by
-        have h1 : cosh (ν * t) ≤ exp (ν * t) := by
-          rw [cosh_eq, div_le_iff₀' two_pos, two_mul, add_le_add_iff_left,
-              ← mul_le_mul_iff_left₀ (exp_pos (ν * t)), exp_neg]
-          rw [inv_mul_cancel₀ (exp_ne_zero (ν * t)), ← exp_add, one_le_exp_iff, ← mul_add]
-          exact (mul_nonneg_iff_of_pos_left νpos).mpr (nonneg_add_self_iff.mpr (by linarith))
-        have h2 : exp (ν * t) ≤ exp t := exp_le_exp.mpr (by nlinarith)
-        linarith
+        calc
+          cosh (ν * t) ≤ exp (ν * t) := by
+            rw [cosh_eq, div_le_iff₀' two_pos, two_mul, add_le_add_iff_left,
+                ← mul_le_mul_iff_left₀ (exp_pos (ν * t)), exp_neg]
+            rw [inv_mul_cancel₀ (exp_ne_zero (ν * t)), ← exp_add, one_le_exp_iff, ← mul_add]
+            exact (mul_nonneg_iff_of_pos_left νpos).mpr (nonneg_add_self_iff.mpr (by linarith))
+          _ ≤ exp t := exp_le_exp.mpr (by nlinarith)
       have h_exp_eq : -z * (exp t / 2) = -z * exp t / 2 := by ring
       calc exp (-z * cosh t) * cosh (ν * t)
           ≤ exp (-z * (exp t / 2)) * cosh (ν * t) := by
@@ -615,9 +612,7 @@ lemma besselK_mul_self_le {ν : ℝ} (νpos : 0 < ν) (νle : ν ≤ 1) (z : ℝ
           Filter.tendsto_neg_atTop_atBot.comp h3
         convert h4 using 1
         ext t; ring
-      have h4 := h1.const_mul (-2/z)
-      simp only [mul_zero] at h4
-      exact h4
+      simpa [F] using h1.const_mul (-2 / z)
     -- g is integrable on (1, ∞)
     have hg_int : IntegrableOn g (Ioi 1) := by
       apply integrableOn_Ioi_deriv_of_nonneg hF_cont

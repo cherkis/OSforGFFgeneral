@@ -11,8 +11,8 @@ import Mathlib.MeasureTheory.Integral.IntegrableOn
 import Mathlib.MeasureTheory.Integral.Prod
 import Mathlib.Analysis.Calculus.MeanValue
 import Mathlib.Analysis.Calculus.Deriv.Basic
-import OSforGFF.FunctionalAnalysis
-import OSforGFF.Basic
+import OSforGFFin3D.FunctionalAnalysis
+import OSforGFFin3D.Basic
 
 
 open MeasureTheory SchwartzMap Real Set Metric
@@ -147,24 +147,30 @@ Using G(t) ≤ C·t and AM-GM: t₁t₂/(t₁+t₂)² ≤ 1/4, the integrand is 
 On the bounded time domain {0 < t₁, 0 < t₂, t₁+t₂ < 1}, this gives integrability.
 -/
 
-/-- The spatial part of SpaceTime: ℝ³. -/
-abbrev SpatialCoords3 : Type := EuclideanSpace ℝ (Fin 3)
+/-- The spatial part of SpaceTime. -/
+abbrev SpatialCoords3 : Type := SpatialCoords
 
 /-- Decomposition of SpaceTime as time × space. -/
 noncomputable def spacetimeOfTimeSpace (t : ℝ) (x : SpatialCoords3) : SpaceTime :=
-  EuclideanSpace.equiv (Fin 4) ℝ |>.symm (Fin.cons t (fun i => x i))
+  (EuclideanSpace.equiv (Fin STDimension) ℝ).symm (Fin.cons t (fun i => x i))
 
 /-- The time coordinate of spacetimeOfTimeSpace is t. -/
 lemma spacetimeOfTimeSpace_time (t : ℝ) (x : SpatialCoords3) :
     (spacetimeOfTimeSpace t x) 0 = t := by
-  simp [spacetimeOfTimeSpace, EuclideanSpace.equiv]
+  simp [spacetimeOfTimeSpace]
 
 /-- Access the i-th spatial component of spacetimeOfTimeSpace.
     Mathematical fact: (spacetimeOfTimeSpace t x) (i+1) = x i -/
-lemma spacetimeOfTimeSpace_spatial (t : ℝ) (x : SpatialCoords3) (i : Fin 3) :
-    (spacetimeOfTimeSpace t x) ⟨i.val + 1, Nat.add_lt_add_right i.isLt 1⟩ = x i := by
-  have h : (⟨i.val + 1, Nat.add_lt_add_right i.isLt 1⟩ : Fin 4) = Fin.succ i := rfl
-  simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, h]
+lemma spacetimeOfTimeSpace_spatial (t : ℝ) (x : SpatialCoords3) (i : Fin (STDimension - 1)) :
+    (spacetimeOfTimeSpace t x) i.succ = x i := by
+  simpa [spacetimeOfTimeSpace] using
+    (show (Fin.cons t (fun j => x.ofLp j)) i.succ = x.ofLp i by rfl)
+
+/-- The spatial part of `spacetimeOfTimeSpace t x` is `x`. -/
+lemma spatialPart_spacetimeOfTimeSpace (t : ℝ) (x : SpatialCoords3) :
+    spatialPart (spacetimeOfTimeSpace t x) = x := by
+  ext i
+  exact spacetimeOfTimeSpace_spatial t x i
 
 /-- The decomposition: spacetimeOfTimeSpace t x = timeOrigin t + spatialEmbed x.
     This is the key structural fact: (t, x) = (t, 0) + (0, x). -/
@@ -173,27 +179,20 @@ lemma spacetimeOfTimeSpace_decompose (t : ℝ) (x : SpatialCoords3) :
   ext j
   cases' j using Fin.cases with j
   · -- time coordinate
-    simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, Fin.cons_zero]
+    simp [spacetimeOfTimeSpace]
   · -- spatial coordinates
-    simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, Fin.cons_succ]
+    simp [spacetimeOfTimeSpace]
+
+/-- Norm decomposition for `spacetimeOfTimeSpace`. -/
+lemma spacetimeOfTimeSpace_norm_sq (t : ℝ) (x : SpatialCoords3) :
+    ‖spacetimeOfTimeSpace t x‖ ^ 2 = t ^ 2 + ‖x‖ ^ 2 := by
+  rw [EuclideanSpace.norm_sq_eq, Fin.sum_univ_succ, EuclideanSpace.norm_sq_eq]
+  simp [spacetimeOfTimeSpace_time, spacetimeOfTimeSpace_spatial]
 
 /-- Norm comparison: the spacetime norm dominates the spatial norm. -/
 lemma spacetimeOfTimeSpace_norm_ge (t : ℝ) (x : SpatialCoords3) :
     ‖spacetimeOfTimeSpace t x‖ ≥ ‖x‖ := by
-  have hsq : ‖spacetimeOfTimeSpace t x‖ ^ 2 = t ^ 2 + ‖x‖ ^ 2 := by
-    rw [EuclideanSpace.norm_sq_eq, Fin.sum_univ_four]
-    -- Note: x.ofLp i = x i definitionally for EuclideanSpace
-    simp only [Real.norm_eq_abs, sq_abs, spacetimeOfTimeSpace_time]
-    conv_lhs => rw [add_assoc, add_assoc]
-    congr 1
-    rw [EuclideanSpace.norm_sq_eq, Fin.sum_univ_three]
-    simp only [Real.norm_eq_abs, sq_abs]
-    -- Now we need to match spacetimeOfTimeSpace components with x components
-    have h1 : (spacetimeOfTimeSpace t x).ofLp 1 = x 0 := spacetimeOfTimeSpace_spatial t x 0
-    have h2 : (spacetimeOfTimeSpace t x).ofLp 2 = x 1 := spacetimeOfTimeSpace_spatial t x 1
-    have h3 : (spacetimeOfTimeSpace t x).ofLp 3 = x 2 := spacetimeOfTimeSpace_spatial t x 2
-    simp only [h1, h2, h3]
-    ring
+  have hsq := spacetimeOfTimeSpace_norm_sq t x
   have hsq_le : ‖x‖ ^ 2 ≤ ‖spacetimeOfTimeSpace t x‖ ^ 2 := by
     rw [hsq]; nlinarith [sq_nonneg t]
   have hx : 0 ≤ ‖x‖ := norm_nonneg _
@@ -207,13 +206,13 @@ noncomputable def spatialEmbed : SpatialCoords3 →ₗ[ℝ] SpaceTime where
   map_add' := fun x y => by
     ext j
     cases' j using Fin.cases with j
-    · simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, Fin.cons_zero]
-    · simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, Fin.cons_succ]
+    · simp [spacetimeOfTimeSpace]
+    · simp [spacetimeOfTimeSpace]
   map_smul' := fun r x => by
     ext j
     cases' j using Fin.cases with j
-    · simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, Fin.cons_zero]
-    · simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, Fin.cons_succ]
+    · simp [spacetimeOfTimeSpace]
+    · simp [spacetimeOfTimeSpace]
 
 /-- The spatial embedding is continuous (being linear on finite-dim spaces). -/
 lemma spatialEmbed_continuous : Continuous spatialEmbed :=
@@ -477,16 +476,8 @@ lemma schwartz_vanishing_ftc_decay (f : TestFunctionℂ)
     -- ‖spacetimeOfTimeSpace t 0‖ = |t| = t (since ht : 0 < t)
     -- spacetimeOfTimeSpace t 0 is the point (t, 0, 0, 0)
     rw [h_diff]
-    -- Compute the norm directly using EuclideanSpace.norm_sq_eq
-    have hsq : ‖spacetimeOfTimeSpace t 0‖^2 = t^2 := by
-      rw [EuclideanSpace.norm_sq_eq, Fin.sum_univ_four]
-      -- The components are: time = t, spatial = 0
-      have h0 : (spacetimeOfTimeSpace t 0 : SpaceTime).ofLp 0 = t := spacetimeOfTimeSpace_time t 0
-      have h1 : (spacetimeOfTimeSpace t 0 : SpaceTime).ofLp 1 = 0 := spacetimeOfTimeSpace_spatial t 0 0
-      have h2 : (spacetimeOfTimeSpace t 0 : SpaceTime).ofLp 2 = 0 := spacetimeOfTimeSpace_spatial t 0 1
-      have h3 : (spacetimeOfTimeSpace t 0 : SpaceTime).ofLp 3 = 0 := spacetimeOfTimeSpace_spatial t 0 2
-      simp only [h0, h1, h2, h3, Real.norm_eq_abs, abs_zero, sq_abs]
-      ring
+    have hsq : ‖spacetimeOfTimeSpace t 0‖ ^ 2 = t ^ 2 := by
+      simpa using spacetimeOfTimeSpace_norm_sq t (0 : SpatialCoords3)
     have hnorm : 0 ≤ ‖spacetimeOfTimeSpace t 0‖ := norm_nonneg _
     nlinarith [sq_nonneg ‖spacetimeOfTimeSpace t 0‖, sq_nonneg t, hsq, ht]
 
@@ -510,11 +501,11 @@ lemma schwartz_vanishing_ftc_decay (f : TestFunctionℂ)
     ext j
     cases' j using Fin.cases with j
     · -- Time component: (spacetimeOfTimeSpace s 0) 0 = s, (s • e₀) 0 = s * 1 = s
-      simp [spacetimeOfTimeSpace, e₀, EuclideanSpace.equiv, Fin.cons_zero,
+      simp [spacetimeOfTimeSpace, e₀,
             EuclideanSpace.single_apply, smul_eq_mul, mul_one]
     · -- Spatial components: (spacetimeOfTimeSpace s 0) (j+1) = 0, (s • e₀) (j+1) = s * 0 = 0
       have hne : Fin.succ j ≠ 0 := Fin.succ_ne_zero j
-      simp [spacetimeOfTimeSpace, e₀, EuclideanSpace.equiv, Fin.cons_succ,
+      simp [spacetimeOfTimeSpace, e₀,
             EuclideanSpace.single_apply, hne, smul_eq_mul, mul_zero]
 
   -- The path s ↦ spacetimeOfTimeSpace s x_sp equals spacetimeOfTimeSpace 0 x_sp + s • e₀
@@ -608,10 +599,22 @@ theorem spatialNormIntegral_linear_bound (f : TestFunctionℂ)
   obtain ⟨C_pt, hC_pt_pos, h_pt_bound⟩ := schwartz_vanishing_ftc_decay f hf_supp
 
   -- Step 2: Get integrability of the decay function from helper lemma
-  have h_decay_int := polynomial_decay_integrable_3d
+  have h_decay_int : Integrable (fun x : SpatialCoords3 => 1 / (1 + ‖x‖)^4) volume := by
+    have h_dim : (Module.finrank ℝ SpatialCoords3 : ℝ) < (4 : ℝ) := by
+      simpa [SpatialCoords3, SpatialCoords, STDimension] using (show (2 : ℝ) < 4 by norm_num)
+    have h_int := integrable_one_add_norm (E := SpatialCoords3) (μ := volume) (r := 4) h_dim
+    convert h_int using 1
+    ext x
+    have h_pos : 0 < 1 + ‖x‖ := by linarith [norm_nonneg x]
+    calc
+      1 / (1 + ‖x‖) ^ 4 = ((1 + ‖x‖) ^ 4)⁻¹ := by rw [one_div]
+      _ = (1 + ‖x‖) ^ (-4 : ℝ) := by
+        rw [Real.rpow_neg (le_of_lt h_pos)]
+        congr 1
+        exact (Real.rpow_natCast (1 + ‖x‖) 4).symm
 
   -- Step 3: Define the constant K = ∫ 1/(1+‖x‖)^4 dx (finite by h_decay_int)
-  let K := ∫ x : EuclideanSpace ℝ (Fin 3), 1 / (1 + ‖x‖)^4
+  let K := ∫ x : SpatialCoords3, 1 / (1 + ‖x‖)^4
 
   -- K is nonnegative (integral of nonnegative function)
   have hK_nonneg : 0 ≤ K := integral_nonneg (fun x => by positivity)

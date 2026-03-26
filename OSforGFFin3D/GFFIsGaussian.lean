@@ -4,8 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 
-import OSforGFF.OS0_GFF
-import OSforGFF.GaussianMoments
+import OSforGFFin3D.OS0_GFF
+import OSforGFFin3D.GaussianMoments
 
 /-!
 ## Complex GFF Results via OS0 Analyticity

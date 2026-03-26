@@ -36,15 +36,15 @@ import Mathlib.Analysis.Normed.Module.RCLike.Real
 import Mathlib.Topology.Basic
 import Mathlib.Order.Filter.Basic
 
-import OSforGFF.Basic
-import OSforGFF.Schwinger
-import OSforGFF.FunctionalAnalysis
-import OSforGFF.Euclidean
-import OSforGFF.DiscreteSymmetry
-import OSforGFF.PositiveTimeTestFunction_real
-import OSforGFF.ComplexTestFunction
-import OSforGFF.TimeTranslation
-import OSforGFF.SchwingerTwoPointFunction
+import OSforGFFin3D.Basic
+import OSforGFFin3D.Schwinger
+import OSforGFFin3D.FunctionalAnalysis
+import OSforGFFin3D.Euclidean
+import OSforGFFin3D.DiscreteSymmetry
+import OSforGFFin3D.PositiveTimeTestFunction_real
+import OSforGFFin3D.ComplexTestFunction
+import OSforGFFin3D.TimeTranslation
+import OSforGFFin3D.SchwingerTwoPointFunction
 
 /-!
 ## Osterwalder-Schrader Axioms

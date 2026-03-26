@@ -11,8 +11,8 @@ import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
 import Mathlib.LinearAlgebra.TensorAlgebra.Basic
 
-import OSforGFF.Basic
-import OSforGFF.DiscreteSymmetry
+import OSforGFFin3D.Basic
+import OSforGFFin3D.DiscreteSymmetry
 
 /-!
 # Positive Time Test Functions and Star Operations

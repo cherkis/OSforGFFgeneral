@@ -3,8 +3,8 @@ Copyright (c) 2025 Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim. All r
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
-import OSforGFF.FourierTransforms
-import OSforGFF.CovarianceMomentum
+import OSforGFFin3D.FourierTransforms
+import OSforGFFin3D.CovarianceMomentum
 
 /-!
 # Parseval Identity for Covariance

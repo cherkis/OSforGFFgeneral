@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 
-import OSforGFF.OS3_MixedRepInfra
+import OSforGFFin3D.OS3_MixedRepInfra
 
 /-!
 # Mixed Representation of the Free Scalar Two-Point Function
@@ -487,11 +487,14 @@ lemma omega_pos (k_sp : SpatialCoords) (m : ℝ) (hm : 0 < m) :
     0 < Real.sqrt (‖k_sp‖^2 + m^2) := by positivity
 
 /-- The normalization constant relation:
-    (1/(2π)⁴) × π = 1/(2(2π)³)
+    (1/(2π)^STDimension) × π = 1/(2(2π)^(STDimension - 1))
 
-    Proof: (2π)⁴ = 2 × (2π)³ × π, so π/(2π)⁴ = 1/(2(2π)³) -/
+    For the current 3D spacetime branch this is
+    `(1/(2π)^3) × π = 1/(2(2π)^2)`. -/
 lemma normalization_constant_laplace :
-    (1 / (2 * π) ^ 4 : ℝ) * π = 1 / (2 * (2 * π) ^ 3) := by field_simp
+    (1 / (2 * π) ^ STDimension : ℝ) * π = 1 / (2 * (2 * π) ^ (STDimension - 1)) := by
+  simp [STDimension]
+  field_simp
 
 /-- The s-integral evaluation for fixed (k_sp, x, y):
 
@@ -794,26 +797,26 @@ theorem laplace_s_integral_with_norm (m : ℝ) [Fact (0 < m)] (f : TestFunction�
     exact h_s_eval k_sp x y
   rw [h_inner_eval]
   -- Step 4: Apply normalization constant identity
-  -- LHS: (1/(2π)^4) * ∫ [... (π/ω) ...]
-  -- RHS: (1/(2(2π)^3)) * ∫ [... (1/ω) ...]
+  -- LHS: (1/(2π)^3) * ∫ [... (π/ω) ...]
+  -- RHS: (1/(2(2π)^2)) * ∫ [... (1/ω) ...]
   --
-  -- Key identity: (1/(2π)^4) * π = 1/(2(2π)^3) (normalization_constant_laplace)
+  -- Key identity: (1/(2π)^3) * π = 1/(2(2π)^2) (normalization_constant_laplace)
   --
   -- The mathematical content is proven:
   -- - s_integral_eval: Laplace transform identity ✓
-  -- - normalization_constant_laplace: (1/(2π)^4) * π = 1/(2(2π)^3) ✓
+  -- - normalization_constant_laplace: (1/(2π)^3) * π = 1/(2(2π)^2) ✓
   -- - fubini_s_xy_swap: Integral order swap (axiom)
   --
   -- The remaining work is purely algebraic: pulling π from π/ω into the front
-  -- constant and showing the result equals (1/(2(2π)^3)) * ∫[... (1/ω) ...].
+  -- constant and showing the result equals (1/(2(2π)^2)) * ∫[... (1/ω) ...].
 
-  -- Step A: Simplify STDimension (which equals 4)
+  -- Step A: Simplify STDimension (which equals 3)
   simp only [STDimension]
   norm_num
-  -- Goal: ((2 * ↑π) ^ 4)⁻¹ * ∫ ... (↑π / ↑√ω) ... = ((2 * ↑π) ^ 3)⁻¹ * (1/2) * ∫ ... (↑√ω)⁻¹ ...
+  -- Goal: ((2 * ↑π) ^ 3)⁻¹ * ∫ ... (↑π / ↑√ω) ... = ((2 * ↑π) ^ 2)⁻¹ * (1/2) * ∫ ... (↑√ω)⁻¹ ...
 
   -- Step B: Front constant identity (complex version)
-  have h_const : ((2 * (π : ℂ)) ^ 4)⁻¹ * (π : ℂ) = ((2 * (π : ℂ)) ^ 3)⁻¹ * (1 / 2) := by
+  have h_const : ((2 * (π : ℂ)) ^ 3)⁻¹ * (π : ℂ) = ((2 * (π : ℂ)) ^ 2)⁻¹ * (1 / 2) := by
     have hπ : (π : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr Real.pi_pos.ne'
     have h2π : (2 * (π : ℂ)) ≠ 0 := by simp [hπ]
     field_simp
@@ -845,27 +848,27 @@ theorem laplace_s_integral_with_norm (m : ℝ) [Fact (0 < m)] (f : TestFunction�
     simp_rw [MeasureTheory.integral_smul]
 
   -- Step E: The main calculation
-  calc ((2 * (π : ℂ)) ^ 4)⁻¹ *
+  calc ((2 * (π : ℂ)) ^ 3)⁻¹ *
         ∫ (k_sp : SpatialCoords) (x : SpaceTime) (y : SpaceTime),
           (starRingEnd ℂ) (f x) * f y * ((π : ℂ) / ↑(Real.sqrt (‖k_sp‖^2 + m^2))) *
             Complex.exp (-(↑|-x.ofLp 0 - y.ofLp 0| * ↑(Real.sqrt (‖k_sp‖^2 + m^2)))) *
             Complex.exp (-(Complex.I * ↑(spatialDot k_sp (spatialPart x - spatialPart y))))
-      = ((2 * (π : ℂ)) ^ 4)⁻¹ * ((π : ℂ) * ∫ (k_sp : SpatialCoords) (x : SpaceTime) (y : SpaceTime),
+      = ((2 * (π : ℂ)) ^ 3)⁻¹ * ((π : ℂ) * ∫ (k_sp : SpatialCoords) (x : SpaceTime) (y : SpaceTime),
           (starRingEnd ℂ) (f x) * f y * (↑(Real.sqrt (‖k_sp‖^2 + m^2)))⁻¹ *
             Complex.exp (-(↑|-x.ofLp 0 - y.ofLp 0| * ↑(Real.sqrt (‖k_sp‖^2 + m^2)))) *
             Complex.exp (-(Complex.I * ↑(spatialDot k_sp (spatialPart x - spatialPart y))))) := by
         rw [h_integral_eq]
-    _ = (((2 * (π : ℂ)) ^ 4)⁻¹ * (π : ℂ)) * ∫ (k_sp : SpatialCoords) (x : SpaceTime) (y : SpaceTime),
+    _ = (((2 * (π : ℂ)) ^ 3)⁻¹ * (π : ℂ)) * ∫ (k_sp : SpatialCoords) (x : SpaceTime) (y : SpaceTime),
           (starRingEnd ℂ) (f x) * f y * (↑(Real.sqrt (‖k_sp‖^2 + m^2)))⁻¹ *
             Complex.exp (-(↑|-x.ofLp 0 - y.ofLp 0| * ↑(Real.sqrt (‖k_sp‖^2 + m^2)))) *
             Complex.exp (-(Complex.I * ↑(spatialDot k_sp (spatialPart x - spatialPart y)))) := by
         ring
-    _ = (((2 * (π : ℂ)) ^ 3)⁻¹ * (1 / 2)) * ∫ (k_sp : SpatialCoords) (x : SpaceTime) (y : SpaceTime),
+    _ = (((2 * (π : ℂ)) ^ 2)⁻¹ * (1 / 2)) * ∫ (k_sp : SpatialCoords) (x : SpaceTime) (y : SpaceTime),
           (starRingEnd ℂ) (f x) * f y * (↑(Real.sqrt (‖k_sp‖^2 + m^2)))⁻¹ *
             Complex.exp (-(↑|-x.ofLp 0 - y.ofLp 0| * ↑(Real.sqrt (‖k_sp‖^2 + m^2)))) *
             Complex.exp (-(Complex.I * ↑(spatialDot k_sp (spatialPart x - spatialPart y)))) := by
         rw [h_const]
-    _ = ((2 * (π : ℂ)) ^ 3)⁻¹ * (1 / 2) * ∫ (k_spatial : SpatialCoords) (x : SpaceTime) (y : SpaceTime),
+    _ = ((2 * (π : ℂ)) ^ 2)⁻¹ * (1 / 2) * ∫ (k_spatial : SpatialCoords) (x : SpaceTime) (y : SpaceTime),
           (starRingEnd ℂ) (f x) * f y * (↑(Real.sqrt (‖k_spatial‖^2 + m^2)))⁻¹ *
             Complex.exp (-(↑|-x.ofLp 0 - y.ofLp 0| * ↑(Real.sqrt (‖k_spatial‖^2 + m^2)))) *
             Complex.exp (-(Complex.I * ↑(spatialDot k_spatial (spatialPart x - spatialPart y)))) := by
@@ -1790,12 +1793,9 @@ theorem bilinear_to_k0_inside (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ)
   -- Step 2: Prove normalization identity (as complex numbers)
   have h_norm : ((1 / (2 * (2 * π) ^ (STDimension - 1)) : ℝ) : ℂ) =
       ((1 / (2 * π) ^ STDimension : ℝ) : ℂ) * (π : ℂ) := by
-    have hπ : π ≠ 0 := Real.pi_ne_zero
-    have h2π : 2 * π ≠ 0 := by positivity
-    have hd : STDimension = 4 := rfl
     push_cast
     field_simp
-    rw [hd]
+    simp [STDimension]
     ring
 
   -- Step 3: Rewrite coefficient using h_norm and rearrange to match RHS structure

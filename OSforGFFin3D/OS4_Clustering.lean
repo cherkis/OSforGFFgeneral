@@ -4,20 +4,20 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 
-import OSforGFF.Basic
-import OSforGFF.Schwinger
-import OSforGFF.GFFMconstruct
-import OSforGFF.GFFIsGaussian
-import OSforGFF.GaussianFreeField -- For gaussian_satisfies_OS2
-import OSforGFF.OS2_GFF -- For CovarianceEuclideanInvariantℂ_μ_GFF
-import OSforGFF.Covariance  -- For freeCovarianceℂ_bilinear_symm
-import OSforGFF.CovarianceMomentum
-import OSforGFF.OS_Axioms
-import OSforGFF.FunctionalAnalysis
-import OSforGFF.ComplexTestFunction
-import OSforGFF.QuantitativeDecay  -- For schwartz_bilinear_translation_decay_polynomial_proof
-import OSforGFF.TimeTranslation  -- For time translation on distributions
-import OSforGFF.OS4_MGF  -- For shared OS4 infrastructure (no sorries)
+import OSforGFFin3D.Basic
+import OSforGFFin3D.Schwinger
+import OSforGFFin3D.GFFMconstruct
+import OSforGFFin3D.GFFIsGaussian
+import OSforGFFin3D.GaussianFreeField -- For gaussian_satisfies_OS2
+import OSforGFFin3D.OS2_GFF -- For CovarianceEuclideanInvariantℂ_μ_GFF
+import OSforGFFin3D.Covariance  -- For freeCovarianceℂ_bilinear_symm
+import OSforGFFin3D.CovarianceMomentum
+import OSforGFFin3D.OS_Axioms
+import OSforGFFin3D.FunctionalAnalysis
+import OSforGFFin3D.ComplexTestFunction
+import OSforGFFin3D.QuantitativeDecay  -- For schwartz_bilinear_translation_decay_polynomial_proof
+import OSforGFFin3D.TimeTranslation  -- For time translation on distributions
+import OSforGFFin3D.OS4_MGF  -- For shared OS4 infrastructure (no sorries)
 
 /-!
 # OS4 Clustering for Gaussian Free Field
@@ -571,10 +571,8 @@ lemma time_translation_pairing_duality (s : ℝ) (ω : FieldConfiguration) (g : 
 
 /-- The time shift constant vector (s, 0, 0, 0) has norm |s|. -/
 lemma timeShiftConst_norm (s : ℝ) : ‖TimeTranslation.timeShiftConst s‖ = |s| := by
-  simp only [TimeTranslation.timeShiftConst, EuclideanSpace.norm_eq, STDimension, Fin.sum_univ_four,
-    (by decide : (0 : Fin 4).val = 0), (by decide : (1 : Fin 4).val ≠ 0),
-    (by decide : (2 : Fin 4).val ≠ 0), (by decide : (3 : Fin 4).val ≠ 0), ↓reduceIte,
-    Real.norm_eq_abs, sq_abs, zero_pow (by norm_num : 2 ≠ 0), add_zero, Real.sqrt_sq_eq_abs]
+  simpa [TimeTranslation.timeShiftConst, EuclideanSpace.norm_eq, STDimension] using
+    (Real.sqrt_sq_eq_abs s)
 
 /-- Time translation of Schwartz function at a point equals function evaluated at shifted point. -/
 lemma timeTranslationSchwartzℂ_at_point (s : ℝ) (g : TestFunctionℂ) (y : SpaceTime) :
@@ -646,8 +644,11 @@ theorem gaussianFreeField_satisfies_OS4_PolynomialClustering (m : ℝ) [Fact (0 
 
   -- Step 2: Get exponential decay bound for the kernel
   -- From freeCovariance_exponential_bound': |C(u,v)| ≤ c·e^{-m‖u-v‖} for m‖u-v‖ ≥ 1
-  -- The constant is C_exp = m^2 * (sinh 1 + 2) / (4 * π^2)
-  let C_exp := m^2 * (Real.sinh 1 + 2) / (4 * Real.pi^2)
+  -- The constant is the 3D prefactor from `freeCovariance_exponential_bound`.
+  let C_exp :=
+    ((1 / ((4 * Real.pi) ^ (3 / 2 : ℝ))) *
+      (2 * (2 * m^2) ^ (1 / 2 : ℝ)) *
+      (Real.sinh 1 + 2))
   have hC_exp_pos : C_exp > 0 := by
     simp only [C_exp]; positivity
 

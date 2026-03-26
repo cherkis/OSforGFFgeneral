@@ -4,8 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 
-import OSforGFF.Basic
-import OSforGFF.SchwartzProdIntegrable
+import OSforGFFin3D.Basic
+import OSforGFFin3D.SchwartzProdIntegrable
 
 /-!
 # Spacetime Decomposition
@@ -109,25 +109,8 @@ lemma spacetimeDecomp_symm_eq_spacetimeOfTimeSpace (t : ℝ) (v : SpatialCoords)
 /-- The SpaceTime norm decomposes into time and spatial parts: ‖k‖² = k₀² + ‖k_sp‖². -/
 lemma spacetime_norm_sq_decompose (k : SpaceTime) :
     ‖k‖^2 = (k 0)^2 + ‖spatialPart k‖^2 := by
-  -- Expand SpaceTime norm as sum over 4 components
-  have hST : ‖k‖^2 = (k 0)^2 + (k 1)^2 + (k 2)^2 + (k 3)^2 := by
-    rw [EuclideanSpace.norm_sq_eq, Fin.sum_univ_four]
-    simp only [Real.norm_eq_abs, sq_abs]
-  -- Expand SpatialCoords norm as sum over 3 components
-  have hSp : ‖spatialPart k‖^2 = (k 1)^2 + (k 2)^2 + (k 3)^2 := by
-    -- Key component equalities
-    have h0 : (spatialPart k : Fin (STDimension - 1) → ℝ) ⟨0, by decide⟩ = k 1 := rfl
-    have h1 : (spatialPart k : Fin (STDimension - 1) → ℝ) ⟨1, by decide⟩ = k 2 := rfl
-    have h2 : (spatialPart k : Fin (STDimension - 1) → ℝ) ⟨2, by decide⟩ = k 3 := rfl
-    simp only [EuclideanSpace.norm_sq_eq, Real.norm_eq_abs, sq_abs]
-    -- Manually expand the Fin 3 sum
-    have hUniv : (Finset.univ : Finset (Fin (STDimension - 1))) =
-        {⟨0, by decide⟩, ⟨1, by decide⟩, ⟨2, by decide⟩} := rfl
-    rw [hUniv, Finset.sum_insert (by decide : (⟨0, _⟩ : Fin (STDimension - 1)) ∉ _),
-        Finset.sum_insert (by decide : (⟨1, _⟩ : Fin (STDimension - 1)) ∉ _),
-        Finset.sum_singleton, h0, h1, h2]
-    ring
-  rw [hST, hSp]; ring
+  rw [EuclideanSpace.norm_sq_eq, Fin.sum_univ_succ, EuclideanSpace.norm_sq_eq]
+  simp [spatialPart, STDimension, Real.norm_eq_abs, sq_abs]
 
 /-- For a product-type integrand f(k₀) × g(k_sp), the integral decomposes as a product. -/
 lemma integral_spacetime_prod_split {f : ℝ → ℂ} {g : SpatialCoords → ℂ}

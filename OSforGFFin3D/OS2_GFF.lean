@@ -4,10 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 
-import OSforGFF.GFFIsGaussian
-import OSforGFF.Covariance
-import OSforGFF.Euclidean
-import OSforGFF.GaussianFreeField
+import OSforGFFin3D.GFFIsGaussian
+import OSforGFFin3D.Covariance
+import OSforGFFin3D.Euclidean
+import OSforGFFin3D.GaussianFreeField
 
 /-!
 # OS2 Euclidean Invariance for the Free Gaussian Field

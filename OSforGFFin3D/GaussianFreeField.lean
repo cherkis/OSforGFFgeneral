@@ -14,17 +14,17 @@ import Mathlib.Tactic.Ring
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.NormNum
 
-import OSforGFF.Basic
-import OSforGFF.OS_Axioms
-import OSforGFF.GFFMconstruct
-import OSforGFF.GFFIsGaussian
-import OSforGFF.Euclidean
-import OSforGFF.DiscreteSymmetry
-import OSforGFF.FunctionalAnalysis
-import OSforGFF.Minlos
-import OSforGFF.Covariance
-import OSforGFF.MinlosAnalytic
-import OSforGFF.Schwinger
+import OSforGFFin3D.Basic
+import OSforGFFin3D.OS_Axioms
+import OSforGFFin3D.GFFMconstruct
+import OSforGFFin3D.GFFIsGaussian
+import OSforGFFin3D.Euclidean
+import OSforGFFin3D.DiscreteSymmetry
+import OSforGFFin3D.FunctionalAnalysis
+import OSforGFFin3D.Minlos
+import OSforGFFin3D.Covariance
+import OSforGFFin3D.MinlosAnalytic
+import OSforGFFin3D.Schwinger
 
 /-!
 ## Gaussian Free Field — OS0 (Alternative) and OS2
@@ -276,5 +276,3 @@ satisfy all the OS axioms under appropriate assumptions on the covariance. The G
 approach for OS3 provides the mathematical foundation for reflection positivity in the
 Gaussian Free Field context.
 -/
-
-

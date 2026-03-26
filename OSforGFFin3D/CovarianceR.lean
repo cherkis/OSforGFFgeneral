@@ -13,12 +13,12 @@ import Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.Data.Complex.Basic
 
-import OSforGFF.Basic
-import OSforGFF.PositiveTimeTestFunction_real
-import OSforGFF.DiscreteSymmetry
-import OSforGFF.Covariance
-import OSforGFF.ComplexTestFunction
-import OSforGFF.CovarianceMomentum
+import OSforGFFin3D.Basic
+import OSforGFFin3D.PositiveTimeTestFunction_real
+import OSforGFFin3D.DiscreteSymmetry
+import OSforGFFin3D.Covariance
+import OSforGFFin3D.ComplexTestFunction
+import OSforGFFin3D.CovarianceMomentum
 
 /-!
 # Real Covariance Form and Square Root Propagator Embedding

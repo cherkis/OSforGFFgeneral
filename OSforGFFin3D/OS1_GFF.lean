@@ -19,13 +19,13 @@ import Mathlib.Analysis.SpecialFunctions.Gamma.Basic
 import Mathlib.Data.Nat.Factorial.DoubleFactorial
 import Mathlib.Topology.Constructions
 
-import OSforGFF.Basic
-import OSforGFF.OS_Axioms
-import OSforGFF.Covariance
-import OSforGFF.CovarianceMomentum
-import OSforGFF.CovarianceR
-import OSforGFF.GFFMconstruct
-import OSforGFF.GFFIsGaussian
+import OSforGFFin3D.Basic
+import OSforGFFin3D.OS_Axioms
+import OSforGFFin3D.Covariance
+import OSforGFFin3D.CovarianceMomentum
+import OSforGFFin3D.CovarianceR
+import OSforGFFin3D.GFFMconstruct
+import OSforGFFin3D.GFFIsGaussian
 
 /-!
 # OS1 Regularity Axiom - Complete Theory

@@ -20,19 +20,19 @@ import Mathlib.Analysis.Real.Pi.Bounds
 import Mathlib.Order.Filter.Basic
 import Mathlib.MeasureTheory.Function.JacobianOneDim
 
-import OSforGFF.Basic
-import OSforGFF.Euclidean
-import OSforGFF.DiscreteSymmetry
-import OSforGFF.Schwinger
-import OSforGFF.FunctionalAnalysis
-import OSforGFF.CovarianceMomentum
-import OSforGFF.Covariance
-import OSforGFF.FourierTransforms
-import OSforGFF.OS_Axioms
-import OSforGFF.SchwartzProdIntegrable
-import OSforGFF.SpacetimeDecomp
-import OSforGFF.SchwartzTonelli
-import OSforGFF.LaplaceIntegral
+import OSforGFFin3D.Basic
+import OSforGFFin3D.Euclidean
+import OSforGFFin3D.DiscreteSymmetry
+import OSforGFFin3D.Schwinger
+import OSforGFFin3D.FunctionalAnalysis
+import OSforGFFin3D.CovarianceMomentum
+import OSforGFFin3D.Covariance
+import OSforGFFin3D.FourierTransforms
+import OSforGFFin3D.OS_Axioms
+import OSforGFFin3D.SchwartzProdIntegrable
+import OSforGFFin3D.SpacetimeDecomp
+import OSforGFFin3D.SchwartzTonelli
+import OSforGFFin3D.LaplaceIntegral
 
 /-!
 # Mixed Representation Infrastructure
@@ -192,65 +192,26 @@ theorem heatKernel_eq_gaussianFT (s : ℝ) (hs : 0 < s) (z : SpaceTime) :
     (heatKernelPositionSpace s ‖z‖ : ℂ) =
     (1 / (2 * π) ^ STDimension : ℝ) *
     ∫ k : SpaceTime, Complex.exp (-Complex.I * ⟪k, z⟫_ℝ) * Complex.exp (-(s : ℂ) * ‖k‖^2) := by
-  -- Step 1: Rewrite the integral as ∫ exp(-s‖k‖² - I⟪k,z⟫) = ∫ exp(-s‖k‖² + (-I)⟪z,k⟫)
-  have h_integral : ∫ k : SpaceTime, Complex.exp (-Complex.I * ⟪k, z⟫_ℝ) *
-      Complex.exp (-(s : ℂ) * ‖k‖^2) =
-      ∫ k : SpaceTime, Complex.exp (-(s : ℂ) * ‖k‖^2 + (-Complex.I) * ⟪z, k⟫_ℝ) := by
+  have h_comm :
+      ∫ k : SpaceTime, Complex.exp (-Complex.I * ⟪k, z⟫_ℝ) * Complex.exp (-(s : ℂ) * ‖k‖^2) =
+        ∫ k : SpaceTime, Complex.exp (-(s : ℂ) * ‖k‖^2) * Complex.exp (-Complex.I * ⟪k, z⟫_ℝ) := by
     congr 1
     ext k
-    rw [← Complex.exp_add]
-    congr 1
-    -- ⟪k, z⟫ = ⟪z, k⟫ by symmetry of inner product
-    have h_sym : ⟪k, z⟫_ℝ = ⟪z, k⟫_ℝ := (real_inner_comm k z).symm
-    rw [h_sym]
-    ring
-  rw [h_integral]
-
-  -- Step 2: Apply Mathlib's integral_cexp_neg_mul_sq_norm_add
-  have hs_re : 0 < (s : ℂ).re := by simp [hs]
-  have h_main := GaussianFourier.integral_cexp_neg_mul_sq_norm_add (V := SpaceTime) hs_re (-Complex.I) z
-  rw [h_main]
-
-  -- Step 3: Simplify (-I)² = -1
-  have h_I_sq : (-Complex.I) ^ 2 = -1 := by
-    rw [neg_sq, Complex.I_sq]
-  simp only [h_I_sq, neg_one_mul]
-
-  -- Step 4: Verify the coefficient equality
-  -- Need: (4πs)^{-d/2} exp(-‖z‖²/(4s)) = (1/(2π)^d) * (π/s)^{d/2} * exp(-‖z‖²/(4s))
-  -- For d = 4: (4πs)^{-2} = (1/(2π)^4) * (π/s)^2
-  -- LHS = 1/(16π²s²)
-  -- RHS = 1/(16π⁴) * π²/s² = 1/(16π²s²) ✓
-
-  -- Expand heatKernelPositionSpace
-  rw [heatKernelPositionSpace_4D s hs ‖z‖]
-
-  -- The finrank of SpaceTime is 4
-  have h_finrank : Module.finrank ℝ SpaceTime = 4 := finrank_euclideanSpace_fin
-  rw [h_finrank]
-
-  -- Simplify the complex exponent ↑4 / 2 = 2
-  have h_exp_eq : (↑π / ↑s : ℂ) ^ ((4 : ℕ) / 2 : ℂ) = (↑π / ↑s : ℂ) ^ (2 : ℂ) := by
-    congr 1
-    norm_num
-  rw [h_exp_eq]
-
-  -- (π/s)^2 as complex power equals (π/s)² as a natural power
-  have h_pow_div : (↑π / ↑s : ℂ) = ↑(π / s) := by push_cast; ring
-  rw [h_pow_div]
-
-  -- Convert complex power (2 : ℂ) to natural power
-  have h_cpow_two : (↑(π / s) : ℂ) ^ (2 : ℂ) = (↑(π / s) : ℂ) ^ (2 : ℕ) := Complex.cpow_natCast _ 2
-  rw [h_cpow_two]
-
-  -- Now combine everything
-  have hπ : π ≠ 0 := Real.pi_ne_zero
-  have hs_ne : s ≠ 0 := ne_of_gt hs
-  have hd : (STDimension : ℕ) = 4 := rfl
-  simp only [hd, pow_two]
-  push_cast
-  field_simp
-  ring
+    ring_nf
+  have h_norm_ne : ((2 * Real.pi) ^ STDimension : ℝ) ≠ 0 := by positivity
+  calc
+    (heatKernelPositionSpace s ‖z‖ : ℂ)
+        = ((((2 * Real.pi) ^ STDimension : ℝ)⁻¹ : ℂ) *
+            (((2 * Real.pi) ^ STDimension : ℝ) * (heatKernelPositionSpace s ‖z‖ : ℂ))) := by
+              simp [h_norm_ne]
+    _ = (1 / (2 * π) ^ STDimension : ℝ) *
+        ∫ k : SpaceTime, Complex.exp (-(s : ℂ) * ‖k‖^2) * Complex.exp (-Complex.I * ⟪k, z⟫_ℝ) := by
+          rw [gaussianFT_eq_heatKernel_times_norm s hs z]
+          simp [one_div]
+    _ = (1 / (2 * π) ^ STDimension : ℝ) *
+        ∫ k : SpaceTime, Complex.exp (-Complex.I * ⟪k, z⟫_ℝ) * Complex.exp (-(s : ℂ) * ‖k‖^2) := by
+          congr 1
+          exact h_comm.symm
 
 /-! ### Technical Integration Axioms
 
@@ -911,9 +872,9 @@ def dominate_G (C : ℝ) (m : ℝ) (p : ℝ × SpatialCoords) : ℝ :=
 
 /-- Theoretically proven integrability of `dominate_G`.
 
-    Integrable on (0, ∞) × ℝ³ because:
-    ∫ exp(-s|k|²) dk = (π/s)^(3/2).
-    ∫ s^(3/2) * (π/s)^(3/2) * exp(-s*m²) ds = π^(3/2) ∫ exp(-s*m²) ds.
+  Integrable on (0, ∞) × ℝ² because:
+  ∫ exp(-s|k|²) dk = π / s.
+  ∫ s^(3/2) * (π / s) * exp(-s*m²) ds = π ∫ s^(1/2) * exp(-s*m²) ds.
     The latter converges for m > 0. -/
 theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
     Integrable (dominate_G C m) ((volume.restrict (Set.Ioi 0)).prod volume) := by
@@ -958,8 +919,8 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
 
   -- Key: the lintegral of G₀ is finite
   -- ∫∫ G₀(s,k) dk ds = ∫_s ∫_k s^(3/2) exp(-s(|k|² + m²)) dk ds
-  --                  = ∫_s s^(3/2) exp(-sm²) * (π/s)^(3/2) ds
-  --                  = π^(3/2) ∫_s exp(-sm²) ds = π^(3/2) / m²
+  --                  = ∫_s s^(3/2) exp(-sm²) * (π / s) ds
+  --                  = π ∫_s s^(1/2) exp(-sm²) ds
 
   have h_lintegral_finite : ∫⁻ p : ℝ × SpatialCoords, ENNReal.ofReal (G₀ p) ∂μ < ⊤ := by
     -- Use Tonelli to factor the lintegral
@@ -972,17 +933,17 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
     rw [h_eq]
 
     -- Strategy: Bound the inner integral, then show outer integral is finite
-    -- G₀(s,k) = s^(3/2) * exp(-sm²) * exp(-s|k|²) for s > 0, k ∈ ℝ³
+    -- G₀(s,k) = s^(3/2) * exp(-sm²) * exp(-s|k|²) for s > 0, k ∈ ℝ²
 
     -- The inner integral ∫_k s^(3/2) exp(-sm²) exp(-s|k|²) dk
-    -- = s^(3/2) * exp(-sm²) * (π/s)^(3/2)  [Gaussian integral]
-    -- = π^(3/2) * exp(-sm²)
+    -- = s^(3/2) * exp(-sm²) * (π / s)  [Gaussian integral in two dimensions]
+    -- = π * s^(1/2) * exp(-sm²)
 
     -- Bound: for s ∈ Ioi 0, G₀(s,k) ≤ s^(3/2) * exp(-s*|k|²)
     -- (since exp(-sm²) ≤ 1)
 
-    -- Key helper: s^(3/2) * (π/s)^(3/2) = π^(3/2) is a finite constant
-    -- The outer integral ∫_0^∞ π^(3/2) * exp(-sm²) ds = π^(3/2) / m² < ∞
+    -- Key helper: s^(3/2) * (π / s) = π * s^(1/2)
+    -- The outer integral ∫_0^∞ π * s^(1/2) * exp(-sm²) ds is finite
 
     -- Use monotonicity and bound by a computable integral
     -- First show the equality of integrands on Ioi 0
@@ -1017,15 +978,15 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
           -- For s > 0, the integrand factors as:
           -- s^(3/2) * exp(-sm²) * exp(-s|k|²)
           --
-          -- Inner k-integral: ∫_k exp(-s|k|²) dk = (π/s)^(3/2)  [Gaussian integral]
-          -- So s^(3/2) * (π/s)^(3/2) = π^(3/2), giving inner = π^(3/2) * exp(-sm²)
+          -- Inner k-integral: ∫_k exp(-s|k|²) dk = π / s  [Gaussian integral in two dimensions]
+          -- So s^(3/2) * (π / s) = π * s^(1/2), giving inner = π * s^(1/2) * exp(-sm²)
           --
-          -- Outer s-integral: ∫_0^∞ π^(3/2) * exp(-sm²) ds = π^(3/2) / m² < ∞
+          -- Outer s-integral: ∫_0^∞ π * s^(1/2) * exp(-sm²) ds < ∞
 
           -- First show inner integral equality
           have h_inner : ∀ s ∈ Set.Ioi (0 : ℝ),
               ∫⁻ k : SpatialCoords, ENNReal.ofReal (s ^ (3/2 : ℝ) * Real.exp (-s * m^2) *
-                Real.exp (-s * ‖k‖^2)) = ENNReal.ofReal (π ^ (3/2 : ℝ) * Real.exp (-s * m^2)) := by
+                Real.exp (-s * ‖k‖^2)) = ENNReal.ofReal (π * s ^ (1 / 2 : ℝ) * Real.exp (-s * m^2)) := by
             intro s hs
             have hs_pos : 0 < s := hs
             -- The Gaussian exp(-s|k|²) is integrable for s > 0
@@ -1060,36 +1021,43 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
             -- Pull out constant
             have h_factor : (fun k : SpatialCoords => s ^ (3/2 : ℝ) * Real.exp (-s * m^2) *
                 Real.exp (-s * ‖k‖^2)) = fun k => (s ^ (3/2 : ℝ) * Real.exp (-s * m^2)) *
-                Real.exp (-s * ‖k‖^2) := by ext k; ring
+                Real.exp (-s * ‖k‖^2) := by
+              funext k
+              ring_nf
             rw [h_factor, MeasureTheory.integral_const_mul]
-            -- Use Gaussian formula: ∫ exp(-s|k|²) dk = (π/s)^(3/2)
-            have h_dim : Module.finrank ℝ SpatialCoords = 3 := by simp [SpatialCoords]
+            -- Use Gaussian formula: ∫ exp(-s|k|²) dk = π / s
+            have h_dim : Module.finrank ℝ SpatialCoords = 2 := by
+              simp [SpatialCoords, STDimension]
             have h_gauss_val := GaussianFourier.integral_rexp_neg_mul_sq_norm (V := SpatialCoords) hs_pos
             rw [h_dim] at h_gauss_val
-            rw [h_gauss_val]
-            -- Now: s^(3/2) * exp(-sm²) * (π/s)^(3/2) = π^(3/2) * exp(-sm²)
+            norm_num at h_gauss_val
+            have h_gauss_val' : ∫ a : SpatialCoords, Real.exp (-s * ‖a‖^2) = π / s := by
+              convert h_gauss_val using 1 with a
+              congr 1
+              ring_nf
+            rw [h_gauss_val']
+            -- Now: s^(3/2) * exp(-sm²) * (π / s) = π * s^(1/2) * exp(-sm²)
             congr 1
-            -- Goal: s^(3/2) * exp(-sm²) * (π/s)^(3/2) = π^(3/2) * exp(-sm²)
             have hs_ne : s ≠ 0 := ne_of_gt hs_pos
-            have h_s_pos' : 0 < s ^ (3/2 : ℝ) := Real.rpow_pos_of_pos hs_pos _
-            have h_pi_pos : 0 < π ^ (3/2 : ℝ) := Real.rpow_pos_of_pos Real.pi_pos _
-            -- (π/s)^(3/2) = π^(3/2) / s^(3/2) for s > 0
-            -- Note: the exponent in Gaussian formula comes as ↑3/2 = (3:ℕ)/2 : ℝ
-            have h_exp_eq : (↑3 : ℝ) / 2 = (3/2 : ℝ) := by norm_num
-            rw [h_exp_eq]
-            rw [Real.div_rpow (le_of_lt Real.pi_pos) (le_of_lt hs_pos)]
-            -- s^(3/2) * exp(-sm²) * (π^(3/2) / s^(3/2)) = π^(3/2) * exp(-sm²)
-            have h_s_ne' : s ^ (3/2 : ℝ) ≠ 0 := ne_of_gt h_s_pos'
-            field_simp [h_s_ne']
-            -- After field_simp, goal should be s^(3/2) * exp * π^(3/2) = π^(3/2) * exp * s^(3/2)
-            ring_nf
+            have h_s32 : s ^ (3 / 2 : ℝ) = s * s ^ (1 / 2 : ℝ) := by
+              rw [show (3 / 2 : ℝ) = 1 + (1 / 2 : ℝ) by norm_num]
+              rw [Real.rpow_add hs_pos]
+              simp [Real.rpow_one]
+            rw [h_s32]
+            have h_cancel : s * (π / s) = π := by
+              field_simp [hs_ne]
+            calc
+              (s * s ^ (1 / 2 : ℝ)) * Real.exp (-s * m^2) * (π / s)
+                  = (s * (π / s)) * (s ^ (1 / 2 : ℝ) * Real.exp (-s * m^2)) := by ring
+              _ = π * (s ^ (1 / 2 : ℝ) * Real.exp (-s * m^2)) := by rw [h_cancel]
+              _ = π * s ^ (1 / 2 : ℝ) * Real.exp (-s * m^2) := by ring
 
           -- Outer integral: use the inner equality to simplify
           -- We need: ∫⁻ s ∈ Ioi 0, (LHS inner) = ∫⁻ s ∈ Ioi 0, (RHS inner)
           have h_eqon : Set.EqOn
               (fun s => ∫⁻ k : SpatialCoords,
                 ENNReal.ofReal (s ^ (3/2 : ℝ) * Real.exp (-s * m^2) * Real.exp (-s * ‖k‖^2)))
-              (fun s => ENNReal.ofReal (π ^ (3/2 : ℝ) * Real.exp (-s * m^2)))
+              (fun s => ENNReal.ofReal (π * s ^ (1 / 2 : ℝ) * Real.exp (-s * m^2)))
               (Set.Ioi 0) := by
             intro s hs
             exact h_inner s hs
@@ -1097,23 +1065,24 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
                 ENNReal.ofReal (s ^ (3/2 : ℝ) * Real.exp (-s * m^2) *
                   Real.exp (-s * ‖k‖^2)) ∂volume ∂volume =
               ∫⁻ s in Set.Ioi (0 : ℝ),
-                ENNReal.ofReal (π ^ (3/2 : ℝ) * Real.exp (-s * m^2)) ∂volume := by
+                ENNReal.ofReal (π * s ^ (1 / 2 : ℝ) * Real.exp (-s * m^2)) ∂volume := by
             exact MeasureTheory.setLIntegral_congr_fun measurableSet_Ioi h_eqon
           calc ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : SpatialCoords,
                 ENNReal.ofReal (s ^ (3/2 : ℝ) * Real.exp (-s * m^2) *
                   Real.exp (-s * ‖k‖^2)) ∂volume ∂volume
             = ∫⁻ s in Set.Ioi (0 : ℝ),
-                ENNReal.ofReal (π ^ (3/2 : ℝ) * Real.exp (-s * m^2)) ∂volume := h_lintegral_eq
+                ENNReal.ofReal (π * s ^ (1 / 2 : ℝ) * Real.exp (-s * m^2)) ∂volume := h_lintegral_eq
             _ < ⊤ := by
               -- The integrand is nonnegative and integrable
-              have h_exp_int : IntegrableOn (fun s => Real.exp (-s * m^2)) (Set.Ioi 0) := by
-                have h_neg : -m^2 < 0 := neg_neg_of_pos (sq_pos_of_pos hm)
-                have : (fun s => Real.exp (-s * m^2)) = fun s => Real.exp ((-m^2) * s) := by
-                  ext s; ring_nf
-                rw [this]
-                exact integrableOn_exp_mul_Ioi h_neg 0
-              have h_prod_int : IntegrableOn (fun s => π ^ (3/2 : ℝ) * Real.exp (-s * m^2)) (Set.Ioi 0) :=
-                h_exp_int.const_mul _
+              have h_exp_int : IntegrableOn (fun s => s ^ (1 / 2 : ℝ) * Real.exp (-s * m^2)) (Set.Ioi 0) := by
+                have hm2 : 0 < m ^ 2 := sq_pos_of_pos hm
+                have hr : (-1 : ℝ) < (1 / 2 : ℝ) := by norm_num
+                have hp : (1 : ℝ) ≤ 1 := le_rfl
+                have h := integrableOn_rpow_mul_exp_neg_mul_rpow hr hp hm2
+                simpa [Real.rpow_one, mul_comm, mul_left_comm, mul_assoc] using h
+              have h_prod_int : IntegrableOn (fun s => π * s ^ (1 / 2 : ℝ) * Real.exp (-s * m^2)) (Set.Ioi 0) :=
+                by
+                  simpa [mul_assoc, mul_left_comm, mul_comm] using h_exp_int.const_mul π
               exact h_prod_int.setLIntegral_lt_top
 
   refine ⟨hG₀_meas.aestronglyMeasurable, ?_⟩
@@ -2016,7 +1985,7 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
       -- spacetimeOfTimeSpace t x = EuclideanSpace.equiv ... |>.symm (Fin.cons t (fun i => x i))
       -- This is a composition of continuous functions
       unfold spacetimeOfTimeSpace Function.uncurry
-      apply (EuclideanSpace.equiv (Fin 4) ℝ).symm.continuous.comp
+      apply (EuclideanSpace.equiv (Fin STDimension) ℝ).symm.continuous.comp
       -- Need: Continuous (fun p : ℝ × SpatialCoords3 => Fin.cons p.1 (fun i => p.2 i))
       apply continuous_pi
       intro j
@@ -2028,12 +1997,12 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
         simp only [Fin.cons_succ]
         exact (PiLp.continuous_apply 2 _ j).comp continuous_snd
     -- The joint function (t, x_sp) ↦ ‖f(spacetimeOfTimeSpace t x_sp)‖ is continuous
-    have h_joint_cont : Continuous (fun p : ℝ × EuclideanSpace ℝ (Fin 3) =>
+    have h_joint_cont : Continuous (fun p : ℝ × SpatialCoords3 =>
         ‖f (spacetimeOfTimeSpace p.1 p.2)‖) := by
       apply Continuous.norm
       exact (SchwartzMap.continuous f).comp h_sts_cont
     -- Continuous implies strongly measurable
-    have h_joint_sm : MeasureTheory.StronglyMeasurable (fun p : ℝ × EuclideanSpace ℝ (Fin 3) =>
+    have h_joint_sm : MeasureTheory.StronglyMeasurable (fun p : ℝ × SpatialCoords3 =>
         ‖f (spacetimeOfTimeSpace p.1 p.2)‖) := h_joint_cont.stronglyMeasurable
     -- Use StronglyMeasurable.integral_prod_right
     have h_sm : MeasureTheory.StronglyMeasurable (fun t => ∫ x_sp, ‖f (spacetimeOfTimeSpace t x_sp)‖) :=

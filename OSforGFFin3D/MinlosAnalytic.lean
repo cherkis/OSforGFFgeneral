@@ -16,8 +16,8 @@ import Mathlib.Order.Filter.Basic
 import Mathlib.Topology.Constructions
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 
-import OSforGFF.Basic
-import OSforGFF.Minlos
+import OSforGFFin3D.Basic
+import OSforGFFin3D.Minlos
 import Mathlib.MeasureTheory.Measure.Map
 import Mathlib.MeasureTheory.Measure.Typeclasses.Probability
 

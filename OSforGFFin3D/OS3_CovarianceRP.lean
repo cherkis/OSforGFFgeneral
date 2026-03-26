@@ -4,14 +4,14 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 
-import OSforGFF.Basic
-import OSforGFF.PositiveTimeTestFunction_real
-import OSforGFF.FourierTransforms
-import OSforGFF.CovarianceMomentum
-import OSforGFF.OS3_MixedRep
-import OSforGFF.OS3_MixedRepInfra
-import OSforGFF.Parseval
-import OSforGFF.Covariance
+import OSforGFFin3D.Basic
+import OSforGFFin3D.PositiveTimeTestFunction_real
+import OSforGFFin3D.FourierTransforms
+import OSforGFFin3D.CovarianceMomentum
+import OSforGFFin3D.OS3_MixedRep
+import OSforGFFin3D.OS3_MixedRepInfra
+import OSforGFFin3D.Parseval
+import OSforGFFin3D.Covariance
 import Mathlib.MeasureTheory.Integral.Bochner.ContinuousLinearMap
 
 /-!

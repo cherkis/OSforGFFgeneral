@@ -20,13 +20,13 @@ elsewhere:
 We expose an unconditional master theorem: all five OS axioms hold for the free GFF.
 -/
 
-import OSforGFF.GaussianFreeField
-import OSforGFF.OS3_GFF
-import OSforGFF.OS0_GFF
-import OSforGFF.OS1_GFF
-import OSforGFF.OS2_GFF
-import OSforGFF.OS4_Clustering
-import OSforGFF.OS4_Ergodicity
+import OSforGFFin3D.GaussianFreeField
+import OSforGFFin3D.OS3_GFF
+import OSforGFFin3D.OS0_GFF
+import OSforGFFin3D.OS1_GFF
+import OSforGFFin3D.OS2_GFF
+import OSforGFFin3D.OS4_Clustering
+import OSforGFFin3D.OS4_Ergodicity
 
 open scoped BigOperators
 

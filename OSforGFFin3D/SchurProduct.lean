@@ -21,7 +21,7 @@ import Mathlib.LinearAlgebra.Matrix.PosDef
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Finset.Prod
 import Mathlib.Analysis.SpecialFunctions.Exp
-import OSforGFF.FrobeniusPositivity
+import OSforGFFin3D.FrobeniusPositivity
 
 set_option linter.unusedSectionVars false
 

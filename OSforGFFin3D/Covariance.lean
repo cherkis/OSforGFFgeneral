@@ -16,14 +16,14 @@ import Mathlib.Analysis.Complex.Exponential
 import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
 
 -- Import our basic definitions
-import OSforGFF.Basic
-import OSforGFF.Euclidean
-import OSforGFF.DiscreteSymmetry
-import OSforGFF.Schwinger
-import OSforGFF.FunctionalAnalysis
-import OSforGFF.CovarianceMomentum
-import OSforGFF.FourierTransforms
-import OSforGFF.Parseval
+import OSforGFFin3D.Basic
+import OSforGFFin3D.Euclidean
+import OSforGFFin3D.DiscreteSymmetry
+import OSforGFFin3D.Schwinger
+import OSforGFFin3D.FunctionalAnalysis
+import OSforGFFin3D.CovarianceMomentum
+import OSforGFFin3D.FourierTransforms
+import OSforGFFin3D.Parseval
 
 /-!
 # Free Covariance for Gaussian Free Field

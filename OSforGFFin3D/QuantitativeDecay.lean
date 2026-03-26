@@ -11,7 +11,7 @@ import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 import Mathlib.Analysis.SpecialFunctions.JapaneseBracket
 import Mathlib.Topology.MetricSpace.Bounded
 import Mathlib.Probability.Moments.IntegrableExpMul
-import OSforGFF.SchwartzTranslationDecay
+import OSforGFFin3D.SchwartzTranslationDecay
 
 /-!
 # Quantitative Decay for Schwartz Bilinear Forms
@@ -1054,4 +1054,3 @@ theorem schwartz_bilinear_translation_decay_polynomial_proof
       _ ≤ C_conv * (1 + ‖a‖)^(-α) := h_conv_to_goal
 
 end
-

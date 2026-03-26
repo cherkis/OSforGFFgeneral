@@ -518,6 +518,46 @@ noncomputable def freeCovarianceBessel (m : ℝ) (x y : SpaceTime) : ℝ :=
 noncomputable abbrev freeCovariance (m : ℝ) (x y : SpaceTime) : ℝ :=
   freeCovarianceBessel m x y
 
+/-- The Bessel covariance is symmetric. -/
+lemma freeCovarianceBessel_symm (m : ℝ) (x y : SpaceTime) :
+    freeCovarianceBessel m x y = freeCovarianceBessel m y x := by
+  unfold freeCovarianceBessel
+  simp only [norm_sub_rev]
+
+/-- The Bessel covariance is positive away from the diagonal for `m > 0`. -/
+lemma freeCovarianceBessel_pos (m : ℝ) (hm : 0 < m) (x y : SpaceTime) (hxy : x ≠ y) :
+    0 < freeCovarianceBessel m x y := by
+  unfold freeCovarianceBessel
+  have hr : ‖x - y‖ ≠ 0 := by
+    simp only [ne_eq, norm_eq_zero, sub_eq_zero]
+    exact hxy
+  have hr_pos : 0 < ‖x - y‖ := norm_pos_iff.mpr (sub_ne_zero.mpr hxy)
+  simp only [hr, ↓reduceIte]
+  apply mul_pos
+  · apply one_div_pos.mpr
+    positivity
+  · apply mul_pos
+    · have h_rpow_pos : 0 < (2 * m / ‖x - y‖) ^ (1 / 2 : ℝ) := by
+        apply Real.rpow_pos_of_pos
+        positivity
+      nlinarith
+    · exact besselKhalf_pos (m * ‖x - y‖) (by positivity)
+
+/-- Position-space free covariance is symmetric: `C(x,y) = C(y,x)`. -/
+lemma freeCovariance_symmetric (m : ℝ) (x y : SpaceTime) :
+    freeCovariance m x y = freeCovariance m y x :=
+  freeCovarianceBessel_symm m x y
+
+/-- The position-space free covariance is real-valued after `ℂ` coercion. -/
+@[simp] lemma freeCovariance_star (m : ℝ) (x y : SpaceTime) :
+    star (freeCovariance m x y : ℂ) = (freeCovariance m x y : ℂ) := by
+  simp
+
+/-- Hermiticity of the complex-lifted position-space kernel. -/
+@[simp] lemma freeCovariance_hermitian (m : ℝ) (x y : SpaceTime) :
+    (freeCovariance m x y : ℂ) = star (freeCovariance m y x : ℂ) := by
+  simp [freeCovariance_symmetric m x y]
+
 /-- The Schwinger-regulated covariance: uses proper-time representation with regulator `α`. -/
 noncomputable def covarianceSchwingerRegulated (α : ℝ) (m : ℝ) (r : ℝ) : ℝ :=
   ∫ t in Set.Ioi 0, Real.exp (-t * m^2) * heatKernelPositionSpace (α + t) r
@@ -1683,6 +1723,51 @@ theorem freeCovariance_regulated_bilinear_integrable (α : ℝ) (hα : 0 < α) (
 noncomputable def freeCovarianceKernel (m : ℝ) (z : SpaceTime) : ℝ :=
   freeCovariance m 0 z
 
+/-- Continuity of the free covariance kernel away from the origin. -/
+lemma freeCovarianceKernel_continuousOn (m : ℝ) (hm : 0 < m) :
+    ContinuousOn (freeCovarianceKernel m) {z : SpaceTime | z ≠ 0} := by
+  let S : Set SpaceTime := ({0} : Set SpaceTime)ᶜ
+  have h_formula_cont : ContinuousOn
+      (fun r : ℝ =>
+        (1 / ((4 * Real.pi) ^ (3 / 2 : ℝ))) *
+          (2 * (2 * m / r) ^ (1 / 2 : ℝ) * besselKhalf (m * r)))
+      (Set.Ioi 0) := by
+    apply ContinuousOn.mul continuousOn_const
+    apply ContinuousOn.mul
+    · apply ContinuousOn.mul continuousOn_const
+      apply ContinuousOn.rpow
+      · apply ContinuousOn.div continuousOn_const continuousOn_id
+        intro r hr
+        exact ne_of_gt (Set.mem_Ioi.mp hr)
+      · exact continuousOn_const
+      · intro r hr
+        left
+        have hr_pos : 0 < r := Set.mem_Ioi.mp hr
+        positivity
+    · apply besselKhalf_continuousOn.comp (continuousOn_const.mul continuousOn_id)
+      intro r hr
+      exact mul_pos hm (Set.mem_Ioi.mp hr)
+  have h_norm_cont : Continuous (fun z : SpaceTime => ‖z‖) := continuous_norm
+  have h_eq : Set.EqOn (fun z => freeCovarianceKernel m z)
+      (fun z =>
+        (1 / ((4 * Real.pi) ^ (3 / 2 : ℝ))) *
+          (2 * (2 * m / ‖z‖) ^ (1 / 2 : ℝ) * besselKhalf (m * ‖z‖))) S := by
+    intro z hz
+    rw [Set.mem_compl_iff, Set.mem_singleton_iff] at hz
+    unfold freeCovarianceKernel freeCovariance freeCovarianceBessel
+    simp [hz, norm_neg]
+  have h_comp : ContinuousOn
+      (fun z : SpaceTime =>
+        (1 / ((4 * Real.pi) ^ (3 / 2 : ℝ))) *
+          (2 * (2 * m / ‖z‖) ^ (1 / 2 : ℝ) * besselKhalf (m * ‖z‖))) S := by
+    apply h_formula_cont.comp h_norm_cont.continuousOn
+    intro z hz
+    rw [Set.mem_compl_iff, Set.mem_singleton_iff] at hz
+    exact norm_pos_iff.mpr hz
+  have h_cont : ContinuousOn (fun z : SpaceTime => freeCovarianceKernel m z) S := by
+    exact h_comp.congr h_eq
+  simpa [S] using h_cont
+
 private lemma aestronglyMeasurable_freeCovarianceKernel (m : ℝ) [Fact (0 < m)] :
     AEStronglyMeasurable (fun z : SpaceTime => freeCovarianceKernel m z) volume := by
   let S : Set SpaceTime := ({0} : Set SpaceTime)ᶜ
@@ -1895,7 +1980,7 @@ private lemma freeCovariance_exponential_bound_aux (m : ℝ) (hm : 0 < m) (u v :
     unfold freeCovariance freeCovarianceBessel
     simp [hr_def, h_norm_ne]
   have h_sinh_half_le :
-      (Real.sinh (1 / 2 : ℝ)) / (1 / 2 : ℝ) + 2 ≤ Real.sinh 1 + 2 := by
+      2 * Real.sinh (1 / 2 : ℝ) + 2 ≤ Real.sinh 1 + 2 := by
     have h_cosh_ge_one : 1 ≤ Real.cosh (1 / 2 : ℝ) := Real.one_le_cosh _
     have h_sinh_half_nonneg : 0 ≤ Real.sinh (1 / 2 : ℝ) := by
       exact le_of_lt (Real.sinh_pos_iff.mpr (by norm_num : (0 : ℝ) < 1 / 2))
@@ -1906,15 +1991,12 @@ private lemma freeCovariance_exponential_bound_aux (m : ℝ) (hm : 0 < m) (u v :
         have h_nonneg : 0 ≤ 2 * Real.sinh (1 / 2 : ℝ) := by nlinarith
         simpa [mul_assoc] using mul_le_mul_of_nonneg_left h_cosh_ge_one h_nonneg
       simpa [h_two_mul] using h_mul
-    have h_div_eq : (Real.sinh (1 / 2 : ℝ)) / (1 / 2 : ℝ) = 2 * Real.sinh (1 / 2 : ℝ) := by
-      ring
-    rw [h_div_eq]
     linarith
   have h_bessel_bound :
       besselKhalf (m * r) ≤ (Real.sinh 1 + 2) * Real.exp (-(m * r)) := by
     calc
       besselKhalf (m * r)
-          ≤ ((Real.sinh (1 / 2 : ℝ)) / (1 / 2 : ℝ) + 2) * Real.exp (-(m * r)) :=
+          ≤ (2 * Real.sinh (1 / 2 : ℝ) + 2) * Real.exp (-(m * r)) :=
             besselKhalf_asymptotic (m * r) hmr_ge1
       _ ≤ (Real.sinh 1 + 2) * Real.exp (-(m * r)) := by
             apply mul_le_mul_of_nonneg_right h_sinh_half_le
@@ -2112,6 +2194,36 @@ lemma freeCovarianceKernel_integrable (m : ℝ) (hm : 0 < m) :
       _ = (Cexp * Cpoly) * (1 + ‖z‖) ^ (-4 : ℝ) := by ring
   rw [← integrableOn_univ, ← Set.union_compl_self (Metric.ball 0 (1 / m))]
   exact IntegrableOn.union h_ball h_tail
+
+/-- The bilinear form `f(x) * C(x,y) * g(y)` is integrable on product space. -/
+theorem freeCovarianceℂ_bilinear_integrable' (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ) :
+    Integrable (fun p : SpaceTime × SpaceTime =>
+      (f p.1) * (freeCovariance m p.1 p.2 : ℂ) * (g p.2)) volume := by
+  have h_transl_inv : ∀ x y, freeCovariance m x y = freeCovarianceKernel m (x - y) := by
+    intro x y
+    simp only [freeCovarianceKernel, freeCovariance, freeCovarianceBessel, zero_sub, norm_neg]
+  have h_eq :
+      (fun p : SpaceTime × SpaceTime => f p.1 * (freeCovariance m p.1 p.2 : ℂ) * g p.2) =
+      (fun p => f p.1 * ((freeCovarianceKernel m (p.1 - p.2) : ℝ) : ℂ) * g p.2) := by
+    ext p
+    rw [h_transl_inv p.1 p.2]
+  rw [h_eq]
+  have hK_int : Integrable (fun z : SpaceTime => (freeCovarianceKernel m z : ℂ)) volume := by
+    exact Integrable.ofReal (freeCovarianceKernel_integrable m (Fact.out))
+  exact schwartz_bilinear_integrable_of_translationInvariant_L1
+    (fun z => (freeCovarianceKernel m z : ℂ)) hK_int f g
+
+/-- Negation as a linear isometry equivalence on `SpaceTime`. -/
+def negSpaceTime : SpaceTime ≃ₗᵢ[ℝ] SpaceTime where
+  toLinearEquiv := LinearEquiv.neg ℝ
+  norm_map' := norm_neg
+
+/-- Change of variables `k ↦ -k` for integrals on `SpaceTime`. -/
+theorem integral_comp_neg_spacetime {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E]
+    (f : SpaceTime → E) : ∫ k, f (-k) = ∫ k, f k := by
+  have h := (LinearIsometryEquiv.measurePreserving negSpaceTime).integral_comp
+    negSpaceTime.toHomeomorph.measurableEmbedding f
+  simpa using h
 
 /-- The free propagator function is smooth (infinitely differentiable). -/
 lemma freePropagator_smooth (m : ℝ) [Fact (0 < m)] :

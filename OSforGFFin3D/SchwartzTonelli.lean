@@ -4,8 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 
-import OSforGFF.Basic
-import OSforGFF.SpacetimeDecomp
+import OSforGFFin3D.Basic
+import OSforGFFin3D.SpacetimeDecomp
 import Mathlib.Analysis.SpecialFunctions.JapaneseBracket
 
 /-!

@@ -29,13 +29,13 @@ import Mathlib.Analysis.Calculus.Deriv.Basic
 import Mathlib.Probability.Distributions.Gaussian.Fernique
 import Mathlib.MeasureTheory.Measure.CharacteristicFunction
 
-import OSforGFF.Basic
-import OSforGFF.Schwinger
-import OSforGFF.Minlos
-import OSforGFF.Covariance
-import OSforGFF.CovarianceR
-import OSforGFF.MinlosAnalytic
-import OSforGFF.ComplexTestFunction
+import OSforGFFin3D.Basic
+import OSforGFFin3D.Schwinger
+import OSforGFFin3D.Minlos
+import OSforGFFin3D.Covariance
+import OSforGFFin3D.CovarianceR
+import OSforGFFin3D.MinlosAnalytic
+import OSforGFFin3D.ComplexTestFunction
 
 /-!
 ## Gaussian Free Field Construction via Minlos Theorem

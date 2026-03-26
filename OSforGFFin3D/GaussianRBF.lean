@@ -3,8 +3,8 @@ Copyright (c) 2025 Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim. All r
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
-import OSforGFF.PositiveDefinite
-import OSforGFF.SchurProduct
+import OSforGFFin3D.PositiveDefinite
+import OSforGFFin3D.SchurProduct
 import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.Complex.Basic
@@ -14,7 +14,7 @@ import Mathlib.LinearAlgebra.Matrix.Kronecker
 import Mathlib.Analysis.Complex.Order
 import Mathlib.Data.Matrix.Basic
 import Mathlib.Data.Matrix.Mul
-import OSforGFF.HadamardExp
+import OSforGFFin3D.HadamardExp
 
 open Complex BigOperators Real InnerProductSpace Matrix
 
