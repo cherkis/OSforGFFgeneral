@@ -19,7 +19,7 @@ and establishes key properties needed for the free covariance in AQFT.
 
 * `besselK1` - The modified Bessel function K₁(z) = ∫₀^∞ exp(-z cosh(t)) cosh(t) dt
 * `besselK1_properTime` - Alternative proper-time representation:
-    K₁(z) = (z/2) ∫₀^∞ t^{-2} exp(-t - z²/(4t)) dt
+    K₁(z) = (z/4) ∫₀^∞ t^{-2} exp(-t - z²/(4t)) dt
 
 ## Main results
 

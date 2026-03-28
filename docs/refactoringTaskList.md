@@ -51,35 +51,35 @@ It is intentionally separate from the completed migration plan:
 
 ## Global Checklist
 
-- [ ] Define a standard refactor pattern for long proofs: local helper lemmas,
+- [x] Define a standard refactor pattern for long proofs: local helper lemmas,
       `section`-scoped utilities, and shorter theorem bodies.
-- [ ] Standardize file headers so each file states only current mathematical
+- [x] Standardize file headers so each file states only current mathematical
       scope, not migration history.
-- [ ] Replace repeated "formerly axiom" commentary with concise provenance notes
+- [x] Replace repeated "formerly axiom" commentary with concise provenance notes
       only where that history is still useful.
-- [ ] Centralize compatibility aliases and remove duplicate explanatory comments
+- [x] Centralize compatibility aliases and remove duplicate explanatory comments
       about them.
-- [ ] Run `lake build` after each dependency-layer batch, not only at the end.
+- [x] Run `lake build` after each dependency-layer batch, not only at the end.
 
 ## Priority Order
 
 ### Batch 1: Highest proof-complexity modules
 
-- [ ] `OS3_MixedRepInfra.lean`
-- [ ] `OS3_MixedRep.lean`
-- [ ] `CovarianceMomentum.lean`
-- [ ] `OS4_Clustering.lean`
+- [x] `OS3_MixedRepInfra.lean`
+- [x] `OS3_MixedRep.lean`
+- [x] `CovarianceMomentum.lean`
+- [x] `OS4_Clustering.lean`
 
 ### Batch 2: Core interfaces built on the covariance spine
 
-- [ ] `Parseval.lean`
-- [ ] `Covariance.lean`
-- [ ] `CovarianceR.lean`
-- [ ] `OS1_GFF.lean`
-- [ ] `OS3_CovarianceRP.lean`
-- [ ] `SchwartzProdIntegrable.lean`
-- [ ] `SpacetimeDecomp.lean`
-- [ ] `L2TimeIntegral.lean`
+- [x] `Parseval.lean`
+- [x] `Covariance.lean`
+- [x] `CovarianceR.lean`
+- [x] `OS1_GFF.lean`
+- [x] `OS3_CovarianceRP.lean`
+- [x] `SchwartzProdIntegrable.lean`
+- [x] `SpacetimeDecomp.lean`
+- [x] `L2TimeIntegral.lean`
 
 ### Batch 3: Axiom boundary and measure-construction cleanup
 
@@ -166,16 +166,16 @@ It is intentionally separate from the completed migration plan:
 - [x] `FourierTransforms.lean`: separate transform identities, measurability, and
       normalization lemmas; reduce any legacy commentary that still mirrors the
       old development structure.
-- [ ] `Parseval.lean`: refactor proof flow around explicit local helper lemmas for
+- [x] `Parseval.lean`: refactor proof flow around explicit local helper lemmas for
       Schwartz integrability and bilinear pairing manipulations.
-- [ ] `CovarianceMomentum.lean`: split into sections for heat kernel,
+- [x] `CovarianceMomentum.lean`: split into sections for heat kernel,
       Schwinger representation, explicit Bessel formula, continuity, and decay;
       centralize compatibility aliases; factor repeated positivity and prefactor
       bounds used in several decay proofs.
-- [ ] `Covariance.lean`: extract common bilinear and reflection-invariance proof
+- [x] `Covariance.lean`: extract common bilinear and reflection-invariance proof
       steps; shorten axiom-explanation prose that no longer matches the current
       implementation state.
-- [ ] `CovarianceR.lean`: factor the continuous-linear-map construction into
+- [x] `CovarianceR.lean`: factor the continuous-linear-map construction into
       helper definitions; keep the real/complex bridge lemmas compact and local.
 - [x] `PositiveTimeTestFunction_real.lean`: regroup the API around positivity,
       support, and reflection behavior so downstream OS3 files need fewer local
@@ -183,10 +183,10 @@ It is intentionally separate from the completed migration plan:
 
 ### Spacetime decomposition and integrability infrastructure
 
-- [ ] `SchwartzProdIntegrable.lean`: extract the time-space decomposition lemmas
+- [x] `SchwartzProdIntegrable.lean`: extract the time-space decomposition lemmas
       from the integrability estimates; keep product-measure arguments short and
       composable.
-- [ ] `SpacetimeDecomp.lean`: isolate geometry identities about time/spatial
+- [x] `SpacetimeDecomp.lean`: isolate geometry identities about time/spatial
       splitting; remove any remaining proof clutter caused by explicit component
       manipulations.
 - [x] `SchwartzTonelli.lean`: consolidate Tonelli/Fubini helper lemmas into a
@@ -196,21 +196,21 @@ It is intentionally separate from the completed migration plan:
       seminorm bookkeeping into reusable helper lemmas.
 - [x] `QuantitativeDecay.lean`: separate abstract decay machinery from the
       concrete covariance application lemmas used by `OS4_Clustering.lean`.
-- [ ] `L2TimeIntegral.lean`: group theorems by measurable, integrable, and norm
+- [x] `L2TimeIntegral.lean`: group theorems by measurable, integrable, and norm
       bounds; remove repeated parameter setup from theorem statements and proofs.
 - [x] `LaplaceIntegral.lean`: extract the standard half-power integral lemmas and
       simplify the interface consumed by mixed-representation files.
 
 ### Mixed-representation and reflection-positivity branch
 
-- [ ] `OS3_MixedRepInfra.lean`: break very long proofs into named local stages
+- [x] `OS3_MixedRepInfra.lean`: break very long proofs into named local stages
       for Gaussian FT, measurability, domination, and Fubini swaps; replace
       historical axiom narration with precise statements of remaining technical
       dependencies.
-- [ ] `OS3_MixedRep.lean`: extract reusable bilinear-form conversion lemmas;
+- [x] `OS3_MixedRep.lean`: extract reusable bilinear-form conversion lemmas;
       reduce duplication between heat-kernel, mixed-representation, and Bessel
       representation arguments.
-- [ ] `OS3_CovarianceRP.lean`: refactor the reflection-positivity proof into
+- [x] `OS3_CovarianceRP.lean`: refactor the reflection-positivity proof into
       explicit phases so the mixed-representation inputs and positivity steps are
       easy to audit.
 
@@ -248,7 +248,7 @@ It is intentionally separate from the completed migration plan:
 - [x] `OS0_GFF.lean`: isolate the true analyticity axiom boundary
       (`differentiable_analyticAt_finDim`) from derived proof infrastructure;
       group holomorphicity, integrability, and final OS0 assembly separately.
-- [ ] `OS1_GFF.lean`: continue extracting private helper lemmas for covariance
+- [x] `OS1_GFF.lean`: continue extracting private helper lemmas for covariance
       identification, measurability, and mass-dependent constants; keep the final
       OS1 theorem bodies short.
 - [x] `OS2_GFF.lean`: factor Euclidean-invariance transport lemmas from the final
@@ -257,7 +257,7 @@ It is intentionally separate from the completed migration plan:
       reduction from covariance reflection positivity to OS3.
 - [x] `OS4_MGF.lean`: reduce purely infrastructural commentary and keep the file
       focused on the OS4 moment-generating-function inputs used downstream.
-- [ ] `OS4_Clustering.lean`: split the file into covariance decay, bilinear test
+- [x] `OS4_Clustering.lean`: split the file into covariance decay, bilinear test
       function estimates, and Gaussian clustering assembly; extract time-shift
       bound helpers that are currently threaded through large proofs.
 - [x] `OS4_Ergodicity.lean`: keep only the ergodicity reduction and theorem
@@ -280,7 +280,7 @@ It is intentionally separate from the completed migration plan:
 
 - [x] No large proof-heavy file depends on repeated copy-pasted algebraic or
       measurability blocks.
-- [ ] The only remaining axioms are intentional top-level mathematical boundary
+- [x] The only remaining axioms are intentional top-level mathematical boundary
       assumptions, each isolated in the narrowest appropriate file.
 - [x] Public theorem files (`OS0_GFF` through `OS4_Ergodicity`, `GaussianFreeField`,
       `GFFmaster`) are mostly assembly, not storage for low-level helper lemmas.

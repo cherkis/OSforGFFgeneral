@@ -1781,7 +1781,7 @@ private lemma aestronglyMeasurable_freeCovarianceKernel (m : ℝ) [Fact (0 < m)]
     filter_upwards [hfg, compl_mem_ae_iff.mpr hs_null] with x hxs hxc
     exact hxs (by simpa using hxc)
   apply h_lift hS_meas
-  · simpa [S] using (measure_singleton (0 : SpaceTime))
+  · simp [S]
   have hm : 0 < m := Fact.out
   have h_formula_cont : ContinuousOn
       (fun r : ℝ =>
@@ -1987,8 +1987,12 @@ private lemma freeCovariance_exponential_bound_aux (m : ℝ) (hm : 0 < m) (u v :
     have h_twice : 2 * Real.sinh (1 / 2 : ℝ) ≤ Real.sinh 1 := by
       have h_mul : 2 * Real.sinh (1 / 2 : ℝ) ≤ 2 * Real.sinh (1 / 2 : ℝ) * Real.cosh (1 / 2 : ℝ) := by
         have h_nonneg : 0 ≤ 2 * Real.sinh (1 / 2 : ℝ) := by nlinarith
-        simpa [mul_assoc] using mul_le_mul_of_nonneg_left h_cosh_ge_one h_nonneg
-      simpa [h_two_mul] using h_mul
+        calc
+          2 * Real.sinh (1 / 2 : ℝ) = (2 * Real.sinh (1 / 2 : ℝ)) * 1 := by ring
+          _ ≤ (2 * Real.sinh (1 / 2 : ℝ)) * Real.cosh (1 / 2 : ℝ) := by
+            exact mul_le_mul_of_nonneg_left h_cosh_ge_one h_nonneg
+      rw [h_two_mul]
+      exact h_mul
     linarith
   have h_bessel_bound :
       besselKhalf (m * r) ≤ (Real.sinh 1 + 2) * Real.exp (-(m * r)) := by
