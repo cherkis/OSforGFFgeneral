@@ -77,7 +77,7 @@ was explored in `old/GeneralMinlos.lean` but is not used in the current formaliz
 ### Free Field Realization:
 
 **Klein-Gordon Propagator:**
-- `freeFieldPropagator`: C(k) = 1/(ik² + m²) in momentum space
+- `freeFieldPropagator`: C(k) = 1/(k² + m²) in momentum space
 - `freeFieldCovariance`: Covariance built from propagator via Fourier transform
 - `freeFieldCovariance_nuclear`: Proof of nuclear condition for m > 0, d < 4
 

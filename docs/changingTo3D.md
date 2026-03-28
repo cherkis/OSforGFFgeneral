@@ -1,6 +1,8 @@
 @OSforGFFin3D/ is a modification of @OSforGFF/
 Description of the dimension dependence is in @dimension_dependence.md.
 
+`lake build OSforGFFin3D` builds OSforGFFin3D as a Lean library.
+
 # Changing to 3D
 @OSforGFFin3D/ should have
 **Essential (d=3)**: Formulas that evaluate reflect that  $d=3$.
