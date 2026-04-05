@@ -9,6 +9,7 @@
         "echo": true,
         "wc": true,
         "tr": true,
-        "printf": true
+        "printf": true,
+        "diff": true
     }
 }

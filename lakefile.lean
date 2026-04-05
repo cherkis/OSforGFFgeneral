@@ -20,3 +20,6 @@ lean_lib «DependencyExtractor» where
 
 lean_lib «OSforGFFin3D» where
   -- 3D version of OSforGFF library
+
+lean_lib «OSforGFFin2D» where
+  -- 3D version of OSforGFF library
