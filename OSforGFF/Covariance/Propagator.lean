@@ -145,6 +145,49 @@ lemma properTimeCovariance_nonneg (d : ℕ) (m r : ℝ) : 0 ≤ properTimeCovari
   intro t ht
   exact mul_nonneg (Real.exp_nonneg _) (heatKernelProfile_nonneg d t r ht)
 
+/-- Joint integrability of the Schwinger integrand `(t, x) ↦ e^{-tm²} H_d(t, ‖x‖)` over
+    `(volume|_{Ioi 0}) × volume` (`t` outer). Via `integrable_prod_iff`: per-`t` a constant times a
+    Gaussian, and `∫ₓ ‖·‖ = e^{-tm²}` (from `∫H=1`) is integrable in `t`. -/
+lemma schwinger_prod_integrable (d : ℕ) (m : ℝ) (hm : 0 < m) :
+    Integrable (Function.uncurry fun (t : ℝ) (x : EuclideanSpace ℝ (Fin d)) =>
+      Real.exp (-t * m ^ 2) * heatKernelProfile d t ‖x‖)
+      ((volume.restrict (Set.Ioi 0)).prod volume) := by
+  have hmeas : AEStronglyMeasurable
+      (Function.uncurry fun (t : ℝ) (x : EuclideanSpace ℝ (Fin d)) =>
+        Real.exp (-t * m ^ 2) * heatKernelProfile d t ‖x‖)
+      ((volume.restrict (Set.Ioi 0)).prod volume) := by
+    apply Measurable.aestronglyMeasurable
+    unfold Function.uncurry heatKernelProfile
+    fun_prop
+  rw [integrable_prod_iff hmeas]
+  refine ⟨?_, ?_⟩
+  · filter_upwards [ae_restrict_mem measurableSet_Ioi] with t ht
+    simp only [Function.uncurry_apply_pair]
+    exact (heatKernelProfile_integrable d t ht).const_mul _
+  · have hint : Integrable (fun t => Real.exp (-t * m ^ 2)) (volume.restrict (Set.Ioi 0)) := by
+      have h : (-(m ^ 2) : ℝ) < 0 := neg_neg_of_pos (by positivity)
+      have hi := integrableOn_exp_mul_Ioi h 0
+      exact hi.congr_fun (fun t _ => by congr 1; ring) measurableSet_Ioi
+    refine hint.congr ?_
+    filter_upwards [ae_restrict_mem measurableSet_Ioi] with t ht
+    simp only [Function.uncurry_apply_pair]
+    have hnn : ∀ x : EuclideanSpace ℝ (Fin d),
+        ‖Real.exp (-t * m ^ 2) * heatKernelProfile d t ‖x‖‖
+          = Real.exp (-t * m ^ 2) * heatKernelProfile d t ‖x‖ :=
+      fun x => Real.norm_of_nonneg (mul_nonneg (Real.exp_nonneg _) (heatKernelProfile_nonneg d t _ ht))
+    simp_rw [hnn]
+    rw [MeasureTheory.integral_const_mul, heatKernelProfile_integral_eq_one d t ht, mul_one]
+
+/-- The proper-time covariance `x ↦ C_S(‖x‖)` is integrable (`∈ L¹`). From the joint integrability
+    via `Integrable.integral_prod_left`. -/
+lemma properTimeCovariance_integrable (d : ℕ) (m : ℝ) (hm : 0 < m) :
+    Integrable (fun x : EuclideanSpace ℝ (Fin d) => properTimeCovariance d m ‖x‖) := by
+  have h := (schwinger_prod_integrable d m hm).swap.integral_prod_left
+  refine h.congr ?_
+  filter_upwards with x
+  unfold properTimeCovariance
+  simp only [Function.comp_apply, Prod.swap_prod_mk, Function.uncurry_apply_pair]
+
 /-- The dimension-generic free-propagator typeclass.
 
     Two obligations only: the per-`d` closed-form radial covariance `Cprofile`, and the single
