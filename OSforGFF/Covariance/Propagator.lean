@@ -24,6 +24,7 @@ pointwise exponential decay (`GFFPropagator.decayBound`). The momentum-space pro
 -/
 
 open MeasureTheory Real Complex
+open scoped RealInnerProductSpace
 
 namespace OSforGFF
 
@@ -270,13 +271,110 @@ lemma properTimeCovariance_decay (d : ℕ) (m : ℝ) (hm : 0 < m) :
       _ = (4 * Real.pi * t) ^ (-(d : ℝ) / 2) * Real.exp (-(m ^ 2 / 2) * t) * Real.exp (-(1 / (8 * t))) *
             Real.exp (-(m / 2) * r) := by ring
 
+/-- Joint integrability, over `volume × volume|_{(0,∞)}`, of the Fourier–Schwinger integrand
+    `(x, t) ↦ 𝐞(-⟪x, k⟫) · e^{-t m²} H_d(t, ‖x‖)` (character coerced to `ℂ`). -/
+lemma schwinger_fourier_prod_integrable (d : ℕ) (m : ℝ) (hm : 0 < m)
+    (k : EuclideanSpace ℝ (Fin d)) :
+    Integrable (Function.uncurry fun (x : EuclideanSpace ℝ (Fin d)) (t : ℝ) =>
+        (Real.fourierChar (-⟪x, k⟫) : ℂ) *
+          ((Real.exp (-t * m ^ 2) * heatKernelProfile d t ‖x‖ : ℝ) : ℂ))
+      (volume.prod (volume.restrict (Set.Ioi 0))) := by
+  have h_ae_pos : ∀ᵐ p : EuclideanSpace ℝ (Fin d) × ℝ
+      ∂((volume : Measure (EuclideanSpace ℝ (Fin d))).prod (volume.restrict (Set.Ioi 0))),
+      0 < p.2 := by
+    have hprod : (volume : Measure (EuclideanSpace ℝ (Fin d))).prod
+          ((volume : Measure ℝ).restrict (Set.Ioi 0))
+        = ((volume : Measure (EuclideanSpace ℝ (Fin d))).prod volume).restrict
+            (Set.univ ×ˢ Set.Ioi 0) := by
+      rw [← MeasureTheory.Measure.prod_restrict, MeasureTheory.Measure.restrict_univ]
+    rw [hprod]
+    filter_upwards [ae_restrict_mem (MeasurableSet.univ.prod measurableSet_Ioi)] with p hp
+    exact hp.2
+  refine ((schwinger_prod_integrable d m hm).swap).mono' ?_ ?_
+  · have hchar : Continuous fun p : EuclideanSpace ℝ (Fin d) × ℝ =>
+        (Real.fourierChar (-⟪p.1, k⟫) : ℂ) :=
+      continuous_subtype_val.comp
+        (Real.continuous_fourierChar.comp (continuous_fst.inner continuous_const).neg)
+    have hker : Measurable fun p : EuclideanSpace ℝ (Fin d) × ℝ =>
+        ((Real.exp (-p.2 * m ^ 2) * heatKernelProfile d p.2 ‖p.1‖ : ℝ) : ℂ) := by
+      unfold heatKernelProfile
+      fun_prop
+    exact (hchar.measurable.mul hker).aestronglyMeasurable
+  · filter_upwards [h_ae_pos] with p hp
+    obtain ⟨x, t⟩ := p
+    have hnn : 0 ≤ Real.exp (-t * m ^ 2) * heatKernelProfile d t ‖x‖ :=
+      mul_nonneg (Real.exp_nonneg _) (heatKernelProfile_nonneg d t _ hp)
+    simp only [Function.comp_apply, Prod.swap_prod_mk, Function.uncurry_apply_pair]
+    rw [norm_mul, Circle.norm_coe, one_mul, Complex.norm_real]
+    exact le_of_eq (Real.norm_of_nonneg hnn)
+
+/-- The forward Fourier transform of the proper-time covariance `x ↦ C_S(‖x‖)` is the momentum
+    propagator: `𝓕[C_S(‖·‖)](k) = 1/((2π)²‖k‖² + m²)`, uniformly in `d` (Fubini over the
+    proper-time integral, the heat-kernel Fourier transform, and the Laplace integral in `t`). -/
+lemma properTimeCovariance_fourier (d : ℕ) (m : ℝ) (hm : 0 < m) (k : EuclideanSpace ℝ (Fin d)) :
+    FourierTransform.fourier
+        (fun x : EuclideanSpace ℝ (Fin d) => (properTimeCovariance d m ‖x‖ : ℂ)) k
+      = (freePropagatorMom d m k : ℂ) := by
+  have hCS : ∀ (c : ℂ) (x : EuclideanSpace ℝ (Fin d)),
+      c * ((properTimeCovariance d m ‖x‖ : ℝ) : ℂ)
+        = ∫ t in Set.Ioi 0,
+            c * ((Real.exp (-t * m ^ 2) * heatKernelProfile d t ‖x‖ : ℝ) : ℂ) := by
+    intro c x
+    have h1 : ((properTimeCovariance d m ‖x‖ : ℝ) : ℂ)
+        = ∫ t in Set.Ioi 0, ((Real.exp (-t * m ^ 2) * heatKernelProfile d t ‖x‖ : ℝ) : ℂ) := by
+      unfold properTimeCovariance
+      rw [integral_complex_ofReal]
+    rw [h1]
+    exact (MeasureTheory.integral_const_mul _ _).symm
+  have hinner : ∀ t ∈ Set.Ioi (0 : ℝ),
+      (∫ x : EuclideanSpace ℝ (Fin d),
+          (Real.fourierChar (-⟪x, k⟫) : ℂ) *
+            ((Real.exp (-t * m ^ 2) * heatKernelProfile d t ‖x‖ : ℝ) : ℂ))
+        = ((Real.exp (-(m ^ 2 + (2 * Real.pi) ^ 2 * ‖k‖ ^ 2) * t) : ℝ) : ℂ) := by
+    intro t ht
+    have hFT := heatKernelProfile_fourier d t ht k
+    rw [Real.fourier_eq] at hFT
+    simp_rw [Circle.smul_def, smul_eq_mul] at hFT
+    calc (∫ x : EuclideanSpace ℝ (Fin d),
+            (Real.fourierChar (-⟪x, k⟫) : ℂ) *
+              ((Real.exp (-t * m ^ 2) * heatKernelProfile d t ‖x‖ : ℝ) : ℂ))
+        = ∫ x : EuclideanSpace ℝ (Fin d),
+            ((Real.exp (-t * m ^ 2) : ℝ) : ℂ) *
+              ((Real.fourierChar (-⟪x, k⟫) : ℂ) * ((heatKernelProfile d t ‖x‖ : ℝ) : ℂ)) :=
+          MeasureTheory.integral_congr_ae
+            (Filter.Eventually.of_forall fun x => by push_cast; ring)
+      _ = ((Real.exp (-t * m ^ 2) : ℝ) : ℂ) *
+            ∫ x : EuclideanSpace ℝ (Fin d),
+              (Real.fourierChar (-⟪x, k⟫) : ℂ) * ((heatKernelProfile d t ‖x‖ : ℝ) : ℂ) :=
+          MeasureTheory.integral_const_mul _ _
+      _ = ((Real.exp (-t * m ^ 2) : ℝ) : ℂ) *
+            Complex.exp (-(4 * Real.pi ^ 2 * t : ℝ) * ‖k‖ ^ 2) :=
+          congrArg (fun z => ((Real.exp (-t * m ^ 2) : ℝ) : ℂ) * z) hFT
+      _ = ((Real.exp (-(m ^ 2 + (2 * Real.pi) ^ 2 * ‖k‖ ^ 2) * t) : ℝ) : ℂ) := by
+          rw [Complex.ofReal_exp, Complex.ofReal_exp, ← Complex.exp_add]
+          congr 1
+          push_cast
+          ring
+  have hA : (0 : ℝ) < m ^ 2 + (2 * Real.pi) ^ 2 * ‖k‖ ^ 2 := by positivity
+  have hlaplace : ∫ t in Set.Ioi (0 : ℝ),
+      Real.exp (-(m ^ 2 + (2 * Real.pi) ^ 2 * ‖k‖ ^ 2) * t) = freePropagatorMom d m k := by
+    rw [integral_exp_mul_Ioi (by linarith) 0, mul_zero, Real.exp_zero, neg_div_neg_eq]
+    unfold freePropagatorMom
+    rw [add_comm]
+  rw [Real.fourier_eq]
+  simp_rw [Circle.smul_def, smul_eq_mul, hCS]
+  exact (MeasureTheory.integral_integral_swap (schwinger_fourier_prod_integrable d m hm k)).trans
+    ((MeasureTheory.setIntegral_congr_fun measurableSet_Ioi hinner).trans
+      (integral_complex_ofReal.trans (congrArg Complex.ofReal hlaplace)))
+
 /-- The dimension-generic free-propagator typeclass.
 
     Two obligations only: the per-`d` closed-form radial covariance `Cprofile`, and the single
     bridge `schwinger_eq` identifying it (for `r > 0`; the covariance has an integrable singularity
     at `r = 0`) with the generic proper-time integral `properTimeCovariance`. Its `L¹`-integrability
-    (`GFFPropagator.integrable`) and exponential decay (`GFFPropagator.decayBound`) then hold for
-    every `d`. `[Fact (2 ≤ d)]` supports the time/space split. -/
+    (`GFFPropagator.integrable`), Fourier transform (`GFFPropagator.fourier_eq`), and exponential
+    decay (`GFFPropagator.decayBound`) then hold for every `d`. `[Fact (2 ≤ d)]` supports the
+    time/space split. -/
 class GFFPropagator (d : ℕ) (m : ℝ) [Fact (0 < m)] [Fact (2 ≤ d)] where
   /-- The per-`d` radial profile of the position-space covariance: `C(x, y) = Cprofile ‖x − y‖`. -/
   Cprofile : ℝ → ℝ
@@ -308,6 +406,24 @@ lemma decayBound : ∃ A R₀ : ℝ, 0 ≤ A ∧ 0 < R₀ ∧
   have hr0 : (0 : ℝ) < r := lt_of_lt_of_le one_pos hr
   rw [schwinger_eq r hr0, abs_of_nonneg (properTimeCovariance_nonneg d m r)]
   exact hbound r hr
+
+/-- The forward Fourier transform of `x ↦ Cprofile ‖x‖` is the momentum-space propagator
+    `k ↦ 1/((2π)²‖k‖² + m²)`; the momentum-space input for the Parseval/OS1/OS3 chain. -/
+lemma fourier_eq :
+    FourierTransform.fourier
+        (fun x : EuclideanSpace ℝ (Fin d) => (Cprofile (d := d) (m := m) ‖x‖ : ℂ))
+      = fun k => (freePropagatorMom d m k : ℂ) := by
+  have hm : (0 : ℝ) < m := Fact.out
+  have hd : 0 < d := by have := (Fact.out : 2 ≤ d); omega
+  have : Nonempty (Fin d) := ⟨⟨0, hd⟩⟩
+  have : Nontrivial (EuclideanSpace ℝ (Fin d)) := inferInstance
+  have hae : (fun x : EuclideanSpace ℝ (Fin d) => (Cprofile (d := d) (m := m) ‖x‖ : ℂ))
+      =ᵐ[volume] fun x => (properTimeCovariance d m ‖x‖ : ℂ) := by
+    filter_upwards [compl_mem_ae_iff.mpr (measure_singleton (0 : EuclideanSpace ℝ (Fin d)))]
+      with x hx
+    rw [schwinger_eq (d := d) (m := m) ‖x‖ (norm_pos_iff.mpr (by simpa using hx))]
+  funext k
+  exact (Real.fourier_congr_ae hae k).trans (properTimeCovariance_fourier d m hm k)
 
 end GFFPropagator
 
