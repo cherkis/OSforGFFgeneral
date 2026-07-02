@@ -308,6 +308,17 @@ lemma integrable :
   filter_upwards [compl_mem_ae_iff.mpr (measure_singleton (0 : EuclideanSpace ℝ (Fin d)))] with x hx
   exact (schwinger_eq ‖x‖ (norm_pos_iff.mpr (by simpa using hx))).symm
 
+/-- Derived: `Cprofile` has pointwise exponential decay `|Cprofile r| ≤ A·e^{-(m/2)r}` for `r ≥ 1`.
+    Transports `properTimeCovariance_decay` across `schwinger_eq` (pointwise, since `r ≥ 1 > 0`).
+    Feeds the OS4 clustering decay rate. -/
+lemma decayBound : ∃ A R₀ : ℝ, 0 ≤ A ∧ 0 < R₀ ∧
+    ∀ r : ℝ, R₀ ≤ r → |Cprofile (d := d) (m := m) r| ≤ A * Real.exp (-(m / 2) * r) := by
+  obtain ⟨A, hA, hbound⟩ := properTimeCovariance_decay d m Fact.out
+  refine ⟨A, 1, hA, one_pos, fun r hr => ?_⟩
+  have hr0 : (0 : ℝ) < r := lt_of_lt_of_le one_pos hr
+  rw [schwinger_eq r hr0, abs_of_nonneg (properTimeCovariance_nonneg d m r)]
+  exact hbound r hr
+
 end GFFPropagator
 
 end
