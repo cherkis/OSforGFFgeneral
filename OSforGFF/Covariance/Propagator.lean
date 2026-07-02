@@ -231,6 +231,53 @@ lemma decayDominator_integrableOn (d : ℕ) (m : ℝ) (hm : 0 < m) :
       _ = (4 * Real.pi) ^ (-(d : ℝ) / 2) * ((d.factorial : ℝ) * 8 ^ d) *
             (t ^ ((d : ℝ) / 2) * Real.exp (-(m ^ 2 / 2) * t)) := by ring
 
+/-- Pointwise exponential decay of the proper-time covariance: for `r ≥ 1`,
+    `C_S(r) ≤ A · e^{-(m/2)r}` (rate `m/2`, `A = ∫` the dominator). Via `integral_mono_of_nonneg`
+    against the dominator, using the AM–GM exponent bound `tm²+r²/4t ≥ (m/2)r+tm²/2+1/8t`. -/
+lemma properTimeCovariance_decay (d : ℕ) (m : ℝ) (hm : 0 < m) :
+    ∃ A : ℝ, 0 ≤ A ∧ ∀ r : ℝ, 1 ≤ r →
+      properTimeCovariance d m r ≤ A * Real.exp (-(m / 2) * r) := by
+  set g : ℝ → ℝ := fun t => (4 * Real.pi * t) ^ (-(d : ℝ) / 2) *
+    Real.exp (-(m ^ 2 / 2) * t) * Real.exp (-(1 / (8 * t))) with hg
+  have hgint : IntegrableOn g (Set.Ioi 0) := decayDominator_integrableOn d m hm
+  have hgnn : ∀ t ∈ Set.Ioi (0 : ℝ), 0 ≤ g t := fun t ht => by
+    have ht0 : (0 : ℝ) < t := ht
+    rw [hg]; dsimp only
+    exact mul_nonneg (mul_nonneg
+      (Real.rpow_nonneg (mul_nonneg (mul_nonneg (by norm_num) Real.pi_pos.le) ht0.le) _)
+      (Real.exp_nonneg _)) (Real.exp_nonneg _)
+  refine ⟨∫ t in Set.Ioi 0, g t, setIntegral_nonneg measurableSet_Ioi hgnn, fun r hr => ?_⟩
+  unfold properTimeCovariance
+  rw [show (∫ t in Set.Ioi 0, g t) * Real.exp (-(m / 2) * r)
+        = ∫ t in Set.Ioi 0, g t * Real.exp (-(m / 2) * r) from (integral_mul_const _ _).symm]
+  apply integral_mono_of_nonneg
+  · filter_upwards [ae_restrict_mem measurableSet_Ioi] with t ht
+    exact mul_nonneg (Real.exp_nonneg _) (heatKernelProfile_nonneg d t r ht)
+  · exact hgint.mul_const _
+  · filter_upwards [ae_restrict_mem measurableSet_Ioi] with t ht
+    have ht0 : (0 : ℝ) < t := ht
+    have hexp_ineq : (m / 2) * r + (m ^ 2 / 2) * t + 1 / (8 * t) ≤ t * m ^ 2 + r ^ 2 / (4 * t) := by
+      rw [← sub_nonneg]
+      have hkey : t * m ^ 2 + r ^ 2 / (4 * t) - ((m / 2) * r + (m ^ 2 / 2) * t + 1 / (8 * t))
+           = ((2 * t * m - r) ^ 2 + (r ^ 2 - 1)) / (8 * t) := by field_simp; ring
+      rw [hkey]; apply div_nonneg _ (by positivity)
+      nlinarith [sq_nonneg (2 * t * m - r), hr, sq_nonneg (r - 1)]
+    have hle : Real.exp (-t * m ^ 2) * Real.exp (-r ^ 2 / (4 * t))
+        ≤ Real.exp (-(m ^ 2 / 2) * t) * Real.exp (-(1 / (8 * t))) * Real.exp (-(m / 2) * r) := by
+      rw [← Real.exp_add, ← Real.exp_add, ← Real.exp_add]
+      exact Real.exp_le_exp.mpr (by simp only [neg_div]; linarith [hexp_ineq])
+    rw [hg]
+    unfold heatKernelProfile
+    calc Real.exp (-t * m ^ 2) * ((4 * Real.pi * t) ^ (-(d : ℝ) / 2) * Real.exp (-r ^ 2 / (4 * t)))
+        = (4 * Real.pi * t) ^ (-(d : ℝ) / 2) * (Real.exp (-t * m ^ 2) * Real.exp (-r ^ 2 / (4 * t))) := by
+          ring
+      _ ≤ (4 * Real.pi * t) ^ (-(d : ℝ) / 2) *
+            (Real.exp (-(m ^ 2 / 2) * t) * Real.exp (-(1 / (8 * t))) * Real.exp (-(m / 2) * r)) :=
+            mul_le_mul_of_nonneg_left hle
+              (Real.rpow_nonneg (mul_nonneg (mul_nonneg (by norm_num) Real.pi_pos.le) ht0.le) _)
+      _ = (4 * Real.pi * t) ^ (-(d : ℝ) / 2) * Real.exp (-(m ^ 2 / 2) * t) * Real.exp (-(1 / (8 * t))) *
+            Real.exp (-(m / 2) * r) := by ring
+
 /-- The dimension-generic free-propagator typeclass.
 
     Two obligations only: the per-`d` closed-form radial covariance `Cprofile`, and the single
