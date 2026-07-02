@@ -36,6 +36,7 @@ import «OSforGFF».Schwinger.TwoPoint
 import «OSforGFF».Schwinger.GaussianMoments
 
 -- Covariance (free propagator)
+import «OSforGFF».Covariance.Propagator
 import «OSforGFF».Covariance.Momentum
 import «OSforGFF».Covariance.Position
 import «OSforGFF».Covariance.RealForm
