@@ -16,14 +16,11 @@ covariance is its radial closed form `Cprofile` (4D `(m/4π²r)K₁(mr)`; 3D `e^
 * `schwinger_eq` — it equals, for `r > 0`, the **generic** proper-time (Schwinger/heat-kernel)
   integral `properTimeCovariance`, which is one uniform formula for every `d`.
 
-Everything else — `L¹`-integrability, the forward Fourier transform `𝓕[C] = 1/((2π)²‖k‖²+m²)`, and
-the pointwise exponential decay bound — is *derived once, generically* from `schwinger_eq` (as
-namespaced lemmas below), because those are all facts about `properTimeCovariance`, whose Fourier
-transform is computed by Fubini + the Gaussian Fourier transform (the `(4πt)^{±d/2}` normalization
-cancels). This sidesteps the Fourier-inversion/`L¹`-uniqueness obstruction that blocks stating the
-bridge as a bare `𝓕[C] = P` field (`P` is not integrable on `ℝ^d`, `d ≥ 2`).
-
-Design + rationale: see `plan.md` / `progress.md` (Stage 1a).
+Consequences that hold for every `d` are stated once as facts about `properTimeCovariance` and
+transported to `Cprofile` through `schwinger_eq`: `L¹`-integrability (`GFFPropagator.integrable`) and
+pointwise exponential decay (`GFFPropagator.decayBound`). The momentum-space propagator
+`freePropagatorMom d m k = 1/((2π)²‖k‖²+m²)` is the forward Fourier transform of
+`x ↦ properTimeCovariance d m ‖x‖`.
 -/
 
 open MeasureTheory Real Complex
@@ -40,8 +37,8 @@ def heatKernelProfile (d : ℕ) (t r : ℝ) : ℝ :=
 
 /-- The proper-time (Schwinger) form of the free covariance profile, uniform in `d`:
     `C_S(r) = ∫₀^∞ e^{-t m²} · (4πt)^{-d/2} · e^{-r²/(4t)} dt`.
-    This is the generic engine of the propagator: it is `L¹`, its forward Fourier transform is the
-    momentum propagator, and it has exponential pointwise decay — all derived below. -/
+    It is `L¹`, has pointwise exponential decay, and its forward Fourier transform (as
+    `x ↦ C_S ‖x‖`) is the momentum propagator `1/((2π)²‖k‖² + m²)`. -/
 def properTimeCovariance (d : ℕ) (m r : ℝ) : ℝ :=
   ∫ t in Set.Ioi 0, Real.exp (-t * m ^ 2) * heatKernelProfile d t r
 
@@ -146,8 +143,7 @@ lemma properTimeCovariance_nonneg (d : ℕ) (m r : ℝ) : 0 ≤ properTimeCovari
   exact mul_nonneg (Real.exp_nonneg _) (heatKernelProfile_nonneg d t r ht)
 
 /-- Joint integrability of the Schwinger integrand `(t, x) ↦ e^{-tm²} H_d(t, ‖x‖)` over
-    `(volume|_{Ioi 0}) × volume` (`t` outer). Via `integrable_prod_iff`: per-`t` a constant times a
-    Gaussian, and `∫ₓ ‖·‖ = e^{-tm²}` (from `∫H=1`) is integrable in `t`. -/
+    `(volume|_{Ioi 0}) × volume`. -/
 lemma schwinger_prod_integrable (d : ℕ) (m : ℝ) (hm : 0 < m) :
     Integrable (Function.uncurry fun (t : ℝ) (x : EuclideanSpace ℝ (Fin d)) =>
       Real.exp (-t * m ^ 2) * heatKernelProfile d t ‖x‖)
@@ -178,8 +174,7 @@ lemma schwinger_prod_integrable (d : ℕ) (m : ℝ) (hm : 0 < m) :
     simp_rw [hnn]
     rw [MeasureTheory.integral_const_mul, heatKernelProfile_integral_eq_one d t ht, mul_one]
 
-/-- The proper-time covariance `x ↦ C_S(‖x‖)` is integrable (`∈ L¹`). From the joint integrability
-    via `Integrable.integral_prod_left`. -/
+/-- The proper-time covariance `x ↦ C_S(‖x‖)` is integrable (`∈ L¹`). -/
 lemma properTimeCovariance_integrable (d : ℕ) (m : ℝ) (hm : 0 < m) :
     Integrable (fun x : EuclideanSpace ℝ (Fin d) => properTimeCovariance d m ‖x‖) := by
   have h := (schwinger_prod_integrable d m hm).swap.integral_prod_left
@@ -188,9 +183,7 @@ lemma properTimeCovariance_integrable (d : ℕ) (m : ℝ) (hm : 0 < m) :
   unfold properTimeCovariance
   simp only [Function.comp_apply, Prod.swap_prod_mk, Function.uncurry_apply_pair]
 
-/-- The dominating integrand for the OS4 decay bound, `(4πt)^{-d/2} e^{-tm²/2} e^{-1/(8t)}`, is
-    integrable on `(0,∞)`: dominated by `C·t^{d/2}·e^{-(m²/2)t}` (Gamma-type) via
-    `e^{-1/(8t)} ≤ d!·8ᵈ·tᵈ`. -/
+/-- `(4πt)^{-d/2} · e^{-tm²/2} · e^{-1/(8t)}` is integrable on `(0, ∞)`. -/
 lemma decayDominator_integrableOn (d : ℕ) (m : ℝ) (hm : 0 < m) :
     IntegrableOn (fun t => (4 * Real.pi * t) ^ (-(d : ℝ) / 2) *
       Real.exp (-(m ^ 2 / 2) * t) * Real.exp (-(1 / (8 * t)))) (Set.Ioi 0) := by
@@ -231,9 +224,8 @@ lemma decayDominator_integrableOn (d : ℕ) (m : ℝ) (hm : 0 < m) :
       _ = (4 * Real.pi) ^ (-(d : ℝ) / 2) * ((d.factorial : ℝ) * 8 ^ d) *
             (t ^ ((d : ℝ) / 2) * Real.exp (-(m ^ 2 / 2) * t)) := by ring
 
-/-- Pointwise exponential decay of the proper-time covariance: for `r ≥ 1`,
-    `C_S(r) ≤ A · e^{-(m/2)r}` (rate `m/2`, `A = ∫` the dominator). Via `integral_mono_of_nonneg`
-    against the dominator, using the AM–GM exponent bound `tm²+r²/4t ≥ (m/2)r+tm²/2+1/8t`. -/
+/-- Pointwise exponential decay of the proper-time covariance: there is `A ≥ 0` with
+    `C_S(r) ≤ A · e^{-(m/2)r}` for all `r ≥ 1` (decay rate `m/2`). -/
 lemma properTimeCovariance_decay (d : ℕ) (m : ℝ) (hm : 0 < m) :
     ∃ A : ℝ, 0 ≤ A ∧ ∀ r : ℝ, 1 ≤ r →
       properTimeCovariance d m r ≤ A * Real.exp (-(m / 2) * r) := by
@@ -282,9 +274,9 @@ lemma properTimeCovariance_decay (d : ℕ) (m : ℝ) (hm : 0 < m) :
 
     Two obligations only: the per-`d` closed-form radial covariance `Cprofile`, and the single
     bridge `schwinger_eq` identifying it (for `r > 0`; the covariance has an integrable singularity
-    at `r = 0`) with the generic proper-time integral `properTimeCovariance`. From these,
-    `GFFPropagator.integrable`, `GFFPropagator.fourier_eq`, and `GFFPropagator.decayBound` are
-    derived generically. `[Fact (2 ≤ d)]` supports the time/space split used downstream. -/
+    at `r = 0`) with the generic proper-time integral `properTimeCovariance`. Its `L¹`-integrability
+    (`GFFPropagator.integrable`) and exponential decay (`GFFPropagator.decayBound`) then hold for
+    every `d`. `[Fact (2 ≤ d)]` supports the time/space split. -/
 class GFFPropagator (d : ℕ) (m : ℝ) [Fact (0 < m)] [Fact (2 ≤ d)] where
   /-- The per-`d` radial profile of the position-space covariance: `C(x, y) = Cprofile ‖x − y‖`. -/
   Cprofile : ℝ → ℝ
@@ -296,8 +288,7 @@ namespace GFFPropagator
 
 variable {d : ℕ} {m : ℝ} [Fact (0 < m)] [Fact (2 ≤ d)] [GFFPropagator d m]
 
-/-- Derived: `x ↦ Cprofile ‖x‖` is integrable (`∈ L¹`). Transports `properTimeCovariance_integrable`
-    across `schwinger_eq`, which holds off the null set `{0}`. Feeds OS1 local integrability. -/
+/-- `x ↦ Cprofile ‖x‖` is integrable (`∈ L¹`); the local-integrability input for OS1. -/
 lemma integrable :
     Integrable (fun x : EuclideanSpace ℝ (Fin d) => Cprofile (d := d) (m := m) ‖x‖) := by
   have hm : (0 : ℝ) < m := Fact.out
@@ -308,9 +299,8 @@ lemma integrable :
   filter_upwards [compl_mem_ae_iff.mpr (measure_singleton (0 : EuclideanSpace ℝ (Fin d)))] with x hx
   exact (schwinger_eq ‖x‖ (norm_pos_iff.mpr (by simpa using hx))).symm
 
-/-- Derived: `Cprofile` has pointwise exponential decay `|Cprofile r| ≤ A·e^{-(m/2)r}` for `r ≥ 1`.
-    Transports `properTimeCovariance_decay` across `schwinger_eq` (pointwise, since `r ≥ 1 > 0`).
-    Feeds the OS4 clustering decay rate. -/
+/-- `Cprofile` has pointwise exponential decay: for some `A ≥ 0` and `R₀ > 0`,
+    `|Cprofile r| ≤ A · e^{-(m/2)r}` whenever `R₀ ≤ r`; the decay input for OS4 clustering. -/
 lemma decayBound : ∃ A R₀ : ℝ, 0 ≤ A ∧ 0 < R₀ ∧
     ∀ r : ℝ, R₀ ≤ r → |Cprofile (d := d) (m := m) r| ≤ A * Real.exp (-(m / 2) * r) := by
   obtain ⟨A, hA, hbound⟩ := properTimeCovariance_decay d m Fact.out
