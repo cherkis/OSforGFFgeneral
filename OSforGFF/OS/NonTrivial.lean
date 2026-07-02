@@ -58,7 +58,7 @@ namespace OSforGFF
 
 /-- The embedding `toComplex : S(ℝ⁴,ℝ) → S(ℝ⁴,ℂ)` is injective.
     Follows from injectivity of `ℝ → ℂ` applied pointwise. -/
-theorem toComplex_injective : Function.Injective (toComplex : TestFunction → TestFunctionℂ) := by
+theorem toComplex_injective : Function.Injective (toComplex : TestFunction4 → TestFunctionℂ4) := by
   intro f g h
   ext x
   have : toComplex f x = toComplex g x := congr_fun (congr_arg _ h) x
@@ -71,12 +71,12 @@ theorem toComplex_injective : Function.Injective (toComplex : TestFunction → T
     Proof: `FourierPair` gives `𝓕⁻(𝓕 f) = f`, so `𝓕` has a left inverse. -/
 theorem fourierTransform_schwartz_injective :
     Function.Injective
-      (SchwartzMap.fourierTransformCLM ℂ : TestFunctionℂ → TestFunctionℂ) := by
+      (SchwartzMap.fourierTransformCLM ℂ : TestFunctionℂ4 → TestFunctionℂ4) := by
   intro f g h
   -- SchwartzMap.fourierTransformCLM agrees with FourierTransform.fourier
-  have hf' : (SchwartzMap.fourierTransformCLM ℂ f : TestFunctionℂ) =
+  have hf' : (SchwartzMap.fourierTransformCLM ℂ f : TestFunctionℂ4) =
     FourierTransform.fourier f := rfl
-  have hg' : (SchwartzMap.fourierTransformCLM ℂ g : TestFunctionℂ) =
+  have hg' : (SchwartzMap.fourierTransformCLM ℂ g : TestFunctionℂ4) =
     FourierTransform.fourier g := rfl
   rw [hf', hg'] at h
   -- FourierPair gives 𝓕⁻ ∘ 𝓕 = id on Schwartz space
@@ -87,23 +87,23 @@ theorem fourierTransform_schwartz_injective :
 
 /-! ## Continuous functions that vanish a.e. vanish everywhere -/
 
-/-- A continuous function `SpaceTime → ℂ` that is zero a.e. with respect to
+/-- A continuous function `SpaceTime4 → ℂ` that is zero a.e. with respect to
     Lebesgue measure is zero everywhere.
 
     Proof: if `f(x₀) ≠ 0`, then `U = f⁻¹(ℂ \ {0})` is open and nonempty.
     Since volume on `ℝ⁴` is an `IsOpenPosMeasure`, `μ(U) > 0`,
     contradicting `f = 0` a.e. -/
 private lemma eq_zero_of_continuous_ae_zero
-    {f : SpaceTime → ℂ} (hcont : Continuous f) (hae : f =ᵐ[volume] 0) :
+    {f : SpaceTime4 → ℂ} (hcont : Continuous f) (hae : f =ᵐ[volume] 0) :
     f = 0 := by
   funext x
   by_contra hx
-  have hU_open : IsOpen {y : SpaceTime | f y ≠ 0} :=
+  have hU_open : IsOpen {y : SpaceTime4 | f y ≠ 0} :=
     hcont.isOpen_preimage _ isOpen_compl_singleton
-  have hU_ne : Set.Nonempty {y : SpaceTime | f y ≠ 0} := ⟨x, hx⟩
-  have hU_pos : 0 < volume {y : SpaceTime | f y ≠ 0} :=
+  have hU_ne : Set.Nonempty {y : SpaceTime4 | f y ≠ 0} := ⟨x, hx⟩
+  have hU_pos : 0 < volume {y : SpaceTime4 | f y ≠ 0} :=
     hU_open.measure_pos volume hU_ne
-  have hU_zero : volume {y : SpaceTime | f y ≠ 0} = 0 := by
+  have hU_zero : volume {y : SpaceTime4 | f y ≠ 0} = 0 := by
     rw [← ae_iff]
     exact hae.mono fun y hy => by simpa using hy
   exact absurd hU_zero (ne_of_gt hU_pos)
@@ -115,8 +115,8 @@ private lemma eq_zero_of_continuous_ae_zero
     `sqrtPropagatorMap m f k = 𝓕(toComplex f)(k) · w(k)` where `w(k) > 0`,
     so vanishing of the product forces `𝓕(toComplex f) = 0`, hence `f = 0`
     by Fourier injectivity. -/
-theorem sqrtPropagatorMap_eq_zero_iff (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
-    (∀ k : SpaceTime, sqrtPropagatorMap m f k = 0) ↔ f = 0 := by
+theorem sqrtPropagatorMap_eq_zero_iff (m : ℝ) [Fact (0 < m)] (f : TestFunction4) :
+    (∀ k : SpaceTime4, sqrtPropagatorMap m f k = 0) ↔ f = 0 := by
   constructor
   · intro h
     -- Each factor: 𝓕(toComplex f)(k) * w(k) = 0, and w(k) > 0, so 𝓕(toComplex f)(k) = 0
@@ -138,13 +138,13 @@ theorem sqrtPropagatorMap_eq_zero_iff (m : ℝ) [Fact (0 < m)] (f : TestFunction
         rw [h_ft_zero_fn, map_zero]
       exact fourierTransform_schwartz_injective this
     -- By toComplex injectivity, f = 0
-    have h_tc_0 : toComplex (0 : TestFunction) = 0 := by ext x; simp [toComplex_apply]
+    have h_tc_0 : toComplex (0 : TestFunction4) = 0 := by ext x; simp [toComplex_apply]
     exact toComplex_injective (h_tc_zero.trans h_tc_0.symm)
   · intro h; subst h; intro k
     unfold sqrtPropagatorMap
-    have h1 : toComplex (0 : TestFunction) = 0 := by ext x; simp [toComplex_apply]
+    have h1 : toComplex (0 : TestFunction4) = 0 := by ext x; simp [toComplex_apply]
     rw [h1]
-    have h2 : SchwartzMap.fourierTransformCLM ℂ (0 : TestFunctionℂ) = 0 :=
+    have h2 : SchwartzMap.fourierTransformCLM ℂ (0 : TestFunctionℂ4) = 0 :=
       ContinuousLinearMap.map_zero _
     simp only [h2, SchwartzMap.zero_apply, zero_mul]
 
@@ -195,7 +195,7 @@ theorem embeddingMap_injective (m : ℝ) [Fact (0 < m)] :
     Proof: `C(f,f) = ‖T f‖²` where `T` is injective, so `f ≠ 0 ⟹ T f ≠ 0
     ⟹ ‖T f‖ > 0 ⟹ ‖T f‖² > 0`. -/
 theorem freeCovarianceFormR_strictPos (m : ℝ) [Fact (0 < m)]
-    (f : TestFunction) (hf : f ≠ 0) :
+    (f : TestFunction4) (hf : f ≠ 0) :
     0 < freeCovarianceFormR m f f := by
   rw [freeCovarianceFormR_eq_normSq m f]
   have h_ne : embeddingMap m f ≠ 0 := by
@@ -208,7 +208,7 @@ theorem freeCovarianceFormR_strictPos (m : ℝ) [Fact (0 < m)]
 /-- The variance of `⟨ω,f⟩` under the GFF is strictly positive for `f ≠ 0`.
     Equivalently, the pushforward by the pairing is a non-degenerate Gaussian. -/
 theorem gaussianFreeField_variance_pos (m : ℝ) [Fact (0 < m)]
-    (f : TestFunction) (hf : f ≠ 0) :
+    (f : TestFunction4) (hf : f ≠ 0) :
     0 < ∫ ω, (distributionPairingCLM f ω) ^ 2 ∂(μ_GFF m).toMeasure := by
   rw [gff_second_moment_eq_covariance]
   exact freeCovarianceFormR_strictPos m f hf
@@ -220,17 +220,17 @@ theorem gaussianFreeField_variance_pos (m : ℝ) [Fact (0 < m)]
     Any nonzero Schwartz function witnesses this.  We use a standard bump
     function on ℝ⁴, which exists by `ContDiff.exists_eq_one_of_isOpen`. -/
 theorem gaussianFreeField_not_dirac (m : ℝ) [Fact (0 < m)] :
-    ∃ f : TestFunction, f ≠ 0 ∧
+    ∃ f : TestFunction4, f ≠ 0 ∧
       0 < ∫ ω, (distributionPairingCLM f ω) ^ 2 ∂(μ_GFF m).toMeasure := by
   -- Schwartz space on ℝ⁴ is nontrivial: exhibit a nonzero element.
   -- This uses the existence of smooth compactly-supported bump functions.
-  have ⟨f, hf⟩ : ∃ f : TestFunction, f ≠ 0 := by
-    let φ : ContDiffBump (0 : SpaceTime) := ⟨1, 2, by norm_num, by norm_num⟩
+  have ⟨f, hf⟩ : ∃ f : TestFunction4, f ≠ 0 := by
+    let φ : ContDiffBump (0 : SpaceTime4) := ⟨1, 2, by norm_num, by norm_num⟩
     refine ⟨φ.hasCompactSupport.toSchwartzMap φ.contDiff, fun h => ?_⟩
-    have h1 : φ (0 : SpaceTime) = 1 :=
+    have h1 : φ (0 : SpaceTime4) = 1 :=
       φ.one_of_mem_closedBall (Metric.mem_closedBall_self φ.rIn_pos.le)
-    have h2 : (φ.hasCompactSupport.toSchwartzMap φ.contDiff) (0 : SpaceTime) =
-              φ (0 : SpaceTime) := rfl
+    have h2 : (φ.hasCompactSupport.toSchwartzMap φ.contDiff) (0 : SpaceTime4) =
+              φ (0 : SpaceTime4) := rfl
     rw [h] at h2; simp at h2; linarith
   exact ⟨f, hf, gaussianFreeField_variance_pos m f hf⟩
 
@@ -315,7 +315,7 @@ theorem besselK1_tendsto_atTop_at_zero :
     `C(x,y) = (m/(4π²r)) · K₁(mr)` where `r = ‖x-y‖`.  As `r → 0⁺`,
     `K₁(mr) ≥ K₁(1) > 0` for `mr ≤ 1` and `m/(4π²r) → +∞`,
     so the product diverges. -/
-theorem freeCovariance_tendsto_atTop (m : ℝ) [Fact (0 < m)] (x₀ : SpaceTime) :
+theorem freeCovariance_tendsto_atTop (m : ℝ) [Fact (0 < m)] (x₀ : SpaceTime4) :
     Filter.Tendsto (fun x => freeCovarianceBessel m x₀ x)
       (nhdsWithin x₀ {x₀}ᶜ) Filter.atTop := by
   have hm := Fact.out (self := ‹Fact (0 < m)›)
@@ -323,9 +323,9 @@ theorem freeCovariance_tendsto_atTop (m : ℝ) [Fact (0 < m)] (x₀ : SpaceTime)
   have h_norm : Filter.Tendsto (fun x => ‖x₀ - x‖)
       (nhdsWithin x₀ {x₀}ᶜ) (nhdsWithin 0 (Set.Ioi 0)) := by
     apply tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within
-    · have hc : ContinuousAt (fun x : SpaceTime => ‖x₀ - x‖) x₀ :=
+    · have hc : ContinuousAt (fun x : SpaceTime4 => ‖x₀ - x‖) x₀ :=
         (continuous_norm.comp (continuous_const.sub continuous_id)).continuousAt
-      have h0 : (fun x : SpaceTime => ‖x₀ - x‖) x₀ = 0 := by simp
+      have h0 : (fun x : SpaceTime4 => ‖x₀ - x‖) x₀ = 0 := by simp
       have := hc.tendsto; simp only [sub_self, norm_zero] at this
       exact this.mono_left nhdsWithin_le_nhds
     · exact eventually_nhdsWithin_of_forall fun x hx =>

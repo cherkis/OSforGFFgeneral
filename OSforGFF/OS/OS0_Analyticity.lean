@@ -80,33 +80,33 @@ variable (m : ℝ) [Fact (0 < m)]
 
 /-- The complex pairing is continuous in ω.
     This follows from the continuity of the evaluation map on WeakDual. -/
-theorem distributionPairingℂ_real_continuous (f : TestFunctionℂ) :
-    Continuous (fun ω : FieldConfiguration => distributionPairingℂ_real ω f) := by
+theorem distributionPairingℂ_real_continuous (f : TestFunctionℂ4) :
+    Continuous (fun ω : FieldConfiguration4 => distributionPairingℂ_real ω f) := by
   -- distributionPairingℂ_real ω f = ω f_re + I * ω f_im
   -- where f_re = schwartz_comp_clm f reCLM and f_im = schwartz_comp_clm f imCLM
   simp only [distributionPairingℂ_real, complex_testfunction_decompose]
   -- Now we need: Continuous (ω ↦ ↑(ω (schwartz_comp_clm f reCLM)) + I * ↑(ω (schwartz_comp_clm f imCLM)))
   -- Each evaluation ω ↦ ω g is continuous by WeakDual.eval_continuous
-  have h_re : Continuous (fun ω : FieldConfiguration => (ω (schwartz_comp_clm f Complex.reCLM) : ℂ)) :=
+  have h_re : Continuous (fun ω : FieldConfiguration4 => (ω (schwartz_comp_clm f Complex.reCLM) : ℂ)) :=
     Complex.continuous_ofReal.comp (WeakDual.eval_continuous _)
-  have h_im : Continuous (fun ω : FieldConfiguration => (ω (schwartz_comp_clm f Complex.imCLM) : ℂ)) :=
+  have h_im : Continuous (fun ω : FieldConfiguration4 => (ω (schwartz_comp_clm f Complex.imCLM) : ℂ)) :=
     Complex.continuous_ofReal.comp (WeakDual.eval_continuous _)
   -- The full pairing is a continuous combination
   exact h_re.add (continuous_const.mul h_im)
 
 /-- The complex pairing is measurable in ω (cylinder σ-algebra version).
     This follows from the measurability of the evaluation map on WeakDual. -/
-lemma distributionPairingℂ_real_measurable (f : TestFunctionℂ) :
-    Measurable (fun ω : FieldConfiguration => distributionPairingℂ_real ω f) := by
+lemma distributionPairingℂ_real_measurable (f : TestFunctionℂ4) :
+    Measurable (fun ω : FieldConfiguration4 => distributionPairingℂ_real ω f) := by
   simp only [distributionPairingℂ_real, complex_testfunction_decompose]
   exact (continuous_ofReal.measurable.comp (WeakDual.eval_measurable _)).add
     (measurable_const.mul (continuous_ofReal.measurable.comp (WeakDual.eval_measurable _)))
 
 /-- The GFF integrand for the generating functional is measurable in ω for each z. -/
 theorem gff_integrand_measurable
-    (n : ℕ) (J : Fin n → TestFunctionℂ) (z : Fin n → ℂ) :
+    (n : ℕ) (J : Fin n → TestFunctionℂ4) (z : Fin n → ℂ) :
     AEStronglyMeasurable
-      (fun ω : FieldConfiguration =>
+      (fun ω : FieldConfiguration4 =>
         Complex.exp (Complex.I * distributionPairingℂ_real ω (∑ i, z i • J i)))
       (μ_GFF m).toMeasure := by
   exact (Complex.continuous_exp.measurable.comp
@@ -118,7 +118,7 @@ theorem gff_integrand_measurable
     2. ω ↦ ⟨ω, f⟩ is linear in f
     3. exp(i · _) is entire -/
 theorem gff_integrand_analytic
-    (n : ℕ) (J : Fin n → TestFunctionℂ) (ω : FieldConfiguration) (z₀ : Fin n → ℂ) :
+    (n : ℕ) (J : Fin n → TestFunctionℂ4) (ω : FieldConfiguration4) (z₀ : Fin n → ℂ) :
     AnalyticAt ℂ
       (fun z : Fin n → ℂ =>
         Complex.exp (Complex.I * distributionPairingℂ_real ω (∑ i, z i • J i)))
@@ -146,12 +146,12 @@ theorem gff_integrand_analytic
       -- distributionPairingℂ_real is linear in the test function
       -- Use pairing_linear_combo: pairing(t•f + s•g) = t * pairing(f) + s * pairing(g)
       -- First establish the basic linearity properties
-      have h_add : ∀ f g : TestFunctionℂ, distributionPairingℂ_real ω (f + g) =
+      have h_add : ∀ f g : TestFunctionℂ4, distributionPairingℂ_real ω (f + g) =
           distributionPairingℂ_real ω f + distributionPairingℂ_real ω g := fun f g => by
         have := pairing_linear_combo ω f g 1 1
         simp at this
         exact this
-      have h_smul : ∀ (c : ℂ) (f : TestFunctionℂ), distributionPairingℂ_real ω (c • f) =
+      have h_smul : ∀ (c : ℂ) (f : TestFunctionℂ4), distributionPairingℂ_real ω (c • f) =
           c * distributionPairingℂ_real ω f := fun c f => by
         have := pairing_linear_combo ω f 0 c 0
         simp at this
@@ -191,7 +191,7 @@ theorem gff_integrand_analytic
     - I * distributionPairingℂ_real ω f = I * (ω f_re) - (ω f_im)
     - Re(I * distributionPairingℂ_real ω f) = -(ω f_im)
     - ‖exp(z)‖ = exp(Re(z)), so ‖exp(I * ...)‖ = exp(-(ω f_im)) -/
-lemma norm_exp_I_distributionPairingℂ_real (f : TestFunctionℂ) (ω : FieldConfiguration) :
+lemma norm_exp_I_distributionPairingℂ_real (f : TestFunctionℂ4) (ω : FieldConfiguration4) :
     ‖Complex.exp (Complex.I * distributionPairingℂ_real ω f)‖ =
       Real.exp (-(ω (complex_testfunction_decompose f).2)) := by
   -- Use Complex.norm_exp: ‖exp(z)‖ = exp(z.re)
@@ -209,8 +209,8 @@ lemma norm_exp_I_distributionPairingℂ_real (f : TestFunctionℂ) (ω : FieldCo
 /-- Integrability of exp(-ω f) for a real test function f under the GFF measure.
     This follows from the Gaussian nature: for centered Gaussian X with variance σ²,
     E[exp(-X)] = exp(σ²/2). -/
-lemma gff_exp_neg_pairing_integrable (f : TestFunction) :
-    Integrable (fun ω : FieldConfiguration => Real.exp (-(ω f)))
+lemma gff_exp_neg_pairing_integrable (f : TestFunction4) :
+    Integrable (fun ω : FieldConfiguration4 => Real.exp (-(ω f)))
       (μ_GFF m).toMeasure := by
   -- Use exponential square integrability (Fernique)
   -- For any α > 0, exp(α x²) is integrable, and exp(-x) ≤ exp(α x² + 1/(4α))
@@ -234,7 +234,7 @@ lemma gff_exp_neg_pairing_integrable (f : TestFunction) :
       (fun ω => Real.exp (1 / (4 * α)) * Real.exp (α * (distributionPairingCLM f ω)^2))
       (μ_GFF m).toMeasure := h_integ.const_mul (Real.exp (1 / (4 * α)))
   -- exp(-ω f) is measurable
-  have h_meas : AEStronglyMeasurable (fun ω : FieldConfiguration => Real.exp (-(ω f)))
+  have h_meas : AEStronglyMeasurable (fun ω : FieldConfiguration4 => Real.exp (-(ω f)))
       (μ_GFF m).toMeasure :=
     (Real.continuous_exp.measurable.comp (measurable_neg.comp (WeakDual.eval_measurable f))).aestronglyMeasurable
   -- Pointwise bound: ‖exp(-ω f)‖ ≤ exp(1/(4α)) * exp(α (ω f)²)
@@ -250,8 +250,8 @@ lemma gff_exp_neg_pairing_integrable (f : TestFunction) :
 /-- exp(|ω f|) is in L^2 (and in fact all L^p) under the GFF measure.
     This follows from Fernique's theorem: if exp(α x²) is integrable, then exp(|x|)^p is integrable
     for all p < ∞ because |x|^p ≤ C_p * exp(ε x²) for small ε. -/
-lemma gff_exp_abs_pairing_memLp (f : TestFunction) (p : ENNReal) (hp : p ≠ ⊤) :
-    MemLp (fun ω : FieldConfiguration => Real.exp |ω f|) p (μ_GFF m).toMeasure := by
+lemma gff_exp_abs_pairing_memLp (f : TestFunction4) (p : ENNReal) (hp : p ≠ ⊤) :
+    MemLp (fun ω : FieldConfiguration4 => Real.exp |ω f|) p (μ_GFF m).toMeasure := by
   -- By Fernique, ∃ α > 0 such that exp(α x²) is integrable
   obtain ⟨α, hα_pos, h_fernique⟩ := gaussianFreeField_pairing_expSq_integrable m f
   -- For any p < ∞, we use exp(|x|)^p = exp(p|x|) ≤ exp(p²/(4α)) * exp(α x²)
@@ -326,7 +326,7 @@ lemma gff_exp_abs_pairing_memLp (f : TestFunction) (p : ENNReal) (hp : p ≠ ⊤
   -- ‖exp(|x|)‖^p = exp(|x|)^p = exp(p * |x|)
 
   -- The key: exp(p|ω f|) ≤ C * exp(α (ω f)²) and RHS is integrable
-  have h_norm_pow_bound : ∀ ω : FieldConfiguration,
+  have h_norm_pow_bound : ∀ ω : FieldConfiguration4,
       Real.exp (p.toReal * |ω f|) ≤ C * Real.exp (α * (ω f)^2) := fun ω => by
     have h1 := h_exp_bound (ω f)
     exact h1
@@ -360,7 +360,7 @@ lemma gff_exp_abs_pairing_memLp (f : TestFunction) (p : ENNReal) (hp : p ≠ ⊤
     -- Need: ∫⁻ ‖exp(|ω f|)‖ₑ^p < ⊤
     -- Since ‖exp(|x|)‖ₑ = exp(|x|), we have ‖exp(|x|)‖ₑ^p = exp(p|x|)
     -- and exp(p|x|) is integrable by h_exp_p_integrable
-    have h_eq : ∀ ω : FieldConfiguration,
+    have h_eq : ∀ ω : FieldConfiguration4,
         (‖Real.exp |ω f|‖ₑ : ENNReal) ^ p.toReal = ENNReal.ofReal (Real.exp (p.toReal * |ω f|)) := by
       intro ω
       have h_pos : 0 < Real.exp |ω f| := Real.exp_pos _
@@ -383,19 +383,19 @@ lemma gff_exp_abs_pairing_memLp (f : TestFunction) (p : ENNReal) (hp : p ≠ ⊤
 
 /-- Integrability of exp(|ω f|) under the GFF measure.
     This is the L¹ special case of gff_exp_abs_pairing_memLp. -/
-lemma gff_exp_abs_pairing_integrable (f : TestFunction) :
-    Integrable (fun ω : FieldConfiguration => Real.exp |ω f|) (μ_GFF m).toMeasure :=
+lemma gff_exp_abs_pairing_integrable (f : TestFunction4) :
+    Integrable (fun ω : FieldConfiguration4 => Real.exp |ω f|) (μ_GFF m).toMeasure :=
   memLp_one_iff_integrable.mp (gff_exp_abs_pairing_memLp m f 1 ENNReal.one_ne_top)
 
 /-- Product of exponentials of absolute pairings is in L².
     If we have k test functions g₁, ..., gₖ, then exp(∑ᵢ |ω gᵢ|) = ∏ᵢ exp(|ω gᵢ|).
     Each exp(|ω gᵢ|) ∈ L^(2k) by gff_exp_abs_pairing_memLp.
     By generalized Hölder (MemLp.prod'), a product of k functions in L^(2k) is in L². -/
-lemma gff_exp_abs_sum_memLp {ι : Type*} (s : Finset ι) (g : ι → TestFunction) :
-    MemLp (fun ω : FieldConfiguration => Real.exp (∑ i ∈ s, |ω (g i)|)) 2 (μ_GFF m).toMeasure := by
+lemma gff_exp_abs_sum_memLp {ι : Type*} (s : Finset ι) (g : ι → TestFunction4) :
+    MemLp (fun ω : FieldConfiguration4 => Real.exp (∑ i ∈ s, |ω (g i)|)) 2 (μ_GFF m).toMeasure := by
   -- Rewrite exp(sum) as product of exp
-  have h_eq : (fun ω : FieldConfiguration => Real.exp (∑ i ∈ s, |ω (g i)|)) =
-              (fun ω : FieldConfiguration => ∏ i ∈ s, Real.exp |ω (g i)|) := by
+  have h_eq : (fun ω : FieldConfiguration4 => Real.exp (∑ i ∈ s, |ω (g i)|)) =
+              (fun ω : FieldConfiguration4 => ∏ i ∈ s, Real.exp |ω (g i)|) := by
     ext ω; exact Real.exp_sum s (fun i => |ω (g i)|)
   rw [h_eq]
   -- Handle empty case
@@ -405,13 +405,13 @@ lemma gff_exp_abs_sum_memLp {ι : Type*} (s : Finset ι) (g : ι → TestFunctio
   let k : ℕ := s.card
   have hk_pos : 0 < k := Finset.card_pos.mpr hs
   -- Each factor is in L^(2k)
-  have h_each : ∀ i ∈ s, MemLp (fun ω : FieldConfiguration => Real.exp |ω (g i)|)
+  have h_each : ∀ i ∈ s, MemLp (fun ω : FieldConfiguration4 => Real.exp |ω (g i)|)
       (2 * k : ℕ) (μ_GFF m).toMeasure := by
     intro i _
     exact gff_exp_abs_pairing_memLp m (g i) (2 * k : ℕ) (ENNReal.natCast_ne_top _)
   -- Apply MemLp.prod' with constant exponent 2k for each factor
   have h_prod := MemLp.prod' (s := s) (p := fun _ => (2 * k : ℕ))
-    (f := fun i (ω : FieldConfiguration) => Real.exp |ω (g i)|)
+    (f := fun i (ω : FieldConfiguration4) => Real.exp |ω (g i)|)
     (fun i hi => h_each i hi)
   -- The resulting exponent is (∑ i ∈ s, 1/(2k))⁻¹ = (k/(2k))⁻¹ = 2
   convert h_prod using 1
@@ -444,8 +444,8 @@ lemma gff_exp_abs_sum_memLp {ι : Type*} (s : Finset ι) (g : ι → TestFunctio
 
 /-- The integral of ‖exp(I * distributionPairingℂ_real ω f)‖ is finite for any complex test function.
     This follows from the Gaussian exponential integrability applied to the imaginary part. -/
-lemma gff_integrand_norm_integrable (f : TestFunctionℂ) :
-    Integrable (fun ω : FieldConfiguration =>
+lemma gff_integrand_norm_integrable (f : TestFunctionℂ4) :
+    Integrable (fun ω : FieldConfiguration4 =>
         ‖Complex.exp (Complex.I * distributionPairingℂ_real ω f)‖)
       (μ_GFF m).toMeasure := by
   -- Rewrite the norm using our lemma
@@ -458,9 +458,9 @@ lemma gff_integrand_norm_integrable (f : TestFunctionℂ) :
 /-- The GFF integrand is integrable for each z.
     This follows from the norm being exp(-(ω f_im)) which is integrable by
     Gaussian exponential integrability. -/
-theorem gff_integrand_integrable (n : ℕ) (J : Fin n → TestFunctionℂ) (z : Fin n → ℂ) :
+theorem gff_integrand_integrable (n : ℕ) (J : Fin n → TestFunctionℂ4) (z : Fin n → ℂ) :
     Integrable
-      (fun ω : FieldConfiguration =>
+      (fun ω : FieldConfiguration4 =>
         Complex.exp (Complex.I * distributionPairingℂ_real ω (∑ i, z i • J i)))
       (μ_GFF m).toMeasure := by
   -- The norm is exp(-(ω f_im)) which is integrable
@@ -489,14 +489,14 @@ which equals exp(-½ C_ℂ(f,f)). -/
     entire in t; the modulus is bounded by exp(|Im(t)| · |⟨ω,f_im⟩|), which is
     integrable by Fernique's theorem (gaussianFreeField_pairing_memLp).
     Standard parameter-dependent holomorphy then gives analyticity of the integral. -/
-lemma gff_cf_slice_entire (f_re f_im : TestFunction) :
+lemma gff_cf_slice_entire (f_re f_im : TestFunction4) :
     AnalyticOnNhd ℂ (fun t : ℂ =>
       GJGeneratingFunctionalℂ (μ_GFF m) (toComplex f_re + t • toComplex f_im))
       Set.univ := by
   -- Abbreviations
-  set a : FieldConfiguration → ℂ := fun ω => Complex.I * (ω f_re : ℂ)
-  set b : FieldConfiguration → ℂ := fun ω => Complex.I * (ω f_im : ℂ)
-  set F : ℂ → FieldConfiguration → ℂ := fun t ω => Complex.exp (a ω + t * b ω)
+  set a : FieldConfiguration4 → ℂ := fun ω => Complex.I * (ω f_re : ℂ)
+  set b : FieldConfiguration4 → ℂ := fun ω => Complex.I * (ω f_im : ℂ)
+  set F : ℂ → FieldConfiguration4 → ℂ := fun t ω => Complex.exp (a ω + t * b ω)
   -- Helper: Re(a(ω) + t * b(ω)) = -t.im * ω(f_im)
   have h_re_formula : ∀ ω t, (a ω + t * b ω).re = -t.im * ω f_im := by
     intro ω t
@@ -506,9 +506,9 @@ lemma gff_cf_slice_entire (f_re f_im : TestFunction) :
   -- Measurability helpers
   have h_eval_meas_re := WeakDual.eval_measurable f_re
   have h_eval_meas_im := WeakDual.eval_measurable f_im
-  have h_ofReal_re : Measurable (fun ω : FieldConfiguration => (ω f_re : ℂ)) :=
+  have h_ofReal_re : Measurable (fun ω : FieldConfiguration4 => (ω f_re : ℂ)) :=
     Complex.continuous_ofReal.measurable.comp h_eval_meas_re
-  have h_ofReal_im : Measurable (fun ω : FieldConfiguration => (ω f_im : ℂ)) :=
+  have h_ofReal_im : Measurable (fun ω : FieldConfiguration4 => (ω f_im : ℂ)) :=
     Complex.continuous_ofReal.measurable.comp h_eval_meas_im
   have h_a_meas : Measurable a := h_ofReal_re.const_mul _
   have h_b_meas : Measurable b := h_ofReal_im.const_mul _
@@ -604,7 +604,7 @@ lemma gff_cf_slice_entire (f_re f_im : TestFunction) :
       (h_b_meas.mul (Complex.continuous_exp.measurable.comp
         (h_a_meas.add (h_b_meas.const_mul t₀))))).aestronglyMeasurable
   -- Bound for derivative norm
-  set bound : FieldConfiguration → ℝ := fun ω => |ω f_im| * Real.exp ((|t₀.im| + 1) * |ω f_im|)
+  set bound : FieldConfiguration4 → ℝ := fun ω => |ω f_im| * Real.exp ((|t₀.im| + 1) * |ω f_im|)
   -- Fderiv bound on B(t₀, 1)
   have h_fderiv_bound : ∀ᵐ ω ∂(μ_GFF m).toMeasure, ∀ t ∈ s,
       ‖ContinuousLinearMap.smulRight (1 : ℂ →L[ℂ] ℂ) (b ω * F t ω)‖ ≤ bound ω := by
@@ -657,7 +657,7 @@ lemma gff_cf_slice_entire (f_re f_im : TestFunction) :
     Proved by 1-parameter analytic continuation: decompose f = f_re + I·f_im,
     show the generating functional and Gaussian formula agree on ℝ (from
     `gff_real_characteristic`), extend to ℂ via the identity theorem. -/
-theorem gff_complex_CF_covariance (f : TestFunctionℂ) :
+theorem gff_complex_CF_covariance (f : TestFunctionℂ4) :
     GJGeneratingFunctionalℂ (μ_GFF m) f =
     cexp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear m f f) := by
   -- Decompose f = toComplex f_re + I • toComplex f_im
@@ -753,20 +753,20 @@ Using the ℂ-bilinearity of `freeCovarianceℂ_bilinear`, we expand
 C_ℂ(∑ᵢ zᵢ Jᵢ, ∑ⱼ zⱼ Jⱼ) = ∑ᵢ ∑ⱼ zᵢ zⱼ C_ℂ(Jᵢ, Jⱼ). -/
 
 /-- C_ℂ(f, 0) = 0, derived from smul_right with c = 0. -/
-private lemma freeCovarianceℂ_bilinear_zero_right (f : TestFunctionℂ) :
+private lemma freeCovarianceℂ_bilinear_zero_right (f : TestFunctionℂ4) :
     freeCovarianceℂ_bilinear m f 0 = 0 := by
-  have h := freeCovarianceℂ_bilinear_smul_right m (0 : ℂ) f (0 : TestFunctionℂ)
+  have h := freeCovarianceℂ_bilinear_smul_right m (0 : ℂ) f (0 : TestFunctionℂ4)
   simp at h; exact h
 
 /-- C_ℂ(0, g) = 0, derived from smul_left with c = 0. -/
-private lemma freeCovarianceℂ_bilinear_zero_left (g : TestFunctionℂ) :
+private lemma freeCovarianceℂ_bilinear_zero_left (g : TestFunctionℂ4) :
     freeCovarianceℂ_bilinear m 0 g = 0 := by
-  have h := freeCovarianceℂ_bilinear_smul_left m (0 : ℂ) (0 : TestFunctionℂ) g
+  have h := freeCovarianceℂ_bilinear_smul_left m (0 : ℂ) (0 : TestFunctionℂ4) g
   simp at h; exact h
 
 /-- Right linearity over finite sums for the complexified covariance. -/
-private lemma freeCovarianceℂ_sum_right (f : TestFunctionℂ)
-    (s : Finset (Fin n)) (z : Fin n → ℂ) (J : Fin n → TestFunctionℂ) :
+private lemma freeCovarianceℂ_sum_right (f : TestFunctionℂ4)
+    (s : Finset (Fin n)) (z : Fin n → ℂ) (J : Fin n → TestFunctionℂ4) :
     freeCovarianceℂ_bilinear m f (∑ i ∈ s, z i • J i) =
     ∑ i ∈ s, z i * freeCovarianceℂ_bilinear m f (J i) := by
   induction s using Finset.cons_induction with
@@ -777,8 +777,8 @@ private lemma freeCovarianceℂ_sum_right (f : TestFunctionℂ)
 
 /-- Left linearity over finite sums for the complexified covariance. -/
 private lemma freeCovarianceℂ_sum_left
-    (s : Finset (Fin n)) (z : Fin n → ℂ) (J : Fin n → TestFunctionℂ)
-    (g : TestFunctionℂ) :
+    (s : Finset (Fin n)) (z : Fin n → ℂ) (J : Fin n → TestFunctionℂ4)
+    (g : TestFunctionℂ4) :
     freeCovarianceℂ_bilinear m (∑ i ∈ s, z i • J i) g =
     ∑ i ∈ s, z i * freeCovarianceℂ_bilinear m (J i) g := by
   induction s using Finset.cons_induction with
@@ -789,7 +789,7 @@ private lemma freeCovarianceℂ_sum_left
 
 /-- Full bilinear expansion of C_ℂ(∑ zᵢ Jᵢ, ∑ zⱼ Jⱼ) as a finite double sum. -/
 theorem freeCovarianceℂ_bilinear_sum_expansion {n : ℕ}
-    (J : Fin n → TestFunctionℂ) (z : Fin n → ℂ) :
+    (J : Fin n → TestFunctionℂ4) (z : Fin n → ℂ) :
     freeCovarianceℂ_bilinear m (∑ i, z i • J i) (∑ j, z j • J j) =
     ∑ i : Fin n, ∑ j : Fin n,
       z i * z j * freeCovarianceℂ_bilinear m (J i) (J j) := by
@@ -800,7 +800,7 @@ theorem freeCovarianceℂ_bilinear_sum_expansion {n : ℕ}
 
 /-- The generating functional for ∑ᵢ zᵢ Jᵢ equals exp of a finite quadratic form. -/
 theorem gff_generating_eq_exp_quadratic {n : ℕ}
-    (J : Fin n → TestFunctionℂ) (z : Fin n → ℂ) :
+    (J : Fin n → TestFunctionℂ4) (z : Fin n → ℂ) :
     GJGeneratingFunctionalℂ (μ_GFF m) (∑ i, z i • J i) =
     cexp (-(1/2 : ℂ) * ∑ i : Fin n, ∑ j : Fin n,
       z i * z j * freeCovarianceℂ_bilinear m (J i) (J j)) := by

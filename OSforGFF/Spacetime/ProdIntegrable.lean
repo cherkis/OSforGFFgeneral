@@ -24,27 +24,27 @@ namespace SchwartzLinearBound
 
 end SchwartzLinearBound
 
-/-! ## SpaceTime-specialized version
+/-! ## SpaceTime4-specialized version
 
-For SpaceTime = EuclideanSpace ℝ (Fin 4), the time coordinate is accessed via `x 0`.
+For SpaceTime4 = EuclideanSpace ℝ (Fin 4), the time coordinate is accessed via `x 0`.
 This specialized version matches the signature needed in OS3_MixedRepInfra.lean.
 -/
 
-section SpaceTime
+section SpaceTime4
 
--- No namespace needed, TestFunctionℂ and SpaceTime are top-level
+-- No namespace needed, TestFunctionℂ4 and SpaceTime4 are top-level
 
 /-- For a Schwartz function vanishing on {x₀ ≤ 0}, the linear bound ‖f(x)‖ ≤ C · x₀ holds.
     Follows from mean value theorem + global derivative bounds on Schwartz functions. -/
-theorem schwartz_vanishing_linear_bound (f : TestFunctionℂ)
-    (hf_supp : ∀ x : SpaceTime, x 0 ≤ 0 → f x = 0) :
-    ∃ C : ℝ, 0 < C ∧ ∀ x : SpaceTime, 0 < x 0 → ‖f x‖ ≤ C * (x 0) := by
+theorem schwartz_vanishing_linear_bound (f : TestFunctionℂ4)
+    (hf_supp : ∀ x : SpaceTime4, x 0 ≤ 0 → f x = 0) :
+    ∃ C : ℝ, 0 < C ∧ ∀ x : SpaceTime4, 0 < x 0 → ‖f x‖ ≤ C * (x 0) := by
   -- Step 1: Get a global bound on the first derivative from Schwartz decay
   -- f.decay' 0 1 gives: ∃ C, ∀ x, ‖x‖^0 * ‖iteratedFDeriv ℝ 1 f x‖ ≤ C
   obtain ⟨C_deriv, hC_deriv⟩ := f.decay' 0 1
 
   -- The derivative bound (simplified from decay)
-  have h_deriv_bound : ∀ y : SpaceTime, ‖iteratedFDeriv ℝ 1 f y‖ ≤ C_deriv := by
+  have h_deriv_bound : ∀ y : SpaceTime4, ‖iteratedFDeriv ℝ 1 f y‖ ≤ C_deriv := by
     intro y
     have := hC_deriv y
     simp only [pow_zero, one_mul] at this
@@ -64,8 +64,8 @@ theorem schwartz_vanishing_linear_bound (f : TestFunctionℂ)
 
   -- Construct the boundary point: x with time component set to 0
   -- x₀_bdy = x - (x 0) • e₀ where e₀ = EuclideanSpace.single 0 1
-  let e₀ : SpaceTime := EuclideanSpace.single 0 1
-  let x₀_bdy : SpaceTime := x - (x 0) • e₀
+  let e₀ : SpaceTime4 := EuclideanSpace.single 0 1
+  let x₀_bdy : SpaceTime4 := x - (x 0) • e₀
 
   -- Verify x₀_bdy 0 = 0
   -- (x - (x 0) • e₀) 0 = x 0 - (x 0) * (e₀ 0) = x 0 - (x 0) * 1 = 0
@@ -93,17 +93,17 @@ theorem schwartz_vanishing_linear_bound (f : TestFunctionℂ)
   -- Since x 0 > 0, we have |x 0| = x 0
   rw [abs_of_pos hx_pos] at h_dist
 
-  -- SpaceTime is convex
-  have h_convex : Convex ℝ (Set.univ : Set SpaceTime) := convex_univ
+  -- SpaceTime4 is convex
+  have h_convex : Convex ℝ (Set.univ : Set SpaceTime4) := convex_univ
 
   -- Schwartz functions have FDeriv everywhere
-  have h_hasFDeriv : ∀ y ∈ (Set.univ : Set SpaceTime),
+  have h_hasFDeriv : ∀ y ∈ (Set.univ : Set SpaceTime4),
       HasFDerivWithinAt f (fderiv ℝ f y) Set.univ y := by
     intro y _
     exact f.differentiableAt.hasFDerivAt.hasFDerivWithinAt
 
   -- Connection: ‖fderiv ℝ f y‖ = ‖iteratedFDeriv ℝ 1 f y‖ (via curry isomorphism)
-  have h_fderiv_bound : ∀ y ∈ (Set.univ : Set SpaceTime), ‖fderiv ℝ f y‖ ≤ C_deriv := by
+  have h_fderiv_bound : ∀ y ∈ (Set.univ : Set SpaceTime4), ‖fderiv ℝ f y‖ ≤ C_deriv := by
     intro y _
     -- Use: ‖iteratedFDeriv ℝ 1 f y‖ = ‖fderiv ℝ f y‖
     -- This follows from iteratedFDeriv 1 f = curryLeftEquiv.symm ∘ fderiv f ∘ iteratedFDeriv 0 f
@@ -130,8 +130,8 @@ theorem schwartz_vanishing_linear_bound (f : TestFunctionℂ)
 
 /-! ## Integrate over space first (Fubini approach)
 
-The key insight is to decompose SpaceTime = ℝ × ℝ³ and integrate over spatial
-coordinates first. For a Schwartz function f : SpaceTime → ℂ vanishing at t ≤ 0:
+The key insight is to decompose SpaceTime4 = ℝ × ℝ³ and integrate over spatial
+coordinates first. For a Schwartz function f : SpaceTime4 → ℂ vanishing at t ≤ 0:
 
 1. Define G(t) = ∫_{ℝ³} ‖f(t, x)‖ dx  (the spatial integral of the norm)
 2. G is well-defined and finite for all t (f is Schwartz)
@@ -145,11 +145,11 @@ Using G(t) ≤ C·t and AM-GM: t₁t₂/(t₁+t₂)² ≤ 1/4, the integrand is 
 On the bounded time domain {0 < t₁, 0 < t₂, t₁+t₂ < 1}, this gives integrability.
 -/
 
-/-- The spatial part of SpaceTime: ℝ³. -/
+/-- The spatial part of SpaceTime4: ℝ³. -/
 abbrev SpatialCoords3 : Type := EuclideanSpace ℝ (Fin 3)
 
-/-- Decomposition of SpaceTime as time × space. -/
-noncomputable def spacetimeOfTimeSpace (t : ℝ) (x : SpatialCoords3) : SpaceTime :=
+/-- Decomposition of SpaceTime4 as time × space. -/
+noncomputable def spacetimeOfTimeSpace (t : ℝ) (x : SpatialCoords3) : SpaceTime4 :=
   EuclideanSpace.equiv (Fin 4) ℝ |>.symm (Fin.cons t (fun i => x i))
 
 /-- The time coordinate of spacetimeOfTimeSpace is t. -/
@@ -200,7 +200,7 @@ lemma spacetimeOfTimeSpace_norm_ge (t : ℝ) (x : SpatialCoords3) :
 
 /-- Linear embedding of ℝ³ into ℝ⁴ as the spatial subspace at time 0.
     This maps x ↦ (0, x₀, x₁, x₂), i.e., spacetimeOfTimeSpace 0 x. -/
-noncomputable def spatialEmbed : SpatialCoords3 →ₗ[ℝ] SpaceTime where
+noncomputable def spatialEmbed : SpatialCoords3 →ₗ[ℝ] SpaceTime4 where
   toFun := fun x => spacetimeOfTimeSpace 0 x
   map_add' := fun x y => by
     ext j
@@ -218,11 +218,11 @@ lemma spatialEmbed_continuous : Continuous spatialEmbed :=
   LinearMap.continuous_of_finiteDimensional spatialEmbed
 
 /-- The spatial embedding as a CLM. -/
-noncomputable def spatialEmbedCLM : SpatialCoords3 →L[ℝ] SpaceTime :=
+noncomputable def spatialEmbedCLM : SpatialCoords3 →L[ℝ] SpaceTime4 :=
   ⟨spatialEmbed, spatialEmbed_continuous⟩
 
-/-- The time-origin point: (t, 0, 0, 0) in SpaceTime. -/
-noncomputable def timeOrigin (t : ℝ) : SpaceTime :=
+/-- The time-origin point: (t, 0, 0, 0) in SpaceTime4. -/
+noncomputable def timeOrigin (t : ℝ) : SpaceTime4 :=
   spacetimeOfTimeSpace t 0
 
 /-- spacetimeOfTimeSpace is continuous in the spatial argument for fixed time. -/
@@ -239,7 +239,7 @@ lemma continuous_spacetimeOfTimeSpace_right (t : ℝ) : Continuous (spacetimeOfT
 
 /-- A Schwartz function restricted to a fixed time slice is integrable over ℝ³.
     Uses decay transfer: 4D Schwartz decay implies 3D integrability via norm comparison. -/
-lemma schwartz_time_slice_integrable (f : TestFunctionℂ) (t : ℝ) :
+lemma schwartz_time_slice_integrable (f : TestFunctionℂ4) (t : ℝ) :
     Integrable (fun x : SpatialCoords3 => f (spacetimeOfTimeSpace t x)) volume := by
   -- Strategy: Show the function has rapid decay and use integrability of decay functions
   --
@@ -250,8 +250,8 @@ lemma schwartz_time_slice_integrable (f : TestFunctionℂ) (t : ℝ) :
   -- 4. So |f(spacetimeOfTimeSpace t x)| ≤ C/(1 + ‖x‖)^N which is integrable on ℝ³ for N > 3
   --
   -- Use Schwartz decay bound from FunctionalAnalysis
-  have hST_dim : Module.finrank ℝ SpaceTime < 5 := by
-    simp only [SpaceTime, finrank_euclideanSpace, Fintype.card_fin]
+  have hST_dim : Module.finrank ℝ SpaceTime4 < 5 := by
+    simp only [SpaceTime4, finrank_euclideanSpace, Fintype.card_fin]
     norm_num
   obtain ⟨C, hC_pos, hf_decay⟩ := schwartz_integrable_decay f 5 hST_dim
   -- Note: SpatialCoords3 has dimension 3, and we need N > dim, so N = 5 > 3 works
@@ -300,12 +300,12 @@ lemma schwartz_time_slice_integrable (f : TestFunctionℂ) (t : ℝ) :
   exact h_bound x
 
 /-- The spatial integral G(t) = ∫_{ℝ³} ‖f(t, x)‖ dx. -/
-noncomputable def spatialNormIntegral (f : TestFunctionℂ) (t : ℝ) : ℝ :=
+noncomputable def spatialNormIntegral (f : TestFunctionℂ4) (t : ℝ) : ℝ :=
   ∫ x : SpatialCoords3, ‖f (spacetimeOfTimeSpace t x)‖
 
 /-- G(t) = 0 for t ≤ 0 when f vanishes on {t ≤ 0}. -/
-lemma spatialNormIntegral_zero_of_neg (f : TestFunctionℂ)
-    (hf_supp : ∀ x : SpaceTime, x 0 ≤ 0 → f x = 0) (t : ℝ) (ht : t ≤ 0) :
+lemma spatialNormIntegral_zero_of_neg (f : TestFunctionℂ4)
+    (hf_supp : ∀ x : SpaceTime4, x 0 ≤ 0 → f x = 0) (t : ℝ) (ht : t ≤ 0) :
     spatialNormIntegral f t = 0 := by
   simp only [spatialNormIntegral]
   have h_zero : ∀ x : SpatialCoords3, ‖f (spacetimeOfTimeSpace t x)‖ = 0 := by
@@ -316,7 +316,7 @@ lemma spatialNormIntegral_zero_of_neg (f : TestFunctionℂ)
   simp [h_zero]
 
 /-- G(t) is nonnegative. -/
-lemma spatialNormIntegral_nonneg (f : TestFunctionℂ) (t : ℝ) :
+lemma spatialNormIntegral_nonneg (f : TestFunctionℂ4) (t : ℝ) :
     0 ≤ spatialNormIntegral f t :=
   integral_nonneg (fun _ => norm_nonneg _)
 
@@ -345,8 +345,8 @@ lemma spatialNormIntegral_nonneg (f : TestFunctionℂ) (t : ℝ) :
     integral ∫ ‖f(t, ·)‖ dx bounded by C·t.
 
     **Used by**: `spatialNormIntegral_linear_bound` and `F_norm_bound_via_linear_vanishing`. -/
-lemma schwartz_vanishing_ftc_decay (f : TestFunctionℂ)
-    (hf_supp : ∀ x : SpaceTime, x 0 ≤ 0 → f x = 0) :
+lemma schwartz_vanishing_ftc_decay (f : TestFunctionℂ4)
+    (hf_supp : ∀ x : SpaceTime4, x 0 ≤ 0 → f x = 0) :
     ∃ C : ℝ, 0 < C ∧ ∀ (t : ℝ) (_ht : 0 < t) (x_sp : SpatialCoords3),
       ‖f (spacetimeOfTimeSpace t x_sp)‖ ≤ C * t / (1 + ‖x_sp‖)^4 := by
   -- Step 1: Get derivative bounds from Schwartz decay
@@ -355,7 +355,7 @@ lemma schwartz_vanishing_ftc_decay (f : TestFunctionℂ)
   obtain ⟨C_decay, hC_decay⟩ := f.decay' 4 1
   obtain ⟨C_unif, hC_unif⟩ := f.decay' 0 1
 
-  have h_unif : ∀ y : SpaceTime, ‖iteratedFDeriv ℝ 1 f y‖ ≤ C_unif := by
+  have h_unif : ∀ y : SpaceTime4, ‖iteratedFDeriv ℝ 1 f y‖ ≤ C_unif := by
     intro y; have := hC_unif y; simp only [pow_zero, one_mul] at this; exact this
 
   have hC_decay_nn : 0 ≤ C_decay := by
@@ -372,7 +372,7 @@ lemma schwartz_vanishing_ftc_decay (f : TestFunctionℂ)
   have hC_pos : 0 < C := by simp only [C]; linarith
 
   -- Key bound: ‖fderiv ℝ f y‖ ≤ C / (1 + ‖y‖)^4
-  have h_fderiv_decay : ∀ y : SpaceTime, ‖fderiv ℝ f y‖ ≤ C / (1 + ‖y‖)^4 := by
+  have h_fderiv_decay : ∀ y : SpaceTime4, ‖fderiv ℝ f y‖ ≤ C / (1 + ‖y‖)^4 := by
     intro y
     -- Convert iteratedFDeriv to fderiv
     have h_norm_eq : ‖iteratedFDeriv ℝ 1 f y‖ = ‖fderiv ℝ f y‖ := by
@@ -479,10 +479,10 @@ lemma schwartz_vanishing_ftc_decay (f : TestFunctionℂ)
     have hsq : ‖spacetimeOfTimeSpace t 0‖^2 = t^2 := by
       rw [EuclideanSpace.norm_sq_eq, Fin.sum_univ_four]
       -- The components are: time = t, spatial = 0
-      have h0 : (spacetimeOfTimeSpace t 0 : SpaceTime).ofLp 0 = t := spacetimeOfTimeSpace_time t 0
-      have h1 : (spacetimeOfTimeSpace t 0 : SpaceTime).ofLp 1 = 0 := spacetimeOfTimeSpace_spatial t 0 0
-      have h2 : (spacetimeOfTimeSpace t 0 : SpaceTime).ofLp 2 = 0 := spacetimeOfTimeSpace_spatial t 0 1
-      have h3 : (spacetimeOfTimeSpace t 0 : SpaceTime).ofLp 3 = 0 := spacetimeOfTimeSpace_spatial t 0 2
+      have h0 : (spacetimeOfTimeSpace t 0 : SpaceTime4).ofLp 0 = t := spacetimeOfTimeSpace_time t 0
+      have h1 : (spacetimeOfTimeSpace t 0 : SpaceTime4).ofLp 1 = 0 := spacetimeOfTimeSpace_spatial t 0 0
+      have h2 : (spacetimeOfTimeSpace t 0 : SpaceTime4).ofLp 2 = 0 := spacetimeOfTimeSpace_spatial t 0 1
+      have h3 : (spacetimeOfTimeSpace t 0 : SpaceTime4).ofLp 3 = 0 := spacetimeOfTimeSpace_spatial t 0 2
       simp only [h0, h1, h2, h3, Real.norm_eq_abs, abs_zero, sq_abs]
       ring
     have hnorm : 0 ≤ ‖spacetimeOfTimeSpace t 0‖ := norm_nonneg _
@@ -500,7 +500,7 @@ lemma schwartz_vanishing_ftc_decay (f : TestFunctionℂ)
   -- where e₀ = (1,0,0,0). This is affine, hence differentiable.
   -- f is Schwartz hence C^∞, so F = f ∘ path is differentiable.
   -- Define the time unit vector e₀ = (1, 0, 0, 0)
-  let e₀ : SpaceTime := EuclideanSpace.single 0 1
+  let e₀ : SpaceTime4 := EuclideanSpace.single 0 1
 
   -- Key lemma: spacetimeOfTimeSpace t 0 = t • e₀
   have h_time_smul : ∀ s : ℝ, spacetimeOfTimeSpace s 0 = s • e₀ := by
@@ -599,8 +599,8 @@ lemma schwartz_vanishing_ftc_decay (f : TestFunctionℂ)
     This follows from integrating the pointwise bound ‖f(t,x)‖ ≤ C·t
     over the spatial coordinates. Since Schwartz functions have fast decay,
     the spatial integral is finite. -/
-theorem spatialNormIntegral_linear_bound (f : TestFunctionℂ)
-    (hf_supp : ∀ x : SpaceTime, x 0 ≤ 0 → f x = 0) :
+theorem spatialNormIntegral_linear_bound (f : TestFunctionℂ4)
+    (hf_supp : ∀ x : SpaceTime4, x 0 ≤ 0 → f x = 0) :
     ∃ C : ℝ, 0 < C ∧ ∀ t : ℝ, 0 < t → spatialNormIntegral f t ≤ C * t := by
   -- Step 1: Get the pointwise FTC + decay bound from helper lemma
   obtain ⟨C_pt, hC_pt_pos, h_pt_bound⟩ := schwartz_vanishing_ftc_decay f hf_supp
@@ -684,4 +684,4 @@ theorem spatialNormIntegral_linear_bound (f : TestFunctionℂ)
     _ ≤ C_pt * t * (K + 1) := by nlinarith [mul_pos hC_pt_pos ht]
     _ = C_pt * (K + 1) * t := by ring
 
-end SpaceTime
+end SpaceTime4

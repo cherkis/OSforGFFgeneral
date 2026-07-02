@@ -44,16 +44,16 @@ namespace QFT
 /-! ## Real Covariance Form -/
 
 /-- Real covariance bilinear form induced by the free covariance kernel. -/
-noncomputable def freeCovarianceFormR (m : ℝ) (f g : TestFunction) : ℝ :=
+noncomputable def freeCovarianceFormR (m : ℝ) (f g : TestFunction4) : ℝ :=
   ∫ x, ∫ y, (f x) * (freeCovariance m x y) * (g y) ∂volume ∂volume
 
 theorem freeCovarianceℂ_bilinear_agrees_on_reals
-  (m : ℝ) (f g : TestFunction) :
+  (m : ℝ) (f g : TestFunction4) :
     freeCovarianceℂ_bilinear m (toComplex f) (toComplex g)
       = (freeCovarianceFormR m f g : ℂ) := by
   unfold freeCovarianceℂ_bilinear freeCovarianceFormR
   simp only [toComplex_apply]
-  have h : ∀ (x y : SpaceTime),
+  have h : ∀ (x y : SpaceTime4),
     ((f x : ℂ)) * ((freeCovariance m x y : ℂ)) * ((g y : ℂ))
     = (((f x) * (freeCovariance m x y) * (g y) : ℝ) : ℂ) := by
     intro x y
@@ -69,20 +69,20 @@ theorem freeCovarianceℂ_bilinear_agrees_on_reals
 /-! ## Weighted L² Space Construction -/
 
 /-- The weighted measure on momentum space with density (‖k‖² + m²)⁻¹. -/
-noncomputable def momentumWeightMeasure (m : ℝ) : Measure SpaceTime :=
+noncomputable def momentumWeightMeasure (m : ℝ) : Measure SpaceTime4 :=
   volume.withDensity (fun k => ENNReal.ofReal (momentumWeight m k))
 
 /-- For `c : ℝ` and Schwartz functions over ℂ, ℝ-smul equals ℂ-smul by the canonical coercion. -/
-private lemma schwartz_real_smul_eq_complex (c : ℝ) (f : SchwartzMap SpaceTime ℂ) :
+private lemma schwartz_real_smul_eq_complex (c : ℝ) (f : SchwartzMap SpaceTime4 ℂ) :
     c • f = (c : ℂ) • f := by
   ext x; simp [SchwartzMap.smul_apply]
 
 /-- For `c : ℝ` and `Lp ℂ 2`, ℝ-smul equals ℂ-smul by the canonical coercion. -/
-private lemma lp_real_smul_eq_complex (c : ℝ) (g : Lp ℂ 2 (volume : Measure SpaceTime)) :
+private lemma lp_real_smul_eq_complex (c : ℝ) (g : Lp ℂ 2 (volume : Measure SpaceTime4)) :
     c • g = (c : ℂ) • g := by
   ext1; filter_upwards [Lp.coeFn_smul c g, Lp.coeFn_smul (c : ℂ) g] with x h1 h2
   rw [h1, h2]
-  have : c • (g : SpaceTime → ℂ) x = (c : ℂ) • (g : SpaceTime → ℂ) x := by
+  have : c • (g : SpaceTime4 → ℂ) x = (c : ℂ) • (g : SpaceTime4 → ℂ) x := by
     rw [Complex.real_smul, smul_eq_mul]
   exact this
 
@@ -91,7 +91,7 @@ private lemma lp_real_smul_eq_complex (c : ℝ) (g : Lp ℂ 2 (volume : Measure 
 Note: we build this manually instead of using `restrictScalars` because the
 `LinearMap.CompatibleSMul` instance is not found automatically in mathlib v4.29. -/
 noncomputable def fourierTransformCLM_real :
-    TestFunctionℂ →L[ℝ] TestFunctionℂ where
+    TestFunctionℂ4 →L[ℝ] TestFunctionℂ4 where
   toLinearMap :=
     { toFun := SchwartzMap.fourierTransformCLM ℂ
       map_add' := fun x y => map_add _ x y
@@ -106,9 +106,9 @@ noncomputable def fourierTransformCLM_real :
 
 /-- ℝ-linear view of the Schwartz-to-`L²` embedding. -/
 noncomputable def schwartzToL2CLM_real (_m : ℝ) :
-    TestFunctionℂ →L[ℝ] Lp ℂ 2 (volume : Measure SpaceTime) where
+    TestFunctionℂ4 →L[ℝ] Lp ℂ 2 (volume : Measure SpaceTime4) where
   toLinearMap :=
-    { toFun := SchwartzMap.toLpCLM ℂ ℂ 2 (volume : Measure SpaceTime)
+    { toFun := SchwartzMap.toLpCLM ℂ ℂ 2 (volume : Measure SpaceTime4)
       map_add' := fun x y => map_add _ x y
       map_smul' := fun c x => by
         show SchwartzMap.toLpCLM ℂ ℂ 2 volume (c • x) = c • SchwartzMap.toLpCLM ℂ ℂ 2 volume x
@@ -123,13 +123,13 @@ noncomputable def schwartzToL2CLM_real (_m : ℝ) :
 
 /-- The embedding T maps a test function to a weighted function in momentum space.
     Conceptually: T f = FourierTransform(f) * (‖k‖² + m²)^(-1/2). -/
-noncomputable def sqrtPropagatorMap (m : ℝ) (f : TestFunction) : SpaceTime → ℂ :=
+noncomputable def sqrtPropagatorMap (m : ℝ) (f : TestFunction4) : SpaceTime4 → ℂ :=
   fun k =>
     (SchwartzMap.fourierTransformCLM ℂ (toComplex f)) k
       * momentumWeightSqrt_mathlib m k
 
 /-- The sqrtPropagatorMap is square-integrable. -/
-lemma sqrtPropagatorMap_sq_integrable (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
+lemma sqrtPropagatorMap_sq_integrable (m : ℝ) [Fact (0 < m)] (f : TestFunction4) :
     Integrable (fun k => ‖sqrtPropagatorMap m f k‖ ^ 2) volume := by
   classical
   set F := SchwartzMap.fourierTransformCLM ℂ (toComplex f)
@@ -183,7 +183,7 @@ lemma sqrtPropagatorMap_sq_integrable (m : ℝ) [Fact (0 < m)] (f : TestFunction
   exact h_dom_integrable.mono h_sq_meas h_dom_pointwise
 
 /-- The weighted Fourier representative lies in L². -/
-lemma sqrtPropagatorMap_memLp (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
+lemma sqrtPropagatorMap_memLp (m : ℝ) [Fact (0 < m)] (f : TestFunction4) :
     MemLp (sqrtPropagatorMap m f) 2 volume := by
   classical
   set F := SchwartzMap.fourierTransformCLM ℂ (toComplex f)
@@ -202,11 +202,11 @@ lemma sqrtPropagatorMap_memLp (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
   exact (memLp_two_iff_integrable_sq_norm h_meas).2 h_sq
 
 /-- The squared L² norm of the mapped function. -/
-noncomputable def sqrtPropagatorMap_norm_sq (m : ℝ) (f : TestFunction) : ℝ :=
+noncomputable def sqrtPropagatorMap_norm_sq (m : ℝ) (f : TestFunction4) : ℝ :=
   ∫ k, ‖sqrtPropagatorMap m f k‖ ^ 2 ∂volume
 
 /-- The map is linear in f (additive). -/
-lemma sqrtPropagatorMap_linear_add (m : ℝ) [Fact (0 < m)] (f g : TestFunction) :
+lemma sqrtPropagatorMap_linear_add (m : ℝ) [Fact (0 < m)] (f g : TestFunction4) :
     sqrtPropagatorMap m (f + g) = sqrtPropagatorMap m f + sqrtPropagatorMap m g := by
   ext k
   unfold sqrtPropagatorMap
@@ -218,7 +218,7 @@ lemma sqrtPropagatorMap_linear_add (m : ℝ) [Fact (0 < m)] (f g : TestFunction)
   simp only [hadd, hmap, SchwartzMap.add_apply, Pi.add_apply, add_mul]
 
 /-- The map is ℝ-linear (scalar multiplication). -/
-lemma sqrtPropagatorMap_linear_smul (m : ℝ) [Fact (0 < m)] (c : ℝ) (f : TestFunction) :
+lemma sqrtPropagatorMap_linear_smul (m : ℝ) [Fact (0 < m)] (c : ℝ) (f : TestFunction4) :
     sqrtPropagatorMap m (c • f) = c • sqrtPropagatorMap m f := by
   ext k
   unfold sqrtPropagatorMap
@@ -232,12 +232,12 @@ lemma sqrtPropagatorMap_linear_smul (m : ℝ) [Fact (0 < m)] (c : ℝ) (f : Test
 /-! ## Connection to Covariance -/
 
 /-- For real test functions, the star (conjugation) of toComplex is the identity. -/
-lemma toComplex_star (f : TestFunction) (x : SpaceTime) :
+lemma toComplex_star (f : TestFunction4) (x : SpaceTime4) :
     starRingEnd ℂ (toComplex f x) = toComplex f x := by
   simp [toComplex_apply]
 
 /-- For real test functions, freeCovarianceℂ agrees with freeCovarianceℂ_bilinear. -/
-lemma freeCovarianceℂ_eq_bilinear_on_reals (m : ℝ) (f g : TestFunction) :
+lemma freeCovarianceℂ_eq_bilinear_on_reals (m : ℝ) (f g : TestFunction4) :
     freeCovarianceℂ m (toComplex f) (toComplex g)
       = freeCovarianceℂ_bilinear m (toComplex f) (toComplex g) := by
   unfold freeCovarianceℂ freeCovarianceℂ_bilinear
@@ -246,7 +246,7 @@ lemma freeCovarianceℂ_eq_bilinear_on_reals (m : ℝ) (f g : TestFunction) :
   rw [toComplex_star]
 
 /-- Key lemma: The squared norm equals the covariance form. -/
-lemma sqrtPropagatorMap_norm_eq_covariance (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
+lemma sqrtPropagatorMap_norm_eq_covariance (m : ℝ) [Fact (0 < m)] (f : TestFunction4) :
     sqrtPropagatorMap_norm_sq m f = freeCovarianceFormR m f f := by
   classical
   set F := SchwartzMap.fourierTransformCLM ℂ (toComplex f)
@@ -307,13 +307,13 @@ lemma sqrtPropagatorMap_norm_eq_covariance (m : ℝ) [Fact (0 < m)] (f : TestFun
 
 /-! ## The Proof of sqrtPropagatorEmbedding -/
 
-/-- The target Hilbert space: L²(SpaceTime, Lebesgue) with complex values. -/
+/-- The target Hilbert space: L²(SpaceTime4, Lebesgue) with complex values. -/
 abbrev TargetHilbertSpace (_m : ℝ) : Type :=
-  Lp (E := ℂ) 2 (volume : Measure SpaceTime)
+  Lp (E := ℂ) 2 (volume : Measure SpaceTime4)
 
-/-- The linear map T: TestFunction → L². -/
+/-- The linear map T: TestFunction4 → L². -/
 noncomputable def embeddingMap (m : ℝ) [Fact (0 < m)] :
-    TestFunction →ₗ[ℝ] TargetHilbertSpace m :=
+    TestFunction4 →ₗ[ℝ] TargetHilbertSpace m :=
   { toFun := fun f =>
       (sqrtPropagatorMap_memLp (m := m) (f := f)).toLp (sqrtPropagatorMap m f)
     map_add' := by
@@ -340,8 +340,8 @@ noncomputable def embeddingMap (m : ℝ) [Fact (0 < m)] :
 
 /-- ℝ-linear view of the Lp multiplication CLM (avoiding `restrictScalars`). -/
 private noncomputable def momentumWeightSqrt_mathlib_mul_CLM_real (m : ℝ) [Fact (0 < m)] :
-    Lp ℂ 2 (volume : Measure SpaceTime) →L[ℝ]
-      Lp ℂ 2 (volume : Measure SpaceTime) where
+    Lp ℂ 2 (volume : Measure SpaceTime4) →L[ℝ]
+      Lp ℂ 2 (volume : Measure SpaceTime4) where
   toLinearMap :=
     { toFun := momentumWeightSqrt_mathlib_mul_CLM m
       map_add' := fun x y => map_add _ x y
@@ -357,15 +357,15 @@ private noncomputable def momentumWeightSqrt_mathlib_mul_CLM_real (m : ℝ) [Fac
 
 /-- Continuous linear map obtained by composing the proven building blocks. -/
 noncomputable def embeddingMapCLM (m : ℝ) [Fact (0 < m)] :
-    TestFunction →L[ℝ] Lp ℂ 2 (volume : Measure SpaceTime) :=
+    TestFunction4 →L[ℝ] Lp ℂ 2 (volume : Measure SpaceTime4) :=
   ((momentumWeightSqrt_mathlib_mul_CLM_real m).comp (schwartzToL2CLM_real m)).comp
     ((fourierTransformCLM_real).comp toComplexCLM)
 
-lemma embeddingMapCLM_apply (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
+lemma embeddingMapCLM_apply (m : ℝ) [Fact (0 < m)] (f : TestFunction4) :
     embeddingMapCLM m f = embeddingMap m f := by
   classical
   set g := SchwartzMap.fourierTransformCLM ℂ (toComplex f) with hg
-  set A := (SchwartzMap.toLpCLM ℂ ℂ 2 (volume : Measure SpaceTime)) g with hA
+  set A := (SchwartzMap.toLpCLM ℂ ℂ 2 (volume : Measure SpaceTime4)) g with hA
   have h_eval : embeddingMapCLM m f = (momentumWeightSqrt_mathlib_mul_CLM m) A := by
     rfl
   have h_mul := momentumWeightSqrt_mathlib_mul_CLM_spec (m := m) A
@@ -374,7 +374,7 @@ lemma embeddingMapCLM_apply (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
     simpa [h_eval]
   have h_A : (fun k => A k) =ᵐ[volume] fun k => g k := by
     simpa [A, g, hA, hg]
-      using (g.memLp 2 (volume : Measure SpaceTime)).coeFn_toLp
+      using (g.memLp 2 (volume : Measure SpaceTime4)).coeFn_toLp
   have h_weight : (fun k => (momentumWeightSqrt_mathlib m k : ℂ) * A k)
       =ᵐ[volume] fun k => (momentumWeightSqrt_mathlib m k : ℂ) * g k := by
     refine h_A.mono ?_
@@ -400,15 +400,15 @@ lemma embeddingMapCLM_apply (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
     Note: InnerProductSpace ℝ H implies NormedSpace ℝ H via InnerProductSpace.toNormedSpace. -/
 theorem sqrtPropagatorEmbedding (m : ℝ) [Fact (0 < m)] :
   ∃ (H : Type) (_ : NormedAddCommGroup H) (_ : InnerProductSpace ℝ H)
-    (T : TestFunction →ₗ[ℝ] H),
-    ∀ f : TestFunction, freeCovarianceFormR m f f = ‖T f‖^2 := by
+    (T : TestFunction4 →ₗ[ℝ] H),
+    ∀ f : TestFunction4, freeCovarianceFormR m f f = ‖T f‖^2 := by
   refine ⟨TargetHilbertSpace m, inferInstance, inferInstance, embeddingMap m, ?_⟩
   intro f
   rw [← sqrtPropagatorMap_norm_eq_covariance]
   unfold sqrtPropagatorMap_norm_sq
   symm
   have h_memLp := sqrtPropagatorMap_memLp (m := m) (f := f)
-  show ‖embeddingMap m f‖ ^ 2 = ∫ (k : SpaceTime), ‖sqrtPropagatorMap m f k‖ ^ 2
+  show ‖embeddingMap m f‖ ^ 2 = ∫ (k : SpaceTime4), ‖sqrtPropagatorMap m f k‖ ^ 2
   change ‖h_memLp.toLp (sqrtPropagatorMap m f)‖ ^ 2 = _
   have h_norm : ‖h_memLp.toLp (sqrtPropagatorMap m f)‖ = ENNReal.toReal (eLpNorm (sqrtPropagatorMap m f) 2 volume) :=
     MeasureTheory.Lp.norm_toLp (sqrtPropagatorMap m f) h_memLp
@@ -426,8 +426,8 @@ theorem sqrtPropagatorEmbedding (m : ℝ) [Fact (0 < m)] :
             simp [pow_two]
           calc (eLpNorm (sqrtPropagatorMap m f) 2 volume) ^ (2 : ℕ)
               = (eLpNorm (sqrtPropagatorMap m f) 2 volume) ^ (2 : ℝ) := h_pow_cast
-            _ = ∫⁻ (x : SpaceTime), ‖sqrtPropagatorMap m f x‖ₑ ^ 2 := h_eq
-            _ = ∫⁻ (k : SpaceTime), (‖sqrtPropagatorMap m f k‖₊ : ENNReal) ^ 2 := by
+            _ = ∫⁻ (x : SpaceTime4), ‖sqrtPropagatorMap m f x‖ₑ ^ 2 := h_eq
+            _ = ∫⁻ (k : SpaceTime4), (‖sqrtPropagatorMap m f k‖₊ : ENNReal) ^ 2 := by
               refine lintegral_congr_ae ?_; filter_upwards with k; simp only [enorm]; norm_cast
     _ = ∫ k, ‖sqrtPropagatorMap m f k‖ ^ 2 := by
           have h_ae_meas := h_integrable.aestronglyMeasurable
@@ -445,8 +445,8 @@ theorem sqrtPropagatorEmbedding (m : ℝ) [Fact (0 < m)] :
 /-! ## Auxiliary Lemmas for Continuity -/
 
 /-- Squared L² norm of the embedded function in terms of the pointwise integral. -/
-lemma embeddingMap_norm_sq (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
-    ‖embeddingMap m f‖ ^ 2 = ∫ (k : SpaceTime), ‖sqrtPropagatorMap m f k‖ ^ 2 ∂volume := by
+lemma embeddingMap_norm_sq (m : ℝ) [Fact (0 < m)] (f : TestFunction4) :
+    ‖embeddingMap m f‖ ^ 2 = ∫ (k : SpaceTime4), ‖sqrtPropagatorMap m f k‖ ^ 2 ∂volume := by
   have h_memLp := sqrtPropagatorMap_memLp (m := m) (f := f)
   change ‖h_memLp.toLp (sqrtPropagatorMap m f)‖ ^ 2 = _
   have h_norm : ‖h_memLp.toLp (sqrtPropagatorMap m f)‖
@@ -469,8 +469,8 @@ lemma embeddingMap_norm_sq (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
               simp [pow_two]
             calc (eLpNorm (sqrtPropagatorMap m f) 2 volume) ^ (2 : ℕ)
                 = (eLpNorm (sqrtPropagatorMap m f) 2 volume) ^ (2 : ℝ) := h_pow_cast
-              _ = ∫⁻ (x : SpaceTime), ‖sqrtPropagatorMap m f x‖ₑ ^ 2 := h_eq
-              _ = ∫⁻ (k : SpaceTime), (‖sqrtPropagatorMap m f k‖₊ : ENNReal) ^ 2 := by
+              _ = ∫⁻ (x : SpaceTime4), ‖sqrtPropagatorMap m f x‖ₑ ^ 2 := h_eq
+              _ = ∫⁻ (k : SpaceTime4), (‖sqrtPropagatorMap m f k‖₊ : ENNReal) ^ 2 := by
                 refine lintegral_congr_ae ?_
                 filter_upwards with k
                 simp only [enorm]
@@ -488,13 +488,13 @@ lemma embeddingMap_norm_sq (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
             conv_rhs => arg 1; rw [← coe_nnnorm, ENNReal.ofReal_coe_nnreal]
             conv_rhs => arg 2; rw [← coe_nnnorm, ENNReal.ofReal_coe_nnreal]
 
-lemma freeCovarianceFormR_eq_normSq (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
+lemma freeCovarianceFormR_eq_normSq (m : ℝ) [Fact (0 < m)] (f : TestFunction4) :
     freeCovarianceFormR m f f = ‖embeddingMap m f‖ ^ 2 := by
   have h_cov := sqrtPropagatorMap_norm_eq_covariance (m := m) (f := f)
   have h_norm := embeddingMap_norm_sq (m := m) (f := f)
   simpa [sqrtPropagatorMap_norm_sq, h_norm] using h_cov.symm
 
-/-- The embedding map TestFunction → L² is continuous. -/
+/-- The embedding map TestFunction4 → L² is continuous. -/
 lemma embeddingMap_continuous (m : ℝ) [Fact (0 < m)] :
     Continuous (embeddingMap m) := by
   classical
@@ -507,7 +507,7 @@ lemma embeddingMap_continuous (m : ℝ) [Fact (0 < m)] :
 
 /-- Continuity of the real covariance quadratic form f ↦ C(f,f). -/
 theorem freeCovarianceFormR_continuous (m : ℝ) [Fact (0 < m)] :
-    Continuous (fun f : TestFunction => freeCovarianceFormR m f f) := by
+    Continuous (fun f : TestFunction4 => freeCovarianceFormR m f f) := by
   have h_eq : (fun f => freeCovarianceFormR m f f) = (fun f => ‖embeddingMap m f‖ ^ 2) := by
     ext f
     exact freeCovarianceFormR_eq_normSq (m := m) (f := f)
@@ -520,7 +520,7 @@ theorem freeCovarianceFormR_continuous (m : ℝ) [Fact (0 < m)] :
 
 /-- Positivity of the real covariance quadratic form. -/
 theorem freeCovarianceFormR_pos (m : ℝ) [Fact (0 < m)] :
-    ∀ f : TestFunction, 0 ≤ freeCovarianceFormR m f f := by
+    ∀ f : TestFunction4, 0 ≤ freeCovarianceFormR m f f := by
   intro f
   have h1 : freeCovarianceℂ_bilinear m (toComplex f) (toComplex f) = (freeCovarianceFormR m f f : ℂ) :=
     freeCovarianceℂ_bilinear_agrees_on_reals m f f
@@ -533,7 +533,7 @@ theorem freeCovarianceFormR_pos (m : ℝ) [Fact (0 < m)] :
   simpa using h3
 
 /-- Symmetry of the real covariance bilinear form. -/
-theorem freeCovarianceFormR_symm (m : ℝ) [Fact (0 < m)] (f g : TestFunction) :
+theorem freeCovarianceFormR_symm (m : ℝ) [Fact (0 < m)] (f g : TestFunction4) :
     freeCovarianceFormR m f g = freeCovarianceFormR m g f := by
   apply Complex.ofReal_injective
   calc (freeCovarianceFormR m f g : ℂ)
@@ -545,7 +545,7 @@ theorem freeCovarianceFormR_symm (m : ℝ) [Fact (0 < m)] (f g : TestFunction) :
           rw [freeCovarianceℂ_bilinear_agrees_on_reals m g f]
 
 /-- Linearity in the first argument of the real covariance bilinear form. -/
-lemma freeCovarianceFormR_add_left (m : ℝ) [Fact (0 < m)] (f₁ f₂ g : TestFunction) :
+lemma freeCovarianceFormR_add_left (m : ℝ) [Fact (0 < m)] (f₁ f₂ g : TestFunction4) :
     freeCovarianceFormR m (f₁ + f₂) g = freeCovarianceFormR m f₁ g + freeCovarianceFormR m f₂ g := by
   apply Complex.ofReal_injective
   have h :=
@@ -569,7 +569,7 @@ lemma freeCovarianceFormR_add_left (m : ℝ) [Fact (0 < m)] (f₁ f₂ g : TestF
   simpa [Complex.ofReal_add] using h'
 
 /-- Scalar multiplication in the first argument of the real covariance bilinear form. -/
-lemma freeCovarianceFormR_smul_left (m : ℝ) [Fact (0 < m)] (c : ℝ) (f g : TestFunction) :
+lemma freeCovarianceFormR_smul_left (m : ℝ) [Fact (0 < m)] (c : ℝ) (f g : TestFunction4) :
     freeCovarianceFormR m (c • f) g = c * freeCovarianceFormR m f g := by
   apply Complex.ofReal_injective
   have h :=
@@ -595,7 +595,7 @@ lemma freeCovarianceFormR_smul_left (m : ℝ) [Fact (0 < m)] (c : ℝ) (f g : Te
   simpa [Complex.ofReal_mul] using h'
 
 /-- Addition in the second argument of the real covariance bilinear form. -/
-lemma freeCovarianceFormR_add_right (m : ℝ) [Fact (0 < m)] (f g₁ g₂ : TestFunction) :
+lemma freeCovarianceFormR_add_right (m : ℝ) [Fact (0 < m)] (f g₁ g₂ : TestFunction4) :
     freeCovarianceFormR m f (g₁ + g₂) = freeCovarianceFormR m f g₁ + freeCovarianceFormR m f g₂ := by
   apply Complex.ofReal_injective
   have h :=
@@ -619,7 +619,7 @@ lemma freeCovarianceFormR_add_right (m : ℝ) [Fact (0 < m)] (f g₁ g₂ : Test
   simpa [Complex.ofReal_add] using h'
 
 /-- Scalar multiplication in the second argument of the real covariance bilinear form. -/
-lemma freeCovarianceFormR_smul_right (m : ℝ) [Fact (0 < m)] (c : ℝ) (f g : TestFunction) :
+lemma freeCovarianceFormR_smul_right (m : ℝ) [Fact (0 < m)] (c : ℝ) (f g : TestFunction4) :
     freeCovarianceFormR m f (c • g) = c * freeCovarianceFormR m f g := by
   apply Complex.ofReal_injective
   have h :=
@@ -645,7 +645,7 @@ lemma freeCovarianceFormR_smul_right (m : ℝ) [Fact (0 < m)] (c : ℝ) (f g : T
   simpa [Complex.ofReal_mul] using h'
 
 /-- Zero in the first argument gives zero. -/
-lemma freeCovarianceFormR_zero_left (m : ℝ) [Fact (0 < m)] (g : TestFunction) :
+lemma freeCovarianceFormR_zero_left (m : ℝ) [Fact (0 < m)] (g : TestFunction4) :
     freeCovarianceFormR m 0 g = 0 := by
   have h := freeCovarianceFormR_smul_left m (0 : ℝ) 0 g
   simp only [zero_smul] at h
@@ -653,25 +653,25 @@ lemma freeCovarianceFormR_zero_left (m : ℝ) [Fact (0 < m)] (g : TestFunction) 
   simp only [zero_mul]
 
 /-- Zero in the second argument gives zero. -/
-lemma freeCovarianceFormR_zero_right (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
+lemma freeCovarianceFormR_zero_right (m : ℝ) [Fact (0 < m)] (f : TestFunction4) :
     freeCovarianceFormR m f 0 = 0 := by
   rw [freeCovarianceFormR_symm]
   exact freeCovarianceFormR_zero_left m f
 
 lemma freeCovarianceFormR_reflection_invariant
-    (m : ℝ) [Fact (0 < m)] (f g : TestFunction) :
+    (m : ℝ) [Fact (0 < m)] (f g : TestFunction4) :
     freeCovarianceFormR m (QFT.compTimeReflectionReal f)
       (QFT.compTimeReflectionReal g) = freeCovarianceFormR m f g := by
   classical
-  set fc : TestFunctionℂ := toComplex f
-  set gc : TestFunctionℂ := toComplex g
-  have h_comp_invol (h : TestFunctionℂ) :
+  set fc : TestFunctionℂ4 := toComplex f
+  set gc : TestFunctionℂ4 := toComplex g
+  have h_comp_invol (h : TestFunctionℂ4) :
       QFT.compTimeReflection (QFT.compTimeReflection h) = h := by
     ext x
     simp only [QFT.compTimeReflection, SchwartzMap.compCLM_apply, Function.comp_apply]
     congr 1
     exact QFT.timeReflectionLE.right_inv x
-  have h_toComplex_comp (h : TestFunction) :
+  have h_toComplex_comp (h : TestFunction4) :
       toComplex (QFT.compTimeReflectionReal h)
         = QFT.compTimeReflection (toComplex h) := by
     ext x
@@ -679,7 +679,7 @@ lemma freeCovarianceFormR_reflection_invariant
       QFT.timeReflectionCLM]
   have h_integrable :
       Integrable
-        (fun p : SpaceTime × SpaceTime =>
+        (fun p : SpaceTime4 × SpaceTime4 =>
           (QFT.compTimeReflection fc) p.1
             * (freeCovariance m p.1 p.2 : ℂ)
             * (QFT.compTimeReflection gc) p.2)
@@ -712,7 +712,7 @@ lemma freeCovarianceFormR_reflection_invariant
                 fc x * (freeCovariance m x y : ℂ) * gc y ∂volume ∂volume := by
               exact
                 congrArg
-                  (fun h : TestFunctionℂ =>
+                  (fun h : TestFunctionℂ4 =>
                     ∫ x, ∫ y,
                         fc x * (freeCovariance m x y : ℂ) * h y ∂volume ∂volume)
                   (h_comp_invol gc)
@@ -740,7 +740,7 @@ lemma freeCovarianceFormR_reflection_invariant
 
 /-- Mixed-time-reflection identity for the real free covariance. -/
 lemma freeCovarianceFormR_reflection_cross
-    (m : ℝ) [Fact (0 < m)] (f g : TestFunction) :
+    (m : ℝ) [Fact (0 < m)] (f g : TestFunction4) :
     freeCovarianceFormR m (QFT.compTimeReflectionReal f) g
       = freeCovarianceFormR m (QFT.compTimeReflectionReal g) f := by
   classical
@@ -749,7 +749,7 @@ lemma freeCovarianceFormR_reflection_cross
     ext x
     change
         (QFT.compTimeReflectionReal
-            (QFT.compTimeReflectionReal f) : TestFunction) x = f x
+            (QFT.compTimeReflectionReal f) : TestFunction4) x = f x
     have h_time_aux := QFT.timeReflectionLE.right_inv x
     have h_time :
         QFT.timeReflectionLinear (QFT.timeReflectionLinear x) = x := by
@@ -761,7 +761,7 @@ lemma freeCovarianceFormR_reflection_cross
     ext x
     change
         (QFT.compTimeReflectionReal
-            (QFT.compTimeReflectionReal g) : TestFunction) x = g x
+            (QFT.compTimeReflectionReal g) : TestFunction4) x = g x
     have h_time_aux := QFT.timeReflectionLE.right_inv x
     have h_time :
         QFT.timeReflectionLinear (QFT.timeReflectionLinear x) = x := by
@@ -783,7 +783,7 @@ lemma freeCovarianceFormR_reflection_cross
 /-- Left linearity of freeCovarianceFormR for any fixed right argument. -/
 lemma freeCovarianceFormR_left_linear_any_right
     (m : ℝ) [Fact (0 < m)] {n : ℕ} (f : Fin n → PositiveTimeTestFunction) (c : Fin n → ℝ)
-    (s : Finset (Fin n)) (g : TestFunction) :
+    (s : Finset (Fin n)) (g : TestFunction4) :
     ∑ i ∈ s, c i * freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) g =
     freeCovarianceFormR m (∑ i ∈ s, c i • QFT.compTimeReflectionReal (f i).val) g := by
   induction' s using Finset.induction with k t hk ih

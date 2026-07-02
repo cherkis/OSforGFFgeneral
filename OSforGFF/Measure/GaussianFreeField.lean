@@ -72,8 +72,8 @@ lemma bilin_sum_sum {E : Type*} [AddCommMonoid E] [Module ℂ E]
 end OS0_alt
 
 /-- Assumption: The complex covariance is continuous bilinear -/
-def CovarianceContinuous (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∀ (J K : TestFunctionℂ), Continuous (fun z : ℂ =>
+def CovarianceContinuous (dμ_config : ProbabilityMeasure FieldConfiguration4) : Prop :=
+  ∀ (J K : TestFunctionℂ4), Continuous (fun z : ℂ =>
     SchwingerFunctionℂ₂ dμ_config (z • J) K)
 
 /-! ## OS0: Analyticity for Gaussian Measures (OLD PROOF - in OS0_alt namespace)
@@ -87,8 +87,8 @@ Note: The primary proof is in `OSforGFF.OS.OS0_Analyticity`.
 
 namespace OS0_alt
 
-def GJcov_bilin (dμ_config : ProbabilityMeasure FieldConfiguration)
-  (h_bilinear : CovarianceBilinear dμ_config) : LinearMap.BilinMap ℂ TestFunctionℂ ℂ :=
+def GJcov_bilin (dμ_config : ProbabilityMeasure FieldConfiguration4)
+  (h_bilinear : CovarianceBilinear dμ_config) : LinearMap.BilinMap ℂ TestFunctionℂ4 ℂ :=
   LinearMap.mk₂ ℂ
     (fun x y => SchwingerFunctionℂ₂ dμ_config x y)
     (by intro x x' y  -- additivity in the 1st arg
@@ -105,14 +105,14 @@ def GJcov_bilin (dμ_config : ProbabilityMeasure FieldConfiguration)
         exact (h_bilinear a x 0 y).2.2.1)
 
 theorem gaussian_satisfies_OS0
-  (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (dμ_config : ProbabilityMeasure FieldConfiguration4)
   (h_gaussian : isGaussianGJ dμ_config)
   (h_bilinear : CovarianceBilinear dμ_config)
   : OS0_Analyticity dμ_config := by
   intro n J
 
   -- Extract the Gaussian form: Z[f] = exp(-½⟨f, Cf⟩)
-  have h_form : ∀ (f : TestFunctionℂ),
+  have h_form : ∀ (f : TestFunctionℂ4),
       GJGeneratingFunctionalℂ dμ_config f = Complex.exp (-(1/2 : ℂ) * SchwingerFunctionℂ₂ dμ_config f f) :=
     h_gaussian.2
 
@@ -198,19 +198,19 @@ differences of spacetime points.
 -/
 
 /-- Assumption: The covariance is invariant under Euclidean transformations -/
-def CovarianceEuclideanInvariant (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∀ (g : QFT.E) (f h : TestFunction),
+def CovarianceEuclideanInvariant (dμ_config : ProbabilityMeasure FieldConfiguration4) : Prop :=
+  ∀ (g : QFT.E) (f h : TestFunction4),
     SchwingerFunction₂ dμ_config (QFT.euclidean_action_real g f) (QFT.euclidean_action_real g h) =
     SchwingerFunction₂ dμ_config f h
 
 /-- Assumption: The complex covariance is invariant under Euclidean transformations -/
-def CovarianceEuclideanInvariantℂ (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∀ (g : QFT.E) (f h : TestFunctionℂ),
+def CovarianceEuclideanInvariantℂ (dμ_config : ProbabilityMeasure FieldConfiguration4) : Prop :=
+  ∀ (g : QFT.E) (f h : TestFunctionℂ4),
     SchwingerFunctionℂ₂ dμ_config (QFT.euclidean_action g f) (QFT.euclidean_action g h) =
     SchwingerFunctionℂ₂ dμ_config f h
 
 theorem gaussian_satisfies_OS2
-  (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (dμ_config : ProbabilityMeasure FieldConfiguration4)
   (h_gaussian : isGaussianGJ dμ_config)
   (h_euclidean_invariant : CovarianceEuclideanInvariantℂ dμ_config)
   : OS2_EuclideanInvariance dμ_config := by

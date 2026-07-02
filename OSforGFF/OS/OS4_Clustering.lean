@@ -55,7 +55,7 @@ namespace QFT
                  = S₂(f,f) + 2·S₂(f,g) + S₂(g,g)  (by symmetry)
 
     This uses the bilinearity proved in Measure.IsGaussian. -/
-lemma schwinger2_sum_expansion (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ) :
+lemma schwinger2_sum_expansion (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ4) :
     SchwingerFunctionℂ₂ (gaussianFreeField_free m) (f + g) (f + g) =
       SchwingerFunctionℂ₂ (gaussianFreeField_free m) f f +
       2 * SchwingerFunctionℂ₂ (gaussianFreeField_free m) f g +
@@ -88,7 +88,7 @@ lemma schwinger2_sum_expansion (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ) 
 
     Compare with `gaussianFreeField_real_entry_factor` in OS.OS3_ReflectionPositivity which
     proves the analogous factorization for real test functions. -/
-lemma gff_generating_sum_factorization (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ) :
+lemma gff_generating_sum_factorization (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ4) :
     GJGeneratingFunctionalℂ (gaussianFreeField_free m) (f + g) =
       GJGeneratingFunctionalℂ (gaussianFreeField_free m) f *
       GJGeneratingFunctionalℂ (gaussianFreeField_free m) g *
@@ -124,9 +124,9 @@ lemma LinearIsometry_inv_one : LinearIsometry.inv (1 : O4) = 1 := by
 
 /-- For OS2-invariant measures, Z[euclidean_action g f] = Z[f] for any g ∈ E. -/
 lemma generating_euclidean_invariant
-    (dμ_config : ProbabilityMeasure FieldConfiguration)
+    (dμ_config : ProbabilityMeasure FieldConfiguration4)
     (h_inv : OS2_EuclideanInvariance dμ_config)
-    (g : E) (f : TestFunctionℂ) :
+    (g : E) (f : TestFunctionℂ4) :
     GJGeneratingFunctionalℂ dμ_config (euclidean_action g f) =
     GJGeneratingFunctionalℂ dμ_config f := by
   exact (h_inv g f).symm
@@ -145,7 +145,7 @@ lemma generating_euclidean_invariant
     Re C_bilin(f,f) = C(fRe,fRe) - C(fIm,fIm), which can be negative!
     The bound |Z[f]| ≤ 1 does NOT hold for general complex f.
     Instead, use gff_generating_L2_bound from OS.OS1_Regularity for the general case. -/
-lemma gff_generating_norm_le_one_real (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
+lemma gff_generating_norm_le_one_real (m : ℝ) [Fact (0 < m)] (f : TestFunction4) :
     ‖GJGeneratingFunctionalℂ (gaussianFreeField_free m) (toComplex f)‖ ≤ 1 := by
   rw [gff_complex_generating m (toComplex f)]
   rw [Complex.norm_exp]
@@ -182,7 +182,7 @@ lemma gff_generating_norm_le_one_real (m : ℝ) [Fact (0 < m)] (f : TestFunction
     - Real test function bound: |Z[f]| ≤ 1 for real f (positive definite covariance)
     - Exponential estimate: |exp(-z) - 1| ≤ 2|z| for |z| ≤ 1 -/
 lemma GFF_OS4_from_small_decay_real (m : ℝ) [Fact (0 < m)]
-    (f g : TestFunction) (a : SpaceTime) (δ : ℝ) (_hδ_pos : δ > 0) (hδ_small : δ ≤ 1)
+    (f g : TestFunction4) (a : SpaceTime4) (δ : ℝ) (_hδ_pos : δ > 0) (hδ_small : δ ≤ 1)
     (h_decay : ‖SchwingerFunction₂ (gaussianFreeField_free m) f (g.translate a)‖ < δ) :
     ‖GJGeneratingFunctional (gaussianFreeField_free m) (f + g.translate a) -
      GJGeneratingFunctional (gaussianFreeField_free m) f *
@@ -310,8 +310,8 @@ lemma GFF_OS4_from_small_decay_real (m : ℝ) [Fact (0 < m)]
     Uses the covariance representation:
     S₂(f, T_a g) = ∫∫ f(x) · C(x-y) · g(y-a) dx dy -/
 theorem schwartz_cross_covariance_decay_real (m : ℝ) [Fact (0 < m)]
-    (f g : TestFunction) (ε : ℝ) (hε : ε > 0) :
-    ∃ R > 0, ∀ a : SpaceTime, ‖a‖ > R →
+    (f g : TestFunction4) (ε : ℝ) (hε : ε > 0) :
+    ∃ R > 0, ∀ a : SpaceTime4, ‖a‖ > R →
       ‖SchwingerFunction₂ (gaussianFreeField_free m) f (g.translate a)‖ < ε := by
   -- Step 1: Get the kernel decay bound
   have hm : 0 < m := Fact.out
@@ -320,7 +320,7 @@ theorem schwartz_cross_covariance_decay_real (m : ℝ) [Fact (0 < m)]
   -- Step 2: Convert the decay bound to the required form
   -- Need: |K(z)| ≤ C / ‖z‖^α for ‖z‖ ≥ R₀
   -- We have: |K(z)| ≤ C * ‖z‖^(-2) for all z
-  have hK_decay' : ∀ z : SpaceTime, ‖z‖ ≥ 1 → |freeCovarianceKernel m z| ≤ C / ‖z‖ ^ (2 : ℝ) := by
+  have hK_decay' : ∀ z : SpaceTime4, ‖z‖ ≥ 1 → |freeCovarianceKernel m z| ≤ C / ‖z‖ ^ (2 : ℝ) := by
     intro z hz
     have hbound := hK_decay z
     calc |freeCovarianceKernel m z| ≤ C * ‖z‖ ^ (-2 : ℝ) := hbound
@@ -337,7 +337,7 @@ theorem schwartz_cross_covariance_decay_real (m : ℝ) [Fact (0 < m)]
     (freeCovarianceKernel_integrable m hm).locallyIntegrable
 
   -- ContinuousOn outside the R₀-ball (where R₀ = 1): follows from ContinuousOn {z ≠ 0}
-  have hK_cont : ContinuousOn (freeCovarianceKernel m) (Metric.closedBall (0 : SpaceTime) 1)ᶜ := by
+  have hK_cont : ContinuousOn (freeCovarianceKernel m) (Metric.closedBall (0 : SpaceTime4) 1)ᶜ := by
     apply (freeCovarianceKernel_continuousOn m hm).mono
     intro z hz
     simp only [Set.mem_compl_iff, Metric.mem_closedBall, dist_zero_right, not_le] at hz
@@ -345,9 +345,9 @@ theorem schwartz_cross_covariance_decay_real (m : ℝ) [Fact (0 < m)]
     exact norm_ne_zero_iff.mp (by linarith)
 
   have h_decay_tendsto : Filter.Tendsto
-      (fun a => ∫ x : SpaceTime, ∫ y : SpaceTime,
+      (fun a => ∫ x : SpaceTime4, ∫ y : SpaceTime4,
         (toComplex f) x * (freeCovarianceKernel m (x - y) : ℂ) * (toComplex g) (y - a))
-      (Filter.cocompact SpaceTime)
+      (Filter.cocompact SpaceTime4)
       (nhds 0) :=
     schwartz_bilinear_translation_decay_proof (toComplex f) (toComplex g)
       (freeCovarianceKernel m) hK_meas hK_loc 2 (by norm_num) C 1 hC_pos (by norm_num) hK_cont hK_decay'
@@ -388,7 +388,7 @@ theorem schwartz_cross_covariance_decay_real (m : ℝ) [Fact (0 < m)]
       = |SchwingerFunction₂ (gaussianFreeField_free m) f (g.translate a)| := Real.norm_eq_abs _
     _ = ‖(SchwingerFunction₂ (gaussianFreeField_free m) f (g.translate a) : ℂ)‖ := by
         rw [Complex.norm_real, Real.norm_eq_abs]
-    _ = ‖∫ x : SpaceTime, ∫ y : SpaceTime,
+    _ = ‖∫ x : SpaceTime4, ∫ y : SpaceTime4,
           (toComplex f) x * (freeCovarianceKernel m (x - y) : ℂ) * (toComplex g) (y - a)‖ := by
         -- Step 6a: SchwingerFunction₂ = ∫ ω, (ω f)(ω g') (by schwinger_eq_covariance)
         have h_schwinger1 : SchwingerFunction₂ (gaussianFreeField_free m) f (g.translate a)
@@ -491,9 +491,9 @@ These are not used in the main OS4 proof path (which goes through `OS4_Polynomia
 but kept as an alternative qualitative formulation of clustering. -/
 
 /-- Covariance clustering property: the 2-point function decays at large separations. -/
-def CovarianceClustering_real (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∀ (f g : TestFunction) (ε : ℝ), ε > 0 →
-    ∃ R > 0, ∀ a : SpaceTime, ‖a‖ > R →
+def CovarianceClustering_real (dμ_config : ProbabilityMeasure FieldConfiguration4) : Prop :=
+  ∀ (f g : TestFunction4) (ε : ℝ), ε > 0 →
+    ∃ R > 0, ∀ a : SpaceTime4, ‖a‖ > R →
       ‖SchwingerFunction₂ dμ_config f (g.translate a)‖ < ε
 
 /-- The free covariance has the clustering property. -/
@@ -523,7 +523,7 @@ This connects time translation of distributions to translation of test functions
 
 /-- Time translation vector: shifts only the time coordinate by s.
     timeVector s = (s, 0, 0, 0) in coordinates. -/
-def timeVector (s : ℝ) : SpaceTime :=
+def timeVector (s : ℝ) : SpaceTime4 :=
   EuclideanSpace.equiv (Fin STDimension) ℝ |>.symm
     (fun i => if i = 0 then s else 0)
 
@@ -537,7 +537,7 @@ def timeVector (s : ℝ) : SpaceTime :=
     The proof follows from:
     1. timeTranslationDistribution_apply: (T_s ω)(f) = ω(T_{-s} f) for real test functions
     2. Time translation commutes with taking real/imaginary parts of complex Schwartz functions -/
-lemma time_translation_pairing_duality (s : ℝ) (ω : FieldConfiguration) (g : TestFunctionℂ) :
+lemma time_translation_pairing_duality (s : ℝ) (ω : FieldConfiguration4) (g : TestFunctionℂ4) :
     distributionPairingℂ_real (TimeTranslation.timeTranslationDistribution s ω) g =
     distributionPairingℂ_real ω (TimeTranslation.timeTranslationSchwartzℂ (-s) g) := by
   -- Use the proven lemma from OS4Ron
@@ -553,17 +553,17 @@ lemma timeShiftConst_norm (s : ℝ) : ‖TimeTranslation.timeShiftConst s‖ = |
     Real.norm_eq_abs, sq_abs, zero_pow (by norm_num : 2 ≠ 0), add_zero, Real.sqrt_sq_eq_abs]
 
 /-- Time translation of Schwartz function at a point equals function evaluated at shifted point. -/
-lemma timeTranslationSchwartzℂ_at_point (s : ℝ) (g : TestFunctionℂ) (y : SpaceTime) :
+lemma timeTranslationSchwartzℂ_at_point (s : ℝ) (g : TestFunctionℂ4) (y : SpaceTime4) :
     TimeTranslation.timeTranslationSchwartzℂ s g y = g (TimeTranslation.timeShift s y) := by
   rfl
 
 /-- Time shift by s equals adding the time shift constant. -/
-lemma timeShift_eq_add (s : ℝ) (y : SpaceTime) :
+lemma timeShift_eq_add (s : ℝ) (y : SpaceTime4) :
     TimeTranslation.timeShift s y = y + TimeTranslation.timeShiftConst s := by
   exact TimeTranslation.timeShift_eq_add_const s y
 
 /-- Time translation by -s gives g(y - timeShiftConst(s)). -/
-lemma timeTranslationSchwartzℂ_neg_eq_sub (s : ℝ) (g : TestFunctionℂ) (y : SpaceTime) :
+lemma timeTranslationSchwartzℂ_neg_eq_sub (s : ℝ) (g : TestFunctionℂ4) (y : SpaceTime4) :
     TimeTranslation.timeTranslationSchwartzℂ (-s) g y = g (y - TimeTranslation.timeShiftConst s) := by
   rw [timeTranslationSchwartzℂ_at_point, timeShift_eq_add]
   congr 1
@@ -574,7 +574,7 @@ lemma timeTranslationSchwartzℂ_neg_eq_sub (s : ℝ) (g : TestFunctionℂ) (y :
   split_ifs <;> ring
 
 /-- freeCovariance is translation-invariant: C(x,y) = C(0, x-y) = freeCovarianceKernel(x-y). -/
-lemma freeCovariance_eq_kernel (m : ℝ) (x y : SpaceTime) :
+lemma freeCovariance_eq_kernel (m : ℝ) (x y : SpaceTime4) :
     freeCovariance m x y = freeCovarianceKernel m (x - y) := by
   -- freeCovariance m x y = freeCovarianceBessel m x y = (m / (4π²r)) K₁(mr) where r = ‖x - y‖
   -- freeCovarianceKernel m z = freeCovariance m 0 z = freeCovarianceBessel m 0 z
@@ -586,9 +586,9 @@ lemma freeCovariance_eq_kernel (m : ℝ) (x y : SpaceTime) :
 
 /-- The Schwinger 2-point function for time-translated test function equals
     the bilinear integral with translated argument. -/
-lemma schwinger2_time_translated_eq_bilinear (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ) (s : ℝ) :
+lemma schwinger2_time_translated_eq_bilinear (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ4) (s : ℝ) :
     SchwingerFunctionℂ₂ (gaussianFreeField_free m) f (TimeTranslation.timeTranslationSchwartzℂ (-s) g) =
-    ∫ x : SpaceTime, ∫ y : SpaceTime,
+    ∫ x : SpaceTime4, ∫ y : SpaceTime4,
       f x * (freeCovarianceKernel m (x - y) : ℂ) * g (y - TimeTranslation.timeShiftConst s) := by
   -- S₂(f, T_{-s} g) = freeCovarianceℂ_bilinear m f (T_{-s} g)
   rw [gff_two_point_equals_covarianceℂ_free]
@@ -627,18 +627,18 @@ theorem gaussianFreeField_satisfies_OS4_PolynomialClustering (m : ℝ) [Fact (0 
   have hC_exp_pos : C_exp > 0 := by
     simp only [C_exp]; positivity
 
-  have hK_cont : ContinuousOn (freeCovarianceKernel m) (Metric.closedBall (0 : SpaceTime) (1/m))ᶜ :=
+  have hK_cont : ContinuousOn (freeCovarianceKernel m) (Metric.closedBall (0 : SpaceTime4) (1/m))ᶜ :=
     (freeCovarianceKernel_continuousOn m hm).mono fun z hz => by
       simp only [Set.mem_compl_iff, Metric.mem_closedBall, dist_zero_right, not_le] at hz
       exact norm_ne_zero_iff.mp (ne_of_gt (lt_of_lt_of_le (by positivity) (le_of_lt hz)))
 
   -- Convert exponential bound from freeCovariance to freeCovarianceKernel
-  have hK_decay : ∀ z : SpaceTime, ‖z‖ ≥ 1/m → |freeCovarianceKernel m z| ≤ C_exp * Real.exp (-m * ‖z‖) := by
+  have hK_decay : ∀ z : SpaceTime4, ‖z‖ ≥ 1/m → |freeCovarianceKernel m z| ≤ C_exp * Real.exp (-m * ‖z‖) := by
     intro z hz
     have hmz : m * ‖z‖ ≥ 1 := by
       calc m * ‖z‖ ≥ m * (1/m) := mul_le_mul_of_nonneg_left hz (le_of_lt hm)
         _ = 1 := by field_simp
-    have h_norm_eq : ‖(0 : SpaceTime) - z‖ = ‖z‖ := by simp
+    have h_norm_eq : ‖(0 : SpaceTime4) - z‖ = ‖z‖ := by simp
     have h := freeCovariance_exponential_bound m hm 0 z (by rw [h_norm_eq]; exact hmz)
     simp only [freeCovarianceKernel, freeCovariance, h_norm_eq] at h ⊢; exact h
 

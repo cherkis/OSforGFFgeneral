@@ -70,26 +70,26 @@ noncomputable section
 open scoped MeasureTheory Complex BigOperators SchwartzMap
 
 /-- OS0 (Analyticity): The generating functional is analytic in the test functions. -/
-def OS0_Analyticity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∀ (n : ℕ) (J : Fin n → TestFunctionℂ),
+def OS0_Analyticity (dμ_config : ProbabilityMeasure FieldConfiguration4) : Prop :=
+  ∀ (n : ℕ) (J : Fin n → TestFunctionℂ4),
     AnalyticOn ℂ (fun z : Fin n → ℂ =>
       GJGeneratingFunctionalℂ dμ_config (∑ i, z i • J i)) Set.univ
 
 /-- Two-point function local integrability condition for p = 2 -/
-def TwoPointIntegrable (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def TwoPointIntegrable (dμ_config : ProbabilityMeasure FieldConfiguration4) : Prop :=
   LocallyIntegrable (fun x => SchwingerTwoPointFunction dμ_config x) volume
 
 /-- OS1 (Regularity): The complex generating functional satisfies exponential bounds. -/
-def OS1_Regularity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def OS1_Regularity (dμ_config : ProbabilityMeasure FieldConfiguration4) : Prop :=
   ∃ (p : ℝ) (c : ℝ), 1 ≤ p ∧ p ≤ 2 ∧ c > 0 ∧
-    (∀ (f : TestFunctionℂ),
+    (∀ (f : TestFunctionℂ4),
       ‖GJGeneratingFunctionalℂ dμ_config f‖ ≤
         Real.exp (c * (∫ x, ‖f x‖ ∂volume + ∫ x, ‖f x‖^p ∂volume))) ∧
     (p = 2 → TwoPointIntegrable dμ_config)
 
 /-- OS2 (Euclidean Invariance): The measure is invariant under Euclidean transformations. -/
-def OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∀ (g : QFT.E) (f : TestFunctionℂ),
+def OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfiguration4) : Prop :=
+  ∀ (g : QFT.E) (f : TestFunctionℂ4),
     GJGeneratingFunctionalℂ dμ_config f =
     GJGeneratingFunctionalℂ dμ_config (QFT.euclidean_action g f)
 
@@ -98,7 +98,7 @@ def OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfiguration)
     (Osterwalder–Schrader 1975, axiom E2) using complex-valued test functions and complex
     coefficients with conjugation, compatible with OS reconstruction.
 
-    The `star` operation on `TestFunctionℂ` is `(star f)(x) = conj(f(Θx))`, combining
+    The `star` operation on `TestFunctionℂ4` is `(star f)(x) = conj(f(Θx))`, combining
     time reflection with complex conjugation.  This is required by the `i` factor in the
     characteristic function `Z[J] = ∫ exp(i⟨ω,J⟩) dμ` so that
     `Z[f − star g] = ∫ exp(i⟨ω,f⟩) · conj(exp(i⟨ω,Θg⟩)) dμ`.
@@ -106,7 +106,7 @@ def OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfiguration)
     For real positive-time test functions embedded via `toComplex`, `star = compTimeReflection`
     (see `star_toComplex_eq_compTimeReflection`), so this reduces to
     `OS3_ReflectionPositivity_real`. -/
-def OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration4) : Prop :=
   ∀ (n : ℕ) (f : Fin n → PositiveTimeTestFunctionℂ) (c : Fin n → ℂ),
     0 ≤ (∑ i, ∑ j, starRingEnd ℂ (c i) * c j *
       GJGeneratingFunctionalℂ dμ_config
@@ -116,7 +116,7 @@ def OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration
     test functions and real coefficients.  This is equivalent to `OS3_ReflectionPositivity`
     for measures where the generating functional is real on real test functions
     (in particular for Gaussian measures). -/
-def OS3_ReflectionPositivity_real (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def OS3_ReflectionPositivity_real (dμ_config : ProbabilityMeasure FieldConfiguration4) : Prop :=
   ∀ (n : ℕ) (f : Fin n → PositiveTimeTestFunction) (c : Fin n → ℝ),
     let reflection_matrix := fun i j : Fin n =>
       GJGeneratingFunctional dμ_config
@@ -139,8 +139,8 @@ def OS3_ReflectionPositivity_real (dμ_config : ProbabilityMeasure FieldConfigur
     positive definiteness of the covariance. The complex extension follows from
     analyticity (OS0) and regularity (OS1).
 -/
-def OS4_Clustering (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∀ (f g : TestFunction) (ε : ℝ), ε > 0 → ∃ (R : ℝ), R > 0 ∧ ∀ (a : SpaceTime),
+def OS4_Clustering (dμ_config : ProbabilityMeasure FieldConfiguration4) : Prop :=
+  ∀ (f g : TestFunction4) (ε : ℝ), ε > 0 → ∃ (R : ℝ), R > 0 ∧ ∀ (a : SpaceTime4),
     ‖a‖ > R →
     ‖GJGeneratingFunctional dμ_config (f + g.translate a) -
      GJGeneratingFunctional dμ_config f * GJGeneratingFunctional dμ_config g‖ < ε
@@ -152,10 +152,10 @@ def OS4_Clustering (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :
 
     This is the standard ergodicity formulation from Glimm-Jaffe.
 -/
-def OS4_Ergodicity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∀ (n : ℕ) (z : Fin n → ℂ) (f : Fin n → TestFunctionℂ),
+def OS4_Ergodicity (dμ_config : ProbabilityMeasure FieldConfiguration4) : Prop :=
+  ∀ (n : ℕ) (z : Fin n → ℂ) (f : Fin n → TestFunctionℂ4),
     let μ := dμ_config.toMeasure
-    let A : FieldConfiguration → ℂ := fun ω =>
+    let A : FieldConfiguration4 → ℂ := fun ω =>
       ∑ j, z j * Complex.exp (distributionPairingℂ_real ω (f j))
     Filter.Tendsto
       (fun T : ℝ =>
@@ -174,9 +174,9 @@ def OS4_Ergodicity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :
     polynomial decay rate. For the GFF in 4D spacetime (d=3 spatial dimensions),
     the natural rate is α = 2d = 6 from the mass gap.
 -/
-def OS4_PolynomialClustering (dμ_config : ProbabilityMeasure FieldConfiguration)
+def OS4_PolynomialClustering (dμ_config : ProbabilityMeasure FieldConfiguration4)
     (α : ℝ) (_hα : α > 0) : Prop :=
-  ∀ (f g : TestFunctionℂ), ∃ (c : ℝ), c ≥ 0 ∧
+  ∀ (f g : TestFunctionℂ4), ∃ (c : ℝ), c ≥ 0 ∧
     let μ := dμ_config.toMeasure
     ∀ s : ℝ, s ≥ 0 →
       ‖∫ ω, Complex.exp (distributionPairingℂ_real ω f +
@@ -189,7 +189,7 @@ def OS4_PolynomialClustering (dμ_config : ProbabilityMeasure FieldConfiguration
 
 /-- A probability measure on field configurations satisfies all Osterwalder-Schrader axioms.
     This bundles OS0 through OS4 (clustering and ergodicity) into a single predicate. -/
-structure SatisfiesAllOS (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop where
+structure SatisfiesAllOS (dμ_config : ProbabilityMeasure FieldConfiguration4) : Prop where
   os0 : OS0_Analyticity dμ_config
   os1 : OS1_Regularity dμ_config
   os2 : OS2_EuclideanInvariance dμ_config
