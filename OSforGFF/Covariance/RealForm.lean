@@ -782,7 +782,7 @@ lemma freeCovarianceFormR_reflection_cross
 
 /-- Left linearity of freeCovarianceFormR for any fixed right argument. -/
 lemma freeCovarianceFormR_left_linear_any_right
-    (m : ℝ) [Fact (0 < m)] {n : ℕ} (f : Fin n → PositiveTimeTestFunction) (c : Fin n → ℝ)
+    (m : ℝ) [Fact (0 < m)] {n : ℕ} (f : Fin n → PositiveTimeTestFunction4) (c : Fin n → ℝ)
     (s : Finset (Fin n)) (g : TestFunction4) :
     ∑ i ∈ s, c i * freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) g =
     freeCovarianceFormR m (∑ i ∈ s, c i • QFT.compTimeReflectionReal (f i).val) g := by

@@ -107,7 +107,7 @@ def OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfiguration4
     (see `star_toComplex_eq_compTimeReflection`), so this reduces to
     `OS3_ReflectionPositivity_real`. -/
 def OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration4) : Prop :=
-  ∀ (n : ℕ) (f : Fin n → PositiveTimeTestFunctionℂ) (c : Fin n → ℂ),
+  ∀ (n : ℕ) (f : Fin n → PositiveTimeTestFunctionℂ4) (c : Fin n → ℂ),
     0 ≤ (∑ i, ∑ j, starRingEnd ℂ (c i) * c j *
       GJGeneratingFunctionalℂ dμ_config
         ((f i).val - star ((f j).val))).re
@@ -117,7 +117,7 @@ def OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration
     for measures where the generating functional is real on real test functions
     (in particular for Gaussian measures). -/
 def OS3_ReflectionPositivity_real (dμ_config : ProbabilityMeasure FieldConfiguration4) : Prop :=
-  ∀ (n : ℕ) (f : Fin n → PositiveTimeTestFunction) (c : Fin n → ℝ),
+  ∀ (n : ℕ) (f : Fin n → PositiveTimeTestFunction4) (c : Fin n → ℝ),
     let reflection_matrix := fun i j : Fin n =>
       GJGeneratingFunctional dμ_config
         ((f i).val - compTimeReflectionReal ((f j).val))

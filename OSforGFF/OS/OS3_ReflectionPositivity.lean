@@ -51,7 +51,7 @@ namespace QFT
 
 /-- Reflection positivity for a single positive-time test function in the real setting. -/
 private lemma freeCovarianceFormR_reflection_nonneg
-    (m : ℝ) [Fact (0 < m)] (f : PositiveTimeTestFunction) :
+    (m : ℝ) [Fact (0 < m)] (f : PositiveTimeTestFunction4) :
     0 ≤ freeCovarianceFormR m (QFT.compTimeReflectionReal f.val) f.val := by
   classical
   have hf_supp : ∀ x : SpaceTime4, x 0 ≤ 0 → f.val x = 0 := fun x hx => by
@@ -84,7 +84,7 @@ attribute [local simp] inner_sub_right inner_sub_left
     This is the real analogue of covariance reflection positivity. -/
 lemma freeCovarianceFormR_reflection_matrix_posSemidef
     (m : ℝ) [Fact (0 < m)]
-    {n : ℕ} (f : Fin n → PositiveTimeTestFunction) :
+    {n : ℕ} (f : Fin n → PositiveTimeTestFunction4) :
     Matrix.PosSemidef (fun i j : Fin n =>
       freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) (f j).val) := by
   -- The matrix R_{ij} = C(θf_i, f_j) is symmetric by freeCovarianceFormR_reflection_cross
@@ -333,7 +333,7 @@ lemma gaussianFreeField_real_generating_re
 /-- Factorisation of OS3 matrix entries in the purely real setting. -/
 lemma gaussianFreeField_real_entry_factor
     (m : ℝ) [Fact (0 < m)]
-    {f g : PositiveTimeTestFunction} :
+    {f g : PositiveTimeTestFunction4} :
     (GJGeneratingFunctional (gaussianFreeField_free m)
         (f.val - QFT.compTimeReflectionReal g.val)).re
       = (GJGeneratingFunctional (gaussianFreeField_free m) (f.val)).re
@@ -423,7 +423,7 @@ variable (m : ℝ) [Fact (0 < m)]
 
 /-- Matrix formulation of the real OS3 inequality for the Gaussian free field. -/
 lemma gaussianFreeField_OS3_matrix_real
-    {n : ℕ} (f : Fin n → PositiveTimeTestFunction) (c : Fin n → ℝ) :
+    {n : ℕ} (f : Fin n → PositiveTimeTestFunction4) (c : Fin n → ℝ) :
     0 ≤ (∑ i, ∑ j, c i * c j *
         (GJGeneratingFunctional (gaussianFreeField_free m)
           ((f i).val - QFT.compTimeReflectionReal (f j).val)).re) := by
@@ -624,7 +624,7 @@ private lemma star_star_testFunctionℂ (f : TestFunctionℂ4) : star (star f) =
     Proof: `R_{ji} = C(f_j, star f_i) = C(star f_i, f_j)` by symmetry
     `= C(star f_i, star(star f_j))` by star involution `= conj(C(f_i, star f_j))` by star_star_conj. -/
 private lemma reflection_matrix_IsHermitian
-    {n : ℕ} (f : Fin n → PositiveTimeTestFunctionℂ) :
+    {n : ℕ} (f : Fin n → PositiveTimeTestFunctionℂ4) :
     IsHermitianMatrix fun i j => freeCovarianceℂ_bilinear m (f i).val (star (f j).val) := by
   intro i j
   -- Goal (after beta-reduction):
@@ -913,7 +913,7 @@ private lemma freeCovarianceℂ_bilinear_sum_sum {n : ℕ}
       = ∑ᵢⱼ conj(vᵢ) vⱼ C(star(fⱼ), fᵢ) = ∑ᵢⱼ conj(vᵢ) vⱼ C(fᵢ, star(fⱼ))`.
     `Re(rpInnerProduct(h)) ≥ 0` by `freeCovariance_reflection_positive_bilinear`. -/
 private lemma reflection_matrix_IsRePSD
-    {n : ℕ} (f : Fin n → PositiveTimeTestFunctionℂ) :
+    {n : ℕ} (f : Fin n → PositiveTimeTestFunctionℂ4) :
     IsRePSD fun i j => freeCovarianceℂ_bilinear m (f i).val (star (f j).val) := by
   intro v
   -- Define h = ∑ conj(v_j) f_j (positive-time test function)
@@ -959,7 +959,7 @@ private lemma reflection_matrix_IsRePSD
 
 /-- The complex OS3 quadratic form for the GFF is nonneg. -/
 private lemma gff_complexOS3_matrix
-    {n : ℕ} (f : Fin n → PositiveTimeTestFunctionℂ) (c : Fin n → ℂ) :
+    {n : ℕ} (f : Fin n → PositiveTimeTestFunctionℂ4) (c : Fin n → ℂ) :
     0 ≤ (∑ i, ∑ j, starRingEnd ℂ (c i) * c j *
         GJGeneratingFunctionalℂ (gaussianFreeField_free m)
           ((f i).val - star (f j).val)).re := by
