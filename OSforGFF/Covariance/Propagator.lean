@@ -117,6 +117,34 @@ lemma heatKernelProfile_fourier (d : ℕ) (t : ℝ) (ht : 0 < t) (k : EuclideanS
   push_cast
   field_simp
 
+/-- The heat-kernel profile is nonnegative for `t > 0`. -/
+lemma heatKernelProfile_nonneg (d : ℕ) (t r : ℝ) (ht : 0 < t) : 0 ≤ heatKernelProfile d t r := by
+  unfold heatKernelProfile
+  have h4 : (0 : ℝ) < 4 * Real.pi * t := by positivity
+  exact mul_nonneg (Real.rpow_nonneg (le_of_lt h4) _) (Real.exp_nonneg _)
+
+/-- For `t > 0`, `x ↦ H_d(t, ‖x‖)` is integrable (a constant times a Gaussian). -/
+lemma heatKernelProfile_integrable (d : ℕ) (t : ℝ) (ht : 0 < t) :
+    Integrable (fun x : EuclideanSpace ℝ (Fin d) => heatKernelProfile d t ‖x‖) := by
+  unfold heatKernelProfile
+  apply Integrable.const_mul
+  have h := GaussianFourier.integrable_cexp_neg_mul_sq_norm_add (V := EuclideanSpace ℝ (Fin d))
+    (b := ((1 / (4 * t) : ℝ) : ℂ)) (by rw [Complex.ofReal_re]; positivity) 0 0
+  simp only [zero_mul, add_zero] at h
+  refine (h.norm).congr ?_
+  filter_upwards with x
+  rw [Complex.norm_exp]
+  congr 1
+  rw [show (-((1 / (4 * t) : ℝ) : ℂ) * (↑‖x‖ : ℂ) ^ 2) = ((-‖x‖ ^ 2 / (4 * t) : ℝ) : ℂ) by
+      push_cast; ring, Complex.ofReal_re]
+
+/-- The proper-time covariance is nonnegative. -/
+lemma properTimeCovariance_nonneg (d : ℕ) (m r : ℝ) : 0 ≤ properTimeCovariance d m r := by
+  unfold properTimeCovariance
+  apply setIntegral_nonneg measurableSet_Ioi
+  intro t ht
+  exact mul_nonneg (Real.exp_nonneg _) (heatKernelProfile_nonneg d t r ht)
+
 /-- The dimension-generic free-propagator typeclass.
 
     Two obligations only: the per-`d` closed-form radial covariance `Cprofile`, and the single
