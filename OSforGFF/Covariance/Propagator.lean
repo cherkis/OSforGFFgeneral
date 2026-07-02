@@ -188,6 +188,49 @@ lemma properTimeCovariance_integrable (d : ℕ) (m : ℝ) (hm : 0 < m) :
   unfold properTimeCovariance
   simp only [Function.comp_apply, Prod.swap_prod_mk, Function.uncurry_apply_pair]
 
+/-- The dominating integrand for the OS4 decay bound, `(4πt)^{-d/2} e^{-tm²/2} e^{-1/(8t)}`, is
+    integrable on `(0,∞)`: dominated by `C·t^{d/2}·e^{-(m²/2)t}` (Gamma-type) via
+    `e^{-1/(8t)} ≤ d!·8ᵈ·tᵈ`. -/
+lemma decayDominator_integrableOn (d : ℕ) (m : ℝ) (hm : 0 < m) :
+    IntegrableOn (fun t => (4 * Real.pi * t) ^ (-(d : ℝ) / 2) *
+      Real.exp (-(m ^ 2 / 2) * t) * Real.exp (-(1 / (8 * t)))) (Set.Ioi 0) := by
+  have hb : (0 : ℝ) < m ^ 2 / 2 := by positivity
+  have hgi : IntegrableOn (fun t => t ^ ((d : ℝ) / 2) * Real.exp (-(m ^ 2 / 2) * t)) (Set.Ioi 0) := by
+    have := integrableOn_rpow_mul_exp_neg_mul_rpow (s := (d : ℝ) / 2) (p := 1) (b := m ^ 2 / 2)
+      (by have h2 : (0 : ℝ) ≤ (d : ℝ) / 2 := (by positivity); linarith) (le_refl 1) hb
+    simpa [Real.rpow_one] using this
+  refine (hgi.const_mul ((4 * Real.pi) ^ (-(d : ℝ) / 2) * ((d.factorial : ℝ) * 8 ^ d))).mono' ?_ ?_
+  · exact (by fun_prop : Measurable _).aestronglyMeasurable
+  · filter_upwards [ae_restrict_mem measurableSet_Ioi] with t ht
+    have ht0 : (0 : ℝ) < t := ht
+    rw [Real.norm_of_nonneg (by positivity)]
+    have hexp : Real.exp (-(1 / (8 * t))) ≤ (d.factorial : ℝ) * 8 ^ d * t ^ d := by
+      have hx : (0 : ℝ) ≤ 1 / (8 * t) := by positivity
+      have h := Real.pow_div_factorial_le_exp (1 / (8 * t)) hx d
+      have hlow : (0 : ℝ) < (1 / (8 * t)) ^ d / d.factorial := by positivity
+      rw [Real.exp_neg]
+      calc (Real.exp (1 / (8 * t)))⁻¹ ≤ ((1 / (8 * t)) ^ d / d.factorial)⁻¹ := inv_anti₀ hlow h
+        _ = (d.factorial : ℝ) * 8 ^ d * t ^ d := by
+            rw [inv_div, one_div, inv_pow, div_eq_mul_inv, inv_inv, mul_pow]; ring
+    have hkey : t ^ (-(d : ℝ) / 2) * Real.exp (-(1 / (8 * t)))
+        ≤ ((d.factorial : ℝ) * 8 ^ d) * t ^ ((d : ℝ) / 2) := by
+      have htd : t ^ (-(d : ℝ) / 2) * (t : ℝ) ^ d = t ^ ((d : ℝ) / 2) := by
+        rw [← Real.rpow_natCast t d, ← Real.rpow_add ht0]; ring_nf
+      calc t ^ (-(d : ℝ) / 2) * Real.exp (-(1 / (8 * t)))
+          ≤ t ^ (-(d : ℝ) / 2) * ((d.factorial : ℝ) * 8 ^ d * t ^ d) :=
+            mul_le_mul_of_nonneg_left hexp (Real.rpow_nonneg (le_of_lt ht0) _)
+        _ = ((d.factorial : ℝ) * 8 ^ d) * t ^ ((d : ℝ) / 2) := by rw [← htd]; ring
+    rw [Real.mul_rpow (by positivity) (le_of_lt ht0)]
+    calc (4 * Real.pi) ^ (-(d : ℝ) / 2) * t ^ (-(d : ℝ) / 2) * Real.exp (-(m ^ 2 / 2) * t) *
+            Real.exp (-(1 / (8 * t)))
+        = (4 * Real.pi) ^ (-(d : ℝ) / 2) * Real.exp (-(m ^ 2 / 2) * t) *
+            (t ^ (-(d : ℝ) / 2) * Real.exp (-(1 / (8 * t)))) := by ring
+      _ ≤ (4 * Real.pi) ^ (-(d : ℝ) / 2) * Real.exp (-(m ^ 2 / 2) * t) *
+            (((d.factorial : ℝ) * 8 ^ d) * t ^ ((d : ℝ) / 2)) :=
+            mul_le_mul_of_nonneg_left hkey (by positivity)
+      _ = (4 * Real.pi) ^ (-(d : ℝ) / 2) * ((d.factorial : ℝ) * 8 ^ d) *
+            (t ^ ((d : ℝ) / 2) * Real.exp (-(m ^ 2 / 2) * t)) := by ring
+
 /-- The dimension-generic free-propagator typeclass.
 
     Two obligations only: the per-`d` closed-form radial covariance `Cprofile`, and the single
