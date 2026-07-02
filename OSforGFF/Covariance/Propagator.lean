@@ -202,6 +202,24 @@ class GFFPropagator (d : ℕ) (m : ℝ) [Fact (0 < m)] [Fact (2 ≤ d)] where
       (evaluate the proper-time integral to the closed form). -/
   schwinger_eq : ∀ r > 0, Cprofile r = properTimeCovariance d m r
 
+namespace GFFPropagator
+
+variable {d : ℕ} {m : ℝ} [Fact (0 < m)] [Fact (2 ≤ d)] [GFFPropagator d m]
+
+/-- Derived: `x ↦ Cprofile ‖x‖` is integrable (`∈ L¹`). Transports `properTimeCovariance_integrable`
+    across `schwinger_eq`, which holds off the null set `{0}`. Feeds OS1 local integrability. -/
+lemma integrable :
+    Integrable (fun x : EuclideanSpace ℝ (Fin d) => Cprofile (d := d) (m := m) ‖x‖) := by
+  have hm : (0 : ℝ) < m := Fact.out
+  have hd : 0 < d := by have := (Fact.out : 2 ≤ d); omega
+  have : Nonempty (Fin d) := ⟨⟨0, hd⟩⟩
+  have : Nontrivial (EuclideanSpace ℝ (Fin d)) := inferInstance
+  refine (properTimeCovariance_integrable d m hm).congr ?_
+  filter_upwards [compl_mem_ae_iff.mpr (measure_singleton (0 : EuclideanSpace ℝ (Fin d)))] with x hx
+  exact (schwinger_eq ‖x‖ (norm_pos_iff.mpr (by simpa using hx))).symm
+
+end GFFPropagator
+
 end
 
 end OSforGFF
