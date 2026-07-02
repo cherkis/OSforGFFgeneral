@@ -64,3 +64,6 @@ import «OSforGFF».OS.OS4_Ergodicity
 
 -- Master theorem
 import «OSforGFF».OS.Master
+
+-- Build-enforced guardrails (axiom-footprint + statement-type). See OSforGFF/Guardrails.lean.
+import «OSforGFF».Guardrails
