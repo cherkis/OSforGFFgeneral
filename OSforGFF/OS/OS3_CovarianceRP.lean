@@ -73,13 +73,13 @@ noncomputable def timeReflection (x : SpaceTime4) : SpaceTime4 :=
 lemma timeReflection_involutive : Function.Involutive timeReflection :=
   _root_.timeReflection_involutive
 
-noncomputable def spatialDot (k_spatial x_spatial : SpatialCoords) : ℝ :=
+noncomputable def spatialDot (k_spatial x_spatial : SpatialCoords4) : ℝ :=
   ∑ i, k_spatial i * x_spatial i
 
 noncomputable def freeCovarianceℂ_bilinear (m : ℝ) (f g : TestFunctionℂ4) : ℂ :=
   ∫ x, ∫ y, (f x) * (_root_.freeCovariance m x y) * (g y)
 
-noncomputable def weightedLaplaceFourier (m : ℝ) (f : TestFunctionℂ4) (k_sp : SpatialCoords) : ℂ :=
+noncomputable def weightedLaplaceFourier (m : ℝ) (f : TestFunctionℂ4) (k_sp : SpatialCoords4) : ℂ :=
   let ω := Real.sqrt (‖k_sp‖^2 + m^2)
   ∫ x : SpaceTime4, f x * Complex.exp (-ω * x 0) *
     Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x))
@@ -121,7 +121,7 @@ theorem mixed_representation (f : TestFunctionℂ4)
     (hf_supp : ∀ x, x 0 ≤ 0 → f x = 0) :
     rpInnerProduct m f =
     (1 / (2 * (2 * Real.pi) ^ (STDimension - 1)) : ℝ) *
-    ∫ k_sp : SpatialCoords, ∫ x : SpaceTime4, ∫ y : SpaceTime4,
+    ∫ k_sp : SpatialCoords4, ∫ x : SpaceTime4, ∫ y : SpaceTime4,
       let ω := Real.sqrt (‖k_sp‖^2 + m^2)
       (starRingEnd ℂ (f x)) * f y *
       (1 / ω : ℝ) *
@@ -132,7 +132,7 @@ theorem mixed_representation (f : TestFunctionℂ4)
 
 /-! ## Part 4: Key Lemmas -/
 
-lemma energy_pos (k_sp : SpatialCoords) : 0 < Real.sqrt (‖k_sp‖^2 + m^2) := by
+lemma energy_pos (k_sp : SpatialCoords4) : 0 < Real.sqrt (‖k_sp‖^2 + m^2) := by
   apply Real.sqrt_pos_of_pos
   have hm : 0 < m := Fact.out
   nlinarith [sq_nonneg ‖k_sp‖]
@@ -145,7 +145,7 @@ lemma abs_neg_sum_nonneg (x0 y0 : ℝ) (hx : 0 ≤ x0) (hy : 0 ≤ y0) :
   rw [abs_of_nonpos (by linarith : -x0 - y0 ≤ 0)]; ring
 
 omit [Fact (0 < m)] in
-lemma spatialDot_sub (k_sp x_sp y_sp : SpatialCoords) :
+lemma spatialDot_sub (k_sp x_sp y_sp : SpatialCoords4) :
     spatialDot k_sp (x_sp - y_sp) = spatialDot k_sp x_sp - spatialDot k_sp y_sp := by
   simp only [spatialDot]
   have h : ∀ i, k_sp i * (x_sp - y_sp) i = k_sp i * x_sp i - k_sp i * y_sp i := by
@@ -153,25 +153,25 @@ lemma spatialDot_sub (k_sp x_sp y_sp : SpatialCoords) :
   simp_rw [h, Finset.sum_sub_distrib]
 
 omit [Fact (0 < m)] in
-lemma exp_spatial_phase_factor (k_sp : SpatialCoords) (x_sp y_sp : SpatialCoords) :
+lemma exp_spatial_phase_factor (k_sp : SpatialCoords4) (x_sp y_sp : SpatialCoords4) :
     Complex.exp (-Complex.I * spatialDot k_sp (x_sp - y_sp)) =
     Complex.exp (-Complex.I * spatialDot k_sp x_sp) *
     Complex.exp (Complex.I * spatialDot k_sp y_sp) := by
   rw [← Complex.exp_add, spatialDot_sub]; congr 1; push_cast; ring
 
-noncomputable def xIntegralFactor (f : TestFunctionℂ4) (ω : ℝ) (k_sp : SpatialCoords) : ℂ :=
+noncomputable def xIntegralFactor (f : TestFunctionℂ4) (ω : ℝ) (k_sp : SpatialCoords4) : ℂ :=
   ∫ x : SpaceTime4, (starRingEnd ℂ (f x)) *
     Complex.exp (-(ω * x 0)) * Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x))
 
-noncomputable def yIntegralFactor (f : TestFunctionℂ4) (ω : ℝ) (k_sp : SpatialCoords) : ℂ :=
+noncomputable def yIntegralFactor (f : TestFunctionℂ4) (ω : ℝ) (k_sp : SpatialCoords4) : ℂ :=
   ∫ y : SpaceTime4, f y *
     Complex.exp (-(ω * y 0)) * Complex.exp (Complex.I * spatialDot k_sp (spatialPart y))
 
 omit [Fact (0 < m)] in
-lemma norm_neg_eq (k_sp : SpatialCoords) : ‖-k_sp‖ = ‖k_sp‖ := norm_neg k_sp
+lemma norm_neg_eq (k_sp : SpatialCoords4) : ‖-k_sp‖ = ‖k_sp‖ := norm_neg k_sp
 
 omit [Fact (0 < m)] in
-lemma spatialDot_neg_left (k_sp x_sp : SpatialCoords) :
+lemma spatialDot_neg_left (k_sp x_sp : SpatialCoords4) :
     spatialDot (-k_sp) x_sp = -spatialDot k_sp x_sp := by
   simp only [spatialDot]
   have h : ∀ i, (-k_sp) i * x_sp i = -(k_sp i * x_sp i) := by
@@ -179,7 +179,7 @@ lemma spatialDot_neg_left (k_sp x_sp : SpatialCoords) :
   simp_rw [h, Finset.sum_neg_distrib]
 
 omit [Fact (0 < m)] in
-lemma xIntegralFactor_eq_conj_neg (f : TestFunctionℂ4) (k_sp : SpatialCoords)
+lemma xIntegralFactor_eq_conj_neg (f : TestFunctionℂ4) (k_sp : SpatialCoords4)
     (_hf_support : ∀ x : SpaceTime4, x 0 < 0 → f x = 0) :
     xIntegralFactor f (Real.sqrt (‖k_sp‖^2 + m^2)) k_sp =
     starRingEnd ℂ (weightedLaplaceFourier m f (-k_sp)) := by
@@ -210,7 +210,7 @@ lemma xIntegralFactor_eq_conj_neg (f : TestFunctionℂ4) (k_sp : SpatialCoords)
   · simp only [map_mul, Complex.conj_I, Complex.conj_ofReal]
 
 omit [Fact (0 < m)] in
-lemma yIntegralFactor_eq_neg (f : TestFunctionℂ4) (k_sp : SpatialCoords) :
+lemma yIntegralFactor_eq_neg (f : TestFunctionℂ4) (k_sp : SpatialCoords4) :
     yIntegralFactor f (Real.sqrt (‖k_sp‖^2 + m^2)) k_sp =
     weightedLaplaceFourier m f (-k_sp) := by
   simp only [yIntegralFactor, weightedLaplaceFourier]
@@ -232,7 +232,7 @@ lemma yIntegralFactor_eq_neg (f : TestFunctionℂ4) (k_sp : SpatialCoords) :
     - `exp(-ik_sp·r) = exp(-ik_sp·x_sp) · exp(+ik_sp·y_sp)`
 
     This avoids the round-trip through k₀ space that the old proof used. -/
-theorem factorization_to_squared_norm_direct (f : TestFunctionℂ4) (k_sp : SpatialCoords)
+theorem factorization_to_squared_norm_direct (f : TestFunctionℂ4) (k_sp : SpatialCoords4)
     (hf_support : ∀ x : SpaceTime4, x 0 < 0 → f x = 0) :
     let ω := Real.sqrt (‖k_sp‖^2 + m^2)
     ∫ x : SpaceTime4, ∫ y : SpaceTime4,
@@ -330,7 +330,7 @@ theorem rp_equals_squared_norm_integral (f : TestFunctionℂ4)
     (hf_supp : ∀ x : SpaceTime4, x 0 ≤ 0 → f x = 0) :
     rpInnerProduct m f =
     (1 / (2 * (2 * Real.pi) ^ (STDimension - 1)) : ℝ) *
-    ∫ k_sp : SpatialCoords,
+    ∫ k_sp : SpatialCoords4,
       ((1 / Real.sqrt (‖k_sp‖^2 + m^2) *
         Complex.normSq (weightedLaplaceFourier m f (-k_sp)) : ℝ) : ℂ) := by
   have hf_support : ∀ x : SpaceTime4, x 0 < 0 → f x = 0 := fun x hx =>
@@ -363,10 +363,10 @@ theorem freeCovariance_reflection_positive_direct (f : TestFunctionℂ4)
     apply pow_nonneg
     apply mul_nonneg (by norm_num : (0 : ℝ) ≤ 2) Real.pi_pos.le
   · -- Re(∫ ↑(real_val)) = ∫ real_val ≥ 0
-    have h_integral_real : (∫ k_sp : SpatialCoords,
+    have h_integral_real : (∫ k_sp : SpatialCoords4,
         ((1 / Real.sqrt (‖k_sp‖ ^ 2 + m ^ 2) *
           Complex.normSq (weightedLaplaceFourier m f (-k_sp)) : ℝ) : ℂ)) =
-        ↑(∫ k_sp : SpatialCoords,
+        ↑(∫ k_sp : SpatialCoords4,
           (1 / Real.sqrt (‖k_sp‖ ^ 2 + m ^ 2) *
             Complex.normSq (weightedLaplaceFourier m f (-k_sp)))) :=
       integral_ofReal

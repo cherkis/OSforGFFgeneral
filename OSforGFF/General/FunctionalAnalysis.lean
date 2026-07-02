@@ -490,7 +490,7 @@ theorem locallyIntegrable_of_rpow_decay_real {d : ℕ} (hd : d ≥ 3)
     exact integrableOn_compact_diff_ball hK hC (by norm_num : (0:ℝ) < 1/2) h_decay h_meas
 
 /-- **Polynomial decay is integrable in 3D**: The function 1/(1+‖x‖)^4 is integrable
-    over SpatialCoords = EuclideanSpace ℝ (Fin 3).
+    over SpatialCoords4 = EuclideanSpace ℝ (Fin 3).
 
     This is a standard result: decay rate 4 > dimension 3 ensures integrability.
 

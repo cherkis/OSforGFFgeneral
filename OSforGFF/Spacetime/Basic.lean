@@ -78,6 +78,7 @@ open DFunLike (coe)
 noncomputable section
 
 variable {𝕜 : Type} [RCLike 𝕜]
+variable {d : ℕ}
 
 abbrev μ : Measure SpaceTime4 := volume    -- Lebesgue, just named “μ”
 
@@ -95,13 +96,13 @@ example : Module ℂ TestFunctionℂ4 := by infer_instance
 
 /- Space-time and test function setup -/
 
-variable (x : SpaceTime4)
+variable (x : (SpaceTime d))
 
 /- Probability distribution over field configurations (distributions) -/
 def pointwiseMulCLM : ℂ →L[ℂ] ℂ →L[ℂ] ℂ := ContinuousLinearMap.mul ℂ ℂ
 
 /-- Multiplication lifted to the Schwartz space. -/
-def schwartzMul (g : TestFunctionℂ4) : TestFunctionℂ4 →L[ℂ] TestFunctionℂ4 :=
+def schwartzMul (g : (TestFunctionℂ d)) : (TestFunctionℂ d) →L[ℂ] (TestFunctionℂ d) :=
   (SchwartzMap.bilinLeftCLM pointwiseMulCLM (SchwartzMap.hasTemperateGrowth_general g))
 
 
@@ -124,30 +125,30 @@ abbrev FieldConfiguration (d : ℕ) := WeakDual ℝ (SchwartzMap (SpaceTime d) �
 /-- Field configurations over four-dimensional spacetime, `FieldConfiguration STDimension`. -/
 abbrev FieldConfiguration4 := FieldConfiguration STDimension
 
--- MeasurableSpace on FieldConfiguration4 = WeakDual ℝ TestFunction4 is the cylinder σ-algebra
+-- MeasurableSpace on (FieldConfiguration d) = WeakDual ℝ (TestFunction d) is the cylinder σ-algebra
 -- provided by the bochner library: ⨆ f, (borel ℝ).comap (eval f)
 
 /-- The fundamental pairing between a field configuration (distribution) and a test function.
     This is ⟨ω, f⟩ in the Glimm-Jaffe notation.
 
-    Note: FieldConfiguration4 = WeakDual ℝ (SchwartzMap SpaceTime4 ℝ) has the correct
+    Note: (FieldConfiguration d) = WeakDual ℝ (SchwartzMap (SpaceTime d) ℝ) has the correct
     weak-* topology, making evaluation maps x ↦ ω(x) continuous for each test function x. -/
-def distributionPairing (ω : FieldConfiguration4) (f : TestFunction4) : ℝ := ω f
+def distributionPairing (ω : (FieldConfiguration d)) (f : (TestFunction d)) : ℝ := ω f
 
-@[simp] lemma distributionPairing_add (ω₁ ω₂ : FieldConfiguration4) (a : TestFunction4) :
+@[simp] lemma distributionPairing_add (ω₁ ω₂ : (FieldConfiguration d)) (a : (TestFunction d)) :
     distributionPairing (ω₁ + ω₂) a = distributionPairing ω₁ a + distributionPairing ω₂ a := rfl
 
-@[simp] lemma distributionPairing_smul (s : ℝ) (ω : FieldConfiguration4) (a : TestFunction4) :
+@[simp] lemma distributionPairing_smul (s : ℝ) (ω : (FieldConfiguration d)) (a : (TestFunction d)) :
     distributionPairing (s • ω) a = s * distributionPairing ω a :=
   -- This follows from the definition of scalar multiplication in WeakDual
   rfl
 
-@[simp] lemma pairing_smul_real (ω : FieldConfiguration4) (s : ℝ) (a : TestFunction4) :
+@[simp] lemma pairing_smul_real (ω : (FieldConfiguration d)) (s : ℝ) (a : (TestFunction d)) :
   ω (s • a) = s * (ω a) :=
   -- This follows from the linearity of the dual pairing
   map_smul ω s a
 
-@[simp] def distributionPairingCLM (a : TestFunction4) : FieldConfiguration4 →L[ℝ] ℝ where
+@[simp] def distributionPairingCLM (a : (TestFunction d)) : (FieldConfiguration d) →L[ℝ] ℝ where
   toFun ω := distributionPairing ω a
   map_add' ω₁ ω₂ := by
     -- WeakDual addition is pointwise: (ω₁ + ω₂) a = ω₁ a + ω₂ a
@@ -159,7 +160,7 @@ def distributionPairing (ω : FieldConfiguration4) (f : TestFunction4) : ℝ := 
     -- The evaluation map is continuous by definition of WeakDual topology
     exact WeakDual.eval_continuous a
 
-@[simp] lemma distributionPairingCLM_apply (a : TestFunction4) (ω : FieldConfiguration4) :
+@[simp] lemma distributionPairingCLM_apply (a : (TestFunction d)) (ω : (FieldConfiguration d)) :
     distributionPairingCLM a ω = distributionPairing ω a := rfl
 
 variable [SigmaFinite μ]
@@ -173,13 +174,13 @@ where the integral is over field configurations ω (distributions).
 
 /-- The Glimm-Jaffe generating functional: Z[J] = ∫ exp(i⟨ω, J⟩) dμ(ω)
     This is the fundamental object in constructive QFT. -/
-def GJGeneratingFunctional (dμ_config : ProbabilityMeasure FieldConfiguration4)
-  (J : TestFunction4) : ℂ :=
+def GJGeneratingFunctional (dμ_config : ProbabilityMeasure (FieldConfiguration d))
+  (J : (TestFunction d)) : ℂ :=
   ∫ ω, Complex.exp (Complex.I * (distributionPairing ω J : ℂ)) ∂dμ_config.toMeasure
 
 /-- Helper function to create a Schwartz map from a complex test function by applying a continuous linear map.
     This factors out the common pattern for extracting real/imaginary parts. -/
-def schwartz_comp_clm (f : TestFunctionℂ4) (L : ℂ →L[ℝ] ℝ) : TestFunction4 :=
+def schwartz_comp_clm (f : (TestFunctionℂ d)) (L : ℂ →L[ℝ] ℝ) : (TestFunction d) :=
   SchwartzMap.mk (fun x => L (f x)) (by
     -- L is a continuous linear map, hence smooth
     exact ContDiff.comp L.contDiff f.smooth'
@@ -211,41 +212,41 @@ def schwartz_comp_clm (f : TestFunctionℂ4) (L : ℂ →L[ℝ] ℝ) : TestFunct
 omit [SigmaFinite μ]
 
 /-- Evaluate `schwartz_comp_clm` pointwise. -/
-@[simp] lemma schwartz_comp_clm_apply (f : TestFunctionℂ4) (L : ℂ →L[ℝ] ℝ) (x : SpaceTime4) :
+@[simp] lemma schwartz_comp_clm_apply (f : (TestFunctionℂ d)) (L : ℂ →L[ℝ] ℝ) (x : (SpaceTime d)) :
   (schwartz_comp_clm f L) x = L (f x) := rfl
 
 /-- Decompose a complex test function into its real and imaginary parts as real test functions.
     This is more efficient than separate extraction functions. -/
-def complex_testfunction_decompose (f : TestFunctionℂ4) : TestFunction4 × TestFunction4 :=
+def complex_testfunction_decompose (f : (TestFunctionℂ d)) : (TestFunction d) × (TestFunction d) :=
   (schwartz_comp_clm f Complex.reCLM, schwartz_comp_clm f Complex.imCLM)
 
 /-- First component of the decomposition evaluates to the real part pointwise. -/
 @[simp] lemma complex_testfunction_decompose_fst_apply
-  (f : TestFunctionℂ4) (x : SpaceTime4) :
+  (f : (TestFunctionℂ d)) (x : (SpaceTime d)) :
   (complex_testfunction_decompose f).1 x = (f x).re := by
   simp [complex_testfunction_decompose]
 
 /-- Second component of the decomposition evaluates to the imaginary part pointwise. -/
 @[simp] lemma complex_testfunction_decompose_snd_apply
-  (f : TestFunctionℂ4) (x : SpaceTime4) :
+  (f : (TestFunctionℂ d)) (x : (SpaceTime d)) :
   (complex_testfunction_decompose f).2 x = (f x).im := by
   simp [complex_testfunction_decompose]
 
 /-- Coerced-to-ℂ version (useful for complex-side algebra). -/
 @[simp] lemma complex_testfunction_decompose_fst_apply_coe
-  (f : TestFunctionℂ4) (x : SpaceTime4) :
+  (f : (TestFunctionℂ d)) (x : (SpaceTime d)) :
   ((complex_testfunction_decompose f).1 x : ℂ) = ((f x).re : ℂ) := by
   simp [complex_testfunction_decompose]
 
 /-- Coerced-to-ℂ version (useful for complex-side algebra). -/
 @[simp] lemma complex_testfunction_decompose_snd_apply_coe
-  (f : TestFunctionℂ4) (x : SpaceTime4) :
+  (f : (TestFunctionℂ d)) (x : (SpaceTime d)) :
   ((complex_testfunction_decompose f).2 x : ℂ) = ((f x).im : ℂ) := by
   simp [complex_testfunction_decompose]
 
 /-- Recomposition at a point via the decomposition. -/
 lemma complex_testfunction_decompose_recompose
-  (f : TestFunctionℂ4) (x : SpaceTime4) :
+  (f : (TestFunctionℂ d)) (x : (SpaceTime d)) :
   f x = ((complex_testfunction_decompose f).1 x : ℂ)
           + Complex.I * ((complex_testfunction_decompose f).2 x : ℂ) := by
   -- Reduce to the standard identity z = re z + i im z
@@ -259,37 +260,43 @@ lemma complex_testfunction_decompose_recompose
 /-- Complex version of the pairing: real field configuration with complex test function
     We extend the pairing by treating the complex test function as f(x) = f_re(x) + i*f_im(x)
     and defining ⟨ω, f⟩ = ⟨ω, f_re⟩ + i*⟨ω, f_im⟩ -/
-def distributionPairingℂ_real (ω : FieldConfiguration4) (f : TestFunctionℂ4) : ℂ :=
+def distributionPairingℂ_real (ω : (FieldConfiguration d)) (f : (TestFunctionℂ d)) : ℂ :=
   -- Extract real and imaginary parts using our efficient decomposition
   let ⟨f_re, f_im⟩ := complex_testfunction_decompose f
   -- Pair with the real field configuration and combine
   (ω f_re : ℂ) + Complex.I * (ω f_im : ℂ)
 
 /-- Complex version of the generating functional -/
-def GJGeneratingFunctionalℂ (dμ_config : ProbabilityMeasure FieldConfiguration4)
-  (J : TestFunctionℂ4) : ℂ :=
+def GJGeneratingFunctionalℂ (dμ_config : ProbabilityMeasure (FieldConfiguration d))
+  (J : (TestFunctionℂ d)) : ℂ :=
   ∫ ω, Complex.exp (Complex.I * (distributionPairingℂ_real ω J)) ∂dμ_config.toMeasure
 
 /-- The mean field in the Glimm-Jaffe framework -/
-def GJMean (dμ_config : ProbabilityMeasure FieldConfiguration4)
-  (φ : TestFunction4) : ℝ :=
+def GJMean (dμ_config : ProbabilityMeasure (FieldConfiguration d))
+  (φ : (TestFunction d)) : ℝ :=
   ∫ ω, distributionPairing ω φ ∂dμ_config.toMeasure
 
 /-! ## Spatial Geometry and Energy Operators -/
 
 /-- Spatial coordinates: ℝ^{d-1} (space without time) as EuclideanSpace for L2 norm -/
-abbrev SpatialCoords := EuclideanSpace ℝ (Fin (STDimension - 1))
+abbrev SpatialCoords (d : ℕ) := EuclideanSpace ℝ (Fin (d - 1))
+
+/-- Spatial coordinates of the four-dimensional instance, `SpatialCoords STDimension`. -/
+abbrev SpatialCoords4 := SpatialCoords STDimension
 
 /-- L² space on spatial slices (real-valued) -/
-abbrev SpatialL2 := Lp ℝ 2 (volume : Measure SpatialCoords)
+abbrev SpatialL2 (d : ℕ) := Lp ℝ 2 (volume : Measure (SpatialCoords d))
+
+/-- Spatial L² space of the four-dimensional instance, `SpatialL2 STDimension`. -/
+abbrev SpatialL24 := SpatialL2 STDimension
 
 /-- Extract spatial part of spacetime coordinate -/
-def spatialPart (x : SpaceTime4) : SpatialCoords :=
-  (EuclideanSpace.equiv (Fin (STDimension - 1)) ℝ).symm
-    (fun i => x ⟨i.val + 1, by simp [STDimension]; omega⟩)
+def spatialPart (x : SpaceTime d) : SpatialCoords d :=
+  (EuclideanSpace.equiv (Fin (d - 1)) ℝ).symm
+    (fun i => x ⟨i.val + 1, by have := i.isLt; omega⟩)
 
 /-- The energy function E(k) = √(‖k‖² + m²) on spatial momentum space -/
-def E (m : ℝ) (k : SpatialCoords) : ℝ :=
+def E (m : ℝ) (k : SpatialCoords d) : ℝ :=
   Real.sqrt (‖k‖^2 + m^2)
 
 end

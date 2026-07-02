@@ -63,15 +63,15 @@ variable {m : ℝ} [Fact (0 < m)]
 /-! ## Core Definitions -/
 
 /-- Inner product on spatial coordinates: k_spatial · x_spatial = Σᵢ kᵢ xᵢ -/
-noncomputable def spatialDot (k_spatial x_spatial : SpatialCoords) : ℝ :=
+noncomputable def spatialDot (k_spatial x_spatial : SpatialCoords4) : ℝ :=
   ∑ i, k_spatial i * x_spatial i
 
 /-- Inner product on ℝ equals multiplication. -/
 lemma real_inner_eq_mul (x y : ℝ) : @inner ℝ ℝ _ x y = x * y := by
   simp [inner, mul_comm]
 
-/-- spatialDot equals the real inner product on SpatialCoords. -/
-lemma spatialDot_eq_inner (k_spatial x_spatial : SpatialCoords) :
+/-- spatialDot equals the real inner product on SpatialCoords4. -/
+lemma spatialDot_eq_inner (k_spatial x_spatial : SpatialCoords4) :
     spatialDot k_spatial x_spatial = ⟪k_spatial, x_spatial⟫_ℝ := by
   unfold spatialDot
   rw [PiLp.inner_apply]
@@ -100,7 +100,7 @@ lemma spacetime_inner_decompose (k z : SpaceTime4) :
     This is the key quantity that appears after contour integration. For functions
     supported on positive time (x₀ ≥ 0), this becomes a product of two Fourier-Laplace
     transforms, leading to the squared norm factorization. -/
-noncomputable def weightedLaplaceFourier (m : ℝ) (f : TestFunctionℂ4) (k_spatial : SpatialCoords) : ℂ :=
+noncomputable def weightedLaplaceFourier (m : ℝ) (f : TestFunctionℂ4) (k_spatial : SpatialCoords4) : ℂ :=
   let ω := Real.sqrt (‖k_spatial‖^2 + m^2)
   ∫ x : SpaceTime4, f x * Complex.exp (-|x 0| * ω) *
     Complex.exp (Complex.I * spatialDot k_spatial (spatialPart x))
@@ -821,7 +821,7 @@ theorem integrable_s_inv_sq_exp_neg_inv_s {a : ℝ} (ha : 0 < a) :
     Represents the bound `C * s^(3/2) * exp(-s(m² + k²))` which comes from:
     1. Linear vanishing of f at t=0 giving s^(3/2) scaling (offsetting s^(-2) divergence).
     2. Exponential decay in mass and momentum. -/
-def dominate_G (C : ℝ) (m : ℝ) (p : ℝ × SpatialCoords) : ℝ :=
+def dominate_G (C : ℝ) (m : ℝ) (p : ℝ × SpatialCoords4) : ℝ :=
   if p.1 > 0 then
     C * p.1 ^ (3 / 2 : ℝ) * Real.exp (-p.1 * (‖p.2‖^2 + m^2))
   else 0
@@ -835,10 +835,10 @@ def dominate_G (C : ℝ) (m : ℝ) (p : ℝ × SpatialCoords) : ℝ :=
 theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
     Integrable (dominate_G C m) ((volume.restrict (Set.Ioi 0)).prod volume) := by
   have hm : 0 < m := Fact.out
-  let μ : Measure (ℝ × SpatialCoords) := (volume.restrict (Set.Ioi 0)).prod volume
+  let μ : Measure (ℝ × SpatialCoords4) := (volume.restrict (Set.Ioi 0)).prod volume
 
   -- Core function G₀(s,k) = s^(3/2) * exp(-s(|k|² + m²)) for s > 0, else 0
-  let G₀ : ℝ × SpatialCoords → ℝ := fun p =>
+  let G₀ : ℝ × SpatialCoords4 → ℝ := fun p =>
     if p.1 > 0 then p.1 ^ (3/2 : ℝ) * Real.exp (-p.1 * (‖p.2‖^2 + m^2)) else 0
 
   -- dominate_G = C * G₀
@@ -860,7 +860,7 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
     · exact measurable_const
 
   -- G₀ is nonnegative
-  have hG₀_nn : ∀ p : ℝ × SpatialCoords, 0 ≤ G₀ p := by
+  have hG₀_nn : ∀ p : ℝ × SpatialCoords4, 0 ≤ G₀ p := by
     intro p
     simp only [G₀]
     split_ifs with hp
@@ -878,11 +878,11 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
   --                  = ∫_s s^(3/2) exp(-sm²) * (π/s)^(3/2) ds
   --                  = π^(3/2) ∫_s exp(-sm²) ds = π^(3/2) / m²
 
-  have h_lintegral_finite : ∫⁻ p : ℝ × SpatialCoords, ENNReal.ofReal (G₀ p) ∂μ < ⊤ := by
+  have h_lintegral_finite : ∫⁻ p : ℝ × SpatialCoords4, ENNReal.ofReal (G₀ p) ∂μ < ⊤ := by
     -- Use Tonelli to factor the lintegral
     have hG₀_ae_meas : AEMeasurable G₀ μ := hG₀_meas.aemeasurable
-    have h_eq : ∫⁻ p : ℝ × SpatialCoords, ENNReal.ofReal (G₀ p) ∂μ =
-        ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : SpatialCoords,
+    have h_eq : ∫⁻ p : ℝ × SpatialCoords4, ENNReal.ofReal (G₀ p) ∂μ =
+        ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : SpatialCoords4,
           ENNReal.ofReal (G₀ (s, k)) ∂volume ∂volume := by
       simp only [μ]
       rw [MeasureTheory.lintegral_prod _ (hG₀_meas.ennreal_ofReal.aemeasurable)]
@@ -903,7 +903,7 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
 
     -- Use monotonicity and bound by a computable integral
     -- First show the equality of integrands on Ioi 0
-    have h_eq_integrand : ∀ᵐ s ∂(volume.restrict (Set.Ioi 0)), ∀ k : SpatialCoords,
+    have h_eq_integrand : ∀ᵐ s ∂(volume.restrict (Set.Ioi 0)), ∀ k : SpatialCoords4,
         G₀ (s, k) = s ^ (3/2 : ℝ) * Real.exp (-s * m^2) * Real.exp (-s * ‖k‖^2) := by
       filter_upwards [ae_restrict_mem measurableSet_Ioi] with s hs k
       have hs_pos : s > 0 := hs
@@ -918,9 +918,9 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
       rw [h_exp_split]
       ring
 
-    calc ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : SpatialCoords,
+    calc ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : SpatialCoords4,
           ENNReal.ofReal (G₀ (s, k)) ∂volume ∂volume
-        = ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : SpatialCoords,
+        = ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : SpatialCoords4,
             ENNReal.ofReal (s ^ (3/2 : ℝ) * Real.exp (-s * m^2) *
               Real.exp (-s * ‖k‖^2)) ∂volume ∂volume := by
           apply lintegral_congr_ae
@@ -941,43 +941,43 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
 
           -- First show inner integral equality
           have h_inner : ∀ s ∈ Set.Ioi (0 : ℝ),
-              ∫⁻ k : SpatialCoords, ENNReal.ofReal (s ^ (3/2 : ℝ) * Real.exp (-s * m^2) *
+              ∫⁻ k : SpatialCoords4, ENNReal.ofReal (s ^ (3/2 : ℝ) * Real.exp (-s * m^2) *
                 Real.exp (-s * ‖k‖^2)) = ENNReal.ofReal (π ^ (3/2 : ℝ) * Real.exp (-s * m^2)) := by
             intro s hs
             have hs_pos : 0 < s := hs
             -- The Gaussian exp(-s|k|²) is integrable for s > 0
             -- (Inline proof since gaussian_integrable_spatialCoords is defined later)
-            have h_gauss_int : Integrable (fun k_sp : SpatialCoords => Real.exp (-s * ‖k_sp‖^2)) := by
+            have h_gauss_int : Integrable (fun k_sp : SpatialCoords4 => Real.exp (-s * ‖k_sp‖^2)) := by
               have hs' : 0 < (s : ℂ).re := by simp [hs_pos]
-              have h := GaussianFourier.integrable_cexp_neg_mul_sq_norm_add (V := SpatialCoords) hs' 0 0
+              have h := GaussianFourier.integrable_cexp_neg_mul_sq_norm_add (V := SpatialCoords4) hs' 0 0
               simp only [zero_mul, add_zero, inner_zero_left, Complex.ofReal_zero] at h
-              have h_eq : (fun k_sp : SpatialCoords => Complex.exp (-(s : ℂ) * ‖k_sp‖^2)) =
+              have h_eq : (fun k_sp : SpatialCoords4 => Complex.exp (-(s : ℂ) * ‖k_sp‖^2)) =
                   (fun k_sp => (Real.exp (-s * ‖k_sp‖^2) : ℂ)) := by
                 ext k_sp
                 simp only [Complex.ofReal_exp, Complex.ofReal_neg, Complex.ofReal_mul, Complex.ofReal_pow]
               rw [h_eq] at h
               exact h.re
             -- Show integrand is nonnegative
-            have h_integrand_nn : ∀ k : SpatialCoords,
+            have h_integrand_nn : ∀ k : SpatialCoords4,
                 0 ≤ s ^ (3/2 : ℝ) * Real.exp (-s * m^2) * Real.exp (-s * ‖k‖^2) := by
               intro k
               positivity
             -- Show integrand is integrable
             have h_integrand_int : Integrable
-                (fun k : SpatialCoords => s ^ (3/2 : ℝ) * Real.exp (-s * m^2) * Real.exp (-s * ‖k‖^2)) := by
-              have h1 : Integrable (fun k : SpatialCoords => Real.exp (-s * ‖k‖^2)) := h_gauss_int
+                (fun k : SpatialCoords4 => s ^ (3/2 : ℝ) * Real.exp (-s * m^2) * Real.exp (-s * ‖k‖^2)) := by
+              have h1 : Integrable (fun k : SpatialCoords4 => Real.exp (-s * ‖k‖^2)) := h_gauss_int
               exact h1.const_mul _
             -- Convert lintegral to integral using ofReal_integral_eq_lintegral_ofReal
             rw [← MeasureTheory.ofReal_integral_eq_lintegral_ofReal h_integrand_int
                 (ae_of_all _ h_integrand_nn)]
             -- Pull out constant
-            have h_factor : (fun k : SpatialCoords => s ^ (3/2 : ℝ) * Real.exp (-s * m^2) *
+            have h_factor : (fun k : SpatialCoords4 => s ^ (3/2 : ℝ) * Real.exp (-s * m^2) *
                 Real.exp (-s * ‖k‖^2)) = fun k => (s ^ (3/2 : ℝ) * Real.exp (-s * m^2)) *
                 Real.exp (-s * ‖k‖^2) := by ext k; ring
             rw [h_factor, MeasureTheory.integral_const_mul]
             -- Use Gaussian formula: ∫ exp(-s|k|²) dk = (π/s)^(3/2)
-            have h_dim : Module.finrank ℝ SpatialCoords = 3 := by simp [SpatialCoords]
-            have h_gauss_val := GaussianFourier.integral_rexp_neg_mul_sq_norm (V := SpatialCoords) hs_pos
+            have h_dim : Module.finrank ℝ SpatialCoords4 = 3 := by simp [SpatialCoords4]
+            have h_gauss_val := GaussianFourier.integral_rexp_neg_mul_sq_norm (V := SpatialCoords4) hs_pos
             rw [h_dim] at h_gauss_val
             rw [h_gauss_val]
             -- Now: s^(3/2) * exp(-sm²) * (π/s)^(3/2) = π^(3/2) * exp(-sm²)
@@ -1000,19 +1000,19 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
           -- Outer integral: use the inner equality to simplify
           -- We need: ∫⁻ s ∈ Ioi 0, (LHS inner) = ∫⁻ s ∈ Ioi 0, (RHS inner)
           have h_eqon : Set.EqOn
-              (fun s => ∫⁻ k : SpatialCoords,
+              (fun s => ∫⁻ k : SpatialCoords4,
                 ENNReal.ofReal (s ^ (3/2 : ℝ) * Real.exp (-s * m^2) * Real.exp (-s * ‖k‖^2)))
               (fun s => ENNReal.ofReal (π ^ (3/2 : ℝ) * Real.exp (-s * m^2)))
               (Set.Ioi 0) := by
             intro s hs
             exact h_inner s hs
-          have h_lintegral_eq : ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : SpatialCoords,
+          have h_lintegral_eq : ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : SpatialCoords4,
                 ENNReal.ofReal (s ^ (3/2 : ℝ) * Real.exp (-s * m^2) *
                   Real.exp (-s * ‖k‖^2)) ∂volume ∂volume =
               ∫⁻ s in Set.Ioi (0 : ℝ),
                 ENNReal.ofReal (π ^ (3/2 : ℝ) * Real.exp (-s * m^2)) ∂volume := by
             exact MeasureTheory.setLIntegral_congr_fun measurableSet_Ioi h_eqon
-          calc ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : SpatialCoords,
+          calc ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : SpatialCoords4,
                 ENNReal.ofReal (s ^ (3/2 : ℝ) * Real.exp (-s * m^2) *
                   Real.exp (-s * ‖k‖^2)) ∂volume ∂volume
             = ∫⁻ s in Set.Ioi (0 : ℝ),
@@ -1038,7 +1038,7 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
     _ < ⊤ := h_lintegral_finite
 
 /-- `spatialPart` is measurable. -/
-lemma spatialPart_measurable : Measurable (spatialPart : SpaceTime4 → SpatialCoords) := by
+lemma spatialPart_measurable : Measurable (spatialPart : SpaceTime4 → SpatialCoords4) := by
   -- spatialPart is a composition of continuous functions (linear maps), hence measurable
   unfold spatialPart
   apply Measurable.comp
@@ -1054,20 +1054,20 @@ lemma spatialPart_measurable : Measurable (spatialPart : SpaceTime4 → SpatialC
     `((s, k_sp), x, y) ↦ f̄(x) · f(y) · √(π/s) · exp(...) · exp(...) · exp(...)`
 
     After two applications of `StronglyMeasurable.integral_prod_right`, the type is:
-    `(((ℝ × SpatialCoords) × SpaceTime4) × SpaceTime4) → ℂ`
-    represented as `x : (ℝ × SpatialCoords) × SpaceTime4`, `y : SpaceTime4`.
+    `(((ℝ × SpatialCoords4) × SpaceTime4) × SpaceTime4) → ℂ`
+    represented as `x : (ℝ × SpatialCoords4) × SpaceTime4`, `y : SpaceTime4`.
 
     This is a product of continuous/measurable functions, hence measurable. -/
 lemma fubini_s_ksp_integrand_stronglyMeasurable (m : ℝ) (f : TestFunctionℂ4) :
-    StronglyMeasurable (Function.uncurry fun (x : (ℝ × SpatialCoords) × SpaceTime4) (y : SpaceTime4) =>
+    StronglyMeasurable (Function.uncurry fun (x : (ℝ × SpatialCoords4) × SpaceTime4) (y : SpaceTime4) =>
       (starRingEnd ℂ (f x.2)) * f y *
         (Real.sqrt (π / x.1.1) : ℂ) * Complex.exp (-((-(x.2.ofLp 0) - y.ofLp 0)^2 / (4 * x.1.1) : ℝ)) *
         Complex.exp (-(x.1.1 : ℂ) * (‖x.1.2‖^2 + m^2)) *
         Complex.exp (-Complex.I * spatialDot x.1.2 (spatialPart x.2 - spatialPart y))) := by
   -- The integrand is a product of measurable functions
-  -- Variable structure after uncurry: a : ((ℝ × SpatialCoords) × SpaceTime4) × SpaceTime4
-  -- a.1 = (ℝ × SpatialCoords) × SpaceTime4, a.1.1 = (ℝ × SpatialCoords)
-  -- a.1.1.1 = s : ℝ, a.1.1.2 = k_sp : SpatialCoords
+  -- Variable structure after uncurry: a : ((ℝ × SpatialCoords4) × SpaceTime4) × SpaceTime4
+  -- a.1 = (ℝ × SpatialCoords4) × SpaceTime4, a.1.1 = (ℝ × SpatialCoords4)
+  -- a.1.1.1 = s : ℝ, a.1.1.2 = k_sp : SpatialCoords4
   -- a.1.2 = first SpaceTime4 (x), a.2 = second SpaceTime4 (y)
   apply Measurable.stronglyMeasurable
   -- Let's use refine to handle each piece
@@ -1996,7 +1996,7 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ4)
   have h_tonelli := schwartz_tonelli_spacetime f f K hK_nonneg hK_meas hK_bdd
 
   -- G from h_tonelli matches spatialNormIntegral via the linking lemma
-  have hG_eq : (fun t => ∫ v : SpatialCoords, ‖f (spacetimeDecomp.symm (t, v))‖) = G := by
+  have hG_eq : (fun t => ∫ v : SpatialCoords4, ‖f (spacetimeDecomp.symm (t, v))‖) = G := by
     ext t
     simp only [G, spatialNormIntegral]
     apply integral_congr_ae
@@ -2408,7 +2408,7 @@ lemma schwartz_iterated_integral_integrable (f : TestFunctionℂ4)
     The constant C comes from schwartz_vanishing_linear_bound (derivative bound via MVT). -/
 lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4)
     (hf_supp : ∀ x : SpaceTime4, x 0 ≤ 0 → f x = 0) :
-    ∃ C_bound : ℝ, 0 < C_bound ∧ ∀ (s : ℝ) (_hs : 0 < s) (k_sp : SpatialCoords),
+    ∃ C_bound : ℝ, 0 < C_bound ∧ ∀ (s : ℝ) (_hs : 0 < s) (k_sp : SpatialCoords4),
       let F_val := ∫ x : SpaceTime4, ∫ y : SpaceTime4,
           (starRingEnd ℂ (f x)) * f y *
             (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
@@ -2750,18 +2750,18 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFuncti
     handle the s^{-1/2} * exp(-t²/(4s)) term via substitution z = 1/s. -/
 theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4)
     (hf_supp : ∀ x, x 0 ≤ 0 → f x = 0) :
-    ∫ s in Set.Ioi 0, ∫ k_sp : SpatialCoords, ∫ x : SpaceTime4, ∫ y : SpaceTime4,
+    ∫ s in Set.Ioi 0, ∫ k_sp : SpatialCoords4, ∫ x : SpaceTime4, ∫ y : SpaceTime4,
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
         Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
         Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y)) =
-    ∫ k_sp : SpatialCoords, ∫ s in Set.Ioi 0, ∫ x : SpaceTime4, ∫ y : SpaceTime4,
+    ∫ k_sp : SpatialCoords4, ∫ s in Set.Ioi 0, ∫ x : SpaceTime4, ∫ y : SpaceTime4,
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
         Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
         Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y)) := by
   -- Define the uncurried integrand
-  let F : ℝ × SpatialCoords → ℂ := fun ⟨s, k_sp⟩ =>
+  let F : ℝ × SpatialCoords4 → ℂ := fun ⟨s, k_sp⟩ =>
     ∫ x : SpaceTime4, ∫ y : SpaceTime4,
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
@@ -2964,7 +2964,7 @@ lemma s_xy_swap_bound_integrable (f : TestFunctionℂ4) (m : ℝ) [Fact (0 < m)]
     **Proof:** Uses `MeasureTheory.integral_integral_swap` with
     integrability on `(Set.Ioi 0) × SpaceTime4 × SpaceTime4`.
     The bound function is `s^{-1/2} * exp(-s*m^2) * |f(x)| * |f(y)|`. -/
-theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) (k_sp : SpatialCoords) :
+theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) (k_sp : SpatialCoords4) :
     ∫ s in Set.Ioi 0, ∫ x : SpaceTime4, ∫ y : SpaceTime4,
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
@@ -3033,7 +3033,7 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) (k_sp :
         apply ContinuousOn.comp continuous_ofReal.continuousOn _ (Set.mapsTo_univ _ _)
         unfold spatialDot
         -- spatialPart is continuous (projection followed by continuous linear equiv)
-        have h_spatialPart_cont : Continuous spatialPart := by
+        have h_spatialPart_cont : Continuous (spatialPart : SpaceTime4 → SpatialCoords4) := by
           unfold spatialPart
           apply (EuclideanSpace.equiv (Fin (STDimension - 1)) ℝ).symm.continuous.comp
           apply continuous_pi
@@ -3157,7 +3157,7 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) (k_sp :
               apply h_bound.mono'
               · -- AEStronglyMeasurable of F(s, ·, ·)
                 have hf_cont : Continuous f := SchwartzMap.continuous f
-                have h_spatialPart_cont : Continuous spatialPart := by
+                have h_spatialPart_cont : Continuous (spatialPart : SpaceTime4 → SpatialCoords4) := by
                   unfold spatialPart
                   apply (EuclideanSpace.equiv (Fin (STDimension - 1)) ℝ).symm.continuous.comp
                   apply continuous_pi
@@ -3267,17 +3267,17 @@ The common bound for all Fubini swaps is:
   |integrand| ≤ |f(x)| |f(y)| × C(s) × exp(-s‖k_sp‖²)
 which factors and is therefore integrable on the product space. -/
 
-/-- The Gaussian exp(-s‖k‖²) is integrable over SpatialCoords for s > 0. -/
+/-- The Gaussian exp(-s‖k‖²) is integrable over SpatialCoords4 for s > 0. -/
 lemma gaussian_integrable_spatialCoords (s : ℝ) (hs : 0 < s) :
-    MeasureTheory.Integrable (fun k_sp : SpatialCoords => Real.exp (-s * ‖k_sp‖^2)) := by
+    MeasureTheory.Integrable (fun k_sp : SpatialCoords4 => Real.exp (-s * ‖k_sp‖^2)) := by
   have hs' : 0 < (s : ℂ).re := by simp [hs]
   -- Use Mathlib's Gaussian integrability (with c=0, w=0)
-  have h := GaussianFourier.integrable_cexp_neg_mul_sq_norm_add (V := SpatialCoords) hs' 0 0
+  have h := GaussianFourier.integrable_cexp_neg_mul_sq_norm_add (V := SpatialCoords4) hs' 0 0
   -- Simplify the function: exp(-s‖k‖² + 0 * inner 0 k) = exp(-s‖k‖²)
   simp only [zero_mul, add_zero, inner_zero_left, Complex.ofReal_zero] at h
   -- Now h : Integrable (fun v => exp(-(s:ℂ) * ‖v‖²))
   -- Convert complex exponential to real: exp(-(s:ℂ) * ‖v‖²) for real s is real
-  have h_eq : (fun k_sp : SpatialCoords => Complex.exp (-(s : ℂ) * ‖k_sp‖^2)) =
+  have h_eq : (fun k_sp : SpatialCoords4 => Complex.exp (-(s : ℂ) * ‖k_sp‖^2)) =
       (fun k_sp => (Real.exp (-s * ‖k_sp‖^2) : ℂ)) := by
     ext k_sp
     -- Use Complex.ofReal_exp: (Real.exp x : ℂ) = Complex.exp (x : ℂ)
@@ -3290,7 +3290,7 @@ lemma gaussian_integrable_spatialCoords (s : ℝ) (hs : 0 < s) :
   exact h.re
 
 /-- spatialPart is continuous (projection followed by continuous linear equiv). -/
-lemma continuous_spatialPart : Continuous spatialPart := by
+lemma continuous_spatialPart : Continuous (spatialPart : SpaceTime4 → SpatialCoords4) := by
   unfold spatialPart
   apply (EuclideanSpace.equiv (Fin (STDimension - 1)) ℝ).symm.continuous.comp
   apply continuous_pi
@@ -3301,18 +3301,18 @@ lemma continuous_spatialPart : Continuous spatialPart := by
 /-- **Key Lemma**: The integrand for fubini_ksp_xy_swap is absolutely integrable.
 
     The bound |f(x)| |f(y)| exp(-s‖k_sp‖²) is integrable on
-    SpatialCoords × SpaceTime4 × SpaceTime4 because:
+    SpatialCoords4 × SpaceTime4 × SpaceTime4 because:
     1. ∫_{k_sp} exp(-s‖k_sp‖²) dk_sp = (π/s)^{3/2} < ∞
     2. ∫∫_{x,y} |f(x)| |f(y)| dx dy = ‖f‖₁² < ∞
     3. The product factorizes on independent spaces -/
 lemma fubini_ksp_xy_integrand_integrable (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ4) :
     MeasureTheory.Integrable
-      (fun p : SpatialCoords × SpaceTime4 × SpaceTime4 =>
+      (fun p : SpatialCoords4 × SpaceTime4 × SpaceTime4 =>
         ‖f p.2.1‖ * ‖f p.2.2‖ * Real.exp (-s * ‖p.1‖^2))
       (MeasureTheory.volume.prod (MeasureTheory.volume.prod MeasureTheory.volume)) := by
   -- Factor the integrand
   have h_gauss : MeasureTheory.Integrable
-      (fun k_sp : SpatialCoords => Real.exp (-s * ‖k_sp‖^2)) := gaussian_integrable_spatialCoords s hs
+      (fun k_sp : SpatialCoords4 => Real.exp (-s * ‖k_sp‖^2)) := gaussian_integrable_spatialCoords s hs
   have h_schwartz : MeasureTheory.Integrable
       (fun p : SpaceTime4 × SpaceTime4 => ‖f p.1‖ * ‖f p.2‖)
       (MeasureTheory.volume.prod MeasureTheory.volume) := schwartz_norm_prod_integrable f
@@ -3323,7 +3323,7 @@ lemma fubini_ksp_xy_integrand_integrable (s : ℝ) (hs : 0 < s) (f : TestFunctio
   ext ⟨k_sp, x, y⟩
   ring
 
-/-- The full Fubini integrand is absolutely integrable on SpatialCoords × SpaceTime4 × SpaceTime4.
+/-- The full Fubini integrand is absolutely integrable on SpatialCoords4 × SpaceTime4 × SpaceTime4.
 
     The integrand is:
       f̄(x) · f(y) · √(π/s) · exp(-t²/4s) · exp(-s‖k_sp‖²) · exp(-ik·r)
@@ -3342,7 +3342,7 @@ lemma fubini_ksp_xy_integrand_integrable (s : ℝ) (hs : 0 < s) (f : TestFunctio
     - |exp(pure imaginary)| = 1 -/
 lemma fubini_ksp_xy_full_integrand_integrable (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ4) :
     MeasureTheory.Integrable
-      (fun p : SpatialCoords × SpaceTime4 × SpaceTime4 =>
+      (fun p : SpatialCoords4 × SpaceTime4 × SpaceTime4 =>
         (starRingEnd ℂ (f p.2.1)) * f p.2.2 *
           (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(p.2.1 0) - p.2.2 0)^2 / (4 * s) : ℝ)) *
           Complex.exp (-(s : ℂ) * ‖p.1‖^2) *
@@ -3356,18 +3356,18 @@ lemma fubini_ksp_xy_full_integrand_integrable (s : ℝ) (hs : 0 < s) (f : TestFu
     -- The integrand is Schwartz × const × exp(real) × exp(real) × exp(pure imaginary)
     -- Each factor is continuous, hence the whole product is continuous
     have hf_cont : Continuous f := SchwartzMap.continuous f
-    have h1 : Continuous (fun (p : SpatialCoords × SpaceTime4 × SpaceTime4) => (starRingEnd ℂ) (f p.2.1)) :=
+    have h1 : Continuous (fun (p : SpatialCoords4 × SpaceTime4 × SpaceTime4) => (starRingEnd ℂ) (f p.2.1)) :=
       continuous_star.comp (hf_cont.comp continuous_snd.fst)
-    have h2 : Continuous (fun (p : SpatialCoords × SpaceTime4 × SpaceTime4) => f p.2.2) :=
+    have h2 : Continuous (fun (p : SpatialCoords4 × SpaceTime4 × SpaceTime4) => f p.2.2) :=
       hf_cont.comp continuous_snd.snd
-    have h3 : Continuous (fun (_ : SpatialCoords × SpaceTime4 × SpaceTime4) => (Real.sqrt (π / s) : ℂ)) :=
+    have h3 : Continuous (fun (_ : SpatialCoords4 × SpaceTime4 × SpaceTime4) => (Real.sqrt (π / s) : ℂ)) :=
       continuous_const
     -- Continuous coordinate access for EuclideanSpace (which is PiLp 2)
-    have hcoord0_1 : Continuous (fun (p : SpatialCoords × SpaceTime4 × SpaceTime4) => p.2.1 0) :=
+    have hcoord0_1 : Continuous (fun (p : SpatialCoords4 × SpaceTime4 × SpaceTime4) => p.2.1 0) :=
       (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp continuous_snd.fst
-    have hcoord0_2 : Continuous (fun (p : SpatialCoords × SpaceTime4 × SpaceTime4) => p.2.2 0) :=
+    have hcoord0_2 : Continuous (fun (p : SpatialCoords4 × SpaceTime4 × SpaceTime4) => p.2.2 0) :=
       (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp continuous_snd.snd
-    have h4 : Continuous (fun (p : SpatialCoords × SpaceTime4 × SpaceTime4) =>
+    have h4 : Continuous (fun (p : SpatialCoords4 × SpaceTime4 × SpaceTime4) =>
         Complex.exp (-((-(p.2.1 0) - p.2.2 0)^2 / (4 * s) : ℝ))) := by
       apply Complex.continuous_exp.comp
       apply Continuous.neg
@@ -3375,13 +3375,13 @@ lemma fubini_ksp_xy_full_integrand_integrable (s : ℝ) (hs : 0 < s) (f : TestFu
       apply Continuous.div_const
       apply Continuous.pow
       exact hcoord0_1.neg.sub hcoord0_2
-    have h5 : Continuous (fun (p : SpatialCoords × SpaceTime4 × SpaceTime4) =>
+    have h5 : Continuous (fun (p : SpatialCoords4 × SpaceTime4 × SpaceTime4) =>
         Complex.exp (-(s : ℂ) * ‖p.1‖^2)) := by
       apply Complex.continuous_exp.comp
       apply Continuous.mul continuous_const
       apply Continuous.pow
       exact continuous_ofReal.comp (continuous_norm.comp continuous_fst)
-    have h6 : Continuous (fun (p : SpatialCoords × SpaceTime4 × SpaceTime4) =>
+    have h6 : Continuous (fun (p : SpatialCoords4 × SpaceTime4 × SpaceTime4) =>
         Complex.exp (-Complex.I * spatialDot p.1 (spatialPart p.2.1 - spatialPart p.2.2))) := by
       apply Complex.continuous_exp.comp
       apply Continuous.mul continuous_const
@@ -3390,9 +3390,9 @@ lemma fubini_ksp_xy_full_integrand_integrable (s : ℝ) (hs : 0 < s) (f : TestFu
       unfold spatialDot
       apply continuous_finset_sum
       intro i _
-      have hk_i : Continuous (fun (p : SpatialCoords × SpaceTime4 × SpaceTime4) => p.1 i) :=
+      have hk_i : Continuous (fun (p : SpatialCoords4 × SpaceTime4 × SpaceTime4) => p.1 i) :=
         (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp continuous_fst
-      have hv_i : Continuous (fun (p : SpatialCoords × SpaceTime4 × SpaceTime4) =>
+      have hv_i : Continuous (fun (p : SpatialCoords4 × SpaceTime4 × SpaceTime4) =>
           (spatialPart p.2.1 - spatialPart p.2.2) i) :=
         (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp
           (continuous_spatialPart.comp continuous_snd.fst |>.sub
@@ -3451,10 +3451,10 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ4) :
     ∫ x : SpaceTime4, ∫ y : SpaceTime4,
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
-        ∫ k_sp : SpatialCoords,
+        ∫ k_sp : SpatialCoords4,
           Complex.exp (-(s : ℂ) * ‖k_sp‖^2) *
           Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y)) =
-    ∫ k_sp : SpatialCoords, ∫ x : SpaceTime4, ∫ y : SpaceTime4,
+    ∫ k_sp : SpatialCoords4, ∫ x : SpaceTime4, ∫ y : SpaceTime4,
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
         Complex.exp (-(s : ℂ) * ‖k_sp‖^2) *
@@ -3465,16 +3465,16 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ4) :
   have h_pull : ∀ x y : SpaceTime4,
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
-        ∫ k_sp : SpatialCoords,
+        ∫ k_sp : SpatialCoords4,
           Complex.exp (-(s : ℂ) * ‖k_sp‖^2) *
           Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y)) =
-      ∫ k_sp : SpatialCoords,
+      ∫ k_sp : SpatialCoords4,
         (starRingEnd ℂ (f x)) * f y *
           (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
           Complex.exp (-(s : ℂ) * ‖k_sp‖^2) *
           Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y)) := by
     intro x y
-    have : ∀ r : ℂ, ∀ g : SpatialCoords → ℂ,
+    have : ∀ r : ℂ, ∀ g : SpatialCoords4 → ℂ,
         r * ∫ a, g a = ∫ a, r * g a :=
       fun r g => (MeasureTheory.integral_const_mul r g).symm
     rw [this]
@@ -3493,7 +3493,7 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ4) :
   have h_full := fubini_ksp_xy_full_integrand_integrable s hs f
   -- Step 1: Swap inner (y, k_sp) for each fixed x
   have h_inner : ∀ x : SpaceTime4, MeasureTheory.Integrable
-      (fun p : SpaceTime4 × SpatialCoords =>
+      (fun p : SpaceTime4 × SpatialCoords4 =>
         (starRingEnd ℂ (f x)) * f p.1 *
           (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - p.1 0)^2 / (4 * s) : ℝ)) *
           Complex.exp (-(s : ℂ) * ‖p.2‖^2) *
@@ -3504,10 +3504,10 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ4) :
     -- Bound: |F| ≤ |C| * |f(y)| * 1 * exp(-s‖k‖²) * 1
     -- This is integrable as (const * Schwartz) × Gaussian
     have h_bound : MeasureTheory.Integrable
-        (fun p : SpaceTime4 × SpatialCoords => ‖f x‖ * Real.sqrt (π / s) * ‖f p.1‖ * Real.exp (-s * ‖p.2‖^2))
+        (fun p : SpaceTime4 × SpatialCoords4 => ‖f x‖ * Real.sqrt (π / s) * ‖f p.1‖ * Real.exp (-s * ‖p.2‖^2))
         (MeasureTheory.volume.prod MeasureTheory.volume) := by
       have h1 : MeasureTheory.Integrable (fun y : SpaceTime4 => ‖f y‖) := schwartz_norm_integrable f
-      have h2 : MeasureTheory.Integrable (fun k : SpatialCoords => Real.exp (-s * ‖k‖^2)) :=
+      have h2 : MeasureTheory.Integrable (fun k : SpatialCoords4 => Real.exp (-s * ‖k‖^2)) :=
         gaussian_integrable_spatialCoords s hs
       convert (h1.mul_prod h2).const_mul (‖f x‖ * Real.sqrt (π / s)) using 1
       ext ⟨y, k⟩
@@ -3515,9 +3515,9 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ4) :
     apply MeasureTheory.Integrable.mono' h_bound
     · -- AEStronglyMeasurable: continuous function
       have hf_cont : Continuous f := SchwartzMap.continuous f
-      have hcoord : Continuous (fun (p : SpaceTime4 × SpatialCoords) => p.1 0) :=
+      have hcoord : Continuous (fun (p : SpaceTime4 × SpatialCoords4) => p.1 0) :=
         (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp continuous_fst
-      have h_cont : Continuous (fun p : SpaceTime4 × SpatialCoords =>
+      have h_cont : Continuous (fun p : SpaceTime4 × SpatialCoords4 =>
           (starRingEnd ℂ (f x)) * f p.1 *
             (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - p.1 0)^2 / (4 * s) : ℝ)) *
             Complex.exp (-(s : ℂ) * ‖p.2‖^2) *
@@ -3544,9 +3544,9 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ4) :
           unfold spatialDot
           apply continuous_finset_sum
           intro i _
-          have hk_i : Continuous (fun (p : SpaceTime4 × SpatialCoords) => p.2 i) :=
+          have hk_i : Continuous (fun (p : SpaceTime4 × SpatialCoords4) => p.2 i) :=
             (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp continuous_snd
-          have hv_i : Continuous (fun (p : SpaceTime4 × SpatialCoords) => (spatialPart x - spatialPart p.1) i) :=
+          have hv_i : Continuous (fun (p : SpaceTime4 × SpatialCoords4) => (spatialPart x - spatialPart p.1) i) :=
             (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp
               (continuous_const.sub (continuous_spatialPart.comp continuous_fst))
           exact hk_i.mul hv_i
@@ -3596,7 +3596,7 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ4) :
   conv_lhs => arg 2; ext x; rw [h1 x]
   -- Step 2: Swap (x, k_sp)
   -- Define the full integrand on ((x, k), y)
-  let F : (SpaceTime4 × SpatialCoords) × SpaceTime4 → ℂ := fun ⟨⟨x, k⟩, y⟩ =>
+  let F : (SpaceTime4 × SpatialCoords4) × SpaceTime4 → ℂ := fun ⟨⟨x, k⟩, y⟩ =>
     (starRingEnd ℂ (f x)) * f y *
       (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
       Complex.exp (-(s : ℂ) * ‖k‖^2) *
@@ -3606,17 +3606,17 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ4) :
       ((MeasureTheory.volume.prod MeasureTheory.volume).prod MeasureTheory.volume) := by
     -- Bound: |F((x,k),y)| ≤ √(π/s) * ‖f(x)‖ * ‖f(y)‖ * exp(-s‖k‖²)
     have h_bound : MeasureTheory.Integrable
-        (fun (p : (SpaceTime4 × SpatialCoords) × SpaceTime4) =>
+        (fun (p : (SpaceTime4 × SpatialCoords4) × SpaceTime4) =>
           Real.sqrt (π / s) * ‖f p.1.1‖ * ‖f p.2‖ * Real.exp (-s * ‖p.1.2‖^2))
         ((MeasureTheory.volume.prod MeasureTheory.volume).prod MeasureTheory.volume) := by
       have h1 : MeasureTheory.Integrable (fun x : SpaceTime4 => ‖f x‖) := schwartz_norm_integrable f
-      have h2 : MeasureTheory.Integrable (fun k : SpatialCoords => Real.exp (-s * ‖k‖^2)) :=
+      have h2 : MeasureTheory.Integrable (fun k : SpatialCoords4 => Real.exp (-s * ‖k‖^2)) :=
         gaussian_integrable_spatialCoords s hs
       -- The bound is √(π/s) * ‖f(x)‖ * exp(-s‖k‖²) * ‖f(y)‖
       -- = (√(π/s) * ‖f(x)‖ * exp(-s‖k‖²)) * ‖f(y)‖
       -- Integrable on (x,k) × y
       have h_xk : MeasureTheory.Integrable
-          (fun p : SpaceTime4 × SpatialCoords => Real.sqrt (π / s) * ‖f p.1‖ * Real.exp (-s * ‖p.2‖^2))
+          (fun p : SpaceTime4 × SpatialCoords4 => Real.sqrt (π / s) * ‖f p.1‖ * Real.exp (-s * ‖p.2‖^2))
           (MeasureTheory.volume.prod MeasureTheory.volume) := by
         convert ((h1.mul_prod h2).const_mul (Real.sqrt (π / s))) using 1
         ext ⟨x, k⟩; ring
@@ -3627,15 +3627,15 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ4) :
       -- Show the explicit form of F via simp only
       simp only [F]
       have hf_cont : Continuous f := SchwartzMap.continuous f
-      have h_cont : Continuous (fun p : (SpaceTime4 × SpatialCoords) × SpaceTime4 =>
+      have h_cont : Continuous (fun p : (SpaceTime4 × SpatialCoords4) × SpaceTime4 =>
           (starRingEnd ℂ (f p.1.1)) * f p.2 *
             (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(p.1.1 0) - p.2 0)^2 / (4 * s) : ℝ)) *
             Complex.exp (-(s : ℂ) * ‖p.1.2‖^2) *
             Complex.exp (-Complex.I * spatialDot p.1.2 (spatialPart p.1.1 - spatialPart p.2))) := by
-        have hx0 : Continuous (fun p : (SpaceTime4 × SpatialCoords) × SpaceTime4 => p.1.1 0) :=
+        have hx0 : Continuous (fun p : (SpaceTime4 × SpatialCoords4) × SpaceTime4 => p.1.1 0) :=
           (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp
             (continuous_fst.comp continuous_fst)
-        have hy0 : Continuous (fun p : (SpaceTime4 × SpatialCoords) × SpaceTime4 => p.2 0) :=
+        have hy0 : Continuous (fun p : (SpaceTime4 × SpatialCoords4) × SpaceTime4 => p.2 0) :=
           (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp continuous_snd
         apply Continuous.mul
         · apply Continuous.mul
@@ -3661,10 +3661,10 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ4) :
           unfold spatialDot
           apply continuous_finset_sum
           intro i _
-          have hk_i : Continuous (fun p : (SpaceTime4 × SpatialCoords) × SpaceTime4 => p.1.2 i) :=
+          have hk_i : Continuous (fun p : (SpaceTime4 × SpatialCoords4) × SpaceTime4 => p.1.2 i) :=
             (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp
               (continuous_snd.comp continuous_fst)
-          have hv_i : Continuous (fun p : (SpaceTime4 × SpatialCoords) × SpaceTime4 =>
+          have hv_i : Continuous (fun p : (SpaceTime4 × SpatialCoords4) × SpaceTime4 =>
               (spatialPart p.1.1 - spatialPart p.2) i) :=
             (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp
               ((continuous_spatialPart.comp (continuous_fst.comp continuous_fst)).sub
@@ -3705,7 +3705,7 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ4) :
         _ = Real.sqrt (π / s) * ‖f x‖ * ‖f y‖ * Real.exp (-s * ‖k_sp‖^2) := by ring
   -- Apply Integrable.integral_prod_left to get integrability on (x, k)
   have h_outer : MeasureTheory.Integrable
-      (fun p : SpaceTime4 × SpatialCoords => ∫ y : SpaceTime4,
+      (fun p : SpaceTime4 × SpatialCoords4 => ∫ y : SpaceTime4,
         (starRingEnd ℂ (f p.1)) * f y *
           (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(p.1 0) - y 0)^2 / (4 * s) : ℝ)) *
           Complex.exp (-(s : ℂ) * ‖p.2‖^2) *
