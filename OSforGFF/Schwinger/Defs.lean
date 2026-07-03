@@ -34,6 +34,7 @@ open TopologicalSpace
 noncomputable section
 
 variable {𝕜 : Type} [RCLike 𝕜]
+variable {d : ℕ}
 
 /-! ## Schwinger Functions
 
@@ -54,23 +55,23 @@ S_n(f₁,...,fₙ) = (-i)ⁿ (coefficient of (iJ)ⁿ/n! in Z[J])
 
     This is the fundamental object in constructive QFT - all physics is contained
     in the infinite sequence of Schwinger functions {S_n}_{n=1}^∞. -/
-def SchwingerFunction (dμ_config : ProbabilityMeasure FieldConfiguration4) (n : ℕ)
-  (f : Fin n → TestFunction4) : ℝ :=
+def SchwingerFunction (dμ_config : ProbabilityMeasure (FieldConfiguration d)) (n : ℕ)
+  (f : Fin n → (TestFunction d)) : ℝ :=
   ∫ ω, (∏ i, distributionPairing ω (f i)) ∂dμ_config.toMeasure
 
 /-- The 1-point Schwinger function: the mean field -/
-def SchwingerFunction₁ (dμ_config : ProbabilityMeasure FieldConfiguration4)
-  (f : TestFunction4) : ℝ :=
+def SchwingerFunction₁ (dμ_config : ProbabilityMeasure (FieldConfiguration d))
+  (f : (TestFunction d)) : ℝ :=
   SchwingerFunction dμ_config 1 ![f]
 
 /-- The 2-point Schwinger function: the covariance -/
-def SchwingerFunction₂ (dμ_config : ProbabilityMeasure FieldConfiguration4)
-  (f g : TestFunction4) : ℝ :=
+def SchwingerFunction₂ (dμ_config : ProbabilityMeasure (FieldConfiguration d))
+  (f g : (TestFunction d)) : ℝ :=
   SchwingerFunction dμ_config 2 ![f, g]
 
 
 /-- The Schwinger function equals the GJ mean for n=1 -/
-lemma schwinger_eq_mean (dμ_config : ProbabilityMeasure FieldConfiguration4) (f : TestFunction4) :
+lemma schwinger_eq_mean (dμ_config : ProbabilityMeasure (FieldConfiguration d)) (f : (TestFunction d)) :
   SchwingerFunction₁ dμ_config f = GJMean dμ_config f := by
   unfold SchwingerFunction₁ SchwingerFunction GJMean
   -- The product over a singleton {0} is just the single element f 0 = f
@@ -79,7 +80,7 @@ lemma schwinger_eq_mean (dμ_config : ProbabilityMeasure FieldConfiguration4) (f
   simp
 
 /-- The Schwinger function equals the direct covariance integral for n=2 -/
-lemma schwinger_eq_covariance (dμ_config : ProbabilityMeasure FieldConfiguration4) (f g : TestFunction4) :
+lemma schwinger_eq_covariance (dμ_config : ProbabilityMeasure (FieldConfiguration d)) (f g : (TestFunction d)) :
   SchwingerFunction₂ dμ_config f g = ∫ ω, (distributionPairing ω f) * (distributionPairing ω g) ∂dμ_config.toMeasure := by
   unfold SchwingerFunction₂ SchwingerFunction
   -- The product over {0, 1} expands to (f 0) * (f 1) = f * g
@@ -87,27 +88,27 @@ lemma schwinger_eq_covariance (dμ_config : ProbabilityMeasure FieldConfiguratio
   simp [Fin.prod_univ_two]
 
 /-- For centered measures (zero mean), the 1-point function vanishes -/
-lemma schwinger_vanishes_centered (dμ_config : ProbabilityMeasure FieldConfiguration4)
-  (h_centered : ∀ f : TestFunction4, GJMean dμ_config f = 0) (f : TestFunction4) :
+lemma schwinger_vanishes_centered (dμ_config : ProbabilityMeasure (FieldConfiguration d))
+  (h_centered : ∀ f : (TestFunction d), GJMean dμ_config f = 0) (f : (TestFunction d)) :
   SchwingerFunction₁ dμ_config f = 0 := by
   rw [schwinger_eq_mean]
   exact h_centered f
 
 /-- Complex version of Schwinger functions for complex test functions -/
-def SchwingerFunctionℂ (dμ_config : ProbabilityMeasure FieldConfiguration4) (n : ℕ)
-  (f : Fin n → TestFunctionℂ4) : ℂ :=
+def SchwingerFunctionℂ (dμ_config : ProbabilityMeasure (FieldConfiguration d)) (n : ℕ)
+  (f : Fin n → (TestFunctionℂ d)) : ℂ :=
   ∫ ω, (∏ i, distributionPairingℂ_real ω (f i)) ∂dμ_config.toMeasure
 
 /-- The complex 2-point Schwinger function for complex test functions.
     This is the natural extension of SchwingerFunction₂ to complex test functions. -/
-def SchwingerFunctionℂ₂ (dμ_config : ProbabilityMeasure FieldConfiguration4)
-  (φ ψ : TestFunctionℂ4) : ℂ :=
+def SchwingerFunctionℂ₂ (dμ_config : ProbabilityMeasure (FieldConfiguration d))
+  (φ ψ : (TestFunctionℂ d)) : ℂ :=
   SchwingerFunctionℂ dμ_config 2 ![φ, ψ]
 
 /-- Property that SchwingerFunctionℂ₂ is ℂ-bilinear in both arguments.
     This is a key property for Gaussian measures and essential for OS0 analyticity. -/
-def CovarianceBilinear (dμ_config : ProbabilityMeasure FieldConfiguration4) : Prop :=
-  ∀ (c : ℂ) (φ₁ φ₂ ψ : TestFunctionℂ4),
+def CovarianceBilinear (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
+  ∀ (c : ℂ) (φ₁ φ₂ ψ : (TestFunctionℂ d)),
     SchwingerFunctionℂ₂ dμ_config (c • φ₁) ψ = c * SchwingerFunctionℂ₂ dμ_config φ₁ ψ ∧
     SchwingerFunctionℂ₂ dμ_config (φ₁ + φ₂) ψ = SchwingerFunctionℂ₂ dμ_config φ₁ ψ + SchwingerFunctionℂ₂ dμ_config φ₂ ψ ∧
     SchwingerFunctionℂ₂ dμ_config φ₁ (c • ψ) = c * SchwingerFunctionℂ₂ dμ_config φ₁ ψ ∧
@@ -116,17 +117,17 @@ def CovarianceBilinear (dμ_config : ProbabilityMeasure FieldConfiguration4) : P
 /-- If the product pairing is integrable for all test functions, then the complex
     2-point Schwinger function is ℂ-bilinear in both arguments. -/
 lemma CovarianceBilinear_of_integrable
-  (dμ_config : ProbabilityMeasure FieldConfiguration4)
-  (h_int : ∀ (φ ψ : TestFunctionℂ4),
+  (dμ_config : ProbabilityMeasure (FieldConfiguration d))
+  (h_int : ∀ (φ ψ : (TestFunctionℂ d)),
     Integrable (fun ω => distributionPairingℂ_real ω φ * distributionPairingℂ_real ω ψ)
       dμ_config.toMeasure) :
   CovarianceBilinear dμ_config := by
   classical
   intro c φ₁ φ₂ ψ
   -- Abbreviations for the integrands
-  let u₁ : FieldConfiguration4 → ℂ := fun ω => distributionPairingℂ_real ω φ₁
-  let u₂ : FieldConfiguration4 → ℂ := fun ω => distributionPairingℂ_real ω φ₂
-  let v  : FieldConfiguration4 → ℂ := fun ω => distributionPairingℂ_real ω ψ
+  let u₁ : (FieldConfiguration d) → ℂ := fun ω => distributionPairingℂ_real ω φ₁
+  let u₂ : (FieldConfiguration d) → ℂ := fun ω => distributionPairingℂ_real ω φ₂
+  let v  : (FieldConfiguration d) → ℂ := fun ω => distributionPairingℂ_real ω ψ
   have hint₁ : Integrable (fun ω => u₁ ω * v ω) dμ_config.toMeasure := by simpa using h_int φ₁ ψ
   have hint₂ : Integrable (fun ω => u₂ ω * v ω) dμ_config.toMeasure := by simpa using h_int φ₂ ψ
   have hint₃ : Integrable (fun ω => u₁ ω * u₂ ω) dμ_config.toMeasure := by simpa using h_int φ₁ φ₂
@@ -136,7 +137,7 @@ lemma CovarianceBilinear_of_integrable
       (fun ω => distributionPairingℂ_real ω (c • φ₁) * distributionPairingℂ_real ω ψ)
       = (fun ω => c • (u₁ ω * v ω)) := by
     funext ω
-    have h := pairing_linear_combo ω φ₁ (0 : TestFunctionℂ4) c 0
+    have h := pairing_linear_combo ω φ₁ (0 : (TestFunctionℂ d)) c 0
     -- dp ω (c•φ₁) = c * dp ω φ₁
     have h' : distributionPairingℂ_real ω (c • φ₁) = c * distributionPairingℂ_real ω φ₁ := by
       simpa using h
@@ -194,7 +195,7 @@ lemma CovarianceBilinear_of_integrable
       (fun ω => distributionPairingℂ_real ω φ₁ * distributionPairingℂ_real ω (c • ψ))
       = (fun ω => c • (u₁ ω * v ω)) := by
     funext ω
-    have h := pairing_linear_combo ω ψ (0 : TestFunctionℂ4) c 0
+    have h := pairing_linear_combo ω ψ (0 : (TestFunctionℂ d)) c 0
     have h' : distributionPairingℂ_real ω (c • ψ) = c * distributionPairingℂ_real ω ψ := by
       simpa using h
     rw [h']
@@ -255,9 +256,9 @@ Z[J] = ∫ exp(i⟨ω, J⟩) dμ(ω) = ∑_{n=0}^∞ (i)^n/n! * S_n(J,...,J)
 This approach is more elementary and constructive than functional derivatives.
 -/
 /-- A (centered) Gaussian field measure: the generating functional is an exponential of a quadratic form. -/
-def IsGaussianMeasure (dμ : ProbabilityMeasure FieldConfiguration4) : Prop :=
-  ∃ (Cov : TestFunction4 → TestFunction4 → ℝ),
-    ∀ J : TestFunction4,
+def IsGaussianMeasure (dμ : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
+  ∃ (Cov : (TestFunction d) → (TestFunction d) → ℝ),
+    ∀ J : (TestFunction d),
       GJGeneratingFunctional dμ J = Complex.exp ((-(1 : ℂ) / 2) * (Cov J J : ℂ))
 
 
@@ -404,7 +405,7 @@ as distributions on product spaces. These are needed by other modules.
 -/
 
 /-- The product space of n copies of spacetime -/
-abbrev SpaceTimeProduct (n : ℕ) := (Fin n) → SpaceTime4
+abbrev SpaceTimeProduct (d n : ℕ) := (Fin n) → (SpaceTime d)
 
 /-- Test functions on the n-fold product space -/
-abbrev TestFunctionProduct (n : ℕ) := SchwartzMap (SpaceTimeProduct n) ℝ
+abbrev TestFunctionProduct (d n : ℕ) := SchwartzMap (SpaceTimeProduct d n) ℝ
