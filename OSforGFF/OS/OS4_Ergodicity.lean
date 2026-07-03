@@ -633,7 +633,7 @@ lemma L2_time_average_variance_bound (m : ℝ) [Fact (0 < m)] (f : TestFunction�
     · -- L² norm is constant in s (stationarity from OS2)
       intro s
       simp only [A]
-      have h_0 : timeTranslationDistribution 0 = id := funext timeTranslationDistribution_zero
+      have h_0 : timeTranslationDistribution (d := STDimension) 0 = id := funext timeTranslationDistribution_zero
       simp only [h_0, id_eq]
       exact gff_exp_L2_norm_constant m f s
 

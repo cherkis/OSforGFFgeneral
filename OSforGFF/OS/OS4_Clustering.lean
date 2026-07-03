@@ -546,7 +546,7 @@ lemma time_translation_pairing_duality (s : ℝ) (ω : FieldConfiguration4) (g :
 /-! ### Key Lemmas for Connecting Bilinear Decay to Schwinger Function -/
 
 /-- The time shift constant vector (s, 0, 0, 0) has norm |s|. -/
-lemma timeShiftConst_norm (s : ℝ) : ‖TimeTranslation.timeShiftConst s‖ = |s| := by
+lemma timeShiftConst_norm (s : ℝ) : ‖TimeTranslation.timeShiftConst (d := STDimension) s‖ = |s| := by
   simp only [TimeTranslation.timeShiftConst, EuclideanSpace.norm_eq, STDimension, Fin.sum_univ_four,
     (by decide : (0 : Fin 4).val = 0), (by decide : (1 : Fin 4).val ≠ 0),
     (by decide : (2 : Fin 4).val ≠ 0), (by decide : (3 : Fin 4).val ≠ 0), ↓reduceIte,
