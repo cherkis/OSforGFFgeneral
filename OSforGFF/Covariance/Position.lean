@@ -127,8 +127,8 @@ lemma double_integral_timeReflection
   (_hG : Integrable (fun p : SpaceTime4 × SpaceTime4 => G p.1 p.2) (volume.prod volume)) :
   ∫ x, ∫ y, G (QFT.timeReflection x) (QFT.timeReflection y) ∂volume ∂volume
     = ∫ x, ∫ y, G x y ∂volume ∂volume := by
-  have hmp := QFT.timeReflection_measurePreserving
-  have hmeas := QFT.timeReflectionLE.toMeasurableEquiv.measurableEmbedding
+  have hmp := QFT.timeReflection_measurePreserving (d := STDimension)
+  have hmeas := (QFT.timeReflectionLE (d := STDimension)).toMeasurableEquiv.measurableEmbedding
   -- Apply change of variables for inner integral first
   have h_inner : ∀ x, ∫ y, G x (QFT.timeReflection y) = ∫ y, G x y :=
     fun x => hmp.integral_comp hmeas (fun y => G x y)
@@ -160,7 +160,7 @@ lemma double_integral_timeReflection_covariance
   simp_rw [h_comp]
   -- Now goal is: ∫∫ f(Θx) * C(x,y) * g(y) = ∫∫ f(x) * C(Θx, Θy) * g(Θy)
   -- timeReflection is an involution: Θ ∘ Θ = id
-  have hinv : ∀ z, QFT.timeReflection (QFT.timeReflection z) = z := by
+  have hinv : ∀ z : SpaceTime4, QFT.timeReflection (QFT.timeReflection z) = z := by
     intro z
     exact QFT.timeReflectionLE.left_inv z
   -- Transform RHS using double_integral_timeReflection (in reverse direction)

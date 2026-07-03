@@ -102,8 +102,8 @@ theorem rpInnerProduct_eq_bessel_reflected (f : TestFunctionℂ4) :
   unfold rpInnerProduct freeCovarianceℂ_bilinear
   have h_star : ∀ x, (star f) x = starRingEnd ℂ (f (timeReflection x)) := star_apply f
   simp_rw [h_star]
-  have h_mp := QFT.timeReflection_measurePreserving
-  have h_inv : ∀ x, timeReflection (timeReflection x) = x := fun x => by
+  have h_mp := QFT.timeReflection_measurePreserving (d := STDimension)
+  have h_inv : ∀ x : SpaceTime4, timeReflection (timeReflection x) = x := fun x => by
     simp [timeReflection, Function.update]
   let G := fun x => ∫ y, (starRingEnd ℂ (f (timeReflection x))) *
       (_root_.freeCovariance m x y : ℂ) * f y
