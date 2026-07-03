@@ -86,17 +86,17 @@ theorem spacetimeDecomp_measurePreserving :
 theorem spacetimeDecomp_apply (k : SpaceTime4) :
     spacetimeDecomp k = (k 0, spatialPart k) := rfl
 
-/-- `spacetimeDecomp.symm` equals `spacetimeOfTimeSpace` (from SchwartzProdIntegrable.lean).
+/-- `spacetimeDecomp.symm` equals `spacetimeOfTimeSpace4` (from SchwartzProdIntegrable.lean).
     Both construct a SpaceTime4 point from time t and spatial coordinates v. -/
 lemma spacetimeDecomp_symm_eq_spacetimeOfTimeSpace (t : ℝ) (v : SpatialCoords4) :
-    spacetimeDecomp.symm (t, v) = spacetimeOfTimeSpace t v := by
+    spacetimeDecomp.symm (t, v) = spacetimeOfTimeSpace4 t v := by
   -- Both definitions construct a point x with x 0 = t and x i = v (i-1) for i > 0
   ext i
   cases' i using Fin.cases with j
   · -- i = 0: time component
     have h1 : (spacetimeDecomp.symm (t, v)) 0 = t :=
       congr_arg Prod.fst (spacetimeDecomp.apply_symm_apply (t, v))
-    rw [h1, spacetimeOfTimeSpace_time]
+    rw [h1, spacetimeOfTimeSpace4_time]
   · -- i = j + 1: spatial components
     have h_spatial : spatialPart (spacetimeDecomp.symm (t, v)) = v :=
       congr_arg Prod.snd (spacetimeDecomp.apply_symm_apply (t, v))
@@ -104,7 +104,7 @@ lemma spacetimeDecomp_symm_eq_spacetimeOfTimeSpace (t : ℝ) (v : SpatialCoords4
     have h_spatialPart_def : ∀ (k : SpaceTime4), spatialPart k j = k j.succ := fun _ => rfl
     rw [← h_spatialPart_def (spacetimeDecomp.symm (t, v)), h_spatial]
     symm
-    exact spacetimeOfTimeSpace_spatial t v j
+    exact spacetimeOfTimeSpace4_spatial t v j
 
 /-- The SpaceTime4 norm decomposes into time and spatial parts: ‖k‖² = k₀² + ‖k_sp‖². -/
 lemma spacetime_norm_sq_decompose (k : SpaceTime4) :

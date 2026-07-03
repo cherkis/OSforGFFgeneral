@@ -1916,15 +1916,15 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ4)
   have hG_nonneg : ∀ t, 0 ≤ G t := fun t => spatialNormIntegral_nonneg f t
 
   -- G is measurable (via strongly measurable)
-  -- Uses: f is Schwartz (continuous), so (t, x_sp) ↦ ‖f(spacetimeOfTimeSpace t x_sp)‖ is continuous
+  -- Uses: f is Schwartz (continuous), so (t, x_sp) ↦ ‖f(spacetimeOfTimeSpace4 t x_sp)‖ is continuous
   -- Then t ↦ ∫ x_sp, ‖f(...)‖ is strongly measurable by integral_prod_right
   have hG_meas : Measurable G := by
-    -- G t = ∫ x_sp, ‖f (spacetimeOfTimeSpace t x_sp)‖
-    -- First prove spacetimeOfTimeSpace is continuous as a function of (t, x_sp)
-    have h_sts_cont : Continuous (Function.uncurry spacetimeOfTimeSpace) := by
-      -- spacetimeOfTimeSpace t x = EuclideanSpace.equiv ... |>.symm (Fin.cons t (fun i => x i))
+    -- G t = ∫ x_sp, ‖f (spacetimeOfTimeSpace4 t x_sp)‖
+    -- First prove spacetimeOfTimeSpace4 is continuous as a function of (t, x_sp)
+    have h_sts_cont : Continuous (Function.uncurry spacetimeOfTimeSpace4) := by
+      -- spacetimeOfTimeSpace4 t x = EuclideanSpace.equiv ... |>.symm (Fin.cons t (fun i => x i))
       -- This is a composition of continuous functions
-      unfold spacetimeOfTimeSpace Function.uncurry
+      unfold spacetimeOfTimeSpace4 Function.uncurry
       apply (EuclideanSpace.equiv (Fin 4) ℝ).symm.continuous.comp
       -- Need: Continuous (fun p : ℝ × SpatialCoords3 => Fin.cons p.1 (fun i => p.2 i))
       apply continuous_pi
@@ -1936,16 +1936,16 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ4)
       · -- j = succ j: this is p.2 j
         simp only [Fin.cons_succ]
         exact (PiLp.continuous_apply 2 _ j).comp continuous_snd
-    -- The joint function (t, x_sp) ↦ ‖f(spacetimeOfTimeSpace t x_sp)‖ is continuous
+    -- The joint function (t, x_sp) ↦ ‖f(spacetimeOfTimeSpace4 t x_sp)‖ is continuous
     have h_joint_cont : Continuous (fun p : ℝ × EuclideanSpace ℝ (Fin 3) =>
-        ‖f (spacetimeOfTimeSpace p.1 p.2)‖) := by
+        ‖f (spacetimeOfTimeSpace4 p.1 p.2)‖) := by
       apply Continuous.norm
       exact (SchwartzMap.continuous f).comp h_sts_cont
     -- Continuous implies strongly measurable
     have h_joint_sm : MeasureTheory.StronglyMeasurable (fun p : ℝ × EuclideanSpace ℝ (Fin 3) =>
-        ‖f (spacetimeOfTimeSpace p.1 p.2)‖) := h_joint_cont.stronglyMeasurable
+        ‖f (spacetimeOfTimeSpace4 p.1 p.2)‖) := h_joint_cont.stronglyMeasurable
     -- Use StronglyMeasurable.integral_prod_right
-    have h_sm : MeasureTheory.StronglyMeasurable (fun t => ∫ x_sp, ‖f (spacetimeOfTimeSpace t x_sp)‖) :=
+    have h_sm : MeasureTheory.StronglyMeasurable (fun t => ∫ x_sp, ‖f (spacetimeOfTimeSpace4 t x_sp)‖) :=
       MeasureTheory.StronglyMeasurable.integral_prod_right h_joint_sm
     exact h_sm.measurable
 

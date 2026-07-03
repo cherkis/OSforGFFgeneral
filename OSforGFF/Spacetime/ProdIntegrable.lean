@@ -148,106 +148,157 @@ On the bounded time domain {0 < t₁, 0 < t₂, t₁+t₂ < 1}, this gives integ
 /-- The spatial part of SpaceTime4: ℝ³. -/
 abbrev SpatialCoords3 : Type := EuclideanSpace ℝ (Fin 3)
 
-/-- Decomposition of SpaceTime4 as time × space. -/
-noncomputable def spacetimeOfTimeSpace (t : ℝ) (x : SpatialCoords3) : SpaceTime4 :=
-  EuclideanSpace.equiv (Fin 4) ℝ |>.symm (Fin.cons t (fun i => x i))
+variable {d : ℕ} [Fact (2 ≤ d)]
+
+/-- Decomposition of spacetime as time × space: `(t, x) ↦ (t, x₁, …, x_{d-1})`. -/
+noncomputable def spacetimeOfTimeSpace (t : ℝ) (x : SpatialCoords d) : SpaceTime d :=
+  EuclideanSpace.equiv (Fin d) ℝ |>.symm fun i =>
+    Fin.cons (α := fun _ => ℝ) t (fun j => x j)
+      (Fin.cast (by have h : 2 ≤ d := Fact.out; omega) i)
 
 /-- The time coordinate of spacetimeOfTimeSpace is t. -/
-lemma spacetimeOfTimeSpace_time (t : ℝ) (x : SpatialCoords3) :
+lemma spacetimeOfTimeSpace_time (t : ℝ) (x : SpatialCoords d) :
     (spacetimeOfTimeSpace t x) 0 = t := by
-  simp [spacetimeOfTimeSpace, EuclideanSpace.equiv]
+  obtain ⟨n, rfl⟩ : ∃ n, d = n + 1 := ⟨d - 1, by have h : 2 ≤ d := Fact.out; omega⟩
+  simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, Fin.cast, Fin.cons, Fin.cases]
 
 /-- Access the i-th spatial component of spacetimeOfTimeSpace.
     Mathematical fact: (spacetimeOfTimeSpace t x) (i+1) = x i -/
-lemma spacetimeOfTimeSpace_spatial (t : ℝ) (x : SpatialCoords3) (i : Fin 3) :
-    (spacetimeOfTimeSpace t x) ⟨i.val + 1, Nat.add_lt_add_right i.isLt 1⟩ = x i := by
-  have h : (⟨i.val + 1, Nat.add_lt_add_right i.isLt 1⟩ : Fin 4) = Fin.succ i := rfl
-  simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, h]
+lemma spacetimeOfTimeSpace_spatial (t : ℝ) (x : SpatialCoords d) (i : Fin (d - 1)) :
+    (spacetimeOfTimeSpace t x) ⟨i.val + 1, by have := i.isLt; omega⟩ = x i := rfl
 
 /-- The decomposition: spacetimeOfTimeSpace t x = timeOrigin t + spatialEmbed x.
     This is the key structural fact: (t, x) = (t, 0) + (0, x). -/
-lemma spacetimeOfTimeSpace_decompose (t : ℝ) (x : SpatialCoords3) :
+lemma spacetimeOfTimeSpace_decompose (t : ℝ) (x : SpatialCoords d) :
     spacetimeOfTimeSpace t x = spacetimeOfTimeSpace t 0 + spacetimeOfTimeSpace 0 x := by
+  obtain ⟨n, rfl⟩ : ∃ n, d = n + 1 := ⟨d - 1, by have h : 2 ≤ d := Fact.out; omega⟩
   ext j
   cases' j using Fin.cases with j
   · -- time coordinate
-    simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, Fin.cons_zero]
+    simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, Fin.cast, Fin.cons, Fin.cases]
   · -- spatial coordinates
-    simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, Fin.cons_succ]
+    simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, Fin.cast, Fin.cons, Fin.cases]
 
 /-- Norm comparison: the spacetime norm dominates the spatial norm. -/
-lemma spacetimeOfTimeSpace_norm_ge (t : ℝ) (x : SpatialCoords3) :
+lemma spacetimeOfTimeSpace_norm_ge (t : ℝ) (x : SpatialCoords d) :
     ‖spacetimeOfTimeSpace t x‖ ≥ ‖x‖ := by
   have hsq : ‖spacetimeOfTimeSpace t x‖ ^ 2 = t ^ 2 + ‖x‖ ^ 2 := by
-    rw [EuclideanSpace.norm_sq_eq, Fin.sum_univ_four]
-    -- Note: x.ofLp i = x i definitionally for EuclideanSpace
-    simp only [Real.norm_eq_abs, sq_abs, spacetimeOfTimeSpace_time]
-    conv_lhs => rw [add_assoc, add_assoc]
+    obtain ⟨n, rfl⟩ : ∃ n, d = n + 1 := ⟨d - 1, by have h : 2 ≤ d := Fact.out; omega⟩
+    rw [EuclideanSpace.norm_sq_eq, Fin.sum_univ_succ]
     congr 1
-    rw [EuclideanSpace.norm_sq_eq, Fin.sum_univ_three]
-    simp only [Real.norm_eq_abs, sq_abs]
-    -- Now we need to match spacetimeOfTimeSpace components with x components
-    have h1 : (spacetimeOfTimeSpace t x).ofLp 1 = x 0 := spacetimeOfTimeSpace_spatial t x 0
-    have h2 : (spacetimeOfTimeSpace t x).ofLp 2 = x 1 := spacetimeOfTimeSpace_spatial t x 1
-    have h3 : (spacetimeOfTimeSpace t x).ofLp 3 = x 2 := spacetimeOfTimeSpace_spatial t x 2
-    simp only [h1, h2, h3]
-    ring
+    · rw [show (spacetimeOfTimeSpace t x).ofLp 0 = t from spacetimeOfTimeSpace_time t x]
+      simp [Real.norm_eq_abs, sq_abs]
+    · rw [EuclideanSpace.norm_sq_eq]
+      exact Finset.sum_congr rfl fun j _ => by
+        rw [show (spacetimeOfTimeSpace t x).ofLp j.succ = x j from rfl]
   have hsq_le : ‖x‖ ^ 2 ≤ ‖spacetimeOfTimeSpace t x‖ ^ 2 := by
     rw [hsq]; nlinarith [sq_nonneg t]
   have hx : 0 ≤ ‖x‖ := norm_nonneg _
   have hy : 0 ≤ ‖spacetimeOfTimeSpace t x‖ := norm_nonneg _
   exact (sq_le_sq₀ hx hy).mp hsq_le
 
-/-- Linear embedding of ℝ³ into ℝ⁴ as the spatial subspace at time 0.
-    This maps x ↦ (0, x₀, x₁, x₂), i.e., spacetimeOfTimeSpace 0 x. -/
-noncomputable def spatialEmbed : SpatialCoords3 →ₗ[ℝ] SpaceTime4 where
+/-- Linear embedding of space into spacetime as the spatial subspace at time 0.
+    This maps x ↦ (0, x₁, …, x_{d-1}), i.e., spacetimeOfTimeSpace 0 x. -/
+noncomputable def spatialEmbed : SpatialCoords d →ₗ[ℝ] SpaceTime d where
   toFun := fun x => spacetimeOfTimeSpace 0 x
   map_add' := fun x y => by
+    obtain ⟨n, rfl⟩ : ∃ n, d = n + 1 := ⟨d - 1, by have h : 2 ≤ d := Fact.out; omega⟩
     ext j
     cases' j using Fin.cases with j
-    · simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, Fin.cons_zero]
-    · simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, Fin.cons_succ]
+    · simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, Fin.cast, Fin.cons, Fin.cases]
+    · simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, Fin.cast, Fin.cons, Fin.cases]
   map_smul' := fun r x => by
+    obtain ⟨n, rfl⟩ : ∃ n, d = n + 1 := ⟨d - 1, by have h : 2 ≤ d := Fact.out; omega⟩
     ext j
     cases' j using Fin.cases with j
-    · simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, Fin.cons_zero]
-    · simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, Fin.cons_succ]
+    · simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, Fin.cast, Fin.cons, Fin.cases]
+    · simp [spacetimeOfTimeSpace, EuclideanSpace.equiv, Fin.cast, Fin.cons, Fin.cases]
 
 /-- The spatial embedding is continuous (being linear on finite-dim spaces). -/
-lemma spatialEmbed_continuous : Continuous spatialEmbed :=
+lemma spatialEmbed_continuous : Continuous (spatialEmbed (d := d)) :=
   LinearMap.continuous_of_finiteDimensional spatialEmbed
 
 /-- The spatial embedding as a CLM. -/
-noncomputable def spatialEmbedCLM : SpatialCoords3 →L[ℝ] SpaceTime4 :=
+noncomputable def spatialEmbedCLM : SpatialCoords d →L[ℝ] SpaceTime d :=
   ⟨spatialEmbed, spatialEmbed_continuous⟩
 
-/-- The time-origin point: (t, 0, 0, 0) in SpaceTime4. -/
-noncomputable def timeOrigin (t : ℝ) : SpaceTime4 :=
+/-- The time-origin point `(t, 0, …, 0)`. -/
+noncomputable def timeOrigin (t : ℝ) : SpaceTime d :=
   spacetimeOfTimeSpace t 0
 
 /-- spacetimeOfTimeSpace is continuous in the spatial argument for fixed time. -/
-lemma continuous_spacetimeOfTimeSpace_right (t : ℝ) : Continuous (spacetimeOfTimeSpace t) := by
+lemma continuous_spacetimeOfTimeSpace_right (t : ℝ) :
+    Continuous (spacetimeOfTimeSpace (d := d) t) := by
   -- spacetimeOfTimeSpace t x = timeOrigin t + spatialEmbedCLM x
   -- The first term is constant, the second is a CLM applied to x
-  have h_decompose : ∀ x, spacetimeOfTimeSpace t x = timeOrigin t + spatialEmbedCLM x := by
+  have h_decompose : ∀ x : SpatialCoords d,
+      spacetimeOfTimeSpace t x = timeOrigin t + spatialEmbedCLM x := by
     intro x
     rw [spacetimeOfTimeSpace_decompose]
     rfl
-  have h_cont : Continuous (fun x => timeOrigin t + spatialEmbedCLM x) :=
+  have h_cont : Continuous (fun x : SpatialCoords d => timeOrigin t + spatialEmbedCLM x) :=
     continuous_const.add spatialEmbedCLM.continuous
   exact (continuous_congr h_decompose).mpr h_cont
+
+/-- Decomposition of SpaceTime4 as time × space (spatial slice `ℝ³`). -/
+noncomputable def spacetimeOfTimeSpace4 (t : ℝ) (x : SpatialCoords3) : SpaceTime4 :=
+  EuclideanSpace.equiv (Fin 4) ℝ |>.symm (Fin.cons t (fun i => x i))
+
+/-- The time coordinate of spacetimeOfTimeSpace4 is t. -/
+lemma spacetimeOfTimeSpace4_time (t : ℝ) (x : SpatialCoords3) :
+    (spacetimeOfTimeSpace4 t x) 0 = t := by
+  simp [spacetimeOfTimeSpace4, EuclideanSpace.equiv]
+
+/-- Access the i-th spatial component of spacetimeOfTimeSpace4. -/
+lemma spacetimeOfTimeSpace4_spatial (t : ℝ) (x : SpatialCoords3) (i : Fin 3) :
+    (spacetimeOfTimeSpace4 t x) ⟨i.val + 1, Nat.add_lt_add_right i.isLt 1⟩ = x i := by
+  have h : (⟨i.val + 1, Nat.add_lt_add_right i.isLt 1⟩ : Fin 4) = Fin.succ i := rfl
+  simp [spacetimeOfTimeSpace4, EuclideanSpace.equiv, h]
+
+/-- The decomposition: spacetimeOfTimeSpace4 t x = (t, 0) + (0, x). -/
+lemma spacetimeOfTimeSpace4_decompose (t : ℝ) (x : SpatialCoords3) :
+    spacetimeOfTimeSpace4 t x = spacetimeOfTimeSpace4 t 0 + spacetimeOfTimeSpace4 0 x := by
+  ext j
+  cases' j using Fin.cases with j
+  · simp [spacetimeOfTimeSpace4, EuclideanSpace.equiv, Fin.cons_zero]
+  · simp [spacetimeOfTimeSpace4, EuclideanSpace.equiv, Fin.cons_succ]
+
+/-- Norm comparison: the spacetime norm dominates the spatial norm. -/
+lemma spacetimeOfTimeSpace4_norm_ge (t : ℝ) (x : SpatialCoords3) :
+    ‖spacetimeOfTimeSpace4 t x‖ ≥ ‖x‖ := by
+  have hsq : ‖spacetimeOfTimeSpace4 t x‖ ^ 2 = t ^ 2 + ‖x‖ ^ 2 := by
+    rw [EuclideanSpace.norm_sq_eq, Fin.sum_univ_four]
+    simp only [Real.norm_eq_abs, sq_abs, spacetimeOfTimeSpace4_time]
+    conv_lhs => rw [add_assoc, add_assoc]
+    congr 1
+    rw [EuclideanSpace.norm_sq_eq, Fin.sum_univ_three]
+    simp only [Real.norm_eq_abs, sq_abs]
+    have h1 : (spacetimeOfTimeSpace4 t x).ofLp 1 = x 0 := spacetimeOfTimeSpace4_spatial t x 0
+    have h2 : (spacetimeOfTimeSpace4 t x).ofLp 2 = x 1 := spacetimeOfTimeSpace4_spatial t x 1
+    have h3 : (spacetimeOfTimeSpace4 t x).ofLp 3 = x 2 := spacetimeOfTimeSpace4_spatial t x 2
+    simp only [h1, h2, h3]
+    ring
+  have hsq_le : ‖x‖ ^ 2 ≤ ‖spacetimeOfTimeSpace4 t x‖ ^ 2 := by
+    rw [hsq]; nlinarith [sq_nonneg t]
+  have hx : 0 ≤ ‖x‖ := norm_nonneg _
+  have hy : 0 ≤ ‖spacetimeOfTimeSpace4 t x‖ := norm_nonneg _
+  exact (sq_le_sq₀ hx hy).mp hsq_le
+
+/-- spacetimeOfTimeSpace4 is continuous in the spatial argument for fixed time. -/
+lemma continuous_spacetimeOfTimeSpace4_right (t : ℝ) : Continuous (spacetimeOfTimeSpace4 t) :=
+  continuous_spacetimeOfTimeSpace_right (d := STDimension) t
 
 /-- A Schwartz function restricted to a fixed time slice is integrable over ℝ³.
     Uses decay transfer: 4D Schwartz decay implies 3D integrability via norm comparison. -/
 lemma schwartz_time_slice_integrable (f : TestFunctionℂ4) (t : ℝ) :
-    Integrable (fun x : SpatialCoords3 => f (spacetimeOfTimeSpace t x)) volume := by
+    Integrable (fun x : SpatialCoords3 => f (spacetimeOfTimeSpace4 t x)) volume := by
   -- Strategy: Show the function has rapid decay and use integrability of decay functions
   --
   -- Key facts:
   -- 1. f is Schwartz, so |f(y)| ≤ C/(1 + ‖y‖)^N for any N
-  -- 2. spacetimeOfTimeSpace t x = (t, x₁, x₂, x₃), so ‖spacetimeOfTimeSpace t x‖² = t² + ‖x‖²
-  -- 3. For fixed t, ‖spacetimeOfTimeSpace t x‖ ≥ ‖x‖
-  -- 4. So |f(spacetimeOfTimeSpace t x)| ≤ C/(1 + ‖x‖)^N which is integrable on ℝ³ for N > 3
+  -- 2. spacetimeOfTimeSpace4 t x = (t, x₁, x₂, x₃), so ‖spacetimeOfTimeSpace4 t x‖² = t² + ‖x‖²
+  -- 3. For fixed t, ‖spacetimeOfTimeSpace4 t x‖ ≥ ‖x‖
+  -- 4. So |f(spacetimeOfTimeSpace4 t x)| ≤ C/(1 + ‖x‖)^N which is integrable on ℝ³ for N > 3
   --
   -- Use Schwartz decay bound from FunctionalAnalysis
   have hST_dim : Module.finrank ℝ SpaceTime4 < 5 := by
@@ -273,45 +324,45 @@ lemma schwartz_time_slice_integrable (f : TestFunctionℂ4) (t : ℝ) :
     simp_rw [h_eq]
     exact h_int.const_mul C
 
-  -- Pointwise bound: |f(spacetimeOfTimeSpace t x)| ≤ C/(1+‖spacetimeOfTimeSpace t x‖)^5 ≤ C/(1+‖x‖)^5
+  -- Pointwise bound: |f(spacetimeOfTimeSpace4 t x)| ≤ C/(1+‖spacetimeOfTimeSpace4 t x‖)^5 ≤ C/(1+‖x‖)^5
   have h_bound : ∀ x : SpatialCoords3,
-      ‖f (spacetimeOfTimeSpace t x)‖ ≤ C / (1 + ‖x‖)^5 := by
+      ‖f (spacetimeOfTimeSpace4 t x)‖ ≤ C / (1 + ‖x‖)^5 := by
     intro x
     -- Apply Schwartz decay
-    have h1 := hf_decay (spacetimeOfTimeSpace t x)
-    -- Need: 1 + ‖spacetimeOfTimeSpace t x‖ ≥ 1 + ‖x‖
-    -- This follows from ‖spacetimeOfTimeSpace t x‖ ≥ ‖x‖.
-    have h_norm_ge : ‖spacetimeOfTimeSpace t x‖ ≥ ‖x‖ :=
-      spacetimeOfTimeSpace_norm_ge t x
-    have h_bracket_ge : 1 + ‖spacetimeOfTimeSpace t x‖ ≥ 1 + ‖x‖ := by linarith
+    have h1 := hf_decay (spacetimeOfTimeSpace4 t x)
+    -- Need: 1 + ‖spacetimeOfTimeSpace4 t x‖ ≥ 1 + ‖x‖
+    -- This follows from ‖spacetimeOfTimeSpace4 t x‖ ≥ ‖x‖.
+    have h_norm_ge : ‖spacetimeOfTimeSpace4 t x‖ ≥ ‖x‖ :=
+      spacetimeOfTimeSpace4_norm_ge t x
+    have h_bracket_ge : 1 + ‖spacetimeOfTimeSpace4 t x‖ ≥ 1 + ‖x‖ := by linarith
     have h_bracket_pos : 0 < 1 + ‖x‖ := by linarith [norm_nonneg x]
-    have h_pow_le : (1 + ‖x‖)^5 ≤ (1 + ‖spacetimeOfTimeSpace t x‖)^5 := by
+    have h_pow_le : (1 + ‖x‖)^5 ≤ (1 + ‖spacetimeOfTimeSpace4 t x‖)^5 := by
       apply pow_le_pow_left₀ (by linarith [norm_nonneg x]) h_bracket_ge
-    calc ‖f (spacetimeOfTimeSpace t x)‖
-        ≤ C / (1 + ‖spacetimeOfTimeSpace t x‖)^5 := h1
+    calc ‖f (spacetimeOfTimeSpace4 t x)‖
+        ≤ C / (1 + ‖spacetimeOfTimeSpace4 t x‖)^5 := h1
       _ ≤ C / (1 + ‖x‖)^5 := by
           apply div_le_div_of_nonneg_left (le_of_lt hC_pos) (by positivity) h_pow_le
 
   -- Apply Integrable.mono
   apply Integrable.mono h_dom_integrable
-    (f.continuous.comp (continuous_spacetimeOfTimeSpace_right t)).aestronglyMeasurable
+    (f.continuous.comp (continuous_spacetimeOfTimeSpace4_right t)).aestronglyMeasurable
   filter_upwards with x
   rw [Real.norm_of_nonneg (by positivity : 0 ≤ C / (1 + ‖x‖)^5)]
   exact h_bound x
 
 /-- The spatial integral G(t) = ∫_{ℝ³} ‖f(t, x)‖ dx. -/
 noncomputable def spatialNormIntegral (f : TestFunctionℂ4) (t : ℝ) : ℝ :=
-  ∫ x : SpatialCoords3, ‖f (spacetimeOfTimeSpace t x)‖
+  ∫ x : SpatialCoords3, ‖f (spacetimeOfTimeSpace4 t x)‖
 
 /-- G(t) = 0 for t ≤ 0 when f vanishes on {t ≤ 0}. -/
 lemma spatialNormIntegral_zero_of_neg (f : TestFunctionℂ4)
     (hf_supp : ∀ x : SpaceTime4, x 0 ≤ 0 → f x = 0) (t : ℝ) (ht : t ≤ 0) :
     spatialNormIntegral f t = 0 := by
   simp only [spatialNormIntegral]
-  have h_zero : ∀ x : SpatialCoords3, ‖f (spacetimeOfTimeSpace t x)‖ = 0 := by
+  have h_zero : ∀ x : SpatialCoords3, ‖f (spacetimeOfTimeSpace4 t x)‖ = 0 := by
     intro x
-    have h : (spacetimeOfTimeSpace t x) 0 ≤ 0 := by
-      rw [spacetimeOfTimeSpace_time]; exact ht
+    have h : (spacetimeOfTimeSpace4 t x) 0 ≤ 0 := by
+      rw [spacetimeOfTimeSpace4_time]; exact ht
     simp [hf_supp _ h]
   simp [h_zero]
 
@@ -348,7 +399,7 @@ lemma spatialNormIntegral_nonneg (f : TestFunctionℂ4) (t : ℝ) :
 lemma schwartz_vanishing_ftc_decay (f : TestFunctionℂ4)
     (hf_supp : ∀ x : SpaceTime4, x 0 ≤ 0 → f x = 0) :
     ∃ C : ℝ, 0 < C ∧ ∀ (t : ℝ) (_ht : 0 < t) (x_sp : SpatialCoords3),
-      ‖f (spacetimeOfTimeSpace t x_sp)‖ ≤ C * t / (1 + ‖x_sp‖)^4 := by
+      ‖f (spacetimeOfTimeSpace4 t x_sp)‖ ≤ C * t / (1 + ‖x_sp‖)^4 := by
   -- Step 1: Get derivative bounds from Schwartz decay
   -- f.decay' 4 1 gives: ‖y‖^4 * ‖iteratedFDeriv ℝ 1 f y‖ ≤ C_decay (for large ‖y‖)
   -- f.decay' 0 1 gives: ‖iteratedFDeriv ℝ 1 f y‖ ≤ C_unif (uniform bound for all y)
@@ -433,92 +484,92 @@ lemma schwartz_vanishing_ftc_decay (f : TestFunctionℂ4)
   -- Introduce t and x_sp
   intro t ht x_sp
 
-  -- Step 2: Segment bound - on path from (0, x_sp) to (t, x_sp), use spacetimeOfTimeSpace_norm_ge
+  -- Step 2: Segment bound - on path from (0, x_sp) to (t, x_sp), use spacetimeOfTimeSpace4_norm_ge
   -- ‖(s, x_sp)‖² = s² + ‖x_sp‖² ≥ ‖x_sp‖², so (1+‖(s,x_sp)‖)^4 ≥ (1+‖x_sp‖)^4
   -- Therefore ‖fderiv f (s, x_sp)‖ ≤ C / (1+‖x_sp‖)^4 for all s ∈ [0,t]
   have h_fderiv_segment : ∀ s : ℝ, 0 ≤ s → s ≤ t →
-      ‖fderiv ℝ f (spacetimeOfTimeSpace s x_sp)‖ ≤ C / (1 + ‖x_sp‖)^4 := by
+      ‖fderiv ℝ f (spacetimeOfTimeSpace4 s x_sp)‖ ≤ C / (1 + ‖x_sp‖)^4 := by
     intros s _ _
-    have h_decay := h_fderiv_decay (spacetimeOfTimeSpace s x_sp)
-    have h_norm_ge : ‖spacetimeOfTimeSpace s x_sp‖ ≥ ‖x_sp‖ := spacetimeOfTimeSpace_norm_ge s x_sp
+    have h_decay := h_fderiv_decay (spacetimeOfTimeSpace4 s x_sp)
+    have h_norm_ge : ‖spacetimeOfTimeSpace4 s x_sp‖ ≥ ‖x_sp‖ := spacetimeOfTimeSpace4_norm_ge s x_sp
     have h1x : 0 < 1 + ‖x_sp‖ := by linarith [norm_nonneg x_sp]
     have h1x_pow : 0 < (1 + ‖x_sp‖)^4 := pow_pos h1x 4
-    have h_bracket : (1 + ‖spacetimeOfTimeSpace s x_sp‖)^4 ≥ (1 + ‖x_sp‖)^4 := by
+    have h_bracket : (1 + ‖spacetimeOfTimeSpace4 s x_sp‖)^4 ≥ (1 + ‖x_sp‖)^4 := by
       apply pow_le_pow_left₀ (by linarith [norm_nonneg x_sp])
       linarith [h_norm_ge]
-    calc ‖fderiv ℝ f (spacetimeOfTimeSpace s x_sp)‖
-        ≤ C / (1 + ‖spacetimeOfTimeSpace s x_sp‖)^4 := h_decay
+    calc ‖fderiv ℝ f (spacetimeOfTimeSpace4 s x_sp)‖
+        ≤ C / (1 + ‖spacetimeOfTimeSpace4 s x_sp‖)^4 := h_decay
       _ ≤ C / (1 + ‖x_sp‖)^4 := by
           apply div_le_div_of_nonneg_left (le_of_lt hC_pos) h1x_pow h_bracket
 
   -- Step 3: Apply 1D MVT
-  -- F(s) = f(spacetimeOfTimeSpace s x_sp), path is linear: ... + s • e₀
+  -- F(s) = f(spacetimeOfTimeSpace4 s x_sp), path is linear: ... + s • e₀
   -- F'(s) = (fderiv f ...) e₀, and ‖F'(s)‖ ≤ ‖fderiv f ...‖ since ‖e₀‖ = 1
   -- F(0) = 0 by hf_supp, so ‖F(t)‖ ≤ C/(1+‖x_sp‖)^4 * t
 
-  let x := spacetimeOfTimeSpace t x_sp
-  let x₀_bdy := spacetimeOfTimeSpace 0 x_sp
+  let x := spacetimeOfTimeSpace4 t x_sp
+  let x₀_bdy := spacetimeOfTimeSpace4 0 x_sp
 
-  have hf_bdy : f x₀_bdy = 0 := hf_supp x₀_bdy (by rw [spacetimeOfTimeSpace_time])
+  have hf_bdy : f x₀_bdy = 0 := hf_supp x₀_bdy (by rw [spacetimeOfTimeSpace4_time])
 
   have h1x : 0 < 1 + ‖x_sp‖ := by linarith [norm_nonneg x_sp]
   have h1x_pow : 0 < (1 + ‖x_sp‖)^4 := pow_pos h1x 4
 
   -- Compute ‖x - x₀_bdy‖ = t
   have h_dist : ‖x - x₀_bdy‖ = t := by
-    -- x - x₀_bdy = spacetimeOfTimeSpace t x_sp - spacetimeOfTimeSpace 0 x_sp
-    --            = spacetimeOfTimeSpace t 0 (the time component)
-    have h_diff : x - x₀_bdy = spacetimeOfTimeSpace t 0 := by
+    -- x - x₀_bdy = spacetimeOfTimeSpace4 t x_sp - spacetimeOfTimeSpace4 0 x_sp
+    --            = spacetimeOfTimeSpace4 t 0 (the time component)
+    have h_diff : x - x₀_bdy = spacetimeOfTimeSpace4 t 0 := by
       simp only [x, x₀_bdy]
-      rw [spacetimeOfTimeSpace_decompose t x_sp, spacetimeOfTimeSpace_decompose 0 x_sp]
+      rw [spacetimeOfTimeSpace4_decompose t x_sp, spacetimeOfTimeSpace4_decompose 0 x_sp]
       abel
-    -- ‖spacetimeOfTimeSpace t 0‖ = |t| = t (since ht : 0 < t)
-    -- spacetimeOfTimeSpace t 0 is the point (t, 0, 0, 0)
+    -- ‖spacetimeOfTimeSpace4 t 0‖ = |t| = t (since ht : 0 < t)
+    -- spacetimeOfTimeSpace4 t 0 is the point (t, 0, 0, 0)
     rw [h_diff]
     -- Compute the norm directly using EuclideanSpace.norm_sq_eq
-    have hsq : ‖spacetimeOfTimeSpace t 0‖^2 = t^2 := by
+    have hsq : ‖spacetimeOfTimeSpace4 t 0‖^2 = t^2 := by
       rw [EuclideanSpace.norm_sq_eq, Fin.sum_univ_four]
       -- The components are: time = t, spatial = 0
-      have h0 : (spacetimeOfTimeSpace t 0 : SpaceTime4).ofLp 0 = t := spacetimeOfTimeSpace_time t 0
-      have h1 : (spacetimeOfTimeSpace t 0 : SpaceTime4).ofLp 1 = 0 := spacetimeOfTimeSpace_spatial t 0 0
-      have h2 : (spacetimeOfTimeSpace t 0 : SpaceTime4).ofLp 2 = 0 := spacetimeOfTimeSpace_spatial t 0 1
-      have h3 : (spacetimeOfTimeSpace t 0 : SpaceTime4).ofLp 3 = 0 := spacetimeOfTimeSpace_spatial t 0 2
+      have h0 : (spacetimeOfTimeSpace4 t 0 : SpaceTime4).ofLp 0 = t := spacetimeOfTimeSpace4_time t 0
+      have h1 : (spacetimeOfTimeSpace4 t 0 : SpaceTime4).ofLp 1 = 0 := spacetimeOfTimeSpace4_spatial t 0 0
+      have h2 : (spacetimeOfTimeSpace4 t 0 : SpaceTime4).ofLp 2 = 0 := spacetimeOfTimeSpace4_spatial t 0 1
+      have h3 : (spacetimeOfTimeSpace4 t 0 : SpaceTime4).ofLp 3 = 0 := spacetimeOfTimeSpace4_spatial t 0 2
       simp only [h0, h1, h2, h3, Real.norm_eq_abs, abs_zero, sq_abs]
       ring
-    have hnorm : 0 ≤ ‖spacetimeOfTimeSpace t 0‖ := norm_nonneg _
-    nlinarith [sq_nonneg ‖spacetimeOfTimeSpace t 0‖, sq_nonneg t, hsq, ht]
+    have hnorm : 0 ≤ ‖spacetimeOfTimeSpace4 t 0‖ := norm_nonneg _
+    nlinarith [sq_nonneg ‖spacetimeOfTimeSpace4 t 0‖, sq_nonneg t, hsq, ht]
 
-  -- Apply 1D MVT via parameterization F(s) = f(spacetimeOfTimeSpace s x_sp)
+  -- Apply 1D MVT via parameterization F(s) = f(spacetimeOfTimeSpace4 s x_sp)
   -- F : ℝ → ℂ is differentiable, and we have ‖F'(s)‖ ≤ C/(1+‖x_sp‖)^4 on [0,t]
 
   -- Define F
-  let F := fun s : ℝ => f (spacetimeOfTimeSpace s x_sp)
+  let F := fun s : ℝ => f (spacetimeOfTimeSpace4 s x_sp)
 
   -- F is differentiable (composition of Schwartz f with smooth path)
-  -- Path is s ↦ spacetimeOfTimeSpace s x_sp, which is smooth (affine in s)
-  -- Proof: spacetimeOfTimeSpace s x_sp = spacetimeOfTimeSpace 0 x_sp + s • e₀
+  -- Path is s ↦ spacetimeOfTimeSpace4 s x_sp, which is smooth (affine in s)
+  -- Proof: spacetimeOfTimeSpace4 s x_sp = spacetimeOfTimeSpace4 0 x_sp + s • e₀
   -- where e₀ = (1,0,0,0). This is affine, hence differentiable.
   -- f is Schwartz hence C^∞, so F = f ∘ path is differentiable.
   -- Define the time unit vector e₀ = (1, 0, 0, 0)
   let e₀ : SpaceTime4 := EuclideanSpace.single 0 1
 
-  -- Key lemma: spacetimeOfTimeSpace t 0 = t • e₀
-  have h_time_smul : ∀ s : ℝ, spacetimeOfTimeSpace s 0 = s • e₀ := by
+  -- Key lemma: spacetimeOfTimeSpace4 t 0 = t • e₀
+  have h_time_smul : ∀ s : ℝ, spacetimeOfTimeSpace4 s 0 = s • e₀ := by
     intro s
     ext j
     cases' j using Fin.cases with j
-    · -- Time component: (spacetimeOfTimeSpace s 0) 0 = s, (s • e₀) 0 = s * 1 = s
-      simp [spacetimeOfTimeSpace, e₀, EuclideanSpace.equiv, Fin.cons_zero,
+    · -- Time component: (spacetimeOfTimeSpace4 s 0) 0 = s, (s • e₀) 0 = s * 1 = s
+      simp [spacetimeOfTimeSpace4, e₀, EuclideanSpace.equiv, Fin.cons_zero,
             EuclideanSpace.single_apply, smul_eq_mul, mul_one]
-    · -- Spatial components: (spacetimeOfTimeSpace s 0) (j+1) = 0, (s • e₀) (j+1) = s * 0 = 0
+    · -- Spatial components: (spacetimeOfTimeSpace4 s 0) (j+1) = 0, (s • e₀) (j+1) = s * 0 = 0
       have hne : Fin.succ j ≠ 0 := Fin.succ_ne_zero j
-      simp [spacetimeOfTimeSpace, e₀, EuclideanSpace.equiv, Fin.cons_succ,
+      simp [spacetimeOfTimeSpace4, e₀, EuclideanSpace.equiv, Fin.cons_succ,
             EuclideanSpace.single_apply, hne, smul_eq_mul, mul_zero]
 
-  -- The path s ↦ spacetimeOfTimeSpace s x_sp equals spacetimeOfTimeSpace 0 x_sp + s • e₀
-  have h_path_eq : ∀ s : ℝ, spacetimeOfTimeSpace s x_sp = spacetimeOfTimeSpace 0 x_sp + s • e₀ := by
+  -- The path s ↦ spacetimeOfTimeSpace4 s x_sp equals spacetimeOfTimeSpace4 0 x_sp + s • e₀
+  have h_path_eq : ∀ s : ℝ, spacetimeOfTimeSpace4 s x_sp = spacetimeOfTimeSpace4 0 x_sp + s • e₀ := by
     intro s
-    rw [spacetimeOfTimeSpace_decompose s x_sp, h_time_smul, add_comm]
+    rw [spacetimeOfTimeSpace4_decompose s x_sp, h_time_smul, add_comm]
 
   have h_F_diff : DifferentiableOn ℝ F (Set.Icc 0 t) := by
     intro s _
@@ -526,16 +577,16 @@ lemma schwartz_vanishing_ftc_decay (f : TestFunctionℂ4)
     -- Use that f is differentiable and the path is differentiable
     apply DifferentiableAt.differentiableWithinAt
     apply f.differentiableAt.comp
-    -- The path s ↦ spacetimeOfTimeSpace s x_sp is differentiable
-    -- It equals spacetimeOfTimeSpace 0 x_sp + s • e₀ (affine in s)
-    have h_eq : (fun s => spacetimeOfTimeSpace s x_sp) =
-                (fun s => spacetimeOfTimeSpace 0 x_sp + s • e₀) := funext h_path_eq
+    -- The path s ↦ spacetimeOfTimeSpace4 s x_sp is differentiable
+    -- It equals spacetimeOfTimeSpace4 0 x_sp + s • e₀ (affine in s)
+    have h_eq : (fun s => spacetimeOfTimeSpace4 s x_sp) =
+                (fun s => spacetimeOfTimeSpace4 0 x_sp + s • e₀) := funext h_path_eq
     rw [h_eq]
     -- Constant + linear is differentiable
     exact (differentiable_const _).add (differentiable_id.smul_const e₀) |>.differentiableAt
 
   -- Bound on the derivative: ‖derivWithin F [0,t] s‖ ≤ C/(1+‖x_sp‖)^4
-  -- The derivative is F'(s) = (fderiv f (spacetimeOfTimeSpace s x_sp)) (e₀)
+  -- The derivative is F'(s) = (fderiv f (spacetimeOfTimeSpace4 s x_sp)) (e₀)
   -- where e₀ = (1,0,0,0) is the time direction with ‖e₀‖ = 1
   -- So ‖F'(s)‖ ≤ ‖fderiv f ...‖ ≤ C/(1+‖x_sp‖)^4
   -- ‖e₀‖ = 1
@@ -548,14 +599,14 @@ lemma schwartz_vanishing_ftc_decay (f : TestFunctionℂ4)
     intro s hs
     have h_seg := h_fderiv_segment s hs.1 (le_of_lt hs.2)
     -- Step 1: Compute the derivative of the path
-    -- The path is s ↦ spacetimeOfTimeSpace 0 x_sp + s • e₀
+    -- The path is s ↦ spacetimeOfTimeSpace4 0 x_sp + s • e₀
     -- Its derivative is the CLM r ↦ r • e₀
-    have h_path_diff : HasDerivAt (fun s => spacetimeOfTimeSpace s x_sp) e₀ s := by
-      have h_eq : (fun s => spacetimeOfTimeSpace s x_sp) =
-                  (fun s => spacetimeOfTimeSpace 0 x_sp + s • e₀) := funext h_path_eq
+    have h_path_diff : HasDerivAt (fun s => spacetimeOfTimeSpace4 s x_sp) e₀ s := by
+      have h_eq : (fun s => spacetimeOfTimeSpace4 s x_sp) =
+                  (fun s => spacetimeOfTimeSpace4 0 x_sp + s • e₀) := funext h_path_eq
       rw [h_eq]
       -- Derivative of (const + s • e₀) is 0 + 1 • e₀ = e₀
-      have h1 : HasDerivAt (fun _ : ℝ => spacetimeOfTimeSpace 0 x_sp) 0 s := hasDerivAt_const s _
+      have h1 : HasDerivAt (fun _ : ℝ => spacetimeOfTimeSpace4 0 x_sp) 0 s := hasDerivAt_const s _
       have h2 : HasDerivAt (fun r : ℝ => r • e₀) ((1 : ℝ) • e₀) s := hasDerivAt_id s |>.smul_const e₀
       convert h1.add h2 using 1
       simp only [zero_add, one_smul]
@@ -563,22 +614,22 @@ lemma schwartz_vanishing_ftc_decay (f : TestFunctionℂ4)
     -- Step 2: Chain rule for F = f ∘ path
     -- derivWithin F I s = (fderiv f (path s)) (path' s) = (fderiv f ...) e₀
     have h_in_Icc : s ∈ Set.Icc 0 t := ⟨hs.1, le_of_lt hs.2⟩
-    have h_F_deriv : HasDerivWithinAt F ((fderiv ℝ f (spacetimeOfTimeSpace s x_sp)) e₀)
+    have h_F_deriv : HasDerivWithinAt F ((fderiv ℝ f (spacetimeOfTimeSpace4 s x_sp)) e₀)
                                        (Set.Icc 0 t) s := by
       apply HasFDerivAt.comp_hasDerivWithinAt s
       · exact f.differentiableAt.hasFDerivAt
       · exact h_path_diff.hasDerivWithinAt
 
     -- Step 3: derivWithin equals the computed derivative
-    have h_deriv_eq : derivWithin F (Set.Icc 0 t) s = (fderiv ℝ f (spacetimeOfTimeSpace s x_sp)) e₀ :=
+    have h_deriv_eq : derivWithin F (Set.Icc 0 t) s = (fderiv ℝ f (spacetimeOfTimeSpace4 s x_sp)) e₀ :=
       h_F_deriv.derivWithin (uniqueDiffOn_Icc (by linarith : (0 : ℝ) < t) s h_in_Icc)
 
     -- Step 4: Bound using operator norm
     rw [h_deriv_eq]
-    calc ‖(fderiv ℝ f (spacetimeOfTimeSpace s x_sp)) e₀‖
-        ≤ ‖fderiv ℝ f (spacetimeOfTimeSpace s x_sp)‖ * ‖e₀‖ :=
+    calc ‖(fderiv ℝ f (spacetimeOfTimeSpace4 s x_sp)) e₀‖
+        ≤ ‖fderiv ℝ f (spacetimeOfTimeSpace4 s x_sp)‖ * ‖e₀‖ :=
           ContinuousLinearMap.le_opNorm _ _
-      _ = ‖fderiv ℝ f (spacetimeOfTimeSpace s x_sp)‖ := by rw [h_e₀_norm, mul_one]
+      _ = ‖fderiv ℝ f (spacetimeOfTimeSpace4 s x_sp)‖ := by rw [h_e₀_norm, mul_one]
       _ ≤ C / (1 + ‖x_sp‖)^4 := h_seg
 
   -- Apply norm_image_sub_le_of_norm_deriv_le_segment
@@ -624,7 +675,7 @@ theorem spatialNormIntegral_linear_bound (f : TestFunctionℂ4)
   -- Step 4: Apply integral monotonicity
   -- First, show the integrand is bounded pointwise
   have h_pointwise : ∀ x : SpatialCoords3,
-      ‖f (spacetimeOfTimeSpace t x)‖ ≤ C_pt * t / (1 + ‖x‖)^4 := fun x => h_pt_bound t ht x
+      ‖f (spacetimeOfTimeSpace4 t x)‖ ≤ C_pt * t / (1 + ‖x‖)^4 := fun x => h_pt_bound t ht x
 
   -- The bound function is integrable (scale of polynomial_decay_integrable_3d)
   have h_bound_int : Integrable (fun x : SpatialCoords3 => C_pt * t / (1 + ‖x‖)^4) volume := by
@@ -637,31 +688,31 @@ theorem spatialNormIntegral_linear_bound (f : TestFunctionℂ4)
     exact h1.const_mul (C_pt * t)
 
   -- The integrand ‖f ...‖ is integrable (bounded by integrable function)
-  have h_f_int : Integrable (fun x : SpatialCoords3 => ‖f (spacetimeOfTimeSpace t x)‖) volume := by
+  have h_f_int : Integrable (fun x : SpatialCoords3 => ‖f (spacetimeOfTimeSpace4 t x)‖) volume := by
     -- Use Integrable.mono: need AEStronglyMeasurable and pointwise norm bound
     apply h_bound_int.mono
     · -- AEStronglyMeasurable of norm of Schwartz composition
-      exact (f.continuous.comp (continuous_spacetimeOfTimeSpace_right t)).aestronglyMeasurable.norm
+      exact (f.continuous.comp (continuous_spacetimeOfTimeSpace4_right t)).aestronglyMeasurable.norm
     · -- ‖‖f(...)‖‖ = ‖f(...)‖ ≤ bound
       filter_upwards with x
       rw [norm_norm]
       have h1x : 0 < 1 + ‖x‖ := by linarith [norm_nonneg x]
       have h1x_pow : 0 < (1 + ‖x‖)^4 := pow_pos h1x 4
       have hCt : 0 ≤ C_pt * t := mul_nonneg (le_of_lt hC_pt_pos) (le_of_lt ht)
-      calc ‖f (spacetimeOfTimeSpace t x)‖
+      calc ‖f (spacetimeOfTimeSpace4 t x)‖
           ≤ C_pt * t / (1 + ‖x‖)^4 := h_pointwise x
         _ ≤ |C_pt * t / (1 + ‖x‖)^4| := le_abs_self _
         _ = ‖C_pt * t / (1 + ‖x‖)^4‖ := (Real.norm_eq_abs _).symm
 
   -- Convert pointwise bound to ae bound
   have h_ae_bound : ∀ᵐ x ∂(volume : Measure SpatialCoords3),
-      ‖f (spacetimeOfTimeSpace t x)‖ ≤ C_pt * t / (1 + ‖x‖)^4 :=
+      ‖f (spacetimeOfTimeSpace4 t x)‖ ≤ C_pt * t / (1 + ‖x‖)^4 :=
     ae_of_all _ h_pointwise
 
   -- Apply integral monotonicity
   -- integral_mono_of_nonneg : 0 ≤ᵐ f → Integrable g → f ≤ᵐ g → ∫ f ≤ ∫ g
   have h_mono := integral_mono_of_nonneg
-    (f := fun x => ‖f (spacetimeOfTimeSpace t x)‖)
+    (f := fun x => ‖f (spacetimeOfTimeSpace4 t x)‖)
     (g := fun x => C_pt * t / (1 + ‖x‖)^4)
     (ae_of_all _ (fun x => norm_nonneg _))  -- 0 ≤ᵐ ‖f ...‖
     h_bound_int
@@ -678,7 +729,7 @@ theorem spatialNormIntegral_linear_bound (f : TestFunctionℂ4)
 
   -- Combine inequalities
   calc spatialNormIntegral f t
-      = ∫ x : SpatialCoords3, ‖f (spacetimeOfTimeSpace t x)‖ := rfl
+      = ∫ x : SpatialCoords3, ‖f (spacetimeOfTimeSpace4 t x)‖ := rfl
     _ ≤ ∫ x : SpatialCoords3, C_pt * t / (1 + ‖x‖)^4 := h_mono
     _ = C_pt * t * K := h_factor
     _ ≤ C_pt * t * (K + 1) := by nlinarith [mul_pos hC_pt_pos ht]
