@@ -15,18 +15,18 @@ interchange. From Z[tf+sg] = exp(−½ Q(tf+sg, tf+sg)):
 
 - ∂²/∂t∂s|₀ via Gaussian formula gives −Q(f,g)
 - ∂²/∂t∂s|₀ via integral interchange (OS0) gives −S₂(f,g)
-- Hence S₂(f,g) = Q(f,g) = freeCovarianceℂ4(f,g)
+- Hence S₂(f,g) = Q(f,g) = freeCovarianceℂ(f,g)
 
 This imports OS0 because it uses the proved analyticity to justify the derivative
 interchange, not because of OS0-specific infrastructure.
 
 ## Main results
 
-- `gff_two_point_equals_covarianceℂ_free`: S₂(f,g) = freeCovarianceℂ4(f,g)
+- `gff_two_point_equals_covarianceℂ_free`: S₂(f,g) = freeCovarianceℂ(f,g)
 - `isGaussianGJ_gaussianFreeField_free`: the free GFF is Gaussian
 -/
 
-open MeasureTheory Complex QFT
+open MeasureTheory Complex QFT OSforGFF
 
 noncomputable section
 
@@ -34,12 +34,12 @@ noncomputable section
 
 namespace GFFIsGaussian
 
-variable (m : ℝ) [Fact (0 < m)]
+variable {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
 
 /-- For the Gaussian Free Field measure, the product of two complex pairings with test functions
     is integrable. Uses the direct 2-point theorem from GaussianMoments. -/
 lemma gaussian_pairing_product_integrable_free_core
-    (φ ψ : TestFunctionℂ4) :
+    (φ ψ : TestFunctionℂ d) :
     Integrable (fun ω => distributionPairingℂ_real ω φ * distributionPairingℂ_real ω ψ)
       (gaussianFreeField_free m).toMeasure :=
   gaussian_pairing_product_integrable_free_2point m φ ψ
@@ -55,7 +55,7 @@ The proofs use OS0's derivative interchange machinery:
 
 /-- Bilinearity expansion of Q(tf+sg, tf+sg).
     Q(tf+sg, tf+sg) = t²Q(f,f) + 2ts Q(f,g) + s²Q(g,g) -/
-lemma freeCovarianceFormR_bilinear_expand (f g : TestFunction4) (t s : ℝ) :
+lemma freeCovarianceFormR_bilinear_expand (f g : TestFunction d) (t s : ℝ) :
     freeCovarianceFormR m (t • f + s • g) (t • f + s • g) =
       t^2 * freeCovarianceFormR m f f + 2 * t * s * freeCovarianceFormR m f g +
       s^2 * freeCovarianceFormR m g g := by
@@ -81,7 +81,7 @@ lemma freeCovarianceFormR_bilinear_expand (f g : TestFunction4) (t s : ℝ) :
           rw [hsym]; ring
 
 /-- The Gaussian CF formula for two test functions. -/
-lemma gff_cf_two_testfunctions (f g : TestFunction4) (t s : ℝ) :
+lemma gff_cf_two_testfunctions (f g : TestFunction d) (t s : ℝ) :
     GJGeneratingFunctional (gaussianFreeField_free m) (t • f + s • g) =
       Complex.exp (-(1/2 : ℂ) * (t^2 * freeCovarianceFormR m f f +
         2 * t * s * freeCovarianceFormR m f g + s^2 * freeCovarianceFormR m g g)) := by
@@ -95,16 +95,16 @@ lemma gff_cf_two_testfunctions (f g : TestFunction4) (t s : ℝ) :
 The following lemmas use OS0's analyticity to compute mixed derivatives. -/
 
 /-- OS0 specialized to two test functions gives analyticity of Z[tf + sg] in (t,s) ∈ ℂ² -/
-lemma gff_two_param_analytic (f g : TestFunction4) :
+lemma gff_two_param_analytic (f g : TestFunction d) :
     AnalyticOn ℂ (fun z : Fin 2 → ℂ =>
       GJGeneratingFunctionalℂ (gaussianFreeField_free m) (z 0 • toComplex f + z 1 • toComplex g))
       Set.univ := by
   -- Direct application of gaussianFreeField_satisfies_OS0 with n=2, J = ![toComplex f, toComplex g]
-  have h := gaussianFreeField_satisfies_OS0 m 2 ![toComplex f, toComplex g]
+  have h := gaussianFreeField_satisfies_OS0 (d := d) (m := m) 2 ![toComplex f, toComplex g]
   convert h using 2
   -- Goal: GJGeneratingFunctionalℂ _ (z 0 • toComplex f + z 1 • toComplex g) =
   --       GJGeneratingFunctionalℂ _ (∑ i, z i • ![toComplex f, toComplex g] i)
-  -- μ_GFF m = gaussianFreeField_free m by definition (abbrev)
+  -- gaussianFreeField_free (d := d) m = gaussianFreeField_free m by definition (abbrev)
   -- For the test function argument, use Fin.sum_univ_two
   congr 1
   simp only [Fin.sum_univ_two, Matrix.cons_val_zero, Matrix.cons_val_one]
@@ -122,7 +122,7 @@ This eliminates the need for `twoD_line_from_realCF` from MinlosAnalytic. -/
 /-- Key technical lemma: fixing one coordinate, the slice is analytic in the other.
     For z₀ ↦ Z[z₀•f + t•g] where t is a fixed complex number.
     Derived from OS0 by composition with linear embedding z₀ ↦ ![z₀, t]. -/
-lemma gff_slice_analytic_z0 (f g : TestFunction4) (t : ℂ) :
+lemma gff_slice_analytic_z0 (f g : TestFunction d) (t : ℂ) :
     AnalyticOnNhd ℂ (fun z₀ : ℂ =>
       GJGeneratingFunctionalℂ (gaussianFreeField_free m) (z₀ • toComplex f + t • toComplex g))
       Set.univ := by
@@ -148,7 +148,7 @@ lemma gff_slice_analytic_z0 (f g : TestFunction4) (t : ℂ) :
   exact analyticOn_univ.mp hcomp
 
 /-- Derived from gff_slice_analytic_z0 by swapping f ↔ g and using add_comm. -/
-lemma gff_slice_analytic_z1 (f g : TestFunction4) (z₀ : ℂ) :
+lemma gff_slice_analytic_z1 (f g : TestFunction d) (z₀ : ℂ) :
     AnalyticOnNhd ℂ (fun z₁ : ℂ =>
       GJGeneratingFunctionalℂ (gaussianFreeField_free m) (z₀ • toComplex f + z₁ • toComplex g))
       Set.univ := by
@@ -157,7 +157,7 @@ lemma gff_slice_analytic_z1 (f g : TestFunction4) (z₀ : ℂ) :
   convert h using 2
 
 /-- Slice of Gaussian RHS is analytic (exp of polynomial). -/
-lemma gaussian_rhs_slice_analytic_z0 (f g : TestFunction4) (t : ℂ) :
+lemma gaussian_rhs_slice_analytic_z0 (f g : TestFunction d) (t : ℂ) :
     AnalyticOnNhd ℂ (fun z₀ : ℂ =>
       Complex.exp (-(1/2 : ℂ) * (z₀^2 * freeCovarianceFormR m f f +
         2 * z₀ * t * freeCovarianceFormR m f g + t^2 * freeCovarianceFormR m g g)))
@@ -178,7 +178,7 @@ lemma gaussian_rhs_slice_analytic_z0 (f g : TestFunction4) (t : ℂ) :
   · exact analyticOnNhd_const
 
 /-- Slice of Gaussian RHS is analytic in the second variable. -/
-lemma gaussian_rhs_slice_analytic_z1 (f g : TestFunction4) (z₀ : ℂ) :
+lemma gaussian_rhs_slice_analytic_z1 (f g : TestFunction d) (z₀ : ℂ) :
     AnalyticOnNhd ℂ (fun z₁ : ℂ =>
       Complex.exp (-(1/2 : ℂ) * (z₀^2 * freeCovarianceFormR m f f +
         2 * z₀ * z₁ * freeCovarianceFormR m f g + z₁^2 * freeCovarianceFormR m g g)))
@@ -200,7 +200,7 @@ lemma gaussian_rhs_slice_analytic_z1 (f g : TestFunction4) (z₀ : ℂ) :
 
 /-- The GFF CF and Gaussian formula agree on ℝ².
     This follows from gff_cf_two_testfunctions by converting between types. -/
-lemma gff_cf_agrees_on_reals_OS0 (f g : TestFunction4) (t s : ℝ) :
+lemma gff_cf_agrees_on_reals_OS0 (f g : TestFunction d) (t s : ℝ) :
     GJGeneratingFunctionalℂ (gaussianFreeField_free m) ((t : ℂ) • toComplex f + (s : ℂ) • toComplex g) =
       Complex.exp (-(1/2 : ℂ) * ((t : ℂ)^2 * freeCovarianceFormR m f f +
         2 * (t : ℂ) * (s : ℂ) * freeCovarianceFormR m f g + (s : ℂ)^2 * freeCovarianceFormR m g g)) := by
@@ -217,9 +217,9 @@ lemma gff_cf_agrees_on_reals_OS0 (f g : TestFunction4) (t s : ℝ) :
 /-- Complex generating functional for the free GFF via OS0 + identity theorem.
     This proves the result WITHOUT using twoD_line_from_realCF. -/
 theorem gff_complex_characteristic_OS0 :
-    ∀ J : TestFunctionℂ4,
+    ∀ J : TestFunctionℂ d,
       GJGeneratingFunctionalℂ (gaussianFreeField_free m) J =
-        Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear4 m J J) := by
+        Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear m J J) := by
   intro J
   -- Decompose J = f + I*g where f, g are real test functions
   let f := (complex_testfunction_decompose J).1
@@ -311,22 +311,20 @@ theorem gff_complex_characteristic_OS0 :
     simp [one_smul]
 
   -- Step 6: Simplify RHS using Qc formula
-  have h_RHS : Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear4 m J J) = G 1 Complex.I := by
+  have h_RHS : Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear m J J) = G 1 Complex.I := by
     simp only [G]
     congr 1
-    -- freeCovarianceℂ_bilinear4 of J = f + I*g
+    -- freeCovarianceℂ_bilinear of J = f + I*g
     -- Qc(f+Ig, f+Ig) = Q(f,f) - Q(g,g) + 2I*Q(f,g)
     -- Compare with: 1²Q(f,f) + 2*1*I*Q(f,g) + I²*Q(g,g)
     --             = Q(f,f) + 2I*Q(f,g) - Q(g,g)
-    have h_Qc : freeCovarianceℂ_bilinear4 m J J =
+    have h_Qc : freeCovarianceℂ_bilinear m J J =
         freeCovarianceFormR m f f - freeCovarianceFormR m g g +
           2 * Complex.I * freeCovarianceFormR m f g := by
       rw [hJ]
-      rw [freeCovarianceℂ_bilinear_add_left4, freeCovarianceℂ_bilinear_add_right4,
-          freeCovarianceℂ_bilinear_add_right4]
-      simp only [freeCovarianceℂ_bilinear_smul_left4, freeCovarianceℂ_bilinear_smul_right4]
-      simp only [show ∀ (u v : TestFunctionℂ4),
-          freeCovarianceℂ_bilinear4 m u v = freeCovarianceℂ_bilinear m u v from fun _ _ => rfl]
+      rw [freeCovarianceℂ_bilinear_add_left, freeCovarianceℂ_bilinear_add_right,
+          freeCovarianceℂ_bilinear_add_right]
+      simp only [freeCovarianceℂ_bilinear_smul_left, freeCovarianceℂ_bilinear_smul_right]
       have h_ff := freeCovarianceℂ_bilinear_agrees_on_reals (m := m) f f
       have h_fg := freeCovarianceℂ_bilinear_agrees_on_reals (m := m) f g
       have h_gf := freeCovarianceℂ_bilinear_agrees_on_reals (m := m) g f
@@ -369,11 +367,11 @@ This avoids all derivative calculus! -/
     E[XY] = ¼(E[(X+Y)²] - E[(X-Y)²])
          = ¼(Q(f+g,f+g) - Q(f-g,f-g))
          = Q(f,g) by bilinearity -/
-theorem schwinger_eq_covariance_real (f g : TestFunction4) :
+theorem schwinger_eq_covariance_real (f g : TestFunction d) :
     ∫ ω, (ω f) * (ω g) ∂(gaussianFreeField_free m).toMeasure =
       freeCovarianceFormR m f g := by
   -- Use polarization identity: XY = ¼((X+Y)² - (X-Y)²)
-  have h_polar : ∀ ω : FieldConfiguration4,
+  have h_polar : ∀ ω : FieldConfiguration d,
       (ω f) * (ω g) = (1/4 : ℝ) * ((ω (f + g))^2 - (ω (f - g))^2) := by
     intro ω
     -- Linearity of pairing
@@ -422,14 +420,14 @@ theorem schwinger_eq_covariance_real (f g : TestFunction4) :
 
 /-- For real test functions embedded into complex, the Schwinger 2-point function
     equals the complex covariance. -/
-lemma schwinger_eq_covarianceℂ_on_reals (f g : TestFunction4) :
+lemma schwinger_eq_covarianceℂ_on_reals (f g : TestFunction d) :
     SchwingerFunctionℂ₂ (gaussianFreeField_free m) (toComplex f) (toComplex g) =
-      freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex g) := by
+      freeCovarianceℂ_bilinear m (toComplex f) (toComplex g) := by
   -- Use distributionPairingℂ_real_toComplex to reduce to real pairings
   simp only [SchwingerFunctionℂ₂, SchwingerFunctionℂ, Fin.prod_univ_two,
     Matrix.cons_val_zero, Matrix.cons_val_one,
     distributionPairingℂ_real_toComplex]
-  -- Now we have: ∫ ω, ↑(ω f) * ↑(ω g) dμ = freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex g)
+  -- Now we have: ∫ ω, ↑(ω f) * ↑(ω g) dμ = freeCovarianceℂ_bilinear m (toComplex f) (toComplex g)
   -- Step 1: Rewrite ↑a * ↑b = ↑(a * b) pointwise using ofReal_mul
   simp_rw [← Complex.ofReal_mul]
   -- Step 2: Integrability of the product
@@ -454,14 +452,15 @@ end GFFIsGaussian
 
 /-- For complex test functions, the Schwinger 2-point function equals the complex covariance.
 
-    S₂(μ, f, g) = freeCovarianceℂ_bilinear4 m f g
+    S₂(μ, f, g) = freeCovarianceℂ_bilinear m f g
 
     This extends schwinger_eq_covariance_real to complex test functions by bilinearity:
-    both S₂ and freeCovarianceℂ_bilinear4 are bilinear, and they agree on real inputs.
+    both S₂ and freeCovarianceℂ_bilinear are bilinear, and they agree on real inputs.
 
     For any complex f = fRe + I•fIm, g = gRe + I•gIm, we expand by bilinearity. -/
-theorem gff_two_point_equals_covarianceℂ_free (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ4) :
-    SchwingerFunctionℂ₂ (gaussianFreeField_free m) f g = freeCovarianceℂ_bilinear4 m f g := by
+theorem gff_two_point_equals_covarianceℂ_free {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)]
+    [GFFPropagator d m] (f g : TestFunctionℂ d) :
+    SchwingerFunctionℂ₂ (gaussianFreeField_free m) f g = freeCovarianceℂ_bilinear m f g := by
   -- Decompose complex test functions into real and imaginary parts
   let fRe := (complex_testfunction_decompose f).1
   let fIm := (complex_testfunction_decompose f).2
@@ -487,7 +486,7 @@ theorem gff_two_point_equals_covarianceℂ_free (m : ℝ) [Fact (0 < m)] (f g : 
   --   .2.1: S₂(φ₁ + φ₂, ψ) = S₂(φ₁, ψ) + S₂(φ₂, ψ)
   --   .2.2.1: S₂(φ₁, c • ψ) = c * S₂(φ₁, ψ)
   --   .2.2.2: S₂(φ₁, ψ + φ₂) = S₂(φ₁, ψ) + S₂(φ₁, φ₂)
-  have h_bilin := covariance_bilinear_from_general (d := STDimension) m
+  have h_bilin := covariance_bilinear_from_general (d := d) m
   have S2_smul_left : ∀ (c : ℂ) a b, SchwingerFunctionℂ₂ (gaussianFreeField_free m) (c • a) b =
       c * SchwingerFunctionℂ₂ (gaussianFreeField_free m) a b :=
     fun c a b => (h_bilin c a 0 b).1
@@ -503,9 +502,9 @@ theorem gff_two_point_equals_covarianceℂ_free (m : ℝ) [Fact (0 < m)] (f g : 
   -- Expand LHS: S₂(frC + I•fiC, grC + I•giC)
   rw [S2_add_left, S2_add_right, S2_add_right, S2_smul_left, S2_smul_left, S2_smul_right,
       S2_smul_right]
-  -- Expand RHS: freeCovarianceℂ_bilinear4(frC + I•fiC, grC + I•giC)
-  simp only [freeCovarianceℂ_bilinear_add_left4, freeCovarianceℂ_bilinear_add_right4,
-    freeCovarianceℂ_bilinear_smul_left4, freeCovarianceℂ_bilinear_smul_right4]
+  -- Expand RHS: freeCovarianceℂ_bilinear(frC + I•fiC, grC + I•giC)
+  simp only [freeCovarianceℂ_bilinear_add_left, freeCovarianceℂ_bilinear_add_right,
+    freeCovarianceℂ_bilinear_smul_left, freeCovarianceℂ_bilinear_smul_right]
   -- Both sides have 4 terms. Rewrite S₂(toComplex ?, toComplex ?) = C(toComplex ?, toComplex ?)
   -- frC = toComplex fRe, fiC = toComplex fIm, grC = toComplex gRe, giC = toComplex gIm
   rw [GFFIsGaussian.schwinger_eq_covarianceℂ_on_reals m fRe gRe,
@@ -520,14 +519,15 @@ theorem gff_two_point_equals_covarianceℂ_free (m : ℝ) [Fact (0 < m)] (f g : 
     This follows from gff_real_characteristic (for real J) extended to complex J
     via analyticity (gaussianFreeField_satisfies_OS0). Both sides are analytic in J
     and agree on real J, hence they are equal everywhere. -/
-theorem gff_complex_generating (m : ℝ) [Fact (0 < m)] :
-    ∀ J : TestFunctionℂ4,
+theorem gff_complex_generating {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)]
+    [GFFPropagator d m] :
+    ∀ J : TestFunctionℂ d,
       GJGeneratingFunctionalℂ (gaussianFreeField_free m) J =
         Complex.exp (-(1/2 : ℂ) * SchwingerFunctionℂ₂ (gaussianFreeField_free m) J J) := by
   intro J
-  -- Use gff_two_point_equals_covarianceℂ_free: S₂ = freeCovarianceℂ_bilinear4
+  -- Use gff_two_point_equals_covarianceℂ_free: S₂ = freeCovarianceℂ_bilinear
   rw [gff_two_point_equals_covarianceℂ_free]
-  -- Now goal is: Z[J] = exp(-½ freeCovarianceℂ_bilinear4 m J J)
+  -- Now goal is: Z[J] = exp(-½ freeCovarianceℂ_bilinear m J J)
   -- Use gff_complex_characteristic_OS0 (via OS0 + identity theorem, no MinlosAnalytic dependency)
   exact GFFIsGaussian.gff_complex_characteristic_OS0 m J
 
@@ -536,8 +536,9 @@ theorem gff_complex_generating (m : ℝ) [Fact (0 < m)] :
     This combines:
     1. Centering: E[⟨ω,φ⟩] = 0 (from gaussianFreeField_free_centered)
     2. Gaussian CF: Z[J] = exp(-½ S₂(J,J)) (from gff_complex_generating) -/
-theorem isGaussianGJ_gaussianFreeField_free (m : ℝ) [Fact (0 < m)] :
-    isGaussianGJ (gaussianFreeField_free (d := STDimension) m) := by
+theorem isGaussianGJ_gaussianFreeField_free {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)]
+    [GFFPropagator d m] :
+    isGaussianGJ (gaussianFreeField_free (d := d) m) := by
   constructor
   · exact gaussianFreeField_free_centered m
   · exact fun J => gff_complex_generating m J

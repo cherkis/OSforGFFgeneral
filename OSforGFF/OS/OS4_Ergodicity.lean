@@ -91,7 +91,7 @@ def OS4'_Ergodicity_generating (m : ℝ) [Fact (0 < m)] : Prop :=
 /-- OS4'' (Polynomial Clustering): This is exactly OS4_PolynomialClustering
     specialized to the GFF with decay exponent α = 6. -/
 def OS4''_Clustering (m : ℝ) [Fact (0 < m)] : Prop :=
-  OS4_PolynomialClustering (gaussianFreeField_free m) 6 (by norm_num)
+  OS4_PolynomialClustering (gaussianFreeField_free (d := STDimension) m) 6 (by norm_num)
 
 /-! ## GFF Integrability Lemmas -/
 
@@ -416,6 +416,8 @@ lemma gff_covariance_timeTranslation_continuous (m : ℝ) [Fact (0 < m)]
       (timeTranslationSchwartzℂ s f) g) := by
   -- Step 1: S₂ = freeCovarianceℂ_bilinear4 for the GFF
   simp_rw [gff_two_point_equals_covarianceℂ_free]
+  simp_rw [show ∀ (u v : TestFunctionℂ4),
+      freeCovarianceℂ_bilinear m u v = freeCovarianceℂ_bilinear4 m u v from fun _ _ => rfl]
   -- Step 2: Expand the bilinear form definition
   unfold freeCovarianceℂ_bilinear4
   -- L^∞ bounds for Schwartz functions
@@ -1069,7 +1071,7 @@ lemma norm_sq_weighted_sum_le {n : ℕ} (w : Fin n → ℂ) (a : Fin n → ℂ) 
     The proof uses Cauchy-Schwarz to bound the variance of ∑ⱼ zⱼ exp(⟨ω, fⱼ⟩)
     by the sum of individual variances, then applies OS4' to each term. -/
 theorem OS4'_implies_OS4 (m : ℝ) [Fact (0 < m)] :
-    OS4'_Ergodicity_generating m → OS4_Ergodicity (gaussianFreeField_free m) := by
+    OS4'_Ergodicity_generating m → OS4_Ergodicity (gaussianFreeField_free (d := STDimension) m) := by
   intro h_erg n z f
   let μ := (gaussianFreeField_free (d := STDimension) m).toMeasure
   let A : FieldConfiguration4 → ℂ := fun ω => ∑ j, z j * Complex.exp (distributionPairingℂ_real ω (f j))
@@ -1284,7 +1286,7 @@ theorem OS4''_implies_OS4' (m : ℝ) [Fact (0 < m)] :
 
 /-- OS4'' → OS4: The full chain from clustering to ergodicity. -/
 theorem OS4''_implies_OS4_Ergodicity (m : ℝ) [Fact (0 < m)] :
-    OS4''_Clustering m → OS4_Ergodicity (gaussianFreeField_free m) := by
+    OS4''_Clustering m → OS4_Ergodicity (gaussianFreeField_free (d := STDimension) m) := by
   intro h_cluster
   exact OS4'_implies_OS4 m (OS4''_implies_OS4' m h_cluster)
 
@@ -1293,8 +1295,8 @@ theorem OS4''_implies_OS4_Ergodicity (m : ℝ) [Fact (0 < m)] :
     This is the main result connecting the clustering axiom to ergodicity.
 -/
 theorem OS4_PolynomialClustering_implies_OS4_Ergodicity (m : ℝ) [Fact (0 < m)] :
-    OS4_PolynomialClustering (gaussianFreeField_free m) 6 (by norm_num) →
-    OS4_Ergodicity (gaussianFreeField_free m) :=
+    OS4_PolynomialClustering (gaussianFreeField_free (d := STDimension) m) 6 (by norm_num) →
+    OS4_Ergodicity (gaussianFreeField_free (d := STDimension) m) :=
   OS4''_implies_OS4_Ergodicity m
 
 end OS4_Ergodicity

@@ -221,6 +221,7 @@ Elementary bound on the GFF generating function using complex exponential proper
 lemma gff_generating_norm_eq (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) :
   ‖GJGeneratingFunctionalℂ (gaussianFreeField_free m) f‖ =
     Real.exp (-(1/2) * (freeCovarianceℂ_bilinear4 m f f).re) := by
+  rw [show freeCovarianceℂ_bilinear4 m f f = freeCovarianceℂ_bilinear m f f from rfl]
   rw [gff_complex_generating, gff_two_point_equals_covarianceℂ_free, Complex.norm_exp]
   simp only [Complex.neg_re, Complex.mul_re]
   norm_num
@@ -464,7 +465,7 @@ Using the axioms above, we establish local integrability of the Schwinger functi
     This follows from the polynomial decay bound |S_2(x)| ≤ C|x|^{-2}.
     In d=4 spacetime dimensions, |x|^{-2} is locally integrable since 2 < 4. -/
 lemma gff_two_point_locally_integrable (m : ℝ) [Fact (0 < m)] :
-  TwoPointIntegrable (gaussianFreeField_free m) := by
+  TwoPointIntegrable (gaussianFreeField_free (d := STDimension) m) := by
   unfold TwoPointIntegrable
   -- Obtain the decay bound
   obtain ⟨C, hC_pos, h_decay⟩ := schwinger_two_point_decay_bound m
@@ -503,7 +504,7 @@ open MeasureTheory
     Note: Named `_revised` because the alternative OS0 proof in `GaussianFreeField.lean`
     uses the same module; both are valid, and `OS.Master` uses this one. -/
 theorem gaussianFreeField_satisfies_OS1_revised (m : ℝ) [Fact (0 < m)] :
-  OS1_Regularity (gaussianFreeField_free m) := by
+  OS1_Regularity (gaussianFreeField_free (d := STDimension) m) := by
   -- Choose parameters p = 2 and c = 1/(2 m^2)
   refine ⟨(2 : ℝ), (1 / (2 * m^2)), by norm_num, by norm_num, ?cpos, ?bound, ?tpInt⟩
   · -- c > 0

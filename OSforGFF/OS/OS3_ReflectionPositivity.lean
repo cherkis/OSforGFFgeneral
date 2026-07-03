@@ -492,7 +492,7 @@ lemma gaussianFreeField_OS3_matrix_real
 
 /-- Main theorem: the Gaussian free field satisfies OS3_real (reflection positivity, real version). -/
 theorem gaussianFreeField_OS3_real :
-    OS3_ReflectionPositivity_real (gaussianFreeField_free m) := by
+    OS3_ReflectionPositivity_real (gaussianFreeField_free (d := STDimension) m) := by
   intro n f c
   simpa using gaussianFreeField_OS3_matrix_real (m := m) f c
 
@@ -965,7 +965,9 @@ private lemma gff_complexOS3_matrix
         GJGeneratingFunctionalℂ (gaussianFreeField_free m)
           ((f i).val - star (f j).val)).re := by
   -- Step 1: Replace Z[J] with exp(-½ C(J,J))
-  simp_rw [GFFIsGaussian.gff_complex_characteristic_OS0 m]
+  simp_rw [GFFIsGaussian.gff_complex_characteristic_OS0 (d := STDimension) m]
+  simp_rw [show ∀ (u v : TestFunctionℂ4),
+      freeCovarianceℂ_bilinear m u v = freeCovarianceℂ_bilinear4 m u v from fun _ _ => rfl]
   -- Step 2: Factor each matrix entry
   simp_rw [gff_complexZ_entry_factor m]
   -- Step 3: Algebraic rewrite: conj(c_i) c_j A_i conj(A_j) E_ij = conj(w_i) w_j E_ij
@@ -989,7 +991,7 @@ private lemma gff_complexOS3_matrix
     The `star` operation is `(star f)(x) = conj(f(Θx))`.  For real test functions,
     `star = compTimeReflection` (see `star_toComplex_eq_compTimeReflection`). -/
 theorem gaussianFreeField_OS3 :
-    OS3_ReflectionPositivity (gaussianFreeField_free m) := by
+    OS3_ReflectionPositivity (gaussianFreeField_free (d := STDimension) m) := by
   intro n f c
   exact gff_complexOS3_matrix m f c
 

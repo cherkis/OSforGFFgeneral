@@ -190,9 +190,10 @@ lemma gff_mgf_formula (m : ℝ) [Fact (0 < m)] (J : TestFunctionℂ4) :
     ring_nf
     simp [Complex.I_sq]
   rw [h_to_cf, GFFIsGaussian.gff_complex_characteristic_OS0 m]
-  have h_cov : freeCovarianceℂ_bilinear4 m (negI • J) (negI • J) =
-      -freeCovarianceℂ_bilinear4 m J J := by
-    rw [freeCovarianceℂ_bilinear_smul_left4, freeCovarianceℂ_bilinear_smul_right4]
+  rw [show freeCovarianceℂ_bilinear4 m J J = freeCovarianceℂ_bilinear m J J from rfl]
+  have h_cov : freeCovarianceℂ_bilinear m (negI • J) (negI • J) =
+      -freeCovarianceℂ_bilinear m J J := by
+    rw [freeCovarianceℂ_bilinear_smul_left, freeCovarianceℂ_bilinear_smul_right]
     simp only [negI]
     ring_nf
     simp [Complex.I_sq]
@@ -239,7 +240,8 @@ lemma gff_joint_mgf_factorization (m : ℝ) [Fact (0 < m)] (f g : TestFunction�
   congr 1
   have h_sym : freeCovarianceℂ_bilinear4 m g f = freeCovarianceℂ_bilinear4 m f g :=
     freeCovarianceℂ_bilinear_symm4 m g f
-  rw [h_sym]
+  rw [h_sym,
+    show freeCovarianceℂ_bilinear m f g = freeCovarianceℂ_bilinear4 m f g from rfl]
   ring
 
 /-! ## Exponential Bound -/

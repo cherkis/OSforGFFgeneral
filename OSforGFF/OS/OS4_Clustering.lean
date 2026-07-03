@@ -160,6 +160,8 @@ lemma gff_generating_norm_le_one_real (m : ℝ) [Fact (0 < m)] (f : TestFunction
     congr 1; ext x; congr 1; ext y
     have : starRingEnd ℂ (toComplex f y) = toComplex f y := by simp [toComplex_apply]
     rw [this]
+  rw [show freeCovarianceℂ_bilinear m (toComplex f) (toComplex f)
+      = freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex f) from rfl]
   rw [heq]
   have h_nonneg : 0 ≤ (freeCovarianceℂ4 m (toComplex f) (toComplex f)).re :=
     freeCovarianceℂ_positive4 m (toComplex f)
@@ -217,10 +219,10 @@ lemma GFF_OS4_from_small_decay_real (m : ℝ) [Fact (0 < m)]
     gff_generating_sum_factorization m fC T_a_gC
 
   -- Translation invariance: Z[T_a g] = Z[g]
-  have h_OS2 : OS2_EuclideanInvariance (gaussianFreeField_free m) := by
-    have h_euc := CovarianceEuclideanInvariantℂ_μ_GFF m
-    have h_gauss := isGaussianGJ_gaussianFreeField_free m
-    exact gaussian_satisfies_OS2 (gaussianFreeField_free m) h_gauss h_euc
+  have h_OS2 : OS2_EuclideanInvariance (gaussianFreeField_free (d := STDimension) m) := by
+    have h_euc := CovarianceEuclideanInvariantℂ_μ_GFF (d := STDimension) m
+    have h_gauss := isGaussianGJ_gaussianFreeField_free (d := STDimension) m
+    exact gaussian_satisfies_OS2 (gaussianFreeField_free (d := STDimension) m) h_gauss h_euc
 
   -- T_a_gC = euclidean_action ⟨1, a⟩ gC for the translation
   have h_transl_eq : T_a_gC = euclidean_action ⟨1, a⟩ gC := by
@@ -450,7 +452,7 @@ theorem schwartz_cross_covariance_decay_real (m : ℝ) [Fact (0 < m)]
     4. Continuity: exp(-z) → exp(0) = 1 as z → 0
     5. For real test functions: |Z[f]| ≤ 1 (positive definite covariance) -/
 theorem gaussianFreeField_satisfies_OS4 (m : ℝ) [Fact (0 < m)] :
-    OS4_Clustering (gaussianFreeField_free m) := by
+    OS4_Clustering (gaussianFreeField_free (d := STDimension) m) := by
   intro f g ε hε
 
   -- Strategy: Use a small decay target δ = min(ε/2, 1/2).
@@ -593,7 +595,8 @@ lemma schwinger2_time_translated_eq_bilinear (m : ℝ) [Fact (0 < m)] (f g : Tes
       f x * (freeCovarianceKernel m (x - y) : ℂ) * g (y - TimeTranslation.timeShiftConst s) := by
   -- S₂(f, T_{-s} g) = freeCovarianceℂ_bilinear4 m f (T_{-s} g)
   rw [gff_two_point_equals_covarianceℂ_free]
-  -- freeCovarianceℂ_bilinear4 m f g = ∫∫ f(x) · freeCovariance4(x,y) · g(y) dx dy
+  rw [show freeCovarianceℂ_bilinear m f (TimeTranslation.timeTranslationSchwartzℂ (-s) g)
+      = freeCovarianceℂ_bilinear4 m f (TimeTranslation.timeTranslationSchwartzℂ (-s) g) from rfl]
   unfold freeCovarianceℂ_bilinear4
   -- Expand T_{-s} g at point y and use kernel identity
   congr 1 with x
@@ -612,7 +615,7 @@ lemma schwinger2_time_translated_eq_bilinear (m : ℝ) [Fact (0 < m)] (f g : Tes
     Therefore the GFF satisfies OS4_PolynomialClustering for all α > 0. -/
 theorem gaussianFreeField_satisfies_OS4_PolynomialClustering (m : ℝ) [Fact (0 < m)]
     (α : ℝ) (hα : α > 0) :
-    OS4_PolynomialClustering (gaussianFreeField_free m) α hα := by
+    OS4_PolynomialClustering (gaussianFreeField_free (d := STDimension) m) α hα := by
   intro f g
   -- Step 1: Get kernel properties for applying the decay lemma
   have hm : 0 < m := Fact.out
