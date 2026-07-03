@@ -89,7 +89,7 @@ def OS1_Regularity (dμ_config : ProbabilityMeasure FieldConfiguration4) : Prop 
 
 /-- OS2 (Euclidean Invariance): The measure is invariant under Euclidean transformations. -/
 def OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfiguration4) : Prop :=
-  ∀ (g : QFT.E) (f : TestFunctionℂ4),
+  ∀ (g : QFT.E4) (f : TestFunctionℂ4),
     GJGeneratingFunctionalℂ dμ_config f =
     GJGeneratingFunctionalℂ dμ_config (QFT.euclidean_action g f)
 

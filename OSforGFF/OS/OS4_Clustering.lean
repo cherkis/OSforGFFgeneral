@@ -113,10 +113,10 @@ lemma gff_generating_sum_factorization (m : ℝ) [Fact (0 < m)] (f g : TestFunct
 /-! ## Translation as Euclidean Action -/
 
 /-- The inverse of the identity linear isometry is itself. -/
-lemma LinearIsometry_inv_one : LinearIsometry.inv (1 : O4) = 1 := by
+lemma LinearIsometry_inv_one : LinearIsometry.inv (1 : O4 STDimension) = 1 := by
   -- Use comp_inv: R.comp (inv R) = 1
   -- For R = 1: 1.comp (inv 1) = 1, so inv 1 = 1 (since 1.comp x = x)
-  have h := LinearIsometry.comp_inv (1 : O4)
+  have h := LinearIsometry.comp_inv (1 : O4 STDimension)
   simp only [LinearIsometry.one_comp] at h
   exact h
 
@@ -126,7 +126,7 @@ lemma LinearIsometry_inv_one : LinearIsometry.inv (1 : O4) = 1 := by
 lemma generating_euclidean_invariant
     (dμ_config : ProbabilityMeasure FieldConfiguration4)
     (h_inv : OS2_EuclideanInvariance dμ_config)
-    (g : E) (f : TestFunctionℂ4) :
+    (g : E4) (f : TestFunctionℂ4) :
     GJGeneratingFunctionalℂ dμ_config (euclidean_action g f) =
     GJGeneratingFunctionalℂ dμ_config f := by
   exact (h_inv g f).symm

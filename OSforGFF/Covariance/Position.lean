@@ -372,7 +372,7 @@ lemma compTimeReflection_toComplex_star_eq
     Since freeCovariance only depends on ‖x - y‖ (via the Bessel form), and Euclidean
     transformations preserve distances, this follows immediately. -/
 theorem freeCovariance_euclidean_invariant (m : ℝ)
-  (g : QFT.E) (x y : SpaceTime4) :
+  (g : QFT.E4) (x y : SpaceTime4) :
   freeCovariance m (QFT.act g x) (QFT.act g y) = freeCovariance m x y := by
   -- freeCovariance = freeCovarianceBessel only depends on ‖x - y‖
   -- Euclidean transformations preserve this distance
@@ -382,7 +382,7 @@ theorem freeCovariance_euclidean_invariant (m : ℝ)
   simp only [h_diff, g.R.norm_map]
 
 /-- Time reflection as an element of the Euclidean group (rotation with no translation). -/
-def timeReflectionE : QFT.E := ⟨QFT.timeReflectionLE.toLinearIsometry, 0⟩
+def timeReflectionE : QFT.E4 := ⟨QFT.timeReflectionLE.toLinearIsometry, 0⟩
 
 /-- The Euclidean action of timeReflectionE equals timeReflection. -/
 lemma act_timeReflectionE (x : SpaceTime4) : QFT.act timeReflectionE x = QFT.timeReflection x := by

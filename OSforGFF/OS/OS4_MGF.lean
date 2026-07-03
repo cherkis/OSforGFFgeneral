@@ -139,7 +139,7 @@ lemma continuous_distributionPairingℂ_timeTranslation (ω : FieldConfiguration
 
 /-- Time translation as a Euclidean group element.
     timeTranslationE t = (1, -timeShiftConst t) where 1 is the identity rotation. -/
-def timeTranslationE (t : ℝ) : QFT.E := ⟨1, -timeShiftConst t⟩
+def timeTranslationE (t : ℝ) : QFT.E4 := ⟨1, -timeShiftConst t⟩
 
 /-- The Euclidean action of timeTranslationE equals timeTranslationSchwartzℂ. -/
 lemma euclidean_action_timeTranslationE (t : ℝ) (f : TestFunctionℂ4) :
@@ -150,8 +150,8 @@ lemma euclidean_action_timeTranslationE (t : ℝ) (f : TestFunctionℂ4) :
   simp only [timeTranslationSchwartzℂ_apply, timeShift_eq_add_const]
   congr 1
   simp only [QFT.inv_R, QFT.inv_t, QFT.LinearIsometry.inv]
-  have h1 : ∀ v, (LinearIsometry.toLinearIsometryEquiv (1 : QFT.O4) rfl).symm v = v := fun v => by
-    have hv : (LinearIsometry.toLinearIsometryEquiv (1 : QFT.O4) rfl) v = v := by simp [LinearIsometry.toLinearIsometryEquiv]
+  have h1 : ∀ v, (LinearIsometry.toLinearIsometryEquiv (1 : QFT.O4 STDimension) rfl).symm v = v := fun v => by
+    have hv : (LinearIsometry.toLinearIsometryEquiv (1 : QFT.O4 STDimension) rfl) v = v := by simp [LinearIsometry.toLinearIsometryEquiv]
     rw [← hv]; exact LinearIsometryEquiv.symm_apply_apply _ v
   simp only [LinearIsometryEquiv.coe_toLinearIsometry, h1, neg_neg]
 

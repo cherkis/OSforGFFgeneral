@@ -38,23 +38,23 @@ variable (m : ℝ) [Fact (0 < m)]
 /-! ## Euclidean action on test functions -/
 
 /-- The Euclidean action satisfies (g • f)(x) = f(g⁻¹ • x). -/
-lemma euclidean_action_apply (g : E) (f : TestFunctionℂ4) (x : SpaceTime4) :
+lemma euclidean_action_apply (g : E4) (f : TestFunctionℂ4) (x : SpaceTime4) :
     euclidean_action g f x = f (euclidean_pullback g x) := by
   unfold euclidean_action
   simp only [SchwartzMap.compCLM_apply]
   rfl
 
 /-- The Euclidean pullback satisfies euclidean_pullback g x = g⁻¹ • x = act g⁻¹ x. -/
-lemma euclidean_pullback_eq_inv_act (g : E) (x : SpaceTime4) :
+lemma euclidean_pullback_eq_inv_act (g : E4) (x : SpaceTime4) :
     euclidean_pullback g x = act g⁻¹ x := rfl
 
 /-- Composing pullbacks: euclidean_pullback g (act g y) = y. -/
-lemma euclidean_pullback_act (g : E) (y : SpaceTime4) :
+lemma euclidean_pullback_act (g : E4) (y : SpaceTime4) :
     euclidean_pullback g (act g y) = y := by
   simp only [euclidean_pullback_eq_inv_act, act_inv_general]
 
 /-- The forward composition: act g (euclidean_pullback g x) = x. -/
-lemma act_euclidean_pullback (g : E) (x : SpaceTime4) :
+lemma act_euclidean_pullback (g : E4) (x : SpaceTime4) :
     act g (euclidean_pullback g x) = x := by
   simp only [euclidean_pullback_eq_inv_act]
   simpa using act_inv_general (g := g⁻¹) x
@@ -62,7 +62,7 @@ lemma act_euclidean_pullback (g : E) (x : SpaceTime4) :
 /-! ## Change of variables for the bilinear form -/
 
 /-- The Euclidean action as a measurable equivalence. -/
-noncomputable def actEquiv (g : E) : SpaceTime4 ≃ᵐ SpaceTime4 where
+noncomputable def actEquiv (g : E4) : SpaceTime4 ≃ᵐ SpaceTime4 where
   toFun := act g
   invFun := act g⁻¹
   left_inv x := act_inv_general g x
@@ -71,7 +71,7 @@ noncomputable def actEquiv (g : E) : SpaceTime4 ≃ᵐ SpaceTime4 where
   measurable_invFun := (measurePreserving_act g⁻¹).measurable
 
 /-- Measure-preserving property of actEquiv. -/
-lemma measurePreserving_actEquiv (g : E) :
+lemma measurePreserving_actEquiv (g : E4) :
     MeasurePreserving (actEquiv g) volume volume :=
   measurePreserving_act g
 
@@ -103,7 +103,7 @@ set_option linter.unusedSectionVars false in
     for the product integral ∫ F(e p.1, e p.2) d(p) where e = actEquiv g⁻¹.
 
     Need to carefully apply integral_prod and MeasurePreserving.prod to complete. -/
-theorem freeCovarianceℂ_bilinear_euclidean_invariant (g : E) (f h : TestFunctionℂ4) :
+theorem freeCovarianceℂ_bilinear_euclidean_invariant (g : E4) (f h : TestFunctionℂ4) :
     freeCovarianceℂ_bilinear m (euclidean_action g f) (euclidean_action g h) =
     freeCovarianceℂ_bilinear m f h := by
   unfold freeCovarianceℂ_bilinear
