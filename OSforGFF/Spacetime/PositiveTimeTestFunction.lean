@@ -31,7 +31,7 @@ the star operation (complex conjugation composed with time reflection) for test 
 ## Main results
 
 * `is_open_positiveTimeSet`: The positive time set is open
-* `Star TestFunctionℂ4`: Star instance for complex test functions
+* `Star (TestFunctionℂ d)`: Star instance for complex test functions
 -/
 
 noncomputable section
@@ -138,7 +138,7 @@ lemma starRingEnd_iteratedFDeriv_norm_eq (g : (TestFunctionℂ d)) (n : ℕ) (x 
   exact LinearIsometryEquiv.norm_iteratedFDeriv_comp_left Complex.conjLIE g x n
 
 /-- Star operation on test functions: time reflection followed by complex conjugation -/
-noncomputable def starTestFunction (f : TestFunctionℂ4) : TestFunctionℂ4 :=
+noncomputable def starTestFunction (f : (TestFunctionℂ d)) : (TestFunctionℂ d) :=
   -- Apply time reflection then complex conjugation pointwise
   let f_reflected := compTimeReflection f
   -- Apply complex conjugation to each value
@@ -167,7 +167,7 @@ noncomputable def starTestFunction (f : TestFunctionℂ4) : TestFunctionℂ4 :=
        _ ≤ C := hC x⟩
 
 /-- Star instance for complex test functions -/
-noncomputable instance : Star TestFunctionℂ4 where
+noncomputable instance : Star (TestFunctionℂ d) where
   star f := starTestFunction f
 
 lemma PositiveTimeTestFunction.zero_on_nonpositive
