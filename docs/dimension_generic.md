@@ -75,6 +75,6 @@ this instance the generic kernel is *definitionally* the Bessel kernel. The mast
         SatisfiesAllOS (gaussianFreeField_free d m)
 
 specializes to the original four-dimensional statement `SatisfiesAllOS (μ_GFF m)` with the
-same axiom footprint (`propext`, `Classical.choice`, `Quot.sound` — nothing else), and
-`Guardrails.lean` freezes both facts into the build. A `d = 3` (resp. `d = 2`) headline
-theorem requires only the Yukawa (resp. `K₀`) evaluation of the proper-time integral.
+same axiom footprint (`propext`, `Classical.choice`, `Quot.sound` — nothing else). A `d = 3`
+(resp. `d = 2`) headline theorem requires only the Yukawa (resp. `K₀`) evaluation of the
+proper-time integral.

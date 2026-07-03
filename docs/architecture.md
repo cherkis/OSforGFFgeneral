@@ -32,9 +32,9 @@ the later OS proofs (OS1–OS4 need S₂ = C).
 
 Everything is proved: `#print axioms` for the master theorem (both the
 dimension-generic form and its four-dimensional instance) shows exactly Lean's
-three foundational axioms — `propext`, `Classical.choice`, `Quot.sound`.
-`Guardrails.lean` freezes this footprint and the exact statement of the
-four-dimensional theorem into the build, so any regression fails `lake build`.
+three foundational axioms — `propext`, `Classical.choice`, `Quot.sound`. The
+footprint can be re-checked at any time with
+`#print axioms OSforGFF.gaussianFreeField_satisfies_all_OS_axioms`.
 
 ## OS3: the longest proof chain
 
