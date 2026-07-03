@@ -41,11 +41,13 @@ Shared lemmas for OS4_Clustering and OS4_Ergodicity:
 - Exponential bound: |e^z − 1| ≤ |z| · e^{|z|}
 -/
 
-open MeasureTheory Real
+open MeasureTheory Real OSforGFF
 open TopologicalSpace
 open scoped BigOperators
 
 noncomputable section
+
+variable {d : ℕ} [Fact (2 ≤ d)]
 
 namespace OS4infra
 
@@ -74,7 +76,7 @@ export TimeTranslation (
 /-! ## Time Translation Decomposition Lemmas -/
 
 /-- Time translation commutes with real part extraction for complex Schwartz functions. -/
-lemma timeTranslationSchwartzℂ_decompose_fst (s : ℝ) (g : TestFunctionℂ4) :
+lemma timeTranslationSchwartzℂ_decompose_fst (s : ℝ) (g : TestFunctionℂ d) :
     (complex_testfunction_decompose (timeTranslationSchwartzℂ s g)).1 =
     timeTranslationSchwartz s (complex_testfunction_decompose g).1 := by
   ext x
@@ -82,7 +84,7 @@ lemma timeTranslationSchwartzℂ_decompose_fst (s : ℝ) (g : TestFunctionℂ4) 
     timeTranslationSchwartzℂ_apply]
 
 /-- Time translation commutes with imaginary part extraction for complex Schwartz functions. -/
-lemma timeTranslationSchwartzℂ_decompose_snd (s : ℝ) (g : TestFunctionℂ4) :
+lemma timeTranslationSchwartzℂ_decompose_snd (s : ℝ) (g : TestFunctionℂ d) :
     (complex_testfunction_decompose (timeTranslationSchwartzℂ s g)).2 =
     timeTranslationSchwartz s (complex_testfunction_decompose g).2 := by
   ext x
@@ -91,8 +93,8 @@ lemma timeTranslationSchwartzℂ_decompose_snd (s : ℝ) (g : TestFunctionℂ4) 
 
 /-- Time translation on distributions is compatible with complex pairing.
     ⟨T_s ω, g⟩_ℂ = ⟨ω, T_{-s} g⟩_ℂ -/
-lemma timeTranslationDistribution_pairingℂ (s : ℝ) (ω : FieldConfiguration4)
-    (g : TestFunctionℂ4) :
+lemma timeTranslationDistribution_pairingℂ (s : ℝ) (ω : FieldConfiguration d)
+    (g : TestFunctionℂ d) :
     distributionPairingℂ_real (timeTranslationDistribution s ω) g =
     distributionPairingℂ_real ω (timeTranslationSchwartzℂ (-s) g) := by
   simp only [distributionPairingℂ_real]
@@ -108,8 +110,8 @@ lemma timeTranslationDistribution_pairingℂ (s : ℝ) (ω : FieldConfiguration4
 /-! ## Continuity of Complex Pairing under Time Translation -/
 
 /-- s ↦ ⟨T_s ω, g⟩_ℂ is continuous. Uses the proved `continuous_timeTranslationSchwartz`. -/
-lemma continuous_distributionPairingℂ_timeTranslation (ω : FieldConfiguration4)
-    (g : TestFunctionℂ4) :
+lemma continuous_distributionPairingℂ_timeTranslation (ω : FieldConfiguration d)
+    (g : TestFunctionℂ d) :
     Continuous (fun s => distributionPairingℂ_real (timeTranslationDistribution s ω) g) := by
   have h_eq : (fun s => distributionPairingℂ_real (timeTranslationDistribution s ω) g)
       = (fun s => distributionPairingℂ_real ω (timeTranslationSchwartzℂ (-s) g)) := by
@@ -139,10 +141,10 @@ lemma continuous_distributionPairingℂ_timeTranslation (ω : FieldConfiguration
 
 /-- Time translation as a Euclidean group element.
     timeTranslationE t = (1, -timeShiftConst t) where 1 is the identity rotation. -/
-def timeTranslationE (t : ℝ) : QFT.E4 := ⟨1, -timeShiftConst t⟩
+def timeTranslationE (t : ℝ) : QFT.E d := ⟨1, -timeShiftConst t⟩
 
 /-- The Euclidean action of timeTranslationE equals timeTranslationSchwartzℂ. -/
-lemma euclidean_action_timeTranslationE (t : ℝ) (f : TestFunctionℂ4) :
+lemma euclidean_action_timeTranslationE (t : ℝ) (f : TestFunctionℂ d) :
     QFT.euclidean_action (timeTranslationE t) f = timeTranslationSchwartzℂ t f := by
   ext x
   simp only [QFT.euclidean_action_apply, QFT.euclidean_pullback_eq_inv_act]
@@ -150,18 +152,18 @@ lemma euclidean_action_timeTranslationE (t : ℝ) (f : TestFunctionℂ4) :
   simp only [timeTranslationSchwartzℂ_apply, timeShift_eq_add_const]
   congr 1
   simp only [QFT.inv_R, QFT.inv_t, QFT.LinearIsometry.inv]
-  have h1 : ∀ v, (LinearIsometry.toLinearIsometryEquiv (1 : QFT.O4 STDimension) rfl).symm v = v := fun v => by
-    have hv : (LinearIsometry.toLinearIsometryEquiv (1 : QFT.O4 STDimension) rfl) v = v := by simp [LinearIsometry.toLinearIsometryEquiv]
+  have h1 : ∀ v, (LinearIsometry.toLinearIsometryEquiv (1 : QFT.O4 d) rfl).symm v = v := fun v => by
+    have hv : (LinearIsometry.toLinearIsometryEquiv (1 : QFT.O4 d) rfl) v = v := by simp [LinearIsometry.toLinearIsometryEquiv]
     rw [← hv]; exact LinearIsometryEquiv.symm_apply_apply _ v
   simp only [LinearIsometryEquiv.coe_toLinearIsometry, h1, neg_neg]
 
 /-! ## GFF Covariance Invariance -/
 
 /-- The GFF covariance is invariant under simultaneous time translation. -/
-lemma freeCovarianceℂ_bilinear_timeTranslation_invariant (m : ℝ) [Fact (0 < m)] (t : ℝ)
-    (f g : TestFunctionℂ4) :
-    freeCovarianceℂ_bilinear4 m (timeTranslationSchwartzℂ t f) (timeTranslationSchwartzℂ t g) =
-    freeCovarianceℂ_bilinear4 m f g := by
+lemma freeCovarianceℂ_bilinear_timeTranslation_invariant (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (t : ℝ)
+    (f g : TestFunctionℂ d) :
+    freeCovarianceℂ_bilinear m (timeTranslationSchwartzℂ t f) (timeTranslationSchwartzℂ t g) =
+    freeCovarianceℂ_bilinear m f g := by
   rw [← euclidean_action_timeTranslationE t f, ← euclidean_action_timeTranslationE t g]
   exact QFT.freeCovarianceℂ_bilinear_euclidean_invariant m (timeTranslationE t) f g
 
@@ -169,9 +171,9 @@ lemma freeCovarianceℂ_bilinear_timeTranslation_invariant (m : ℝ) [Fact (0 < 
 
 /-- MGF formula for GFF: ∫ exp(⟨ω,J⟩) dμ = exp(+(1/2) * C(J,J)).
     This follows from the characteristic function formula via substitution J → (-I)•J. -/
-lemma gff_mgf_formula (m : ℝ) [Fact (0 < m)] (J : TestFunctionℂ4) :
+lemma gff_mgf_formula (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (J : TestFunctionℂ d) :
     (∫ ω, Complex.exp (distributionPairingℂ_real ω J) ∂(gaussianFreeField_free m).toMeasure) =
-    Complex.exp ((1/2 : ℂ) * freeCovarianceℂ_bilinear4 m J J) := by
+    Complex.exp ((1/2 : ℂ) * freeCovarianceℂ_bilinear m J J) := by
   let negI : ℂ := -Complex.I
   have h_to_cf : (∫ ω, Complex.exp (distributionPairingℂ_real ω J)
       ∂(gaussianFreeField_free m).toMeasure) =
@@ -190,7 +192,6 @@ lemma gff_mgf_formula (m : ℝ) [Fact (0 < m)] (J : TestFunctionℂ4) :
     ring_nf
     simp [Complex.I_sq]
   rw [h_to_cf, GFFIsGaussian.gff_complex_characteristic_OS0 m]
-  rw [show freeCovarianceℂ_bilinear4 m J J = freeCovarianceℂ_bilinear m J J from rfl]
   have h_cov : freeCovarianceℂ_bilinear m (negI • J) (negI • J) =
       -freeCovarianceℂ_bilinear m J J := by
     rw [freeCovarianceℂ_bilinear_smul_left, freeCovarianceℂ_bilinear_smul_right]
@@ -201,7 +202,7 @@ lemma gff_mgf_formula (m : ℝ) [Fact (0 < m)] (J : TestFunctionℂ4) :
   ring_nf
 
 /-- The GFF generating function is invariant under time translation. -/
-lemma gff_generating_time_invariant (m : ℝ) [Fact (0 < m)] (s : ℝ) (f : TestFunctionℂ4) :
+lemma gff_generating_time_invariant (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (s : ℝ) (f : TestFunctionℂ d) :
     ∫ ω, Complex.exp (distributionPairingℂ_real ω (timeTranslationSchwartzℂ s f))
       ∂(gaussianFreeField_free m).toMeasure =
     ∫ ω, Complex.exp (distributionPairingℂ_real ω f)
@@ -214,7 +215,7 @@ lemma gff_generating_time_invariant (m : ℝ) [Fact (0 < m)] (s : ℝ) (f : Test
 /-- Joint MGF factorization for GFF.
     E[e^{⟨ω,f⟩+⟨ω,g⟩}] = E[e^{⟨ω,f⟩}] E[e^{⟨ω,g⟩}] e^{C(f,g)}
     This follows from the GFF being Gaussian. -/
-lemma gff_joint_mgf_factorization (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ4) :
+lemma gff_joint_mgf_factorization (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : TestFunctionℂ d) :
     (∫ ω, Complex.exp (distributionPairingℂ_real ω f + distributionPairingℂ_real ω g)
       ∂(gaussianFreeField_free m).toMeasure) =
     (∫ ω, Complex.exp (distributionPairingℂ_real ω f) ∂(gaussianFreeField_free m).toMeasure) *
@@ -234,14 +235,13 @@ lemma gff_joint_mgf_factorization (m : ℝ) [Fact (0 < m)] (f g : TestFunction�
   rw [h_lhs]
   rw [gff_mgf_formula, gff_mgf_formula, gff_mgf_formula]
   rw [gff_two_point_equals_covarianceℂ_free]
-  rw [freeCovarianceℂ_bilinear_add_left4, freeCovarianceℂ_bilinear_add_right4,
-      freeCovarianceℂ_bilinear_add_right4]
+  rw [freeCovarianceℂ_bilinear_add_left, freeCovarianceℂ_bilinear_add_right,
+      freeCovarianceℂ_bilinear_add_right]
   rw [← Complex.exp_add, ← Complex.exp_add]
   congr 1
-  have h_sym : freeCovarianceℂ_bilinear4 m g f = freeCovarianceℂ_bilinear4 m f g :=
-    freeCovarianceℂ_bilinear_symm4 m g f
-  rw [h_sym,
-    show freeCovarianceℂ_bilinear m f g = freeCovarianceℂ_bilinear4 m f g from rfl]
+  have h_sym : freeCovarianceℂ_bilinear m g f = freeCovarianceℂ_bilinear m f g :=
+    freeCovarianceℂ_bilinear_symm m g f
+  rw [h_sym]
   ring
 
 /-! ## Exponential Bound -/
