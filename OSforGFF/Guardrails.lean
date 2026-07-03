@@ -32,6 +32,11 @@ import «OSforGFF».OS.Master
 #guard_msgs in
 #print axioms OSforGFF.gaussianFreeField_satisfies_all_OS_axioms
 
+-- ── Axiom-footprint guard for the dimension-generic master theorem ───────────
+/-- info: 'OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_generic' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_generic
+
 -- ── Goal-type guard: pins the master theorem's statement (ACTIVATED) ──────────
 /-- info: OSforGFF.gaussianFreeField_satisfies_all_OS_axioms : ∀ (m : ℝ) [inst : Fact (0 < m)], SatisfiesAllOS (μ_GFF m) -/
 #guard_msgs in
