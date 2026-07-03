@@ -139,7 +139,8 @@ lemma freeCovarianceFormR_reflection_matrix_posSemidef
         induction' (Finset.univ : Finset (Fin n)) using Finset.induction with j t hj ih_right
         · simp only [Finset.sum_empty]
           -- freeCovarianceFormR m u 0 = 0 (follows from linearity)
-          rw [← freeCovarianceFormR_zero_right (m := m)]
+          rw [← freeCovarianceFormR_zero_right (d := STDimension) (m := m)
+            (QFT.compTimeReflectionReal (f i).val)]
         · rw [Finset.sum_insert hj, Finset.sum_insert hj]
           -- Apply right linearity: freeCovarianceFormR_add_right and freeCovarianceFormR_smul_right
           -- First convert multiplications to scalar multiplications

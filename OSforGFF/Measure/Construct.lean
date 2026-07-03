@@ -113,7 +113,7 @@ noncomputable def constructGaussianMeasureMinlos_free (m : ℝ) [Fact (0 < m)] :
   ProbabilityMeasure FieldConfiguration4 := by
   classical
   -- Build the embedding T with ‖T f‖² = freeCovarianceFormR m f f
-  have ex1 := sqrtPropagatorEmbedding m
+  have ex1 := sqrtPropagatorEmbedding (d := STDimension) m
   let H : Type := Classical.choose ex1
   have ex2 := Classical.choose_spec ex1
   letI hNorm : NormedAddCommGroup H := Classical.choose ex2
@@ -123,12 +123,12 @@ noncomputable def constructGaussianMeasureMinlos_free (m : ℝ) [Fact (0 < m)] :
   let T : TestFunction4 →ₗ[ℝ] H := Classical.choose ex4
   have h_eq : ∀ f : TestFunction4, freeCovarianceFormR m f f = ‖T f‖^2 := Classical.choose_spec ex4
   -- Continuity, symmetry, and normalization
-  have h_cont := freeCovarianceFormR_continuous m
-  have h_symm : ∀ f, freeCovarianceFormR m (-f) (-f) = freeCovarianceFormR m f f := by
+  have h_cont := freeCovarianceFormR_continuous (d := STDimension) m
+  have h_symm : ∀ f : TestFunction4, freeCovarianceFormR m (-f) (-f) = freeCovarianceFormR m f f := by
     intro f
     have h1 : -f = (-1 : ℝ) • f := (neg_one_smul ℝ f).symm
     rw [h1, freeCovarianceFormR_smul_left, freeCovarianceFormR_smul_right]; ring
-  have h_zero : freeCovarianceFormR m (0) (0) = 0 := by simp [freeCovarianceFormR]
+  have h_zero : freeCovarianceFormR m (0 : TestFunction4) (0 : TestFunction4) = 0 := by simp [freeCovarianceFormR]
   -- Use Minlos: directly obtain a ProbabilityMeasure with the Gaussian characteristic functional
   have h_minlos :=
     gaussian_measure_characteristic_functional
@@ -152,7 +152,7 @@ theorem gff_real_characteristic (m : ℝ) [Fact (0 < m)] :
       Complex.exp (-(1/2 : ℂ) * (freeCovarianceFormR m f f : ℝ)) := by
   classical
   -- Rebuild the same Minlos construction to access its specification
-  have ex1 := sqrtPropagatorEmbedding m
+  have ex1 := sqrtPropagatorEmbedding (d := STDimension) m
   let H : Type := Classical.choose ex1
   have ex2 := Classical.choose_spec ex1
   letI hNorm : NormedAddCommGroup H := Classical.choose ex2
@@ -161,12 +161,12 @@ theorem gff_real_characteristic (m : ℝ) [Fact (0 < m)] :
   have ex4 := Classical.choose_spec ex3
   let T : TestFunction4 →ₗ[ℝ] H := Classical.choose ex4
   have h_eq : ∀ f : TestFunction4, freeCovarianceFormR m f f = ‖T f‖^2 := Classical.choose_spec ex4
-  have h_cont := freeCovarianceFormR_continuous m
-  have h_symm : ∀ f, freeCovarianceFormR m (-f) (-f) = freeCovarianceFormR m f f := by
+  have h_cont := freeCovarianceFormR_continuous (d := STDimension) m
+  have h_symm : ∀ f : TestFunction4, freeCovarianceFormR m (-f) (-f) = freeCovarianceFormR m f f := by
     intro f
     have h1 : -f = (-1 : ℝ) • f := (neg_one_smul ℝ f).symm
     rw [h1, freeCovarianceFormR_smul_left, freeCovarianceFormR_smul_right]; ring
-  have h_zero : freeCovarianceFormR m (0) (0) = 0 := by simp [freeCovarianceFormR]
+  have h_zero : freeCovarianceFormR m (0 : TestFunction4) (0 : TestFunction4) = 0 := by simp [freeCovarianceFormR]
   have h_minlos :=
     gaussian_measure_characteristic_functional
       (E := TestFunction4) (H := H) T (freeCovarianceFormR m)
@@ -324,7 +324,7 @@ lemma gff_second_moment_eq_covariance
 lemma freeCovarianceFormR_gaussian_cf_pd (m : ℝ) [Fact (0 < m)] :
     IsPositiveDefinite
       (fun f : TestFunction4 => Complex.exp (-(1/2 : ℂ) * (freeCovarianceFormR m f f : ℂ))) := by
-  have ex1 := sqrtPropagatorEmbedding m
+  have ex1 := sqrtPropagatorEmbedding (d := STDimension) m
   let H : Type := Classical.choose ex1
   have ex2 := Classical.choose_spec ex1
   letI hNorm : NormedAddCommGroup H := Classical.choose ex2
@@ -333,11 +333,11 @@ lemma freeCovarianceFormR_gaussian_cf_pd (m : ℝ) [Fact (0 < m)] :
   have ex4 := Classical.choose_spec ex3
   let T : TestFunction4 →ₗ[ℝ] H := Classical.choose ex4
   have h_eq : ∀ f : TestFunction4, freeCovarianceFormR m f f = ‖T f‖^2 := Classical.choose_spec ex4
-  have h_symm : ∀ f, freeCovarianceFormR m (-f) (-f) = freeCovarianceFormR m f f := by
+  have h_symm : ∀ f : TestFunction4, freeCovarianceFormR m (-f) (-f) = freeCovarianceFormR m f f := by
     intro f
     have h1 : -f = (-1 : ℝ) • f := (neg_one_smul ℝ f).symm
     rw [h1, freeCovarianceFormR_smul_left, freeCovarianceFormR_smul_right]; ring
-  exact gaussian_positive_definite_bochner T (freeCovarianceFormR m) h_eq h_symm
+  exact gaussian_positive_definite_bochner T (freeCovarianceFormR (d := STDimension) m) h_eq h_symm
 
 /-- The free covariance form as a MinlosAnalytic.CovarianceForm structure. -/
 def freeCovarianceForm (m : ℝ) [Fact (0 < m)] : MinlosAnalytic.CovarianceForm :=

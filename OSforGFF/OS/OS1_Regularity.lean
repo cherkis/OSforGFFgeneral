@@ -120,7 +120,8 @@ theorem schwingerTwoPointFunction_eq_GFF (m : ℝ) [Fact (0 < m)] (x : SpaceTime
     congr 1
     ext v
     -- The kernel is translation invariant
-    have h_transl : freeCovariance4 m u v = freeCovarianceKernel m (u - v) := by
+    have h_transl : freeCovariance STDimension m u v = freeCovarianceKernel m (u - v) := by
+      rw [freeCovariance_dim4_eq]
       simp only [freeCovarianceKernel, freeCovariance4, freeCovarianceBessel, zero_sub, norm_neg]
     rw [h_transl]
   -- Apply the general kernel theorem
@@ -291,8 +292,9 @@ lemma gff_generating_bound_by_imaginary (m : ℝ) [Fact (0 < m)] (f : TestFuncti
   have h_pos : 0 ≤ (freeCovarianceℂ_bilinear4 m frC frC).re := by
     -- For real test functions frC = toComplex fRe, the complex conjugate is the identity
     -- so freeCovarianceℂ_bilinear4 agrees with freeCovarianceℂ4
-    rw [← freeCovarianceℂ_eq_bilinear_on_reals m]
-    exact freeCovarianceℂ_positive4 m frC
+    rw [show freeCovarianceℂ_bilinear4 m frC frC = freeCovarianceℂ_bilinear m frC frC from rfl,
+      ← freeCovarianceℂ_eq_bilinear_on_reals m]
+    exact freeCovarianceℂ_positive (m := m) frC
   linarith
 
 /-

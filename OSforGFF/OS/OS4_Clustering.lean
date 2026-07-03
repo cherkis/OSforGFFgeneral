@@ -418,8 +418,9 @@ theorem schwartz_cross_covariance_decay_real (m : ℝ) [Fact (0 < m)]
         unfold freeCovarianceFormR
         -- Now LHS = (∫∫ f(x) * freeCovariance4(x,y) * (g.translate a)(y) : ℂ)
         -- Use translation invariance: freeCovariance4 m x y = freeCovarianceKernel m (x - y)
-        have h_transl_inv : ∀ x y, freeCovariance4 m x y = freeCovarianceKernel m (x - y) := by
+        have h_transl_inv : ∀ x y, freeCovariance STDimension m x y = freeCovarianceKernel m (x - y) := by
           intro x y
+          rw [freeCovariance_dim4_eq]
           unfold freeCovarianceKernel freeCovariance4 freeCovarianceBessel
           simp only [zero_sub, norm_neg]
         -- Use translate_apply: (g.translate a) y = g (y - a)

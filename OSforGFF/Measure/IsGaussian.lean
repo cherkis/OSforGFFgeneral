@@ -156,7 +156,6 @@ lemma gff_slice_analytic_z1 (f g : TestFunction4) (z₀ : ℂ) :
   simp only [add_comm (z₀ • toComplex f)] at h ⊢
   convert h using 2
 
-omit [Fact (0 < m)] in
 /-- Slice of Gaussian RHS is analytic (exp of polynomial). -/
 lemma gaussian_rhs_slice_analytic_z0 (f g : TestFunction4) (t : ℂ) :
     AnalyticOnNhd ℂ (fun z₀ : ℂ =>
@@ -178,7 +177,6 @@ lemma gaussian_rhs_slice_analytic_z0 (f g : TestFunction4) (t : ℂ) :
     exact h1
   · exact analyticOnNhd_const
 
-omit [Fact (0 < m)] in
 /-- Slice of Gaussian RHS is analytic in the second variable. -/
 lemma gaussian_rhs_slice_analytic_z1 (f g : TestFunction4) (z₀ : ℂ) :
     AnalyticOnNhd ℂ (fun z₁ : ℂ =>
@@ -327,6 +325,8 @@ theorem gff_complex_characteristic_OS0 :
       rw [freeCovarianceℂ_bilinear_add_left4, freeCovarianceℂ_bilinear_add_right4,
           freeCovarianceℂ_bilinear_add_right4]
       simp only [freeCovarianceℂ_bilinear_smul_left4, freeCovarianceℂ_bilinear_smul_right4]
+      simp only [show ∀ (u v : TestFunctionℂ4),
+          freeCovarianceℂ_bilinear4 m u v = freeCovarianceℂ_bilinear m u v from fun _ _ => rfl]
       have h_ff := freeCovarianceℂ_bilinear_agrees_on_reals (m := m) f f
       have h_fg := freeCovarianceℂ_bilinear_agrees_on_reals (m := m) f g
       have h_gf := freeCovarianceℂ_bilinear_agrees_on_reals (m := m) g f

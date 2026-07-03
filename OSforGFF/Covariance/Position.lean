@@ -25,6 +25,7 @@ import OSforGFF.Covariance.Momentum
 import OSforGFF.General.FourierTransforms
 import OSforGFF.Covariance.Parseval
 import OSforGFF.Covariance.ParsevalGeneric
+import OSforGFF.Instances.Dim4
 
 /-!
 # Position-Space Free Covariance

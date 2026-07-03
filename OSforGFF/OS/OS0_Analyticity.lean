@@ -739,6 +739,8 @@ theorem gff_complex_CF_covariance (f : TestFunctionℂ4) :
     rw [freeCovarianceℂ_bilinear_add_left4, freeCovarianceℂ_bilinear_add_right4,
         freeCovarianceℂ_bilinear_add_right4]
     simp only [freeCovarianceℂ_bilinear_smul_left4, freeCovarianceℂ_bilinear_smul_right4]
+    simp only [show ∀ (u v : TestFunctionℂ4),
+        freeCovarianceℂ_bilinear4 m u v = freeCovarianceℂ_bilinear m u v from fun _ _ => rfl]
     rw [freeCovarianceℂ_bilinear_agrees_on_reals m f_re f_re,
         freeCovarianceℂ_bilinear_agrees_on_reals m f_re f_im,
         freeCovarianceℂ_bilinear_agrees_on_reals m f_im f_re,

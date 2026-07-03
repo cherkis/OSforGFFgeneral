@@ -5,6 +5,7 @@ Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 import Mathlib.Analysis.Fourier.Inversion
 import Mathlib.Analysis.Distribution.SchwartzSpace.Fourier
+import OSforGFF.General.FunctionalAnalysis
 import OSforGFF.Spacetime.Basic
 import OSforGFF.Spacetime.ComplexTestFunction
 import OSforGFF.Spacetime.DiscreteSymmetry
@@ -822,5 +823,99 @@ theorem freeCovarianceℂ_bilinear_add_right (m : ℝ) [Fact (0 < m)] [GFFPropag
     freeCovarianceℂ_bilinear_symm m g₁ f, freeCovarianceℂ_bilinear_symm m g₂ f]
 
 end BilinearAlgebra
+
+/-! ### The momentum weight and the weighted `L²` multiplication operator -/
+
+section MomentumWeight
+
+variable {d : ℕ}
+
+/-- The momentum propagator is positive. -/
+lemma freePropagatorMom_pos (m : ℝ) [Fact (0 < m)] (k : EuclideanSpace ℝ (Fin d)) :
+    0 < freePropagatorMom d m k := by
+  unfold OSforGFF.freePropagatorMom
+  have hm : (0 : ℝ) < m := Fact.out
+  positivity
+
+/-- The momentum propagator is nonnegative. -/
+lemma freePropagatorMom_nonneg (m : ℝ) [Fact (0 < m)] (k : EuclideanSpace ℝ (Fin d)) :
+    0 ≤ freePropagatorMom d m k :=
+  le_of_lt (freePropagatorMom_pos m k)
+
+/-- The square root of the momentum propagator: `1 / √((2π)²‖k‖² + m²)`. -/
+noncomputable def freePropagatorMomSqrt (d : ℕ) (m : ℝ) (k : EuclideanSpace ℝ (Fin d)) : ℝ :=
+  1 / Real.sqrt ((2 * Real.pi) ^ 2 * ‖k‖ ^ 2 + m ^ 2)
+
+lemma freePropagatorMomSqrt_pos (m : ℝ) [Fact (0 < m)] (k : EuclideanSpace ℝ (Fin d)) :
+    0 < freePropagatorMomSqrt d m k := by
+  unfold freePropagatorMomSqrt
+  have hm : (0 : ℝ) < m := Fact.out
+  have h : 0 < Real.sqrt ((2 * Real.pi) ^ 2 * ‖k‖ ^ 2 + m ^ 2) :=
+    Real.sqrt_pos.mpr (by positivity)
+  positivity
+
+/-- The squared weight is the momentum propagator. -/
+lemma freePropagatorMomSqrt_sq (m : ℝ) [Fact (0 < m)] (k : EuclideanSpace ℝ (Fin d)) :
+    (freePropagatorMomSqrt d m k) ^ 2 = freePropagatorMom d m k := by
+  unfold freePropagatorMomSqrt OSforGFF.freePropagatorMom
+  have hm : (0 : ℝ) < m := Fact.out
+  rw [div_pow, one_pow, Real.sq_sqrt (by positivity)]
+
+lemma freePropagatorMomSqrt_continuous (m : ℝ) [Fact (0 < m)] :
+    Continuous (fun k : EuclideanSpace ℝ (Fin d) => freePropagatorMomSqrt d m k) := by
+  unfold freePropagatorMomSqrt
+  have hm : (0 : ℝ) < m := Fact.out
+  refine continuous_const.div (Real.continuous_sqrt.comp (by fun_prop)) fun k => ?_
+  exact ne_of_gt (Real.sqrt_pos.mpr (by positivity))
+
+lemma freePropagatorMomSqrt_measurable (m : ℝ) [Fact (0 < m)] :
+    Measurable (fun k : EuclideanSpace ℝ (Fin d) => freePropagatorMomSqrt d m k) :=
+  (freePropagatorMomSqrt_continuous m).measurable
+
+/-- The weight is pointwise bounded by `1 / m`. -/
+lemma freePropagatorMomSqrt_le_inv_mass (m : ℝ) [Fact (0 < m)] :
+    ∀ k : EuclideanSpace ℝ (Fin d), freePropagatorMomSqrt d m k ≤ 1 / m := by
+  intro k
+  have hmpos : 0 < m := Fact.out
+  have h1 : (0 : ℝ) ≤ (2 * Real.pi) ^ 2 * ‖k‖ ^ 2 := by positivity
+  have hm_sqrt_le : m ≤ Real.sqrt ((2 * Real.pi) ^ 2 * ‖k‖ ^ 2 + m ^ 2) := by
+    calc m = Real.sqrt (m ^ 2) := by rw [Real.sqrt_sq hmpos.le]
+      _ ≤ Real.sqrt ((2 * Real.pi) ^ 2 * ‖k‖ ^ 2 + m ^ 2) :=
+        Real.sqrt_le_sqrt (by linarith)
+  unfold freePropagatorMomSqrt
+  exact one_div_le_one_div_of_le hmpos hm_sqrt_le
+
+/-- The complexified weight is a.e. bounded by `1 / m`. -/
+lemma freePropagatorMomSqrt_bounded_ae (m : ℝ) [Fact (0 < m)] :
+    ∀ᵐ k ∂(volume : Measure (EuclideanSpace ℝ (Fin d))),
+      ‖(freePropagatorMomSqrt d m k : ℂ)‖ ≤ 1 / m := by
+  filter_upwards with k
+  rw [Complex.norm_real, Real.norm_of_nonneg (freePropagatorMomSqrt_pos m k).le]
+  exact freePropagatorMomSqrt_le_inv_mass m k
+
+/-- Multiplication by the square-root momentum weight as a bounded operator on complex `L²`. -/
+noncomputable def freePropagatorMomSqrt_mul_CLM (d : ℕ) (m : ℝ) [Fact (0 < m)] :
+    Lp ℂ 2 (volume : Measure (EuclideanSpace ℝ (Fin d))) →L[ℂ]
+      Lp ℂ 2 (volume : Measure (EuclideanSpace ℝ (Fin d))) :=
+  linfty_mul_L2_CLM (fun k => (freePropagatorMomSqrt d m k : ℂ))
+    (Complex.continuous_ofReal.measurable.comp (freePropagatorMomSqrt_measurable m)) (1 / m)
+    (freePropagatorMomSqrt_bounded_ae m)
+
+/-- The multiplication operator acts pointwise almost everywhere. -/
+lemma freePropagatorMomSqrt_mul_CLM_spec (m : ℝ) [Fact (0 < m)]
+    (f : Lp ℂ 2 (volume : Measure (EuclideanSpace ℝ (Fin d)))) :
+    (freePropagatorMomSqrt_mul_CLM d m f) =ᵐ[volume]
+      fun k => (freePropagatorMomSqrt d m k : ℂ) * f k := by
+  unfold freePropagatorMomSqrt_mul_CLM
+  exact linfty_mul_L2_CLM_spec _ _ _ _ f
+
+/-- Schwartz functions have integrable squared norm. -/
+lemma schwartz_normSq_integrable (f : TestFunctionℂ d) :
+    Integrable (fun k => ‖f k‖ ^ 2) volume := by
+  have hf_memLp : MemLp f 2 volume := f.memLp 2 volume
+  have hf_meas : AEStronglyMeasurable f volume := hf_memLp.1
+  simpa using (memLp_two_iff_integrable_sq_norm hf_meas).1 hf_memLp
+
+end MomentumWeight
 
 end
