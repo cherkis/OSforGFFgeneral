@@ -487,7 +487,7 @@ theorem gff_two_point_equals_covarianceℂ_free (m : ℝ) [Fact (0 < m)] (f g : 
   --   .2.1: S₂(φ₁ + φ₂, ψ) = S₂(φ₁, ψ) + S₂(φ₂, ψ)
   --   .2.2.1: S₂(φ₁, c • ψ) = c * S₂(φ₁, ψ)
   --   .2.2.2: S₂(φ₁, ψ + φ₂) = S₂(φ₁, ψ) + S₂(φ₁, φ₂)
-  have h_bilin := covariance_bilinear_from_general m
+  have h_bilin := covariance_bilinear_from_general (d := STDimension) m
   have S2_smul_left : ∀ (c : ℂ) a b, SchwingerFunctionℂ₂ (gaussianFreeField_free m) (c • a) b =
       c * SchwingerFunctionℂ₂ (gaussianFreeField_free m) a b :=
     fun c a b => (h_bilin c a 0 b).1

@@ -187,7 +187,9 @@ theorem schwinger_two_point_decay_bound (m : ℝ) [Fact (0 < m)] :
     This uses the bridge lemma to connect to the concrete GFF definition.
     The functions agree on the complement of {0}, which has full measure. -/
 theorem schwingerTwoPoint_measurable (m : ℝ) [Fact (0 < m)] :
-    AEStronglyMeasurable (fun x => SchwingerTwoPointFunction (gaussianFreeField_free m) x) volume := by
+    AEStronglyMeasurable
+      (fun x => SchwingerTwoPointFunction (gaussianFreeField_free (d := STDimension) m) x)
+      volume := by
   -- Use that the abstract and concrete definitions agree except possibly at 0
   -- Since {0} is a null set in Lebesgue measure, AE strong measurability follows from
   -- the measurability of freeCovarianceKernel and the fact that the functions differ

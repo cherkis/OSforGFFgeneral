@@ -38,10 +38,12 @@ This generalizes `gaussian_pairing_product_integrable_free_core` to arbitrary n,
 providing a unified foundation for all Schwinger function computations.
 -/
 
-open MeasureTheory Complex Finset
+open MeasureTheory Complex Finset OSforGFF
 open TopologicalSpace SchwartzMap
 
 noncomputable section
+
+variable {d : ℕ} [Fact (2 ≤ d)]
 
 /-! ## n-Point Integrability for Gaussian Free Fields -/
 
@@ -53,13 +55,13 @@ open MeasureTheory Complex
 This is the complex analogue of `gaussian_pairing_square_integrable_real` and will serve as the
 base estimate for higher Gaussian moments. -/
 lemma gaussian_complex_pairing_abs_sq_integrable
-    (m : ℝ) [Fact (0 < m)] (φ : TestFunctionℂ4) :
+    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (φ : TestFunctionℂ d) :
   Integrable (fun ω => ‖distributionPairingℂ_real ω φ‖ ^ 2)
     (gaussianFreeField_free m).toMeasure := by
   classical
   -- Split the complex test function into real and imaginary parts
-  set φRe : TestFunction4 := (complex_testfunction_decompose φ).1
-  set φIm : TestFunction4 := (complex_testfunction_decompose φ).2
+  set φRe : TestFunction d := (complex_testfunction_decompose φ).1
+  set φIm : TestFunction d := (complex_testfunction_decompose φ).2
 
   -- Use the proven theorem from GFFbridge (derives from gff_pairing_is_gaussian)
   have hRe_mem :
@@ -113,7 +115,7 @@ end GaussianMoments
 /-- **Foundation**: The original 2-point case implemented directly.
     This provides the base case for the general n-point theorem. -/
 theorem gaussian_pairing_product_integrable_free_2point
-  (m : ℝ) [Fact (0 < m)] (φ ψ : TestFunctionℂ4) :
+  (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (φ ψ : TestFunctionℂ d) :
   Integrable (fun ω => distributionPairingℂ_real ω φ * distributionPairingℂ_real ω ψ)
     (gaussianFreeField_free m).toMeasure := by
   -- Strategy: Decompose both complex test functions into real and imaginary parts
@@ -121,10 +123,10 @@ theorem gaussian_pairing_product_integrable_free_2point
 
   classical
   -- Decompose φ and ψ into real and imaginary parts
-  set φRe : TestFunction4 := (complex_testfunction_decompose φ).1
-  set φIm : TestFunction4 := (complex_testfunction_decompose φ).2
-  set ψRe : TestFunction4 := (complex_testfunction_decompose ψ).1
-  set ψIm : TestFunction4 := (complex_testfunction_decompose ψ).2
+  set φRe : TestFunction d := (complex_testfunction_decompose φ).1
+  set φIm : TestFunction d := (complex_testfunction_decompose φ).2
+  set ψRe : TestFunction d := (complex_testfunction_decompose ψ).1
+  set ψIm : TestFunction d := (complex_testfunction_decompose ψ).2
 
   -- For each real component, we have L² integrability from the proven theorem
   have hφRe_mem : MemLp (distributionPairingCLM φRe) (2 : ENNReal) (gaussianFreeField_free m).toMeasure :=
@@ -239,8 +241,8 @@ theorem gaussian_pairing_product_integrable_free_2point
 
 /-- **Corollary**: The complex covariance is well-defined via the general integrability. -/
 theorem covariance_bilinear_from_general
-  (m : ℝ) [Fact (0 < m)] :
-  CovarianceBilinear (gaussianFreeField_free (d := STDimension) m) := by
+  (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
+  CovarianceBilinear (gaussianFreeField_free (d := d) m) := by
   -- Apply the general construction from integrability
   apply CovarianceBilinear_of_integrable
   exact fun φ ψ => gaussian_pairing_product_integrable_free_2point m φ ψ

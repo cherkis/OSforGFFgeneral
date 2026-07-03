@@ -61,7 +61,7 @@ lemma schwinger2_sum_expansion (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ4)
       2 * SchwingerFunctionℂ₂ (gaussianFreeField_free m) f g +
       SchwingerFunctionℂ₂ (gaussianFreeField_free m) g g := by
   -- Use bilinearity from covariance_bilinear_from_general
-  have h_bilin := covariance_bilinear_from_general m
+  have h_bilin := covariance_bilinear_from_general (d := STDimension) m
   have S2_add_left : ∀ a b c, SchwingerFunctionℂ₂ (gaussianFreeField_free m) (a + b) c =
       SchwingerFunctionℂ₂ (gaussianFreeField_free m) a c +
       SchwingerFunctionℂ₂ (gaussianFreeField_free m) b c :=
