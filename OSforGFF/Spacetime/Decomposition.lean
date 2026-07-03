@@ -10,13 +10,13 @@ import OSforGFF.Spacetime.ProdIntegrable
 /-!
 # Spacetime Decomposition
 
-This file provides the measure-preserving decomposition of SpaceTime4 into
-time and spatial components: SpaceTime4 ≃ᵐ ℝ × SpatialCoords4.
+This file provides the measure-preserving decomposition of `SpaceTime d` into
+time and spatial components: `SpaceTime d ≃ᵐ ℝ × SpatialCoords d`.
 
 ## Main Definitions
 
 * `piLpMeasurableEquiv` - MeasurableEquiv between PiLp and underlying pi type
-* `spacetimeDecomp` - The measurable equivalence SpaceTime4 ≃ᵐ ℝ × SpatialCoords4
+* `spacetimeDecomp` - The measurable equivalence `SpaceTime d ≃ᵐ ℝ × SpatialCoords d`
 
 ## Main Results
 
@@ -27,13 +27,15 @@ time and spatial components: SpaceTime4 ≃ᵐ ℝ × SpatialCoords4.
 
 open MeasureTheory MeasureSpace FiniteDimensional Real
 
-/-! ### Integral Decomposition for SpaceTime4
+/-! ### Integral Decomposition for `SpaceTime d`
 
-We establish that integrals over SpaceTime4 can be decomposed into
-iterated integrals over ℝ (time component) and SpatialCoords4 (spatial components).
+We establish that integrals over `SpaceTime d` can be decomposed into
+iterated integrals over ℝ (time component) and `SpatialCoords d` (spatial components).
 This uses `MeasurableEquiv.piFinSuccAbove` and `measurePreserving_piFinSuccAbove`.
 
 -/
+
+variable {d : ℕ} [Fact (2 ≤ d)]
 
 /-- MeasurableEquiv between PiLp and the underlying pi type. -/
 def piLpMeasurableEquiv (n : ℕ) : PiLp 2 (fun _ : Fin n => ℝ) ≃ᵐ (Fin n → ℝ) where
@@ -41,16 +43,24 @@ def piLpMeasurableEquiv (n : ℕ) : PiLp 2 (fun _ : Fin n => ℝ) ≃ᵐ (Fin n 
   measurable_toFun := WithLp.measurable_ofLp 2 _
   measurable_invFun := WithLp.measurable_toLp 2 _
 
-/-- The measurable equivalence from SpaceTime4 to ℝ × SpatialCoords4.
-    Composes three measure-preserving maps:
-    1. piLpMeasurableEquiv : EuclideanSpace ℝ (Fin 4) → (Fin 4 → ℝ)
-    2. piFinSuccAbove 0 : (Fin 4 → ℝ) → ℝ × (Fin 3 → ℝ)
-    3. id × piLpMeasurableEquiv.symm : ℝ × (Fin 3 → ℝ) → ℝ × SpatialCoords4 -/
-def spacetimeDecomp : SpaceTime4 ≃ᵐ ℝ × SpatialCoords4 :=
-  (piLpMeasurableEquiv STDimension).trans
-  ((MeasurableEquiv.piFinSuccAbove (fun _ => ℝ) 0).trans
+/-- Reindexing along `d = (d - 1) + 1` as a measurable equivalence of pi types. -/
+def finSplitMeasurableEquiv :
+    (Fin d → ℝ) ≃ᵐ (Fin (d - 1 + 1) → ℝ) :=
+  MeasurableEquiv.piCongrLeft (fun _ => ℝ)
+    (finCongr (show d = d - 1 + 1 by have h : 2 ≤ d := Fact.out; omega))
+
+/-- The measurable equivalence from `SpaceTime d` to `ℝ × SpatialCoords d`.
+    Composes four measure-preserving maps:
+    1. piLpMeasurableEquiv : EuclideanSpace ℝ (Fin d) → (Fin d → ℝ)
+    2. finSplitMeasurableEquiv : (Fin d → ℝ) → (Fin ((d-1)+1) → ℝ)
+    3. piFinSuccAbove 0 : (Fin ((d-1)+1) → ℝ) → ℝ × (Fin (d-1) → ℝ)
+    4. id × piLpMeasurableEquiv.symm : ℝ × (Fin (d-1) → ℝ) → ℝ × SpatialCoords d -/
+def spacetimeDecomp : SpaceTime d ≃ᵐ ℝ × SpatialCoords d :=
+  (piLpMeasurableEquiv d).trans
+  ((finSplitMeasurableEquiv.trans
+    (MeasurableEquiv.piFinSuccAbove (fun _ => ℝ) 0)).trans
   (MeasurableEquiv.prodCongr (MeasurableEquiv.refl ℝ)
-    (piLpMeasurableEquiv (STDimension - 1)).symm))
+    (piLpMeasurableEquiv (d - 1)).symm))
 
 /-- Measure preservation for piLpMeasurableEquiv. -/
 lemma piLpMeasurableEquiv_measurePreserving (n : ℕ) :
@@ -61,79 +71,72 @@ lemma piLpMeasurableEquiv_measurePreserving (n : ℕ) :
 
 /-- The spacetime decomposition preserves measure. -/
 theorem spacetimeDecomp_measurePreserving :
-    MeasurePreserving spacetimeDecomp (volume : Measure SpaceTime4) volume := by
+    MeasurePreserving (spacetimeDecomp (d := d)) (volume : Measure (SpaceTime d)) volume := by
   unfold spacetimeDecomp
-  -- Step 1: PiLp → (Fin 4 → ℝ) is measure-preserving
-  have h1 : MeasurePreserving (piLpMeasurableEquiv STDimension)
-      (volume : Measure SpaceTime4) volume :=
-    piLpMeasurableEquiv_measurePreserving STDimension
+  -- Step 1: PiLp → (Fin d → ℝ) is measure-preserving
+  have h1 : MeasurePreserving (piLpMeasurableEquiv d)
+      (volume : Measure (SpaceTime d)) volume :=
+    piLpMeasurableEquiv_measurePreserving d
+  -- Step 1b: reindexing along d = (d-1)+1 is measure-preserving
+  have h1b : MeasurePreserving (finSplitMeasurableEquiv (d := d))
+      (volume : Measure (Fin d → ℝ)) volume :=
+    volume_measurePreserving_piCongrLeft _ _
   -- Step 2: piFinSuccAbove 0 is measure-preserving
   have h2 : MeasurePreserving (MeasurableEquiv.piFinSuccAbove (fun _ => ℝ) 0)
-      (volume : Measure (Fin STDimension → ℝ)) volume :=
+      (volume : Measure (Fin (d - 1 + 1) → ℝ)) volume :=
     measurePreserving_piFinSuccAbove (fun _ => volume) 0
   -- Step 3: id × piLpMeasurableEquiv.symm is measure-preserving
   have h3 : MeasurePreserving
       (MeasurableEquiv.prodCongr (MeasurableEquiv.refl ℝ)
-        (piLpMeasurableEquiv (STDimension - 1)).symm)
-      (volume : Measure (ℝ × (Fin (STDimension - 1) → ℝ))) volume := by
+        (piLpMeasurableEquiv (d - 1)).symm)
+      (volume : Measure (ℝ × (Fin (d - 1) → ℝ))) volume := by
     apply MeasurePreserving.prod
     · exact MeasurePreserving.id volume
     · simp only [piLpMeasurableEquiv, MeasurableEquiv.symm_mk]
-      exact PiLp.volume_preserving_toLp (ι := Fin (STDimension - 1))
-  exact h1.trans (h2.trans h3)
+      exact PiLp.volume_preserving_toLp (ι := Fin (d - 1))
+  exact h1.trans ((h1b.trans h2).trans h3)
 
 /-- Spacetime decomposition maps k to (k 0, spatialPart k). -/
-theorem spacetimeDecomp_apply (k : SpaceTime4) :
-    spacetimeDecomp k = (k 0, spatialPart k) := rfl
+theorem spacetimeDecomp_apply (k : SpaceTime d) :
+    spacetimeDecomp k = (k 0, spatialPart k) := by
+  obtain ⟨n, rfl⟩ : ∃ n, d = n + 1 := ⟨d - 1, by have h : 2 ≤ d := Fact.out; omega⟩
+  rfl
 
-/-- `spacetimeDecomp.symm` equals `spacetimeOfTimeSpace4` (from SchwartzProdIntegrable.lean).
-    Both construct a SpaceTime4 point from time t and spatial coordinates v. -/
-lemma spacetimeDecomp_symm_eq_spacetimeOfTimeSpace (t : ℝ) (v : SpatialCoords4) :
-    spacetimeDecomp.symm (t, v) = spacetimeOfTimeSpace4 t v := by
-  -- Both definitions construct a point x with x 0 = t and x i = v (i-1) for i > 0
+/-- `spacetimeDecomp.symm` equals `spacetimeOfTimeSpace` (from ProdIntegrable.lean).
+    Both construct a spacetime point from time t and spatial coordinates v. -/
+lemma spacetimeDecomp_symm_eq_spacetimeOfTimeSpace (t : ℝ) (v : SpatialCoords d) :
+    spacetimeDecomp.symm (t, v) = spacetimeOfTimeSpace t v := by
+  have h_apply : spacetimeDecomp (spacetimeDecomp.symm (t, v)) = (t, v) :=
+    spacetimeDecomp.apply_symm_apply (t, v)
+  rw [spacetimeDecomp_apply] at h_apply
+  have h_time : (spacetimeDecomp.symm (t, v) : SpaceTime d) 0 = t :=
+    congr_arg Prod.fst h_apply
+  have h_spatial : spatialPart (spacetimeDecomp.symm (t, v)) = v :=
+    congr_arg Prod.snd h_apply
+  obtain ⟨n, rfl⟩ : ∃ n, d = n + 1 := ⟨d - 1, by have h : 2 ≤ d := Fact.out; omega⟩
   ext i
   cases' i using Fin.cases with j
   · -- i = 0: time component
-    have h1 : (spacetimeDecomp.symm (t, v)) 0 = t :=
-      congr_arg Prod.fst (spacetimeDecomp.apply_symm_apply (t, v))
-    rw [h1, spacetimeOfTimeSpace4_time]
+    rw [show spacetimeOfTimeSpace t v 0 = t from spacetimeOfTimeSpace_time t v]
+    exact h_time
   · -- i = j + 1: spatial components
-    have h_spatial : spatialPart (spacetimeDecomp.symm (t, v)) = v :=
-      congr_arg Prod.snd (spacetimeDecomp.apply_symm_apply (t, v))
-    -- spatialPart k (j) = k (j + 1) by definition
-    have h_spatialPart_def : ∀ (k : SpaceTime4), spatialPart k j = k j.succ := fun _ => rfl
-    rw [← h_spatialPart_def (spacetimeDecomp.symm (t, v)), h_spatial]
-    symm
-    exact spacetimeOfTimeSpace4_spatial t v j
+    rw [show ((spacetimeDecomp.symm (t, v) : SpaceTime (n + 1)) j.succ)
+          = spatialPart (spacetimeDecomp.symm (t, v)) j from rfl, h_spatial]
+    exact (spacetimeOfTimeSpace_spatial t v j).symm
 
-/-- The SpaceTime4 norm decomposes into time and spatial parts: ‖k‖² = k₀² + ‖k_sp‖². -/
-lemma spacetime_norm_sq_decompose (k : SpaceTime4) :
+/-- The spacetime norm decomposes into time and spatial parts: ‖k‖² = k₀² + ‖k_sp‖². -/
+lemma spacetime_norm_sq_decompose (k : SpaceTime d) :
     ‖k‖^2 = (k 0)^2 + ‖spatialPart k‖^2 := by
-  -- Expand SpaceTime4 norm as sum over 4 components
-  have hST : ‖k‖^2 = (k 0)^2 + (k 1)^2 + (k 2)^2 + (k 3)^2 := by
-    rw [EuclideanSpace.norm_sq_eq, Fin.sum_univ_four]
-    simp only [Real.norm_eq_abs, sq_abs]
-  -- Expand SpatialCoords4 norm as sum over 3 components
-  have hSp : ‖spatialPart k‖^2 = (k 1)^2 + (k 2)^2 + (k 3)^2 := by
-    -- Key component equalities
-    have h0 : (spatialPart k : Fin (STDimension - 1) → ℝ) ⟨0, by decide⟩ = k 1 := rfl
-    have h1 : (spatialPart k : Fin (STDimension - 1) → ℝ) ⟨1, by decide⟩ = k 2 := rfl
-    have h2 : (spatialPart k : Fin (STDimension - 1) → ℝ) ⟨2, by decide⟩ = k 3 := rfl
-    simp only [EuclideanSpace.norm_sq_eq, Real.norm_eq_abs, sq_abs]
-    -- Manually expand the Fin 3 sum
-    have hUniv : (Finset.univ : Finset (Fin (STDimension - 1))) =
-        {⟨0, by decide⟩, ⟨1, by decide⟩, ⟨2, by decide⟩} := rfl
-    rw [hUniv, Finset.sum_insert (by decide : (⟨0, _⟩ : Fin (STDimension - 1)) ∉ _),
-        Finset.sum_insert (by decide : (⟨1, _⟩ : Fin (STDimension - 1)) ∉ _),
-        Finset.sum_singleton, h0, h1, h2]
-    ring
-  rw [hST, hSp]; ring
+  obtain ⟨n, rfl⟩ : ∃ n, d = n + 1 := ⟨d - 1, by have h : 2 ≤ d := Fact.out; omega⟩
+  rw [EuclideanSpace.norm_sq_eq, EuclideanSpace.norm_sq_eq, Fin.sum_univ_succ]
+  simp only [Real.norm_eq_abs, sq_abs]
+  rfl
 
 /-- For a product-type integrand f(k₀) × g(k_sp), the integral decomposes as a product. -/
-lemma integral_spacetime_prod_split {f : ℝ → ℂ} {g : SpatialCoords4 → ℂ}
+lemma integral_spacetime_prod_split {f : ℝ → ℂ} {g : SpatialCoords d → ℂ}
     (_hf : Integrable f) (_hg : Integrable g) :
-    ∫ k : SpaceTime4, f (k 0) * g (spatialPart k) =
-    (∫ k₀ : ℝ, f k₀) * (∫ k_sp : SpatialCoords4, g k_sp) := by
+    ∫ k : SpaceTime d, f (k 0) * g (spatialPart k) =
+    (∫ k₀ : ℝ, f k₀) * (∫ k_sp : SpatialCoords d, g k_sp) := by
   have h := spacetimeDecomp_measurePreserving.integral_comp' (fun p => f p.1 * g p.2)
   simp only [spacetimeDecomp_apply] at h
   rw [h]; exact integral_prod_mul f g

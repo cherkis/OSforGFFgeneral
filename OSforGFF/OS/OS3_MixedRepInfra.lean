@@ -2002,6 +2002,7 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ4)
     apply integral_congr_ae
     filter_upwards with v
     rw [spacetimeDecomp_symm_eq_spacetimeOfTimeSpace]
+    rfl
 
   -- The integrand matches K(x 0, y 0)
   have h_integrand : ∀ x y : SpaceTime4,
