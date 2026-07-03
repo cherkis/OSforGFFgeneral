@@ -5,297 +5,158 @@ digraph OSforGFF {
   node [shape=box, fontsize=11, style=filled, fillcolor=white];
   edge [color=gray40];
 
-  // === L0: General (pure math extensions, no project imports) ===
   subgraph cluster_General {
     label="General";
     style=filled;
     fillcolor="#f0f0f0";
     color=gray60;
-    "FunctionalAnalysis";
-    "FrobeniusPositivity";
-    "SchurProduct";
-    "HadamardExp";
-    "PositiveDefinite";
-    "GaussianRBF";
-    "FourierTransforms";
-    "LaplaceIntegral";
     "BesselFunction";
-    "QuantitativeDecay";
-    "SchwartzTranslationDecay";
+    "FourierTransforms";
+    "FrobeniusPositivity";
+    "FunctionalAnalysis";
+    "GaussianRBF";
+    "HadamardExp";
     "L2TimeIntegral";
+    "LaplaceIntegral";
+    "PositiveDefinite";
+    "QuantitativeDecay";
+    "SchurProduct";
+    "SchwartzTranslationDecay";
   }
 
-  // === L1: Spacetime (test functions & symmetries) ===
   subgraph cluster_Spacetime {
     label="Spacetime";
     style=filled;
-    fillcolor="#dce6f0";
+    fillcolor="#e8f0fe";
     color=gray60;
-    "Basic" [fillcolor=lightblue];
-    "Euclidean";
-    "DiscreteSymmetry";
-    "Decomposition";
+    "Basic";
     "ComplexTestFunction";
+    "Decomposition";
+    "DiscreteSymmetry";
+    "Euclidean";
     "PositiveTimeTestFunction";
-    "TimeTranslation";
     "ProdIntegrable";
+    "TimeTranslation";
     "Tonelli";
   }
 
-  // === L2: Covariance (free propagator) ===
   subgraph cluster_Covariance {
     label="Covariance";
     style=filled;
-    fillcolor="#d0f0d0";
+    fillcolor="#fef7e0";
     color=gray60;
-    "Momentum";
-    "Position";
+    "ParsevalGeneric";
+    "Propagator";
     "RealForm";
-    "Parseval";
   }
 
-  // === L3: Schwinger (generating functionals) ===
   subgraph cluster_Schwinger {
     label="Schwinger";
     style=filled;
-    fillcolor="#d0f0f0";
+    fillcolor="#e6f4ea";
     color=gray60;
     "Defs";
-    "TwoPoint";
     "GaussianMoments";
+    "TwoPoint";
   }
 
-  // === L4-L5: Measure (Minlos + GFF construction) ===
   subgraph cluster_Measure {
     label="Measure";
     style=filled;
-    fillcolor="#f0dcd0";
+    fillcolor="#fce8e6";
     color=gray60;
-    "NuclearSpace" [shape=octagon, fillcolor="#ffcccc", label="NuclearSpace\n(axiom)"];
-    "Minlos" [shape=octagon, fillcolor="#ffcccc", label="Minlos\n(axiom)"];
-    "MinlosAnalytic";
     "Construct";
-    "IsGaussian";
     "GaussianFreeField";
+    "IsGaussian";
+    "Minlos";
+    "MinlosAnalytic";
+    "NuclearSpace";
   }
 
-  // === L6-L7: OS (axiom definitions + proofs) ===
   subgraph cluster_OS {
-    label="OS Axioms";
+    label="OS";
     style=filled;
-    fillcolor="#f0dce6";
+    fillcolor="#f3e8fd";
     color=gray60;
-    "Axioms" [fillcolor=lightgreen];
-    "OS0_Analyticity" [shape=octagon, fillcolor="#ffcccc", label="OS0_Analyticity\n(axiom)"];
+    "Axioms";
+    "Master";
+    "NonTrivial";
+    "OS0_Analyticity";
     "OS1_Regularity";
     "OS2_Invariance";
-    "OS3_MixedRepInfra";
-    "OS3_MixedRep";
     "OS3_CovarianceRP";
+    "OS3_MixedRep";
+    "OS3_MixedRepInfra";
     "OS3_ReflectionPositivity";
-    "OS4_MGF";
     "OS4_Clustering";
     "OS4_Ergodicity";
+    "OS4_MGF";
   }
 
-  // === L8: Master theorem ===
-  "Master" [fillcolor=gold, penwidth=2];
+  subgraph cluster_Instances {
+    label="Instances";
+    style=filled;
+    fillcolor="#e0f7f4";
+    color=gray60;
+    "Dim4";
+    "Dim4Bessel";
+  }
 
-  // ====== EDGES ======
-
-  // General internal
-  "SchurProduct" -> "FrobeniusPositivity";
-  "HadamardExp" -> "SchurProduct";
-  "GaussianRBF" -> "HadamardExp";
-  "GaussianRBF" -> "PositiveDefinite";
-  "GaussianRBF" -> "SchurProduct";
-  "QuantitativeDecay" -> "SchwartzTranslationDecay";
-  "BesselFunction" -> "Euclidean";
-
-  // Spacetime internal
-  "Basic" -> "FunctionalAnalysis";
-  "Euclidean" -> "Basic";
-  "DiscreteSymmetry" -> "Basic";
-  "DiscreteSymmetry" -> "Euclidean";
-  "ComplexTestFunction" -> "Basic";
-  "PositiveTimeTestFunction" -> "Basic";
-  "PositiveTimeTestFunction" -> "DiscreteSymmetry";
-  "TimeTranslation" -> "Basic";
-  "ProdIntegrable" -> "Basic";
-  "ProdIntegrable" -> "FunctionalAnalysis";
-  "Decomposition" -> "Basic";
-  "Decomposition" -> "ProdIntegrable";
-  "Tonelli" -> "Basic";
-  "Tonelli" -> "Decomposition";
-
-  // Schwinger
-  "Defs" -> "Basic";
-  "Defs" -> "ComplexTestFunction";
-  "Defs" -> "FunctionalAnalysis";
-  "TwoPoint" -> "Basic";
-  "TwoPoint" -> "Defs";
-  "GaussianMoments" -> "Basic";
-  "GaussianMoments" -> "Construct";
-  "GaussianMoments" -> "Defs";
-
-  // Covariance
-  "Momentum" -> "Basic";
-  "Momentum" -> "BesselFunction";
-  "Momentum" -> "DiscreteSymmetry";
-  "Momentum" -> "Euclidean";
-  "Momentum" -> "FunctionalAnalysis";
-  "Momentum" -> "Defs";
-  "Parseval" -> "Momentum";
-  "Parseval" -> "FourierTransforms";
-  "Position" -> "Basic";
-  "Position" -> "Momentum";
-  "Position" -> "DiscreteSymmetry";
-  "Position" -> "Euclidean";
-  "Position" -> "FourierTransforms";
-  "Position" -> "FunctionalAnalysis";
-  "Position" -> "Parseval";
-  "Position" -> "Defs";
-  "RealForm" -> "Basic";
-  "RealForm" -> "ComplexTestFunction";
-  "RealForm" -> "Position";
-  "RealForm" -> "Momentum";
-  "RealForm" -> "DiscreteSymmetry";
-  "RealForm" -> "PositiveTimeTestFunction";
-
-  // Measure
-  "Minlos" -> "GaussianRBF";
-  "Minlos" -> "NuclearSpace";
-  "Minlos" -> "PositiveDefinite";
-  "MinlosAnalytic" -> "Basic";
-  "MinlosAnalytic" -> "Minlos";
-  "Construct" -> "Basic";
-  "Construct" -> "ComplexTestFunction";
-  "Construct" -> "Position";
-  "Construct" -> "RealForm";
-  "Construct" -> "Minlos";
-  "Construct" -> "MinlosAnalytic";
-  "Construct" -> "Defs";
-  "IsGaussian" -> "GaussianMoments";
-  "IsGaussian" -> "OS0_Analyticity";
-  "GaussianFreeField" -> "Basic";
-  "GaussianFreeField" -> "Position";
-  "GaussianFreeField" -> "DiscreteSymmetry";
-  "GaussianFreeField" -> "Euclidean";
-  "GaussianFreeField" -> "FunctionalAnalysis";
-  "GaussianFreeField" -> "IsGaussian";
-  "GaussianFreeField" -> "Construct";
-  "GaussianFreeField" -> "Minlos";
-  "GaussianFreeField" -> "MinlosAnalytic";
-  "GaussianFreeField" -> "Axioms";
-  "GaussianFreeField" -> "Defs";
-
-  // OS Axioms
   "Axioms" -> "Basic";
   "Axioms" -> "ComplexTestFunction";
+  "Axioms" -> "Defs";
   "Axioms" -> "DiscreteSymmetry";
   "Axioms" -> "Euclidean";
   "Axioms" -> "FunctionalAnalysis";
   "Axioms" -> "PositiveTimeTestFunction";
-  "Axioms" -> "Defs";
-  "Axioms" -> "TwoPoint";
   "Axioms" -> "TimeTranslation";
-
-  // OS proofs
-  "OS0_Analyticity" -> "Basic";
-  "OS0_Analyticity" -> "ComplexTestFunction";
-  "OS0_Analyticity" -> "Construct";
-  "OS0_Analyticity" -> "Axioms";
-  "OS0_Analyticity" -> "Defs";
-
-  "OS1_Regularity" -> "Basic";
-  "OS1_Regularity" -> "Position";
-  "OS1_Regularity" -> "Momentum";
-  "OS1_Regularity" -> "RealForm";
-  "OS1_Regularity" -> "IsGaussian";
-  "OS1_Regularity" -> "Construct";
-  "OS1_Regularity" -> "Axioms";
-
-  "OS2_Invariance" -> "Position";
-  "OS2_Invariance" -> "Euclidean";
-  "OS2_Invariance" -> "IsGaussian";
-  "OS2_Invariance" -> "GaussianFreeField";
-
-  "OS3_MixedRepInfra" -> "Basic";
-  "OS3_MixedRepInfra" -> "Position";
-  "OS3_MixedRepInfra" -> "Momentum";
-  "OS3_MixedRepInfra" -> "DiscreteSymmetry";
-  "OS3_MixedRepInfra" -> "Euclidean";
-  "OS3_MixedRepInfra" -> "FourierTransforms";
-  "OS3_MixedRepInfra" -> "FunctionalAnalysis";
-  "OS3_MixedRepInfra" -> "LaplaceIntegral";
-  "OS3_MixedRepInfra" -> "Axioms";
-  "OS3_MixedRepInfra" -> "ProdIntegrable";
-  "OS3_MixedRepInfra" -> "Tonelli";
-  "OS3_MixedRepInfra" -> "Defs";
-  "OS3_MixedRepInfra" -> "Decomposition";
-
-  "OS3_MixedRep" -> "OS3_MixedRepInfra";
-
-  "OS3_CovarianceRP" -> "Basic";
-  "OS3_CovarianceRP" -> "Position";
-  "OS3_CovarianceRP" -> "Momentum";
-  "OS3_CovarianceRP" -> "FourierTransforms";
-  "OS3_CovarianceRP" -> "OS3_MixedRep";
-  "OS3_CovarianceRP" -> "OS3_MixedRepInfra";
-  "OS3_CovarianceRP" -> "Parseval";
-  "OS3_CovarianceRP" -> "PositiveTimeTestFunction";
-
-  "OS3_ReflectionPositivity" -> "Basic";
-  "OS3_ReflectionPositivity" -> "RealForm";
-  "OS3_ReflectionPositivity" -> "DiscreteSymmetry";
-  "OS3_ReflectionPositivity" -> "IsGaussian";
-  "OS3_ReflectionPositivity" -> "Construct";
-  "OS3_ReflectionPositivity" -> "HadamardExp";
-  "OS3_ReflectionPositivity" -> "OS3_CovarianceRP";
-  "OS3_ReflectionPositivity" -> "Axioms";
-  "OS3_ReflectionPositivity" -> "PositiveTimeTestFunction";
-
-  "OS4_MGF" -> "Basic";
-  "OS4_MGF" -> "ComplexTestFunction";
-  "OS4_MGF" -> "Momentum";
-  "OS4_MGF" -> "IsGaussian";
-  "OS4_MGF" -> "Construct";
-  "OS4_MGF" -> "OS0_Analyticity";
-  "OS4_MGF" -> "OS2_Invariance";
-  "OS4_MGF" -> "Axioms";
-  "OS4_MGF" -> "Defs";
-  "OS4_MGF" -> "TimeTranslation";
-
-  "OS4_Clustering" -> "Basic";
-  "OS4_Clustering" -> "ComplexTestFunction";
-  "OS4_Clustering" -> "Position";
-  "OS4_Clustering" -> "Momentum";
-  "OS4_Clustering" -> "FunctionalAnalysis";
-  "OS4_Clustering" -> "IsGaussian";
-  "OS4_Clustering" -> "Construct";
-  "OS4_Clustering" -> "GaussianFreeField";
-  "OS4_Clustering" -> "OS2_Invariance";
-  "OS4_Clustering" -> "OS4_MGF";
-  "OS4_Clustering" -> "Axioms";
-  "OS4_Clustering" -> "QuantitativeDecay";
-  "OS4_Clustering" -> "Defs";
-  "OS4_Clustering" -> "TimeTranslation";
-
-  "OS4_Ergodicity" -> "Basic";
-  "OS4_Ergodicity" -> "ComplexTestFunction";
-  "OS4_Ergodicity" -> "Momentum";
-  "OS4_Ergodicity" -> "IsGaussian";
-  "OS4_Ergodicity" -> "Construct";
-  "OS4_Ergodicity" -> "L2TimeIntegral";
-  "OS4_Ergodicity" -> "OS0_Analyticity";
-  "OS4_Ergodicity" -> "OS2_Invariance";
-  "OS4_Ergodicity" -> "OS4_MGF";
-  "OS4_Ergodicity" -> "Axioms";
-  "OS4_Ergodicity" -> "SchwartzTranslationDecay";
-  "OS4_Ergodicity" -> "Defs";
-  "OS4_Ergodicity" -> "TimeTranslation";
-
-  // Master theorem
+  "Axioms" -> "TwoPoint";
+  "Basic" -> "FunctionalAnalysis";
+  "BesselFunction" -> "Euclidean";
+  "ComplexTestFunction" -> "Basic";
+  "Construct" -> "Basic";
+  "Construct" -> "ComplexTestFunction";
+  "Construct" -> "Defs";
+  "Construct" -> "Minlos";
+  "Construct" -> "MinlosAnalytic";
+  "Construct" -> "RealForm";
+  "Decomposition" -> "Basic";
+  "Decomposition" -> "ProdIntegrable";
+  "Defs" -> "Basic";
+  "Defs" -> "ComplexTestFunction";
+  "Defs" -> "FunctionalAnalysis";
+  "Dim4" -> "Construct";
+  "Dim4" -> "Dim4Bessel";
+  "Dim4" -> "Propagator";
+  "Dim4Bessel" -> "Basic";
+  "Dim4Bessel" -> "BesselFunction";
+  "Dim4Bessel" -> "Defs";
+  "Dim4Bessel" -> "DiscreteSymmetry";
+  "Dim4Bessel" -> "Euclidean";
+  "Dim4Bessel" -> "FunctionalAnalysis";
+  "DiscreteSymmetry" -> "Basic";
+  "DiscreteSymmetry" -> "Euclidean";
+  "Euclidean" -> "Basic";
+  "GaussianFreeField" -> "Axioms";
+  "GaussianFreeField" -> "Basic";
+  "GaussianFreeField" -> "Construct";
+  "GaussianFreeField" -> "Defs";
+  "GaussianFreeField" -> "DiscreteSymmetry";
+  "GaussianFreeField" -> "Euclidean";
+  "GaussianFreeField" -> "FunctionalAnalysis";
+  "GaussianFreeField" -> "IsGaussian";
+  "GaussianFreeField" -> "Minlos";
+  "GaussianFreeField" -> "MinlosAnalytic";
+  "GaussianMoments" -> "Basic";
+  "GaussianMoments" -> "Construct";
+  "GaussianMoments" -> "Defs";
+  "GaussianRBF" -> "HadamardExp";
+  "GaussianRBF" -> "PositiveDefinite";
+  "GaussianRBF" -> "SchurProduct";
+  "HadamardExp" -> "SchurProduct";
+  "IsGaussian" -> "GaussianMoments";
+  "IsGaussian" -> "OS0_Analyticity";
+  "Master" -> "Dim4";
   "Master" -> "GaussianFreeField";
   "Master" -> "OS0_Analyticity";
   "Master" -> "OS1_Regularity";
@@ -303,4 +164,109 @@ digraph OSforGFF {
   "Master" -> "OS3_ReflectionPositivity";
   "Master" -> "OS4_Clustering";
   "Master" -> "OS4_Ergodicity";
+  "Minlos" -> "GaussianRBF";
+  "Minlos" -> "NuclearSpace";
+  "Minlos" -> "PositiveDefinite";
+  "MinlosAnalytic" -> "Basic";
+  "MinlosAnalytic" -> "Minlos";
+  "NonTrivial" -> "ComplexTestFunction";
+  "NonTrivial" -> "Construct";
+  "NonTrivial" -> "Dim4Bessel";
+  "NonTrivial" -> "RealForm";
+  "OS0_Analyticity" -> "Axioms";
+  "OS0_Analyticity" -> "Basic";
+  "OS0_Analyticity" -> "ComplexTestFunction";
+  "OS0_Analyticity" -> "Construct";
+  "OS0_Analyticity" -> "Defs";
+  "OS1_Regularity" -> "Axioms";
+  "OS1_Regularity" -> "Basic";
+  "OS1_Regularity" -> "Construct";
+  "OS1_Regularity" -> "FunctionalAnalysis";
+  "OS1_Regularity" -> "IsGaussian";
+  "OS1_Regularity" -> "ParsevalGeneric";
+  "OS1_Regularity" -> "RealForm";
+  "OS2_Invariance" -> "Euclidean";
+  "OS2_Invariance" -> "GaussianFreeField";
+  "OS2_Invariance" -> "IsGaussian";
+  "OS3_CovarianceRP" -> "Basic";
+  "OS3_CovarianceRP" -> "FourierTransforms";
+  "OS3_CovarianceRP" -> "OS3_MixedRep";
+  "OS3_CovarianceRP" -> "OS3_MixedRepInfra";
+  "OS3_CovarianceRP" -> "PositiveTimeTestFunction";
+  "OS3_MixedRep" -> "OS3_MixedRepInfra";
+  "OS3_MixedRepInfra" -> "Axioms";
+  "OS3_MixedRepInfra" -> "Basic";
+  "OS3_MixedRepInfra" -> "Decomposition";
+  "OS3_MixedRepInfra" -> "Defs";
+  "OS3_MixedRepInfra" -> "DiscreteSymmetry";
+  "OS3_MixedRepInfra" -> "Euclidean";
+  "OS3_MixedRepInfra" -> "FourierTransforms";
+  "OS3_MixedRepInfra" -> "FunctionalAnalysis";
+  "OS3_MixedRepInfra" -> "LaplaceIntegral";
+  "OS3_MixedRepInfra" -> "ParsevalGeneric";
+  "OS3_MixedRepInfra" -> "ProdIntegrable";
+  "OS3_MixedRepInfra" -> "Tonelli";
+  "OS3_ReflectionPositivity" -> "Axioms";
+  "OS3_ReflectionPositivity" -> "Basic";
+  "OS3_ReflectionPositivity" -> "Construct";
+  "OS3_ReflectionPositivity" -> "DiscreteSymmetry";
+  "OS3_ReflectionPositivity" -> "HadamardExp";
+  "OS3_ReflectionPositivity" -> "IsGaussian";
+  "OS3_ReflectionPositivity" -> "OS3_CovarianceRP";
+  "OS3_ReflectionPositivity" -> "PositiveTimeTestFunction";
+  "OS3_ReflectionPositivity" -> "RealForm";
+  "OS4_Clustering" -> "Axioms";
+  "OS4_Clustering" -> "Basic";
+  "OS4_Clustering" -> "ComplexTestFunction";
+  "OS4_Clustering" -> "Construct";
+  "OS4_Clustering" -> "Defs";
+  "OS4_Clustering" -> "FunctionalAnalysis";
+  "OS4_Clustering" -> "GaussianFreeField";
+  "OS4_Clustering" -> "IsGaussian";
+  "OS4_Clustering" -> "OS2_Invariance";
+  "OS4_Clustering" -> "OS4_MGF";
+  "OS4_Clustering" -> "QuantitativeDecay";
+  "OS4_Clustering" -> "TimeTranslation";
+  "OS4_Ergodicity" -> "Axioms";
+  "OS4_Ergodicity" -> "Basic";
+  "OS4_Ergodicity" -> "ComplexTestFunction";
+  "OS4_Ergodicity" -> "Construct";
+  "OS4_Ergodicity" -> "Defs";
+  "OS4_Ergodicity" -> "IsGaussian";
+  "OS4_Ergodicity" -> "L2TimeIntegral";
+  "OS4_Ergodicity" -> "OS0_Analyticity";
+  "OS4_Ergodicity" -> "OS2_Invariance";
+  "OS4_Ergodicity" -> "OS4_MGF";
+  "OS4_Ergodicity" -> "SchwartzTranslationDecay";
+  "OS4_Ergodicity" -> "TimeTranslation";
+  "OS4_MGF" -> "Axioms";
+  "OS4_MGF" -> "Basic";
+  "OS4_MGF" -> "ComplexTestFunction";
+  "OS4_MGF" -> "Construct";
+  "OS4_MGF" -> "Defs";
+  "OS4_MGF" -> "IsGaussian";
+  "OS4_MGF" -> "OS0_Analyticity";
+  "OS4_MGF" -> "OS2_Invariance";
+  "OS4_MGF" -> "TimeTranslation";
+  "ParsevalGeneric" -> "Basic";
+  "ParsevalGeneric" -> "ComplexTestFunction";
+  "ParsevalGeneric" -> "DiscreteSymmetry";
+  "ParsevalGeneric" -> "Euclidean";
+  "ParsevalGeneric" -> "FunctionalAnalysis";
+  "ParsevalGeneric" -> "Propagator";
+  "PositiveTimeTestFunction" -> "Basic";
+  "PositiveTimeTestFunction" -> "DiscreteSymmetry";
+  "ProdIntegrable" -> "Basic";
+  "ProdIntegrable" -> "FunctionalAnalysis";
+  "QuantitativeDecay" -> "SchwartzTranslationDecay";
+  "RealForm" -> "Basic";
+  "RealForm" -> "ComplexTestFunction";
+  "RealForm" -> "DiscreteSymmetry";
+  "RealForm" -> "ParsevalGeneric";
+  "RealForm" -> "PositiveTimeTestFunction";
+  "TimeTranslation" -> "Basic";
+  "Tonelli" -> "Basic";
+  "Tonelli" -> "Decomposition";
+  "TwoPoint" -> "Basic";
+  "TwoPoint" -> "Defs";
 }

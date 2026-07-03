@@ -1,26 +1,37 @@
 # Osterwalder-Schrader Axioms for the Gaussian Free Field
 
-We construct the massive Gaussian Free Field (GFF) in four spacetime dimensions
-as a probability measure on the space of tempered distributions S'(ℝ⁴), and
-prove that it satisfies all five
+We construct the massive Gaussian Free Field (GFF) as a probability measure on
+the space of tempered distributions S'(ℝ^d), and prove that it satisfies all five
 Osterwalder-Schrader axioms for a Euclidean quantum field theory. The construction
 and proofs are formalized in Lean 4 / Mathlib, following the conventions and
 methods of proof in Glimm and Jaffe, *Quantum Physics: A Functional Integral
 Point of View* (Springer, 1987).
 
+The library is **dimension-generic**: the spacetime dimension is a parameter
+`d` (with `2 ≤ d ≤ 5`), and the only per-dimension input is the closed form of
+the radial covariance profile, isolated behind the two-field typeclass
+`GFFPropagator d m` (see [docs/dimension_generic.md](docs/dimension_generic.md)).
+The four-dimensional instance — the Bessel kernel (m/4π²r)K₁(mr) — is provided
+in `OSforGFF/Instances/`, recovering the original 4D theorem verbatim.
+
 ## Master Theorem
 
 ```lean
+theorem gaussianFreeField_satisfies_all_OS_axioms_generic
+    {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)] :
+    SatisfiesAllOS (gaussianFreeField_free (d := d) m)
+
 theorem gaussianFreeField_satisfies_all_OS_axioms (m : ℝ) [Fact (0 < m)] :
-  OS0_Analyticity (μ_GFF m) ∧
-  OS1_Regularity (μ_GFF m) ∧
-  OS2_EuclideanInvariance (μ_GFF m) ∧
-  OS3_ReflectionPositivity (μ_GFF m) ∧
-  OS4_Clustering (μ_GFF m) ∧
-  OS4_Ergodicity (μ_GFF m)
+    SatisfiesAllOS (μ_GFF m)
 ```
 
-**Status:** Version 2.0, March 2026. 0 sorries, 0 axioms, ~32,000 lines of Lean across 47 files.
+where `SatisfiesAllOS` bundles OS0 (analyticity), OS1 (regularity), OS2
+(Euclidean invariance), OS3 (reflection positivity), OS4 (clustering) and OS4
+(ergodicity). The second theorem is the four-dimensional instance of the first;
+the bound `d ≤ 5` enters only through the proper-time Fubini domination in the
+OS3 argument.
+
+**Status:** Version 3.0 (dimension-generic), July 2026. 0 sorries, 0 axioms, ~31,000 lines of Lean across 48 files.
 
 All results are fully proved — no assumed axioms. Nuclear space structure and the Minlos theorem
 are provided by the external libraries [bochner](https://github.com/mrdouglasny/bochner) and
@@ -29,9 +40,11 @@ The Minlos proof uses the external library [kolmogorov_extension4](https://githu
 
 ## Project Structure
 
-The 47 library files are organized into 6 layers, with imports flowing from
+The 48 library files are organized into 7 layers, with imports flowing from
 earlier to later sections. See [docs/architecture.md](docs/architecture.md) for dependency structure,
-design choices, and proof outlines. The dependency graph is in [dependency/import_graph.svg](dependency/import_graph.svg).
+design choices, and proof outlines, and [docs/dimension_generic.md](docs/dimension_generic.md)
+for the dimension-generic design. The dependency graph source is in
+[dependency/import_graph.dot](dependency/import_graph.dot) (render with `dot -Tsvg`).
 
 ---
 
@@ -88,13 +101,14 @@ Generating functionals and correlation functions.
 
 ### 4. Covariance — `OSforGFF/Covariance/`
 
-The free scalar field propagator C(x,y) = (m/4π²|x−y|) K₁(m|x−y|) and its properties.
+The free scalar field propagator C(x,y) = Cprofile(|x−y|), isolated behind the
+`GFFPropagator d m` typeclass and analyzed through its proper-time (Schwinger)
+representation, uniformly in the dimension.
 
 | File | Contents |
 |------|----------|
-| [Momentum](OSforGFF/Covariance/Momentum.lean) | [Momentum-space propagator 1/(k²+m²), decay bounds](summary/OSforGFF/Covariance/Momentum.md) |
-| [Parseval](OSforGFF/Covariance/Parseval.lean) | [Parseval identity: ⟨f,Cf⟩ = ∫\|f̂(k)\|² P(k) dk](summary/OSforGFF/Covariance/Parseval.md) |
-| [Position](OSforGFF/Covariance/Position.lean) | [Position-space covariance, Euclidean invariance, Schwinger representation](summary/OSforGFF/Covariance/Position.md) |
+| [Propagator](OSforGFF/Covariance/Propagator.lean) | [The `GFFPropagator` typeclass, proper-time covariance, engine lemmas (L¹, decay, Fourier transform)](summary/OSforGFF/Covariance/Propagator.md) |
+| [ParsevalGeneric](OSforGFF/Covariance/ParsevalGeneric.lean) | [Parseval identity ⟨f,Cf̄⟩ = ∫\|f̂(k)\|² P(k) dk, positivity, invariances, centered-kernel decay](summary/OSforGFF/Covariance/ParsevalGeneric.md) |
 | [RealForm](OSforGFF/Covariance/RealForm.lean) | [Real covariance bilinear form, square root propagator embedding](summary/OSforGFF/Covariance/RealForm.md) |
 
 ---
@@ -136,7 +150,18 @@ Axiom definitions, individual proofs, and master theorem.
 | [OS4_Clustering](OSforGFF/OS/OS4_Clustering.lean) | [Gaussian factorization + convolution decay lemma (domain split at ‖y‖=‖x‖/2)](summary/OSforGFF/OS/OS4_Clustering.md) |
 | [OS4_Ergodicity](OSforGFF/OS/OS4_Ergodicity.lean) | [Polynomial clustering (α=6) → L² convergence](summary/OSforGFF/OS/OS4_Ergodicity.md) |
 | [NonTrivial](OSforGFF/OS/NonTrivial.lean) | [Nontriviality: C(f,f) > 0, positive variance, UV divergence C(x,y) → ∞](summary/OSforGFF/OS/NonTrivial.md) |
-| [Master](OSforGFF/OS/Master.lean) | [Assembles OS0–OS4 into `gaussianFreeField_satisfies_all_OS_axioms`](summary/OSforGFF/OS/Master.md) |
+| [Master](OSforGFF/OS/Master.lean) | [Assembles OS0–OS4 into the generic master theorem and its 4D instance](summary/OSforGFF/OS/Master.md) |
+
+---
+
+### 7. Instances — `OSforGFF/Instances/`
+
+Per-dimension closed forms of the covariance, packaged as `GFFPropagator` instances.
+
+| File | Contents |
+|------|----------|
+| [Dim4Bessel](OSforGFF/Instances/Dim4Bessel.lean) | [4D momentum-space analysis and the Bessel evaluation (m/4π²r)K₁(mr) of the Schwinger integral](summary/OSforGFF/Instances/Dim4Bessel.md) |
+| [Dim4](OSforGFF/Instances/Dim4.lean) | [The `GFFPropagator STDimension m` instance and the μ_GFF shorthand](summary/OSforGFF/Instances/Dim4.md) |
 
 ---
 

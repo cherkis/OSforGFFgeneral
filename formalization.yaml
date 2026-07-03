@@ -1,6 +1,7 @@
 # formalization.yaml — https://github.com/mathlib-initiative/formalization.yaml (v0.3)
-# Describes the `main` branch state (clean, up-to-date with origin/main).
-# 0 sorries, 0 axioms; ~32,000 lines across 47 files (per README, Version 2.0, March 2026).
+# Describes the `dimension-generic` branch state (the unified library; `main` holds
+# the original 4D-only version). 0 sorries, 0 axioms; ~31,000 lines across 48 files
+# (per README, Version 3.0, July 2026).
 version: "v0.3"
 
 project:
@@ -42,21 +43,31 @@ sources:
 
 status:
   scope: >
-    Constructs the massive Gaussian Free Field (GFF) in four Euclidean spacetime
-    dimensions as a probability measure mu_GFF m on the tempered distributions
-    S'(R^4) (FieldConfiguration), built via the Minlos theorem from the free
-    covariance (-Delta + m^2)^{-1}, and proves it satisfies all five
-    Osterwalder-Schrader axioms (OS0 analyticity, OS1 regularity, OS2 Euclidean
-    invariance, OS3 reflection positivity, OS4 clustering + ergodicity).
-    The construction is specialized to mass m > 0 in d = 4; other dimensions and
-    a Minlos-free construction are noted as planned/related work but not in scope
-    here. Nuclear-space structure and the Minlos/Kolmogorov machinery are supplied
-    by the external libraries bochner (BochnerMinlos), gaussian-field
-    (GaussianField), and kolmogorov_extension4, all of which are axiom-free.
+    Constructs the massive Gaussian Free Field (GFF) in Euclidean spacetime
+    dimension d (generic, 2 <= d <= 5) as a probability measure on the tempered
+    distributions S'(R^d) (FieldConfiguration d), built via the Minlos theorem
+    from the free covariance (-Delta + m^2)^{-1}, and proves it satisfies all
+    five Osterwalder-Schrader axioms (OS0 analyticity, OS1 regularity, OS2
+    Euclidean invariance, OS3 reflection positivity, OS4 clustering + ergodicity).
+    The per-dimension input is isolated in the typeclass GFFPropagator d m (the
+    radial closed form of the covariance and its identification with the
+    proper-time integral); the d = 4 Bessel instance is provided, recovering the
+    original four-dimensional theorem verbatim. The upper bound d <= 5 enters
+    only through the proper-time Fubini domination in the OS3 argument; d = 2, 3
+    instances are planned. Nuclear-space structure and the Minlos/Kolmogorov
+    machinery are supplied by the external libraries bochner (BochnerMinlos),
+    gaussian-field (GaussianField), and kolmogorov_extension4, all axiom-free.
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: []
   main_results:
+    - declaration: "OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_generic"
+      file: "OSforGFF/OS/Master.lean"
+      sorry_count: 0
+      axioms: []
+      literature_dependencies:
+        - statement: "the free GFF (m>0, any dimension 2<=d<=5 with a GFFPropagator instance) satisfies all Osterwalder-Schrader axioms OS0-OS4"
+          source: "10.1007/BF01645738"
     - declaration: "OSforGFF.gaussianFreeField_satisfies_all_OS_axioms"
       file: "OSforGFF/OS/Master.lean"
       sorry_count: 0
@@ -73,7 +84,7 @@ status:
       sorry_count: 0
       axioms: []
       literature_dependencies:
-        - statement: "existence of the GFF measure on S'(R^4) via Minlos from the free covariance"
+        - statement: "existence of the GFF measure on S'(R^d) via Minlos from the free covariance"
           source: "ISBN:978-1-4704-2662-5"
         - statement: "free scalar field covariance (-Delta+m^2)^{-1}"
           source: "ISBN:978-0-387-96477-7"
@@ -127,30 +138,43 @@ automation:
       models: ["gemini-3-pro"]
       framework: "Gemini"
       prompting_notes: "Coding assistance / review (per README)."
+    - method: "agent"
+      models: ["claude-fable-5"]
+      framework: "Claude Code"
+      prompting_notes: "Dimension-unification refactor (generic d, GFFPropagator typeclass, generic master theorem) and documentation, July 2026."
   notes: "Build: `lake build`. Mathlib + bochner + gaussian-field + kolmogorov_extension4 pinned via lake-manifest.json. Models per README acknowledgements."
 
 fidelity:
   divergences: >
     The OS axioms are formalized in the Glimm-Jaffe probability-measure
-    formulation (predicates on ProbabilityMeasure FieldConfiguration) rather than
-    the original Schwinger-function formulation of Osterwalder-Schrader. OS3 is
-    stated in the complex star formulation (OS 1975 axiom E2) with an equivalent
-    real reformulation (OS3_ReflectionPositivity_real). OS4 is split into a
-    clustering statement and an ergodicity statement, with ergodicity derived from
-    a polynomial-clustering bound (alpha = 6) specific to the 4D mass gap. The
-    development is specialized to spacetime dimension d = 4 and mass m > 0.
+    formulation (predicates on ProbabilityMeasure (FieldConfiguration d)) rather
+    than the original Schwinger-function formulation of Osterwalder-Schrader. OS3
+    is stated in the complex star formulation (OS 1975 axiom E2) with an
+    equivalent real reformulation (OS3_ReflectionPositivity_real). OS4 is split
+    into a clustering statement and an ergodicity statement, with ergodicity
+    derived from a polynomial-clustering bound (alpha = 6; the mass gap m > 0
+    gives every polynomial rate). The development is generic in the spacetime
+    dimension (2 <= d <= 5, mass m > 0); the OS3 proof route requires d <= 5
+    through a proper-time Fubini domination, and the concrete instance provided
+    is d = 4 (Bessel kernel).
 
 review:
   status: "self-assessed"
   reviewers: []
   notes: >
-    0 sorries and 0 custom axioms in the OSforGFF source (47 files, ~32,000 lines;
-    per README Version 2.0). External dependencies (bochner, gaussian-field,
-    kolmogorov_extension4) are themselves axiom-free per their own documentation.
+    0 sorries and 0 custom axioms in the OSforGFF source (48 files, ~31,000 lines;
+    per README Version 3.0, dimension-generic). External dependencies (bochner,
+    gaussian-field, kolmogorov_extension4) are themselves axiom-free per their
+    own documentation.
 
 alignment:
   namespace: "OSforGFF / QFT (mixed; OS axiom predicates at root)"
   statements:
+    - source: "10.1007/BF01645738"
+      lean: "OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_generic"
+      module: "OSforGFF.OS.Master"
+      status: "proved"
+      note: "Dimension-generic master theorem: SatisfiesAllOS for any 2 <= d <= 5 with a GFFPropagator d m instance."
     - source: "10.1007/BF01645738"
       lean: "OSforGFF.gaussianFreeField_satisfies_all_OS_axioms"
       module: "OSforGFF.OS.Master"
@@ -160,7 +184,7 @@ alignment:
       lean: "gaussianFreeField_free"
       module: "OSforGFF.Measure.Construct"
       status: "proved"
-      note: "GFF measure on S'(R^4) via Minlos; mu_GFF m is the simp abbrev."
+      note: "GFF measure on S'(R^4) via Minlos; the d=4 shorthand mu_GFF m lives in Instances/Dim4."
     - source: "10.1007/BF01645738"
       lean: "QFT.gaussianFreeField_satisfies_OS0"
       module: "OSforGFF.OS.OS0_Analyticity"
