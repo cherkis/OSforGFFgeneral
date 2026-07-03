@@ -25,7 +25,6 @@ import OSforGFF.Spacetime.Euclidean
 import OSforGFF.Spacetime.DiscreteSymmetry
 import OSforGFF.Schwinger.Defs
 import OSforGFF.General.FunctionalAnalysis
-import OSforGFF.Covariance.Momentum
 import OSforGFF.Covariance.ParsevalGeneric
 import OSforGFF.General.FourierTransforms
 import OSforGFF.OS.Axioms
@@ -70,6 +69,7 @@ noncomputable def spatialDot (k_spatial x_spatial : (SpatialCoords d)) : ℝ :=
 lemma real_inner_eq_mul (x y : ℝ) : @inner ℝ ℝ _ x y = x * y := by
   simp [inner, mul_comm]
 
+omit [Fact (2 ≤ d)] in
 /-- spatialDot equals the real inner product on (SpatialCoords d). -/
 lemma spatialDot_eq_inner (k_spatial x_spatial : (SpatialCoords d)) :
     spatialDot k_spatial x_spatial = ⟪k_spatial, x_spatial⟫_ℝ := by
@@ -156,6 +156,7 @@ The substitution u = √(a/b) exp(t) transforms this into an integral related to
 Since K_{1/2}(z) = √(π/(2z)) exp(-z), the identity follows.
 -/
 
+omit [Fact (2 ≤ d)] in
 /-- **d-dimensional Gaussian Fourier transform.**
 
     (1/(2π)^d) ∫_{ℝ^d} exp(-ik·z) exp(-s|k|²) d^d k = (4πs)^{-d/2} exp(-|z|²/(4s))
@@ -241,6 +242,7 @@ theorem heatKernel_eq_gaussianFT (s : ℝ) (hs : 0 < s) (z : (SpaceTime d)) :
 The following lemmas establish integrability and measurability conditions
 that are mathematically standard but require substantial Mathlib plumbing. -/
 
+omit [Fact (2 ≤ d)] in
 /-- The heat kernel is jointly continuous on (0, ∞) × ℝ as a function of (t, r). -/
 lemma heatKernelPositionSpace_continuousOn :
     ContinuousOn (fun p : ℝ × ℝ => heatKernelProfile d p.1 p.2)
@@ -378,13 +380,14 @@ theorem heatKernelPositionSpace_aestronglyMeasurable_real :
     measurableSet_Ioi.prod MeasurableSet.univ
   exact h_real_cont.aestronglyMeasurable h_meas
 
+omit [Fact (2 ≤ d)] in
 /-- The heat kernel integral is translation invariant:
     ∫_y H(s, ‖a - y‖) dy = ∫_z H(s, ‖z‖) dz = 1 for any a ∈ (SpaceTime d).
 
     This follows from:
     1. Lebesgue measure on (SpaceTime d) is translation invariant
     2. The norm satisfies ‖a - y‖ = ‖-(y - a)‖ = ‖y - a‖
-    3. The heat kernel integrates to 1 (heatKernelPositionSpace_integral_eq_one) -/
+    3. The heat kernel integrates to 1 (heatKernelProfile_integral_eq_one) -/
 lemma heatKernelPositionSpace_integral_translated (s : ℝ) (hs : 0 < s) (a : (SpaceTime d)) :
     ∫ y : (SpaceTime d), heatKernelProfile d s ‖a - y‖ = 1 := by
   -- First, ‖a - y‖ = ‖y - a‖ (norm is symmetric under negation)
@@ -404,6 +407,7 @@ lemma heatKernelPositionSpace_integral_translated (s : ℝ) (hs : 0 < s) (a : (S
   -- Now apply the normalization lemma
   exact heatKernelProfile_integral_eq_one d s hs
 
+omit [Fact (2 ≤ d)] in
 /-- The translated heat kernel is integrable (since its integral equals 1). -/
 lemma heatKernelPositionSpace_integrable (s : ℝ) (hs : 0 < s) (a : (SpaceTime d)) :
     Integrable (fun y : (SpaceTime d) => heatKernelProfile d s ‖a - y‖)
@@ -454,6 +458,7 @@ lemma schwinger_bound_integrand_integral_y (s : ℝ) (hs : 0 < s)
     heatKernelPositionSpace_integral_translated s hs (timeReflection x)
   simpa [r, h_int, mul_assoc] using h_eq
 
+omit [Fact (2 ≤ d)] in
 /-- Integrability in `x` of the Schwinger bound integrand (after integrating in `y`). -/
 lemma schwinger_bound_integrand_integrable_x (s : ℝ)
     (f : (TestFunctionℂ d)) (Cf : ℝ) (m : ℝ)
@@ -1057,6 +1062,7 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5)
           simp only [Real.nnnorm_of_nonneg h_nn, ENNReal.ofReal_eq_coe_nnreal h_nn]
     _ < ⊤ := h_lintegral_finite
 
+omit [Fact (2 ≤ d)] in
 /-- `spatialPart` is measurable. -/
 lemma spatialPart_measurable : Measurable (spatialPart : (SpaceTime d) → (SpatialCoords d)) := by
   -- spatialPart is a composition of continuous functions (linear maps), hence measurable
@@ -1835,7 +1841,7 @@ lemma heatKernelMomentExt_parametric_eq_setIntegral (s : ℝ) (t₁ : ℝ) (ht�
     is integrable on (0,∞).
 
     **Proof sketch**:
-    1. heatKernelMomentExt is integrable on ℝ² (sorry - uses Tonelli + finite integral)
+    1. heatKernelMomentExt is integrable on ℝ² (Tonelli + finite integral)
     2. By Fubini, t₁ ↦ ∫ t₂, heatKernelMomentExt(t₁,t₂) is integrable on ℝ
     3. The set integral on (0,∞) equals the full integral (zero outside)
     4. Multiply by constant c preserves integrability -/
@@ -2891,11 +2897,13 @@ theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5)] (f : (TestFu
   rw [MeasureTheory.integral_integral_swap h_int]
 
 
+omit [Fact (2 ≤ d)] in
 /-- Schwartz function norm is integrable. -/
 lemma schwartz_norm_integrable (f : (TestFunctionℂ d)) :
     MeasureTheory.Integrable (fun x : (SpaceTime d) => ‖f x‖) := by
   exact (SchwartzMap.integrable f).norm
 
+omit [Fact (2 ≤ d)] in
 /-- Product of Schwartz norms is integrable on (SpaceTime d) × (SpaceTime d). -/
 lemma schwartz_norm_prod_integrable (f : (TestFunctionℂ d)) :
     MeasureTheory.Integrable
@@ -2910,6 +2918,7 @@ lemma schwartz_norm_prod_integrable (f : (TestFunctionℂ d)) :
 def s_xy_swap_bound (f : (TestFunctionℂ d)) (m : ℝ) (p : ℝ × (SpaceTime d) × (SpaceTime d)) : ℝ :=
   Real.sqrt (π / p.1) * ‖f p.2.1‖ * ‖f p.2.2‖ * Real.exp (-p.1 * m^2)
 
+omit [Fact (2 ≤ d)] in
 lemma s_xy_swap_bound_integrable (f : (TestFunctionℂ d)) (m : ℝ) [Fact (0 < m)] :
     Integrable (s_xy_swap_bound f m)
       ((volume.restrict (Set.Ioi 0)).prod (volume.prod volume)) := by
@@ -3284,6 +3293,7 @@ The common bound for all Fubini swaps is:
   |integrand| ≤ |f(x)| |f(y)| × C(s) × exp(-s‖k_sp‖²)
 which factors and is therefore integrable on the product space. -/
 
+omit [Fact (2 ≤ d)] in
 /-- The Gaussian exp(-s‖k‖²) is integrable over (SpatialCoords d) for s > 0. -/
 lemma gaussian_integrable_spatialCoords (s : ℝ) (hs : 0 < s) :
     MeasureTheory.Integrable (fun k_sp : (SpatialCoords d) => Real.exp (-s * ‖k_sp‖^2)) := by
@@ -3306,6 +3316,7 @@ lemma gaussian_integrable_spatialCoords (s : ℝ) (hs : 0 < s) :
   -- Integrable (ofReal ∘ g) implies Integrable g via .re since re(ofReal x) = x
   exact h.re
 
+omit [Fact (2 ≤ d)] in
 /-- spatialPart is continuous (projection followed by continuous linear equiv). -/
 lemma continuous_spatialPart : Continuous (spatialPart : (SpaceTime d) → (SpatialCoords d)) := by
   unfold spatialPart
@@ -3315,6 +3326,7 @@ lemma continuous_spatialPart : Continuous (spatialPart : (SpaceTime d) → (Spat
   have h : i.val + 1 < d := by have := i.isLt; omega
   exact PiLp.continuous_apply 2 (fun _ : Fin d => ℝ) (⟨i.val + 1, h⟩ : Fin d)
 
+omit [Fact (2 ≤ d)] in
 /-- **Key Lemma**: The integrand for fubini_ksp_xy_swap is absolutely integrable.
 
     The bound |f(x)| |f(y)| exp(-s‖k_sp‖²) is integrable on

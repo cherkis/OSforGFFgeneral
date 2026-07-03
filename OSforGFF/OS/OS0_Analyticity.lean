@@ -80,6 +80,7 @@ where dμ is the Gaussian measure on field configurations.
 
 variable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
 
+omit [Fact (2 ≤ d)] in
 /-- The complex pairing is continuous in ω.
     This follows from the continuity of the evaluation map on WeakDual. -/
 theorem distributionPairingℂ_real_continuous (f : TestFunctionℂ d) :
@@ -96,6 +97,7 @@ theorem distributionPairingℂ_real_continuous (f : TestFunctionℂ d) :
   -- The full pairing is a continuous combination
   exact h_re.add (continuous_const.mul h_im)
 
+omit [Fact (2 ≤ d)] in
 /-- The complex pairing is measurable in ω (cylinder σ-algebra version).
     This follows from the measurability of the evaluation map on WeakDual. -/
 lemma distributionPairingℂ_real_measurable (f : TestFunctionℂ d) :
@@ -114,6 +116,7 @@ theorem gff_integrand_measurable
   exact (Complex.continuous_exp.measurable.comp
     (measurable_const.mul (distributionPairingℂ_real_measurable _))).aestronglyMeasurable
 
+omit [Fact (2 ≤ d)] in
 /-- The GFF integrand is analytic in z for each fixed field configuration ω.
     This follows from the fact that:
     1. z ↦ ∑ᵢ zᵢ • Jᵢ is linear (hence analytic) in z
@@ -185,6 +188,7 @@ theorem gff_integrand_analytic
     · -- c_i = distributionPairingℂ_real ω (J i) is a constant function in z
       exact analyticAt_const
 
+omit [Fact (2 ≤ d)] in
 /-- The norm of exp(I * distributionPairingℂ_real ω f) equals exp(-(ω f_im))
     where f_im is the imaginary part of the complex test function.
 

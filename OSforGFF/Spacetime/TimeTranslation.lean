@@ -78,12 +78,14 @@ lemma timeShift_time (s : ℝ) (u : (SpaceTime d)) :
   simp only [getTime, timeIndex, timeShift]
   rfl
 
+omit [Fact (2 ≤ d)] in
 @[simp]
 lemma timeShift_spatial (s : ℝ) (u : (SpaceTime d)) (i : Fin d) (hi : i.val ≠ 0) :
     (timeShift s u) i = u i := by
   simp only [timeShift]
   exact if_neg hi
 
+omit [Fact (2 ≤ d)] in
 /-- Time shift is a group action: T_{s+t} = T_s ∘ T_t -/
 lemma timeShift_add (s t : ℝ) (u : (SpaceTime d)) :
     timeShift (s + t) u = timeShift s (timeShift t u) := by
@@ -94,6 +96,7 @@ lemma timeShift_add (s t : ℝ) (u : (SpaceTime d)) :
   · ring
   · rfl
 
+omit [Fact (2 ≤ d)] in
 /-- Time shift by zero is identity -/
 @[simp]
 lemma timeShift_zero (u : (SpaceTime d)) : timeShift 0 u = u := by
@@ -102,11 +105,13 @@ lemma timeShift_zero (u : (SpaceTime d)) : timeShift 0 u = u := by
   funext i
   split_ifs <;> ring
 
+omit [Fact (2 ≤ d)] in
 /-- Time shifts commute: T_s ∘ T_t = T_t ∘ T_s -/
 lemma timeShift_comm (s t : ℝ) (u : (SpaceTime d)) :
     timeShift s (timeShift t u) = timeShift t (timeShift s u) := by
   rw [← timeShift_add, ← timeShift_add, add_comm]
 
+omit [Fact (2 ≤ d)] in
 /-- Time shift is smooth as a map (SpaceTime d) → (SpaceTime d).
     This is because it's an affine map (linear + constant). -/
 lemma timeShift_contDiff (s : ℝ) : ContDiff ℝ (⊤ : ℕ∞) (timeShift (d := d) s) := by
@@ -120,6 +125,7 @@ lemma timeShift_contDiff (s : ℝ) : ContDiff ℝ (⊤ : ℕ∞) (timeShift (d :
   · exact hcoord.add contDiff_const
   · exact hcoord
 
+omit [Fact (2 ≤ d)] in
 /-- Time shift preserves the Euclidean distance (it's an isometry) -/
 lemma timeShift_dist (s : ℝ) (u v : (SpaceTime d)) :
     dist (timeShift s u) (timeShift s v) = dist u v := by
@@ -131,11 +137,13 @@ lemma timeShift_dist (s : ℝ) (u v : (SpaceTime d)) :
   · congr 1; simp only [Real.dist_eq, add_sub_add_right_eq_sub]
   · rfl
 
+omit [Fact (2 ≤ d)] in
 /-- Time shift is an isometry -/
 lemma timeShift_isometry (s : ℝ) : Isometry (timeShift (d := d) s) := by
   rw [isometry_iff_dist_eq]
   exact fun u v => timeShift_dist s u v
 
+omit [Fact (2 ≤ d)] in
 /-- Time shift is antilipschitz (follows from being an isometry). -/
 lemma timeShift_antilipschitz (s : ℝ) : AntilipschitzWith 1 (timeShift (d := d) s) :=
   (timeShift_isometry s).antilipschitz
@@ -144,6 +152,7 @@ lemma timeShift_antilipschitz (s : ℝ) : AntilipschitzWith 1 (timeShift (d := d
 def timeShiftConst (s : ℝ) : (SpaceTime d) :=
   WithLp.toLp 2 (fun i => if i.val = 0 then s else 0)
 
+omit [Fact (2 ≤ d)] in
 /-- timeShift s equals addition of a constant. -/
 lemma timeShift_eq_add_const (s : ℝ) (u : (SpaceTime d)) :
     timeShift s u = u + timeShiftConst s := by
@@ -152,6 +161,7 @@ lemma timeShift_eq_add_const (s : ℝ) (u : (SpaceTime d)) :
   simp only [PiLp.add_apply]
   split_ifs with h <;> ring
 
+omit [Fact (2 ≤ d)] in
 /-- Time shift has temperate growth (key for Schwartz composition).
     This follows because timeShift is an affine map (id + constant). -/
 lemma timeShift_hasTemperateGrowth (s : ℝ) : Function.HasTemperateGrowth (timeShift (d := d) s) := by
@@ -223,6 +233,7 @@ def timeTranslationSchwartzℂCLM (s : ℝ) : (TestFunctionℂ d) →L[ℂ] (Tes
 def timeTranslationSchwartzℂ (s : ℝ) (f : (TestFunctionℂ d)) : (TestFunctionℂ d) :=
   timeTranslationSchwartzℂCLM s f
 
+omit [Fact (2 ≤ d)] in
 /-- Time translation evaluated at a point. -/
 @[simp]
 lemma timeTranslationSchwartz_apply (s : ℝ) (f : (TestFunction d)) (u : (SpaceTime d)) :
@@ -230,6 +241,7 @@ lemma timeTranslationSchwartz_apply (s : ℝ) (f : (TestFunction d)) (u : (Space
   simp only [timeTranslationSchwartz, timeTranslationSchwartzCLM,
     SchwartzMap.compCLMOfAntilipschitz_apply, Function.comp_apply]
 
+omit [Fact (2 ≤ d)] in
 /-- Time translation on complex functions evaluated at a point. -/
 @[simp]
 lemma timeTranslationSchwartzℂ_apply (s : ℝ) (f : (TestFunctionℂ d)) (u : (SpaceTime d)) :
@@ -237,18 +249,21 @@ lemma timeTranslationSchwartzℂ_apply (s : ℝ) (f : (TestFunctionℂ d)) (u : 
   simp only [timeTranslationSchwartzℂ, timeTranslationSchwartzℂCLM,
     SchwartzMap.compCLMOfAntilipschitz_apply, Function.comp_apply]
 
+omit [Fact (2 ≤ d)] in
 /-- Time translation is a group homomorphism: T_{s+t} = T_s ∘ T_t -/
 lemma timeTranslationSchwartz_add (s t : ℝ) (f : (TestFunction d)) :
     timeTranslationSchwartz (s + t) f = timeTranslationSchwartz s (timeTranslationSchwartz t f) := by
   ext u
   simp only [timeTranslationSchwartz_apply, timeShift_add, timeShift_comm]
 
+omit [Fact (2 ≤ d)] in
 /-- Time translation on complex functions: T_{s+t} = T_s ∘ T_t -/
 lemma timeTranslationSchwartzℂ_add (s t : ℝ) (f : (TestFunctionℂ d)) :
     timeTranslationSchwartzℂ (s + t) f = timeTranslationSchwartzℂ s (timeTranslationSchwartzℂ t f) := by
   ext u
   simp only [timeTranslationSchwartzℂ_apply, timeShift_add, timeShift_comm]
 
+omit [Fact (2 ≤ d)] in
 /-- Time translation by zero is identity -/
 @[simp]
 lemma timeTranslationSchwartz_zero (f : (TestFunction d)) :
@@ -256,6 +271,7 @@ lemma timeTranslationSchwartz_zero (f : (TestFunction d)) :
   ext u
   simp only [timeTranslationSchwartz_apply, timeShift_zero]
 
+omit [Fact (2 ≤ d)] in
 /-- Time translation by zero is identity (complex) -/
 @[simp]
 lemma timeTranslationSchwartzℂ_zero (f : (TestFunctionℂ d)) :
@@ -263,12 +279,14 @@ lemma timeTranslationSchwartzℂ_zero (f : (TestFunctionℂ d)) :
   ext u
   simp only [timeTranslationSchwartzℂ_apply, timeShift_zero]
 
+omit [Fact (2 ≤ d)] in
 /-- Time translation preserves addition of Schwartz functions -/
 lemma timeTranslationSchwartz_add_fun (s : ℝ) (f g : (TestFunction d)) :
     timeTranslationSchwartz s (f + g) = timeTranslationSchwartz s f + timeTranslationSchwartz s g := by
   ext u
   simp only [timeTranslationSchwartz_apply, SchwartzMap.add_apply]
 
+omit [Fact (2 ≤ d)] in
 /-- Time translation preserves scalar multiplication of Schwartz functions -/
 lemma timeTranslationSchwartz_smul (s : ℝ) (c : ℝ) (f : (TestFunction d)) :
     timeTranslationSchwartz s (c • f) = c • timeTranslationSchwartz s f := by
@@ -296,6 +314,7 @@ lemma continuous_timeShift_param (x : (SpaceTime d)) : Continuous (fun s : ℝ =
   rw [h_shift]
   exact continuous_const.add (continuous_id.smul continuous_const)
 
+omit [Fact (2 ≤ d)] in
 /-- Peetre's inequality for polynomial weights in (SpaceTime d).
     (1 + ‖x‖)^k ≤ (1 + ‖x + y‖)^k * (1 + ‖y‖)^k
 
@@ -880,11 +899,13 @@ for all f ∈ S(ℝ × ℝ³).
 def timeTranslationDistribution (s : ℝ) (ω : (FieldConfiguration d)) : (FieldConfiguration d) :=
   ω.comp (timeTranslationSchwartzCLM (-s))
 
+omit [Fact (2 ≤ d)] in
 /-- The defining property of time translation on distributions. -/
 @[simp]
 lemma timeTranslationDistribution_apply (s : ℝ) (ω : (FieldConfiguration d)) (f : (TestFunction d)) :
     (timeTranslationDistribution s ω) f = ω (timeTranslationSchwartz (-s) f) := rfl
 
+omit [Fact (2 ≤ d)] in
 /-- Time translation on distributions is a group homomorphism: T_{s+t} = T_s ∘ T_t -/
 lemma timeTranslationDistribution_add (s t : ℝ) (ω : (FieldConfiguration d)) :
     timeTranslationDistribution (s + t) ω =
@@ -902,6 +923,7 @@ lemma timeTranslationDistribution_add (s t : ℝ) (ω : (FieldConfiguration d)) 
     ring_nf
   rw [h]
 
+omit [Fact (2 ≤ d)] in
 /-- Time translation by zero is identity on distributions -/
 @[simp]
 lemma timeTranslationDistribution_zero (ω : (FieldConfiguration d)) :

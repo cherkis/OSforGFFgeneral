@@ -27,6 +27,7 @@ import Mathlib.Analysis.Normed.Field.Basic
 import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.Fourier.FourierTransform
 import Mathlib.Analysis.Fourier.Inversion
+import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
 import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.Analysis.InnerProductSpace.EuclideanDist
 
@@ -267,7 +268,7 @@ Proof method (2025-12-13):
 - Hölder's inequality via `MemLp.mul` with HolderTriple ∞ 2 2
 
 These theorems are used to construct specific multiplication operators
-(e.g., momentumWeightSqrt_mul_CLM) without repeating technical details.
+(e.g., freePropagatorMomSqrt_mul_CLM) without repeating technical details.
 -/
 
 /-- Given a measurable function `g` that is essentially bounded by `C`,
@@ -490,7 +491,7 @@ theorem locallyIntegrable_of_rpow_decay_real {d : ℕ} (hd : d ≥ 3)
     exact integrableOn_compact_diff_ball hK hC (by norm_num : (0:ℝ) < 1/2) h_decay h_meas
 
 /-- **Polynomial decay is integrable in 3D**: The function 1/(1+‖x‖)^4 is integrable
-    over SpatialCoords4 = EuclideanSpace ℝ (Fin 3).
+    over the spatial slice EuclideanSpace ℝ (Fin (d-1)).
 
     This is a standard result: decay rate 4 > dimension 3 ensures integrability.
 
@@ -1186,3 +1187,37 @@ theorem double_mollifier_convergence
   exact Tendsto.congr' h_eq' h_selfconv_limit
 
 end DoubleMollifierConvergence
+
+/-! ## Elementary real-integral helpers -/
+
+/-- Integral of a real constant multiple pulls out of the integral. -/
+theorem integral_const_mul_eq {α} [MeasurableSpace α] (μ : Measure α) (c : ℝ)
+  (f : α → ℝ) (hf : Integrable f μ) :
+  ∫ x, c * f x ∂ μ = c * ∫ x, f x ∂ μ := by
+  -- The integrability assumption ensures both integrals are well-defined
+  have := hf  -- Acknowledge we need integrability for the integral to be well-defined
+  exact MeasureTheory.integral_const_mul c f
+
+/-- Monotonicity of the real integral for pointwise ≤ between nonnegative functions,
+    assuming the larger one is integrable. -/
+theorem real_integral_mono_of_le
+  {α} [MeasurableSpace α] (μ : Measure α) (f g : α → ℝ)
+  (hg : Integrable g μ) (hf_nonneg : ∀ x, 0 ≤ f x) (hle : ∀ x, f x ≤ g x) :
+  ∫ x, f x ∂ μ ≤ ∫ x, g x ∂ μ := by
+  exact MeasureTheory.integral_mono_of_nonneg (ae_of_all _ hf_nonneg) hg (ae_of_all _ hle)
+
+/-- Integral of exp(-a*t) over (0, ∞) equals 1/a for a > 0.
+    This is the Laplace transform of 1 at parameter a. -/
+lemma integral_exp_neg_mul_Ioi_eq_inv (a : ℝ) (ha : 0 < a) :
+    ∫ t in Set.Ioi 0, Real.exp (-a * t) = 1 / a := by
+  have hna : -a < 0 := neg_neg_of_pos ha
+  have h := integral_exp_mul_Ioi hna 0
+  simp only [mul_zero, Real.exp_zero] at h
+  rw [h]
+  field_simp
+
+/-- Integral of a real-valued function, coerced to ℂ, equals `ofReal` of the real integral. -/
+theorem integral_ofReal_eq {α} [MeasurableSpace α] (μ : Measure α) (h : α → ℝ)
+  (_hf : Integrable h μ) :
+  ∫ x, (h x : ℂ) ∂μ = Complex.ofReal (∫ x, h x ∂μ) := by
+  exact integral_complex_ofReal

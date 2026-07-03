@@ -507,6 +507,7 @@ variable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)]
 
 /-! ### Helper lemmas for the complex OS3 proof -/
 
+omit [Fact (d ≤ 5)] in
 /-- Bilinear expansion: `C(f − g, f − g) = C(f,f) − C(f,g) − C(g,f) + C(g,g)`.
     Proved from `freeCovarianceℂ_bilinear_add_left/right` and `_smul_left/right`. -/
 private lemma freeCovarianceℂ_bilinear_sub_sub
@@ -522,6 +523,7 @@ private lemma freeCovarianceℂ_bilinear_sub_sub
       freeCovarianceℂ_bilinear_smul_left, freeCovarianceℂ_bilinear_smul_right]
   ring
 
+omit [Fact (d ≤ 5)] in
 /-- Conjugation identity for the free covariance with star.
     `C(star f, star g) = conj(C(f, g))` when the kernel is real-valued.
 
@@ -618,12 +620,14 @@ private def IsRePSD {n : ℕ} (M : Fin n → Fin n → ℂ) : Prop :=
 private def IsHermitianMatrix {n : ℕ} (M : Fin n → Fin n → ℂ) : Prop :=
   ∀ i j, M j i = starRingEnd ℂ (M i j)
 
+omit [Fact (d ≤ 5)] in
 /-- Star is involutive on `(TestFunctionℂ d)`: `star (star f) = f`. -/
 private lemma star_star_testFunctionℂ (f : (TestFunctionℂ d)) : star (star f) = f := by
   ext x
   change starRingEnd ℂ (starRingEnd ℂ (f (QFT.timeReflection (QFT.timeReflection x)))) = f x
   rw [QFT.timeReflection_involutive, RCLike.conj_conj]
 
+omit [Fact (d ≤ 5)] in
 /-- The reflection matrix `R_{ij} = C(fᵢ, star fⱼ)` is Hermitian.
     Proof: `R_{ji} = C(f_j, star f_i) = C(star f_i, f_j)` by symmetry
     `= C(star f_i, star(star f_j))` by star involution `= conj(C(f_i, star f_j))` by star_star_conj. -/
@@ -827,6 +831,7 @@ private lemma entrywiseExp_IsRePSD
   -- Limit of nonneg reals is nonneg
   exact ge_of_tendsto hconv_re (Filter.eventually_atTop.mpr ⟨0, fun N _ => hre_nonneg N⟩)
 
+omit [Fact (d ≤ 5)] in
 /-- Entry factorization for the GFF:
     `Z[fᵢ − star fⱼ] = Aᵢ · conj(Aⱼ) · exp(Rᵢⱼ)`
     where `Aᵢ = exp(−½ C(fᵢ,fᵢ))` and `Rᵢⱼ = C(fᵢ, star fⱼ)`. -/
@@ -858,6 +863,7 @@ private lemma gff_complexZ_entry_factor (fi fj : (TestFunctionℂ d)) :
              map_ofNat (starRingEnd ℂ)]
   ring
 
+omit [Fact (d ≤ 5)] in
 /-- Star is antilinear on (TestFunctionℂ d): `star(∑ conj(vⱼ) fⱼ) = ∑ vⱼ star(fⱼ)`.
     Proof: pointwise, `star(c • f)(x) = conj(c f(Θx)) = conj(c) conj(f(Θx))`,
     and `compTimeReflection` is a continuous linear map. -/
@@ -865,6 +871,7 @@ private lemma star_apply (f : (TestFunctionℂ d)) (x : (SpaceTime d)) :
     (star f) x = starRingEnd ℂ (f (QFT.timeReflection x)) := by
   rfl
 
+omit [Fact (d ≤ 5)] in
 private lemma star_sum_antilinear {n : ℕ} (v : Fin n → ℂ) (g : Fin n → (TestFunctionℂ d)) :
     star (∑ j, starRingEnd ℂ (v j) • g j) = ∑ j, v j • star (g j) := by
   ext x
@@ -874,6 +881,7 @@ private lemma star_sum_antilinear {n : ℕ} (v : Fin n → ℂ) (g : Fin n → (
   congr 1; ext j
   rw [map_mul, RCLike.conj_conj, star_apply]
 
+omit [Fact (d ≤ 5)] in
 /-- Left-sum expansion for `freeCovarianceℂ_bilinear`. -/
 private lemma freeCovarianceℂ_bilinear_sum_left {n : ℕ}
     (a : Fin n → (TestFunctionℂ d)) (u : Fin n → ℂ) (g : (TestFunctionℂ d)) :
@@ -887,6 +895,7 @@ private lemma freeCovarianceℂ_bilinear_sum_left {n : ℕ}
     rw [Finset.sum_insert ha', Finset.sum_insert ha',
         freeCovarianceℂ_bilinear_add_left, freeCovarianceℂ_bilinear_smul_left, ih]
 
+omit [Fact (d ≤ 5)] in
 /-- Right-sum expansion for `freeCovarianceℂ_bilinear`. -/
 private lemma freeCovarianceℂ_bilinear_sum_right {n : ℕ}
     (f : (TestFunctionℂ d)) (b : Fin n → (TestFunctionℂ d)) (w : Fin n → ℂ) :
@@ -900,6 +909,7 @@ private lemma freeCovarianceℂ_bilinear_sum_right {n : ℕ}
     rw [Finset.sum_insert ha', Finset.sum_insert ha',
         freeCovarianceℂ_bilinear_add_right, freeCovarianceℂ_bilinear_smul_right, ih]
 
+omit [Fact (d ≤ 5)] in
 /-- Bilinearity of `freeCovarianceℂ_bilinear` on finite sums. -/
 private lemma freeCovarianceℂ_bilinear_sum_sum {n : ℕ}
     (a b : Fin n → (TestFunctionℂ d)) (u w : Fin n → ℂ) :

@@ -7,7 +7,6 @@ Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 import OSforGFF.Spacetime.Basic
 import OSforGFF.Spacetime.PositiveTimeTestFunction
 import OSforGFF.General.FourierTransforms
-import OSforGFF.Covariance.Momentum
 import OSforGFF.OS.OS3_MixedRep
 import OSforGFF.OS.OS3_MixedRepInfra
 import Mathlib.MeasureTheory.Integral.Bochner.ContinuousLinearMap
@@ -44,7 +43,7 @@ composed with the star operation. This is the mathematically correct formulation
 avoids non-convergent pointwise integrals. -/
 
 /-- The reflection positivity inner product using the distributional bilinear form:
-    ⟨Θf, f⟩_C = freeCovarianceℂ_bilinear4 m (star f) f
+    ⟨Θf, f⟩_C = freeCovarianceℂ_bilinear m (star f) f
              = ∫∫ conj(f(Θx)) * C(x,y) * f(y) dx dy
 
     The star operation on (TestFunctionℂ d) is defined as:
@@ -134,6 +133,7 @@ theorem mixed_representation [GFFPropagator d m] [Fact (d ≤ 5)] (f : (TestFunc
 
 /-! ## Part 4: Key Lemmas -/
 
+omit [Fact (2 ≤ d)] in
 lemma energy_pos (k_sp : (SpatialCoords d)) : 0 < Real.sqrt (‖k_sp‖^2 + m^2) := by
   apply Real.sqrt_pos_of_pos
   have hm : 0 < m := Fact.out
@@ -147,6 +147,7 @@ lemma abs_neg_sum_nonneg (x0 y0 : ℝ) (hx : 0 ≤ x0) (hy : 0 ≤ y0) :
   rw [abs_of_nonpos (by linarith : -x0 - y0 ≤ 0)]; ring
 
 omit [Fact (0 < m)] in
+omit [Fact (2 ≤ d)] in
 lemma spatialDot_sub (k_sp x_sp y_sp : (SpatialCoords d)) :
     spatialDot k_sp (x_sp - y_sp) = spatialDot k_sp x_sp - spatialDot k_sp y_sp := by
   simp only [spatialDot]
@@ -154,7 +155,7 @@ lemma spatialDot_sub (k_sp x_sp y_sp : (SpatialCoords d)) :
     intro i; simp only [PiLp.sub_apply, mul_sub]
   simp_rw [h, Finset.sum_sub_distrib]
 
-omit [Fact (0 < m)] in
+omit [Fact (0 < m)] [Fact (2 ≤ d)] in
 lemma exp_spatial_phase_factor (k_sp : (SpatialCoords d)) (x_sp y_sp : (SpatialCoords d)) :
     Complex.exp (-Complex.I * spatialDot k_sp (x_sp - y_sp)) =
     Complex.exp (-Complex.I * spatialDot k_sp x_sp) *
@@ -170,9 +171,11 @@ noncomputable def yIntegralFactor (f : (TestFunctionℂ d)) (ω : ℝ) (k_sp : (
     Complex.exp (-(ω * y 0)) * Complex.exp (Complex.I * spatialDot k_sp (spatialPart y))
 
 omit [Fact (0 < m)] in
+omit [Fact (2 ≤ d)] in
 lemma norm_neg_eq (k_sp : (SpatialCoords d)) : ‖-k_sp‖ = ‖k_sp‖ := norm_neg k_sp
 
 omit [Fact (0 < m)] in
+omit [Fact (2 ≤ d)] in
 lemma spatialDot_neg_left (k_sp x_sp : (SpatialCoords d)) :
     spatialDot (-k_sp) x_sp = -spatialDot k_sp x_sp := by
   simp only [spatialDot]
@@ -444,7 +447,7 @@ theorem freeCovariance_reflection_positive_bilinear_real (m : ℝ) [Fact (0 < m)
     simp only [toComplex_apply]
     rw [hf_supp x hx]
     simp)
-  -- Connect the real integral to the complex one via real_integral_eq_complex_re4
+  -- Connect the real integral to the complex one via real_integral_eq_complex_re
   rw [real_integral_eq_complex_re m f]
   -- Show that the complex integral equals rpInnerProduct
   have h_eq : (∫ x, ∫ y, (QFT.compTimeReflection (toComplex f)) x * (freeCovariance d m x y : ℂ)

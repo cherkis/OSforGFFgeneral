@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 import OSforGFF.Measure.GaussianFreeField
+import OSforGFF.Instances.Dim4
 import OSforGFF.OS.OS3_ReflectionPositivity
 import OSforGFF.OS.OS0_Analyticity
 import OSforGFF.OS.OS1_Regularity

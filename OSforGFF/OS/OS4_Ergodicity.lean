@@ -25,7 +25,6 @@ import OSforGFF.OS.OS0_Analyticity
 import OSforGFF.OS.OS2_Invariance
 import OSforGFF.Spacetime.ComplexTestFunction
 import OSforGFF.Spacetime.TimeTranslation
-import OSforGFF.Covariance.Momentum
 import OSforGFF.OS.Axioms
 import OSforGFF.General.L2TimeIntegral
 import OSforGFF.General.SchwartzTranslationDecay
@@ -174,6 +173,7 @@ lemma gff_exp_time_translated_memLp_two (m : ℝ) [Fact (0 < m)] [GFFPropagator 
 
 /-! ## GFF Time Translation Invariance -/
 
+omit [Fact (2 ≤ d)] in
 /-- Time translation commutes with pointwise conjugation. -/
 lemma timeTranslationSchwartzℂ_conj_comm (t : ℝ) (f : (TestFunctionℂ d)) :
     timeTranslationSchwartzℂ t (conjSchwartz f) = conjSchwartz (timeTranslationSchwartzℂ t f) := by
@@ -870,7 +870,7 @@ lemma clustering_implies_covariance_decay (m : ℝ) [Fact (0 < m)] [GFFPropagato
           exact Real.rpow_le_rpow_of_exponent_le h_base (by norm_num : (-6 : ℝ) ≤ -3)
 
 /-- The norm of the GFF covariance is integrable on [0,T] for each fixed first argument.
-    Uses gff_covariance_norm_integrableOn_slice_axiom to avoid expensive type unification. -/
+    Uses gff_covariance_norm_integrableOn_slice_proved to avoid expensive type unification. -/
 lemma gff_covariance_norm_integrableOn_slice (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunctionℂ d))
     (s : ℝ) (T : ℝ) :
     let μ := (gaussianFreeField_free m).toMeasure

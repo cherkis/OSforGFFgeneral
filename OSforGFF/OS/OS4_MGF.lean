@@ -27,7 +27,6 @@ import OSforGFF.OS.OS0_Analyticity
 import OSforGFF.OS.OS2_Invariance
 import OSforGFF.Spacetime.ComplexTestFunction
 import OSforGFF.Spacetime.TimeTranslation
-import OSforGFF.Covariance.Momentum
 import OSforGFF.OS.Axioms
 
 /-!
@@ -75,6 +74,7 @@ export TimeTranslation (
 
 /-! ## Time Translation Decomposition Lemmas -/
 
+omit [Fact (2 ≤ d)] in
 /-- Time translation commutes with real part extraction for complex Schwartz functions. -/
 lemma timeTranslationSchwartzℂ_decompose_fst (s : ℝ) (g : TestFunctionℂ d) :
     (complex_testfunction_decompose (timeTranslationSchwartzℂ s g)).1 =
@@ -83,6 +83,7 @@ lemma timeTranslationSchwartzℂ_decompose_fst (s : ℝ) (g : TestFunctionℂ d)
   simp only [complex_testfunction_decompose_fst_apply, timeTranslationSchwartz_apply,
     timeTranslationSchwartzℂ_apply]
 
+omit [Fact (2 ≤ d)] in
 /-- Time translation commutes with imaginary part extraction for complex Schwartz functions. -/
 lemma timeTranslationSchwartzℂ_decompose_snd (s : ℝ) (g : TestFunctionℂ d) :
     (complex_testfunction_decompose (timeTranslationSchwartzℂ s g)).2 =
@@ -91,6 +92,7 @@ lemma timeTranslationSchwartzℂ_decompose_snd (s : ℝ) (g : TestFunctionℂ d)
   simp only [complex_testfunction_decompose_snd_apply, timeTranslationSchwartz_apply,
     timeTranslationSchwartzℂ_apply]
 
+omit [Fact (2 ≤ d)] in
 /-- Time translation on distributions is compatible with complex pairing.
     ⟨T_s ω, g⟩_ℂ = ⟨ω, T_{-s} g⟩_ℂ -/
 lemma timeTranslationDistribution_pairingℂ (s : ℝ) (ω : FieldConfiguration d)
@@ -143,6 +145,7 @@ lemma continuous_distributionPairingℂ_timeTranslation (ω : FieldConfiguration
     timeTranslationE t = (1, -timeShiftConst t) where 1 is the identity rotation. -/
 def timeTranslationE (t : ℝ) : QFT.E d := ⟨1, -timeShiftConst t⟩
 
+omit [Fact (2 ≤ d)] in
 /-- The Euclidean action of timeTranslationE equals timeTranslationSchwartzℂ. -/
 lemma euclidean_action_timeTranslationE (t : ℝ) (f : TestFunctionℂ d) :
     QFT.euclidean_action (timeTranslationE t) f = timeTranslationSchwartzℂ t f := by

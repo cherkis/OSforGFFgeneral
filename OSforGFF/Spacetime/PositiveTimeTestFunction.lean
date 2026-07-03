@@ -124,6 +124,7 @@ lemma PositiveTimeTestFunctionℂ.zero_on_nonpositive
     exact (lt_irrefl _ this)
   exact image_eq_zero_of_notMem_tsupport hx_not_support
 
+omit [Fact (2 ≤ d)] in
 /-- Helper lemma: starRingEnd ℂ commutes through derivatives and preserves norms -/
 lemma starRingEnd_iteratedFDeriv_norm_eq (g : (TestFunctionℂ d)) (n : ℕ) (x : (SpaceTime d)) :
   ‖iteratedFDeriv ℝ n (fun x => starRingEnd ℂ (g x)) x‖ = ‖iteratedFDeriv ℝ n g x‖ := by

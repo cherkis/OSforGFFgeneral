@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 import OSforGFF.Measure.Construct
+import OSforGFF.Instances.Dim4Bessel
 import OSforGFF.Covariance.RealForm
 import OSforGFF.Spacetime.ComplexTestFunction
 import Mathlib.Analysis.Distribution.SchwartzSpace.Fourier

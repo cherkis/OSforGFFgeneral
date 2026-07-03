@@ -74,11 +74,13 @@ theorem freeCovarianceℂ_bilinear_agrees_on_reals
 noncomputable def momentumWeightMeasure (m : ℝ) : Measure (SpaceTime d) :=
   volume.withDensity (fun k => ENNReal.ofReal (1 / (‖k‖ ^ 2 + m ^ 2)))
 
+omit [Fact (2 ≤ d)] in
 /-- For `c : ℝ` and Schwartz functions over ℂ, ℝ-smul equals ℂ-smul by the canonical coercion. -/
 private lemma schwartz_real_smul_eq_complex (c : ℝ) (f : SchwartzMap (SpaceTime d) ℂ) :
     c • f = (c : ℂ) • f := by
   ext x; simp [SchwartzMap.smul_apply]
 
+omit [Fact (2 ≤ d)] in
 /-- For `c : ℝ` and `Lp ℂ 2`, ℝ-smul equals ℂ-smul by the canonical coercion. -/
 private lemma lp_real_smul_eq_complex (c : ℝ) (g : Lp ℂ 2 (volume : Measure (SpaceTime d))) :
     c • g = (c : ℂ) • g := by
@@ -130,6 +132,7 @@ noncomputable def sqrtPropagatorMap (m : ℝ) (f : TestFunction d) : SpaceTime d
     (SchwartzMap.fourierTransformCLM ℂ (toComplex f)) k
       * freePropagatorMomSqrt d m k
 
+omit [Fact (2 ≤ d)] in
 /-- The sqrtPropagatorMap is square-integrable. -/
 lemma sqrtPropagatorMap_sq_integrable (m : ℝ) [Fact (0 < m)] (f : TestFunction d) :
     Integrable (fun k => ‖sqrtPropagatorMap m f k‖ ^ 2) volume := by
@@ -184,6 +187,7 @@ lemma sqrtPropagatorMap_sq_integrable (m : ℝ) [Fact (0 < m)] (f : TestFunction
           rw [Real.norm_of_nonneg h_nonneg_dom]
   exact h_dom_integrable.mono h_sq_meas h_dom_pointwise
 
+omit [Fact (2 ≤ d)] in
 /-- The weighted Fourier representative lies in L². -/
 lemma sqrtPropagatorMap_memLp (m : ℝ) [Fact (0 < m)] (f : TestFunction d) :
     MemLp (sqrtPropagatorMap m f) 2 volume := by
@@ -207,6 +211,7 @@ lemma sqrtPropagatorMap_memLp (m : ℝ) [Fact (0 < m)] (f : TestFunction d) :
 noncomputable def sqrtPropagatorMap_norm_sq (m : ℝ) (f : TestFunction d) : ℝ :=
   ∫ k, ‖sqrtPropagatorMap m f k‖ ^ 2 ∂volume
 
+omit [Fact (2 ≤ d)] in
 /-- The map is linear in f (additive). -/
 lemma sqrtPropagatorMap_linear_add (m : ℝ) [Fact (0 < m)] (f g : TestFunction d) :
     sqrtPropagatorMap m (f + g) = sqrtPropagatorMap m f + sqrtPropagatorMap m g := by
@@ -219,6 +224,7 @@ lemma sqrtPropagatorMap_linear_add (m : ℝ) [Fact (0 < m)] (f g : TestFunction 
     map_add _ _ _
   simp only [hadd, hmap, SchwartzMap.add_apply, Pi.add_apply, add_mul]
 
+omit [Fact (2 ≤ d)] in
 /-- The map is ℝ-linear (scalar multiplication). -/
 lemma sqrtPropagatorMap_linear_smul (m : ℝ) [Fact (0 < m)] (c : ℝ) (f : TestFunction d) :
     sqrtPropagatorMap m (c • f) = c • sqrtPropagatorMap m f := by
@@ -233,6 +239,7 @@ lemma sqrtPropagatorMap_linear_smul (m : ℝ) [Fact (0 < m)] (c : ℝ) (f : Test
 
 /-! ## Connection to Covariance -/
 
+omit [Fact (2 ≤ d)] in
 /-- For real test functions, the star (conjugation) of toComplex is the identity. -/
 lemma toComplex_star (f : TestFunction d) (x : SpaceTime d) :
     starRingEnd ℂ (toComplex f x) = toComplex f x := by
@@ -362,6 +369,7 @@ noncomputable def embeddingMapCLM (m : ℝ) [Fact (0 < m)] :
   ((freePropagatorMomSqrt_mul_CLM_real m).comp (schwartzToL2CLM_real m)).comp
     ((fourierTransformCLM_real).comp toComplexCLM)
 
+omit [Fact (2 ≤ d)] in
 lemma embeddingMapCLM_apply (m : ℝ) [Fact (0 < m)] (f : TestFunction d) :
     embeddingMapCLM m f = embeddingMap m f := by
   classical
@@ -445,6 +453,7 @@ theorem sqrtPropagatorEmbedding (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
 
 /-! ## Auxiliary Lemmas for Continuity -/
 
+omit [Fact (2 ≤ d)] in
 /-- Squared L² norm of the embedded function in terms of the pointwise integral. -/
 lemma embeddingMap_norm_sq (m : ℝ) [Fact (0 < m)] (f : TestFunction d) :
     ‖embeddingMap m f‖ ^ 2 = ∫ (k : SpaceTime d), ‖sqrtPropagatorMap m f k‖ ^ 2 ∂volume := by
@@ -495,6 +504,7 @@ lemma freeCovarianceFormR_eq_normSq (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
   have h_norm := embeddingMap_norm_sq (m := m) (f := f)
   simpa [sqrtPropagatorMap_norm_sq, h_norm] using h_cov.symm
 
+omit [Fact (2 ≤ d)] in
 /-- The embedding map TestFunction d → L² is continuous. -/
 lemma embeddingMap_continuous (m : ℝ) [Fact (0 < m)] :
     Continuous (embeddingMap (d := d) m) := by

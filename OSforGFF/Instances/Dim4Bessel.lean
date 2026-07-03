@@ -28,11 +28,12 @@ import OSforGFF.General.FunctionalAnalysis
 import OSforGFF.General.BesselFunction
 
 /-!
-# Momentum Space Propagator for Gaussian Free Field
+# Four-dimensional Bessel/momentum support for the `d = 4` propagator instance
 
-This file implements the momentum space free propagator 1/(‖k‖²+m²) and its properties.
-This is the foundation for the free covariance function in position space, which is computed
-via Fourier transform.
+This file implements the four-dimensional momentum space free propagator 1/(‖k‖²+m²) and the
+Bessel-function evaluation of the position-space covariance `(m/(4π²r))·K₁(mr)`. It supplies the
+`schwinger_eq` obligation of the `GFFPropagator STDimension m` instance (`Instances/Dim4.lean`)
+and the four-dimensional UV-divergence input of `OS/NonTrivial.lean`.
 
 ## Main Definitions
 
@@ -59,13 +60,6 @@ noncomputable section
 /-! ### Small helper lemmas for integration and complex algebra -/
 
 
-/-- Helper theorem: integral of a real-valued function, coerced to ℂ, equals `ofReal` of the real integral. -/
-theorem integral_ofReal_eq {α} [MeasurableSpace α] (μ : Measure α) (h : α → ℝ)
-  (_hf : Integrable h μ) :
-  ∫ x, (h x : ℂ) ∂μ = Complex.ofReal (∫ x, h x ∂μ) := by
-  exact integral_complex_ofReal
-
-
 /-- Helper lemma: Schwartz functions are L²-integrable. -/
 lemma schwartz_L2_integrable (f : TestFunctionℂ4) :
   Integrable (fun k => ‖f k‖^2) volume := by
@@ -81,22 +75,6 @@ theorem integral_const_mul {α} [MeasurableSpace α] (μ : Measure α) (c : ℝ)
   (f : α → ℝ) (hf : Integrable f μ) :
   Integrable (fun x => c * f x) μ := by
   exact MeasureTheory.Integrable.const_mul hf c
-
-/-- Helper theorem: Integral of a real constant multiple pulls out of the integral. -/
-theorem integral_const_mul_eq {α} [MeasurableSpace α] (μ : Measure α) (c : ℝ)
-  (f : α → ℝ) (hf : Integrable f μ) :
-  ∫ x, c * f x ∂ μ = c * ∫ x, f x ∂ μ := by
-  -- The integrability assumption ensures both integrals are well-defined
-  have := hf  -- Acknowledge we need integrability for the integral to be well-defined
-  exact MeasureTheory.integral_const_mul c f
-
-/-- Helper theorem: Monotonicity of the real integral for pointwise ≤ between nonnegative functions,
-    assuming the larger one is integrable. -/
-theorem real_integral_mono_of_le
-  {α} [MeasurableSpace α] (μ : Measure α) (f g : α → ℝ)
-  (hg : Integrable g μ) (hf_nonneg : ∀ x, 0 ≤ f x) (hle : ∀ x, f x ≤ g x) :
-  ∫ x, f x ∂ μ ≤ ∫ x, g x ∂ μ := by
-  exact MeasureTheory.integral_mono_of_nonneg (ae_of_all _ hf_nonneg) hg (ae_of_all _ hle)
 
 /-! ## Free Covariance in Euclidean QFT
 
@@ -195,19 +173,6 @@ which leads to the Bessel K₁ function.
 noncomputable def schwingerIntegrand (t : ℝ) (m : ℝ) (k : SpaceTime4) : ℝ :=
   Real.exp (-t * (‖k‖^2 + m^2))
 
-
-/-- Integral of exp(-a*t) over (0, ∞) equals 1/a for a > 0.
-    This is the Laplace transform of 1 at parameter a.
-    Proof: Change of variables u = at gives (1/a) ∫₀^∞ e^{-u} du = 1/a. -/
-lemma integral_exp_neg_mul_Ioi_eq_inv (a : ℝ) (ha : 0 < a) :
-    ∫ t in Set.Ioi 0, Real.exp (-a * t) = 1 / a := by
-  -- Use integral_exp_mul_Ioi with -a < 0 and c = 0
-  have hna : -a < 0 := neg_neg_of_pos ha
-  have h := integral_exp_mul_Ioi hna 0
-  simp only [mul_zero, Real.exp_zero] at h
-  -- h : ∫ x in Set.Ioi 0, rexp (-a * x) = -1 / -a = 1 / a
-  rw [h]
-  field_simp
 
 /-- The Schwinger representation: ∫₀^∞ exp(-t(k² + m²)) dt = 1/(k² + m²).
     This is valid when k² + m² > 0. -/

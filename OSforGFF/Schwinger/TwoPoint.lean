@@ -48,6 +48,7 @@ noncomputable def bumpToSchwartz (φ : ContDiffBump (0 : SpaceTime d)) : TestFun
   -- The normed bump has compact support and is C^∞, hence Schwartz
   (φ.hasCompactSupport_normed (μ := volume)).toSchwartzMap φ.contDiff_normed
 
+omit [Fact (2 ≤ d)] in
 /-- bumpToSchwartz produces the L¹-normalized bump function. -/
 @[simp]
 theorem bumpToSchwartz_apply (φ : ContDiffBump (0 : SpaceTime d)) (x : SpaceTime d) :
@@ -92,9 +93,6 @@ noncomputable def standardBumpSequence (n : ℕ) (hn : n ≠ 0) : ContDiffBump (
 
     where φ_ε is a standard bump function with outer radius ε.
 
-    This replaces the old DiracDelta-based definition, which was conceptually correct
-    but used sorry since delta functions are distributions, not test functions.
-
     **Regularization at coincident points**: At x = 0, the two-point function is
     mathematically undefined (it would be infinite for most QFTs). We regularize
     by setting S₂(0) = 0, which is consistent with the convention used in
@@ -111,6 +109,7 @@ noncomputable def SchwingerTwoPointFunction
     Filter.limUnder Filter.atTop
       (fun n : ℕ => if hn : n = 0 then 0 else SmearedTwoPointFunction dμ_config (standardBumpSequence n hn) x)
 
+omit [Fact (2 ≤ d)] in
 /-- SchwingerTwoPointFunction vanishes at coincident points by definition. -/
 @[simp]
 theorem schwingerTwoPointFunction_zero

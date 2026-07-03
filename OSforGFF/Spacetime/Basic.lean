@@ -45,9 +45,10 @@ import Minlos.NuclearSpace
 
 Core type definitions for the formalization:
 
-- `SpaceTime4` = EuclideanSpace ℝ (Fin 4), the Euclidean 4-space ℝ⁴
-- `TestFunction4` / `TestFunctionℂ4` = real/complex Schwartz functions on ℝ⁴
-- `FieldConfiguration4` = tempered distributions S'(ℝ⁴) (WeakDual of Schwartz space)
+- `SpaceTime d` = EuclideanSpace ℝ (Fin d), Euclidean d-space
+- `TestFunction d` / `TestFunctionℂ d` = real/complex Schwartz functions on ℝ^d
+- `FieldConfiguration d` = tempered distributions S'(ℝ^d) (WeakDual of Schwartz space)
+- `SpaceTime4`, `TestFunction4`, … = shorthand for the four-dimensional instance
 - `distributionPairing` / `distributionPairingℂ_real` = ⟨ω, f⟩ pairings
 - `GJGeneratingFunctional` = Z[J] = ∫ exp(i⟨ω, J⟩) dμ(ω)
 -/
@@ -84,8 +85,6 @@ noncomputable section
 
 variable {𝕜 : Type} [RCLike 𝕜]
 variable {d : ℕ}
-
-abbrev μ : Measure SpaceTime4 := volume    -- Lebesgue, just named “μ”
 
 /- Distributions and test functions -/
 
@@ -168,8 +167,6 @@ def distributionPairing (ω : (FieldConfiguration d)) (f : (TestFunction d)) : �
 @[simp] lemma distributionPairingCLM_apply (a : (TestFunction d)) (ω : (FieldConfiguration d)) :
     distributionPairingCLM a ω = distributionPairing ω a := rfl
 
-variable [SigmaFinite μ]
-
 /-! ## Glimm-Jaffe Generating Functional
 
 The generating functional in the distribution framework:
@@ -213,8 +210,6 @@ def schwartz_comp_clm (f : (TestFunctionℂ d)) (L : ℂ →L[ℝ] ℝ) : (TestF
           apply mul_le_mul_of_nonneg_left (hC x) (norm_nonneg _)
       _ = C * ‖L‖ := by ring
   )
-
-omit [SigmaFinite μ]
 
 /-- Evaluate `schwartz_comp_clm` pointwise. -/
 @[simp] lemma schwartz_comp_clm_apply (f : (TestFunctionℂ d)) (L : ℂ →L[ℝ] ℝ) (x : (SpaceTime d)) :

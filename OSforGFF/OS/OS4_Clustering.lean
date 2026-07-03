@@ -10,8 +10,6 @@ import OSforGFF.Measure.Construct
 import OSforGFF.Measure.IsGaussian
 import OSforGFF.Measure.GaussianFreeField -- For gaussian_satisfies_OS2
 import OSforGFF.OS.OS2_Invariance -- For CovarianceEuclideanInvariantℂ_μ_GFF
-import OSforGFF.Covariance.Position  -- For freeCovarianceℂ_bilinear_symm
-import OSforGFF.Covariance.Momentum
 import OSforGFF.OS.Axioms
 import OSforGFF.General.FunctionalAnalysis
 import OSforGFF.Spacetime.ComplexTestFunction
@@ -114,6 +112,7 @@ lemma gff_generating_sum_factorization (m : ℝ) [Fact (0 < m)] [GFFPropagator d
 
 /-! ## Translation as Euclidean Action -/
 
+omit [Fact (2 ≤ d)] in
 /-- The inverse of the identity linear isometry is itself. -/
 lemma LinearIsometry_inv_one : LinearIsometry.inv (1 : O4 d) = 1 := by
   -- Use comp_inv: R.comp (inv R) = 1
@@ -124,6 +123,7 @@ lemma LinearIsometry_inv_one : LinearIsometry.inv (1 : O4 d) = 1 := by
 
 /-! ## Translation Invariance from OS2 -/
 
+omit [Fact (2 ≤ d)] in
 /-- For OS2-invariant measures, Z[euclidean_action g f] = Z[f] for any g ∈ E. -/
 lemma generating_euclidean_invariant
     (dμ_config : ProbabilityMeasure (FieldConfiguration d))
@@ -513,6 +513,7 @@ def timeVector (s : ℝ) : (SpaceTime d) :=
   EuclideanSpace.equiv (Fin d) ℝ |>.symm
     (fun i => if i = 0 then s else 0)
 
+omit [Fact (2 ≤ d)] in
 /-- Time duality for distribution pairing: ⟨T_s ω, g⟩ = ⟨ω, T_{-s} g⟩.
     This is the fundamental identity connecting time translation of distributions
     to time translation of test functions.
@@ -538,16 +539,19 @@ lemma timeShiftConst_norm (s : ℝ) : ‖TimeTranslation.timeShiftConst (d := d)
   rw [Fin.sum_univ_succ]
   simp [Fin.val_succ, Real.norm_eq_abs, sq_abs, Real.sqrt_sq_eq_abs]
 
+omit [Fact (2 ≤ d)] in
 /-- Time translation of Schwartz function at a point equals function evaluated at shifted point. -/
 lemma timeTranslationSchwartzℂ_at_point (s : ℝ) (g : (TestFunctionℂ d)) (y : (SpaceTime d)) :
     TimeTranslation.timeTranslationSchwartzℂ s g y = g (TimeTranslation.timeShift s y) := by
   rfl
 
+omit [Fact (2 ≤ d)] in
 /-- Time shift by s equals adding the time shift constant. -/
 lemma timeShift_eq_add (s : ℝ) (y : (SpaceTime d)) :
     TimeTranslation.timeShift s y = y + TimeTranslation.timeShiftConst s := by
   exact TimeTranslation.timeShift_eq_add_const s y
 
+omit [Fact (2 ≤ d)] in
 /-- Time translation by -s gives g(y - timeShiftConst(s)). -/
 lemma timeTranslationSchwartzℂ_neg_eq_sub (s : ℝ) (g : (TestFunctionℂ d)) (y : (SpaceTime d)) :
     TimeTranslation.timeTranslationSchwartzℂ (-s) g y = g (y - TimeTranslation.timeShiftConst s) := by

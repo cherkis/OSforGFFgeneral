@@ -130,8 +130,8 @@ theorem schwartz_vanishing_linear_bound (f : TestFunctionℂ d)
 
 /-! ## Integrate over space first (Fubini approach)
 
-The key insight is to decompose SpaceTime4 = ℝ × ℝ³ and integrate over spatial
-coordinates first. For a Schwartz function f : SpaceTime4 → ℂ vanishing at t ≤ 0:
+The key insight is to decompose `SpaceTime d` = ℝ × ℝ^(d-1) and integrate over spatial
+coordinates first. For a Schwartz function f : SpaceTime d → ℂ vanishing at t ≤ 0:
 
 1. Define G(t) = ∫_{ℝ³} ‖f(t, x)‖ dx  (the spatial integral of the norm)
 2. G is well-defined and finite for all t (f is Schwartz)

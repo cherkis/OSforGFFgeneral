@@ -457,6 +457,7 @@ theorem heatKernel_bilinear_fourier_form (m : ℝ) [Fact (0 < m)] (f : (TestFunc
 
 /-! ### Helper lemmas for Laplace s-integral evaluation -/
 
+omit [Fact (2 ≤ d)] in
 /-- ω = √(‖k_sp‖² + m²) is positive for m > 0. -/
 lemma omega_pos (k_sp : (SpatialCoords d)) (m : ℝ) (hm : 0 < m) :
     0 < Real.sqrt (‖k_sp‖^2 + m^2) := by positivity
@@ -861,7 +862,7 @@ theorem schwinger_bilinear_integrable (m : ℝ) [Fact (0 < m)] (f : (TestFunctio
   -- The total integral of this bound is finite because:
   -- 1. For each s > 0: ∫_x ∫_y ‖f(x)‖ * Cf * H(s, ‖Θx-y‖) dy dx
   --    = Cf * ∫_x ‖f(x)‖ * [∫_y H(s, ‖Θx-y‖) dy] dx
-  --    = Cf * ∫_x ‖f(x)‖ * 1 dx  (by heatKernelPositionSpace_integral_eq_one)
+  --    = Cf * ∫_x ‖f(x)‖ * 1 dx  (by heatKernelProfile_integral_eq_one)
   --    = Cf * ‖f‖_{L¹}
   --
   -- 2. The s-integral: ∫_{s>0} exp(-sm²) * Cf * ‖f‖_{L¹} ds
@@ -1024,6 +1025,7 @@ private def schwinger_tripleReorder :
     (SpaceTime d) × ((SpaceTime d) × ℝ) ≃ᵐ ℝ × ((SpaceTime d) × (SpaceTime d)) :=
   MeasurableEquiv.prodAssoc.symm.trans MeasurableEquiv.prodComm
 
+omit [Fact (2 ≤ d)] in
 /-- The schwinger_tripleReorder map is measure-preserving on product Lebesgue measures
     with the s-measure restricted to Ioi 0. -/
 private lemma measurePreserving_schwinger_tripleReorder :
@@ -1242,8 +1244,8 @@ lemma freeCovariance_eq_schwingerRep (m : ℝ) [Fact (0 < m)] [GFFPropagator d m
 
     This follows from:
     1. **Kernel equality** (a.e.): For Θx ≠ y (which is a.e. in the product measure),
-       freeCovariance d(Θx, y) = covarianceSchwingerRep(|Θx - y|) = ∫₀^∞ e^{-sm²} H(s, |Θx-y|) ds
-       This is proven via `covarianceSchwingerRep_eq_freeCovarianceBessel`.
+       freeCovariance d (Θx) y = properTimeCovariance d m |Θx - y| = ∫₀^∞ e^{-sm²} H(s, |Θx-y|) ds
+       This is proven via `GFFPropagator.schwinger_eq`.
 
     2. **Fubini swap**: Exchanging the s-integral with the x,y-integrals.
        Uses `schwinger_bilinear_integrable`.
@@ -1659,6 +1661,7 @@ theorem bessel_bilinear_eq_mixed_representation (m : ℝ) [Fact (0 < m)] [GFFPro
   -- Step 2: Convert heat kernel form to mixed representation
   exact heatKernel_bilinear_to_mixed_rep m f hf_supp
 
+omit [Fact (2 ≤ d)] in
 /-- The mixed representation integrand can be converted to the k₀-inside form
     using the Fourier inversion identity for the Lorentzian.
 

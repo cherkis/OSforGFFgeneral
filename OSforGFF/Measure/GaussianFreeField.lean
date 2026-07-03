@@ -22,7 +22,6 @@ import OSforGFF.Spacetime.Euclidean
 import OSforGFF.Spacetime.DiscreteSymmetry
 import OSforGFF.General.FunctionalAnalysis
 import OSforGFF.Measure.Minlos
-import OSforGFF.Covariance.Position
 import OSforGFF.Measure.MinlosAnalytic
 import OSforGFF.Schwinger.Defs
 
@@ -106,6 +105,7 @@ def GJcov_bilin (dμ_config : ProbabilityMeasure (FieldConfiguration d))
     (by intro a x y   -- homogeneity in the 2nd arg
         exact (h_bilinear a x 0 y).2.2.1)
 
+omit [Fact (2 ≤ d)] in
 theorem gaussian_satisfies_OS0
   (dμ_config : ProbabilityMeasure (FieldConfiguration d))
   (h_gaussian : isGaussianGJ dμ_config)
@@ -211,6 +211,7 @@ def CovarianceEuclideanInvariantℂ (dμ_config : ProbabilityMeasure (FieldConfi
     SchwingerFunctionℂ₂ dμ_config (QFT.euclidean_action g f) (QFT.euclidean_action g h) =
     SchwingerFunctionℂ₂ dμ_config f h
 
+omit [Fact (2 ≤ d)] in
 theorem gaussian_satisfies_OS2
   (dμ_config : ProbabilityMeasure (FieldConfiguration d))
   (h_gaussian : isGaussianGJ dμ_config)

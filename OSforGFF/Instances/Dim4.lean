@@ -3,8 +3,9 @@ Copyright (c) 2025 Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim. All r
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
-import OSforGFF.Covariance.Momentum
+import OSforGFF.Instances.Dim4Bessel
 import OSforGFF.Covariance.Propagator
+import OSforGFF.Measure.Construct
 
 /-!
 # The four-dimensional instance of `GFFPropagator`
@@ -33,5 +34,8 @@ noncomputable instance instGFFPropagatorDim4 (m : ℝ) [Fact (0 < m)] :
 /-- At `d = 4` the generic kernel is definitionally the Bessel kernel. -/
 lemma freeCovariance_dim4_eq (m : ℝ) [Fact (0 < m)] (x y : SpaceTime4) :
     freeCovariance STDimension m x y = freeCovariance4 m x y := rfl
+
+/-- Shorthand for the free GFF probability measure of the four-dimensional instance. -/
+@[simp] abbrev μ_GFF (m : ℝ) [Fact (0 < m)] := gaussianFreeField_free (d := STDimension) m
 
 end

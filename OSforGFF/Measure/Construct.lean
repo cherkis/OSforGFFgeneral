@@ -32,7 +32,6 @@ import Mathlib.MeasureTheory.Measure.FiniteMeasureExt
 import OSforGFF.Spacetime.Basic
 import OSforGFF.Schwinger.Defs
 import OSforGFF.Measure.Minlos
-import OSforGFF.Covariance.Position
 import OSforGFF.Covariance.RealForm
 import OSforGFF.Measure.MinlosAnalytic
 import OSforGFF.Spacetime.ComplexTestFunction
@@ -71,6 +70,7 @@ noncomputable section
 
 variable {d : ℕ} [Fact (2 ≤ d)]
 
+omit [Fact (2 ≤ d)] in
 private lemma distributionPairingCLM_measurable (φ : TestFunction d) :
     Measurable (distributionPairingCLM φ) :=
   WeakDual.eval_measurable φ
@@ -143,9 +143,6 @@ noncomputable def constructGaussianMeasureMinlos_free (m : ℝ) [Fact (0 < m)] [
 noncomputable def gaussianFreeField_free (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] : ProbabilityMeasure (FieldConfiguration d) :=
   constructGaussianMeasureMinlos_free m
 
-/-- Shorthand for the free GFF probability measure used throughout. -/
-@[simp] abbrev μ_GFF (m : ℝ) [Fact (0 < m)] := gaussianFreeField_free (d := STDimension) m
-
 /-- Real characteristic functional of the free GFF: for real test functions f, the generating
     functional equals the Gaussian form with the real covariance. -/
 theorem gff_real_characteristic (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
@@ -203,6 +200,7 @@ private lemma charFun_implies_gaussian
   ring_nf
 
 set_option backward.isDefEq.respectTransparency false in
+omit [Fact (2 ≤ d)] in
 /-- The characteristic function of a pushforward measure by `distributionPairingCLM φ`
     equals the generating functional at a scaled test function. -/
 private lemma charFun_eq_GJGeneratingFunctional

@@ -22,7 +22,7 @@ import Mathlib.Topology.Constructions
 import OSforGFF.Spacetime.Basic
 import OSforGFF.OS.Axioms
 import OSforGFF.Covariance.ParsevalGeneric
-import OSforGFF.Covariance.Momentum
+import OSforGFF.General.FunctionalAnalysis
 import OSforGFF.Covariance.RealForm
 import OSforGFF.Measure.Construct
 import OSforGFF.Measure.IsGaussian
@@ -39,7 +39,7 @@ Proves |Z[f]| ≤ exp(c · ‖f‖²_{L²}) with p = 2 and c = 1/(2m²). The arg
    (Plancherel + bound 1/((2π)²|k|²+m²) ≤ 1/m²)
 5. Combine: |Z[f]| ≤ exp(‖f‖²_{L²}/(2m²))
 
-Local integrability of the two-point function `x ↦ C(x, 0)` follows from global
+Local integrability of the two-point function `x ↦ C(0, x)` follows from global
 integrability of the radial covariance profile (`GFFPropagator.integrable`).
 
 ## Main result
@@ -63,37 +63,21 @@ theorem fourier_plancherel_schwartz (g : TestFunctionℂ d) :
       ∫ x, ‖g x‖^2 ∂volume :=
   SchwartzMap.integral_norm_sq_fourier g
 
-/-- **Two-point Schwinger function of the GFF**: the position-space free covariance
-    kernel `x ↦ C(x, 0)`.
+/-- **Two-point Schwinger function of the GFF**: the centered position-space covariance
+    kernel `K(x) = C(0, x)`.
 
-    Mathematically: ⟨φ(x)φ(0)⟩_μ = C(x, 0) for the Gaussian measure with covariance C.
+    Mathematically: ⟨φ(x)φ(0)⟩_μ = C(0, x) for the Gaussian measure with covariance C.
     The abstract `SchwingerTwoPointFunction` is defined as a mollified limit; for the GFF
     it agrees with this kernel away from the origin (`schwingerTwoPointFunction_eq_GFF`,
     via `double_mollifier_convergence`). -/
 noncomputable def SchwingerTwoPointFunction_GFF (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
     (x : SpaceTime d) : ℝ :=
-  freeCovariance d m x 0
+  freeCovarianceKernel d m x
 
-/-- The GFF two-point function equals the free covariance kernel by definition. -/
+/-- The GFF two-point function equals the centered covariance kernel by definition. -/
 theorem schwingerTwoPoint_eq_freeCovariance (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
     (x : SpaceTime d) :
-  SchwingerTwoPointFunction_GFF m x = freeCovariance d m x 0 := rfl
-
-/-- The free covariance kernel `x ↦ C(x, 0)` is continuous away from the origin: it is
-    the radial profile `Cprofile ‖x‖`, which agrees with the proper-time integral
-    `properTimeCovariance` for `‖x‖ > 0`, and the latter is continuous on `(0, ∞)`. -/
-lemma freeCovariance_kernel_continuousOn (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
-    ContinuousOn (fun x : SpaceTime d => freeCovariance d m x 0)
-      {y : SpaceTime d | y ≠ 0} := by
-  have hm : (0 : ℝ) < m := Fact.out
-  have hC : ContinuousOn ((properTimeCovariance d m) ∘ (fun x : SpaceTime d => ‖x‖))
-      {y : SpaceTime d | y ≠ 0} :=
-    (properTimeCovariance_continuousOn d m hm).comp continuous_norm.continuousOn
-      (fun y hy => Set.mem_Ioi.mpr (norm_pos_iff.mpr hy))
-  refine hC.congr fun y hy => ?_
-  show freeCovariance d m y 0 = properTimeCovariance d m ‖y‖
-  simp only [freeCovariance, sub_zero]
-  exact GFFPropagator.schwinger_eq ‖y‖ (norm_pos_iff.mpr hy)
+  SchwingerTwoPointFunction_GFF m x = freeCovarianceKernel d m x := rfl
 
 /-- The abstract two-point Schwinger function of the GFF equals the concrete covariance
     kernel away from the origin: the mollified limit defining `SchwingerTwoPointFunction`
@@ -102,13 +86,13 @@ theorem schwingerTwoPointFunction_eq_GFF (m : ℝ) [Fact (0 < m)] [GFFPropagator
     (x : SpaceTime d) (hx : x ≠ 0) :
   SchwingerTwoPointFunction (gaussianFreeField_free (d := d) m) x
     = SchwingerTwoPointFunction_GFF m x := by
-  have h_cont : ContinuousOn (fun y : SpaceTime d => freeCovariance d m y 0)
-      {y : SpaceTime d | y ≠ 0} := freeCovariance_kernel_continuousOn m
+  have h_cont : ContinuousOn (freeCovarianceKernel d m)
+      {y : SpaceTime d | y ≠ 0} := freeCovarianceKernel_continuousOn
   have h_S₂ : ∀ (f g : TestFunction d),
       SchwingerFunction₂ (gaussianFreeField_free (d := d) m) f g =
-      ∫ u, ∫ v, f u * freeCovariance d m (u - v) 0 * g v := by
+      ∫ u, ∫ v, f u * freeCovarianceKernel d m (u - v) * g v := by
     -- Chain: S₂(f,g) = ∫ω (ωf)(ωg) dμ = freeCovarianceFormR m f g = ∫∫ f(u) C(u,v) g(v)
-    -- where C(u,v) = C(u-v, 0) by translation invariance
+    -- where C(u,v) = K(u-v) by translation invariance
     intro f g
     -- Step 1: S₂ = ∫ω (ωf)(ωg) via schwinger_eq_covariance
     rw [schwinger_eq_covariance]
@@ -118,41 +102,30 @@ theorem schwingerTwoPointFunction_eq_GFF (m : ℝ) [Fact (0 < m)] [GFFPropagator
     rw [GFFIsGaussian.schwinger_eq_covariance_real m f g]
     -- Step 3: freeCovarianceFormR = ∫∫ f(u) * freeCovariance(u,v) * g(v)
     unfold freeCovarianceFormR
-    -- Step 4: freeCovariance(u,v) = freeCovariance(u-v, 0) by translation invariance
+    -- Step 4: freeCovariance(u,v) = K(u-v) by translation invariance
     congr 1
     ext u
     congr 1
     ext v
-    -- The kernel is translation invariant
-    have h_transl : freeCovariance d m u v = freeCovariance d m (u - v) 0 := by
-      simp only [freeCovariance, sub_zero]
-    rw [h_transl]
+    rw [freeCovariance_eq_kernel u v]
   -- Apply the general kernel theorem
   rw [schwingerTwoPointFunction_eq_kernel (gaussianFreeField_free (d := d) m) x hx
-        (fun y => freeCovariance d m y 0) h_cont h_S₂]
+        (freeCovarianceKernel d m) h_cont h_S₂]
   -- By definition of SchwingerTwoPointFunction_GFF
   rfl
 
-/-- The abstract SchwingerTwoPointFunction equals the free covariance kernel for the GFF.
+/-- The abstract SchwingerTwoPointFunction equals the covariance kernel for the GFF.
     Note: Only holds for x ≠ 0 since the covariance is undefined at coincident points. -/
 theorem schwingerTwoPointFunction_eq_freeCovariance (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
     (x : SpaceTime d) (hx : x ≠ 0) :
-  SchwingerTwoPointFunction (gaussianFreeField_free (d := d) m) x = freeCovariance d m x 0 := by
+  SchwingerTwoPointFunction (gaussianFreeField_free (d := d) m) x = freeCovarianceKernel d m x := by
   rw [schwingerTwoPointFunction_eq_GFF m x hx, schwingerTwoPoint_eq_freeCovariance]
-
-/-- The free covariance kernel `x ↦ C(x, 0)` is (globally) integrable: it is the radial
-    profile `Cprofile ‖x‖`, which is in L¹ by `GFFPropagator.integrable`. -/
-lemma freeCovariance_kernel_integrable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
-    Integrable (fun x : SpaceTime d => freeCovariance d m x 0) := by
-  refine (GFFPropagator.integrable (d := d) (m := m)).congr
-    (Filter.Eventually.of_forall fun x => ?_)
-  simp only [freeCovariance, sub_zero]
 
 /-- The abstract two-point Schwinger function agrees a.e. with the covariance kernel:
     the two functions agree away from the origin, and `{0}` is Lebesgue-null. -/
 lemma schwingerTwoPoint_ae_eq_kernel (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
     (fun x => SchwingerTwoPointFunction (gaussianFreeField_free (d := d) m) x)
-      =ᶠ[ae (volume : Measure (SpaceTime d))] fun x => freeCovariance d m x 0 := by
+      =ᶠ[ae (volume : Measure (SpaceTime d))] freeCovarianceKernel d m := by
   have hd : 0 < d := by have := (Fact.out : 2 ≤ d); omega
   have : Nonempty (Fin d) := ⟨⟨0, hd⟩⟩
   have : Nontrivial (SpaceTime d) := inferInstance
@@ -170,7 +143,7 @@ theorem schwingerTwoPoint_measurable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m
     AEStronglyMeasurable
       (fun x => SchwingerTwoPointFunction (gaussianFreeField_free (d := d) m) x)
       volume :=
-  (freeCovariance_kernel_integrable m).aestronglyMeasurable.congr
+  (freeCovarianceKernel_integrable (d := d) (m := m)).aestronglyMeasurable.congr
     (schwingerTwoPoint_ae_eq_kernel m).symm
 
 /-! ## GFF Exponential Bound
@@ -420,7 +393,7 @@ lemma gff_generating_L2_bound (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : 
 lemma gff_two_point_locally_integrable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
   TwoPointIntegrable (gaussianFreeField_free (d := d) m) := by
   unfold TwoPointIntegrable
-  exact ((freeCovariance_kernel_integrable m).congr
+  exact ((freeCovarianceKernel_integrable (d := d) (m := m)).congr
     (schwingerTwoPoint_ae_eq_kernel m).symm).locallyIntegrable
 
 /-! ## OS1 Verification for the GFF

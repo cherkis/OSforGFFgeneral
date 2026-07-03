@@ -5,7 +5,6 @@ Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 
 import OSforGFF.Measure.IsGaussian
-import OSforGFF.Covariance.Position
 import OSforGFF.Spacetime.Euclidean
 import OSforGFF.Measure.GaussianFreeField
 
@@ -37,6 +36,7 @@ variable {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
 
 /-! ## Euclidean action on test functions -/
 
+omit [Fact (2 ≤ d)] in
 /-- The Euclidean action satisfies (g • f)(x) = f(g⁻¹ • x). -/
 lemma euclidean_action_apply (g : E d) (f : TestFunctionℂ d) (x : SpaceTime d) :
     euclidean_action g f x = f (euclidean_pullback g x) := by
@@ -44,15 +44,18 @@ lemma euclidean_action_apply (g : E d) (f : TestFunctionℂ d) (x : SpaceTime d)
   simp only [SchwartzMap.compCLM_apply]
   rfl
 
+omit [Fact (2 ≤ d)] in
 /-- The Euclidean pullback satisfies euclidean_pullback g x = g⁻¹ • x = act g⁻¹ x. -/
 lemma euclidean_pullback_eq_inv_act (g : E d) (x : SpaceTime d) :
     euclidean_pullback g x = act g⁻¹ x := rfl
 
+omit [Fact (2 ≤ d)] in
 /-- Composing pullbacks: euclidean_pullback g (act g y) = y. -/
 lemma euclidean_pullback_act (g : E d) (y : SpaceTime d) :
     euclidean_pullback g (act g y) = y := by
   simp only [euclidean_pullback_eq_inv_act, act_inv_general]
 
+omit [Fact (2 ≤ d)] in
 /-- The forward composition: act g (euclidean_pullback g x) = x. -/
 lemma act_euclidean_pullback (g : E d) (x : SpaceTime d) :
     act g (euclidean_pullback g x) = x := by
@@ -70,6 +73,7 @@ noncomputable def actEquiv (g : E d) : SpaceTime d ≃ᵐ SpaceTime d where
   measurable_toFun := (measurePreserving_act g).measurable
   measurable_invFun := (measurePreserving_act g⁻¹).measurable
 
+omit [Fact (2 ≤ d)] in
 /-- Measure-preserving property of actEquiv. -/
 lemma measurePreserving_actEquiv (g : E d) :
     MeasurePreserving (actEquiv g) volume volume :=

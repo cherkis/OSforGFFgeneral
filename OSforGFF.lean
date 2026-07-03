@@ -39,10 +39,8 @@ import «OSforGFF».Schwinger.GaussianMoments
 import «OSforGFF».Covariance.Propagator
 import «OSforGFF».Covariance.ParsevalGeneric
 import «OSforGFF».Instances.Dim4
-import «OSforGFF».Covariance.Momentum
-import «OSforGFF».Covariance.Position
+import «OSforGFF».Instances.Dim4Bessel
 import «OSforGFF».Covariance.RealForm
-import «OSforGFF».Covariance.Parseval
 
 -- Measure (Minlos + GFF construction)
 import «OSforGFF».Measure.NuclearSpace
