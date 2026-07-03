@@ -38,7 +38,7 @@ via Fourier transform.
 
 - `freePropagatorMomentum`: Momentum space propagator 1/(‖k‖²+m²)
 - `freeCovariance4`: Position space covariance via Fourier transform
-- `freeCovarianceKernel`: Alternative name for compatibility
+- `freeCovarianceKernel4`: Alternative name for compatibility
 - `propagatorMultiplication`: Linear operator for multiplication by propagator
 
 ## Key Results
@@ -1668,7 +1668,7 @@ theorem freeCovariance_regulated_bilinear_integrable (α : ℝ) (hα : 0 < α) (
   exact Integrable.mono' hbound_int hmeas hnorm
 
 /-- The free covariance kernel (alternative name for compatibility) -/
-noncomputable def freeCovarianceKernel (m : ℝ) (z : SpaceTime4) : ℝ :=
+noncomputable def freeCovarianceKernel4 (m : ℝ) (z : SpaceTime4) : ℝ :=
   freeCovariance4 m 0 z
 
 /-- The Bessel covariance kernel is L¹ (integrable on SpaceTime4).
@@ -1677,17 +1677,17 @@ noncomputable def freeCovarianceKernel (m : ℝ) (z : SpaceTime4) : ℝ :=
     ∫_{ℝ⁴} |K(z)| dz ↔ ∫₀^∞ r³ |f(r)| dr = (m/4π²) ∫₀^∞ r² K₁(mr) dr
 
     This is finite by `radial_besselK1_integrable`. -/
-lemma freeCovarianceKernel_integrable (m : ℝ) (hm : 0 < m) :
-    Integrable (freeCovarianceKernel m) volume := by
+lemma freeCovarianceKernel4_integrable (m : ℝ) (hm : 0 < m) :
+    Integrable (freeCovarianceKernel4 m) volume := by
   -- The kernel is a radial function: K(z) = f(‖z‖) where
   -- f(r) = (m/(4π²r)) K₁(mr) for r > 0, f(0) = 0
   let f : ℝ → ℝ := fun r => if r = 0 then 0 else (m / (4 * Real.pi^2 * r)) * besselK1 (m * r)
-  have h_kernel_eq : ∀ z : SpaceTime4, freeCovarianceKernel m z = f ‖z‖ := by
+  have h_kernel_eq : ∀ z : SpaceTime4, freeCovarianceKernel4 m z = f ‖z‖ := by
     intro z
-    simp only [freeCovarianceKernel, freeCovariance4, freeCovarianceBessel]
+    simp only [freeCovarianceKernel4, freeCovariance4, freeCovarianceBessel]
     simp only [zero_sub, norm_neg]
     rfl
-  rw [show (freeCovarianceKernel m) = (fun z => f ‖z‖) from funext h_kernel_eq]
+  rw [show (freeCovarianceKernel4 m) = (fun z => f ‖z‖) from funext h_kernel_eq]
   rw [integrable_fun_norm_addHaar volume (f := f)]
   have h_dim : Module.finrank ℝ SpaceTime4 = 4 := finrank_euclideanSpace
   have h_intgd : ∀ r ∈ Set.Ioi (0 : ℝ), r ^ (Module.finrank ℝ SpaceTime4 - 1) • f r =
@@ -1710,8 +1710,8 @@ lemma freeCovarianceKernel_integrable (m : ℝ) (hm : 0 < m) :
     - Far from origin (mr > 1): K₁(mr) ≤ (sinh(1) + 2)·exp(-mr), decays faster than 1/r²
 
     The bound is essential for OS1 local integrability in d=4 dimensions. -/
-lemma freeCovarianceKernel_decay_bound (m : ℝ) (hm : 0 < m) :
-    ∃ C : ℝ, C > 0 ∧ ∀ z : SpaceTime4, |freeCovarianceKernel m z| ≤ C * ‖z‖ ^ (-2 : ℝ) := by
+lemma freeCovarianceKernel4_decay_bound (m : ℝ) (hm : 0 < m) :
+    ∃ C : ℝ, C > 0 ∧ ∀ z : SpaceTime4, |freeCovarianceKernel4 m z| ≤ C * ‖z‖ ^ (-2 : ℝ) := by
   -- Define the constant C = (cosh(1) + 2) / (4π²)
   -- This works for both near and far from origin
   set C := (Real.cosh 1 + 2) / (4 * Real.pi^2) with hC_def
@@ -1721,14 +1721,14 @@ lemma freeCovarianceKernel_decay_bound (m : ℝ) (hm : 0 < m) :
   by_cases hz : ‖z‖ = 0
   · -- z = 0: kernel is 0, bound is trivially satisfied since 0^(-2) = 0
     have hz' : z = 0 := norm_eq_zero.mp hz
-    simp only [hz', norm_zero, freeCovarianceKernel, freeCovariance4, freeCovarianceBessel,
+    simp only [hz', norm_zero, freeCovarianceKernel4, freeCovariance4, freeCovarianceBessel,
                sub_zero, if_true, abs_zero]
     rw [Real.zero_rpow (by norm_num : (-2 : ℝ) ≠ 0), mul_zero]
   · -- z ≠ 0: use Bessel bounds
     have hr_pos : 0 < ‖z‖ := norm_pos_iff.mpr (norm_ne_zero_iff.mp hz)
     -- Rewrite kernel in terms of Bessel function
-    have h_kernel : freeCovarianceKernel m z = (m / (4 * Real.pi^2 * ‖z‖)) * besselK1 (m * ‖z‖) := by
-      simp only [freeCovarianceKernel, freeCovariance4, freeCovarianceBessel, zero_sub, norm_neg, hz,
+    have h_kernel : freeCovarianceKernel4 m z = (m / (4 * Real.pi^2 * ‖z‖)) * besselK1 (m * ‖z‖) := by
+      simp only [freeCovarianceKernel4, freeCovariance4, freeCovarianceBessel, zero_sub, norm_neg, hz,
                  if_false]
     rw [h_kernel]
     -- The kernel is nonnegative for m > 0 and z ≠ 0
@@ -1943,8 +1943,8 @@ lemma freeCovariance_exponential_bound' (m : ℝ) [Fact (0 < m)] (u v : SpaceTim
     - Division by ‖z‖ is continuous for z ≠ 0
 
     This is essential for the double mollifier convergence theorem. -/
-lemma freeCovarianceKernel_continuousOn (m : ℝ) (hm : 0 < m) :
-    ContinuousOn (freeCovarianceKernel m) {z : SpaceTime4 | z ≠ 0} := by
+lemma freeCovarianceKernel4_continuousOn (m : ℝ) (hm : 0 < m) :
+    ContinuousOn (freeCovarianceKernel4 m) {z : SpaceTime4 | z ≠ 0} := by
   -- The kernel is f(‖z‖) where f(r) = (m/(4π²r)) K₁(mr)
   -- We show continuity by composition
   -- First show that the kernel (without the if) is continuous on {z ≠ 0}
@@ -1969,12 +1969,12 @@ lemma freeCovarianceKernel_continuousOn (m : ℝ) (hm : 0 < m) :
     simp only [Set.mem_setOf_eq] at hz
     simp only [Set.mem_Ioi]
     exact norm_pos_iff.mpr hz
-  -- The composed function agrees with freeCovarianceKernel on {z ≠ 0}
+  -- The composed function agrees with freeCovarianceKernel4 on {z ≠ 0}
   have h_eq : ∀ z ∈ ({z : SpaceTime4 | z ≠ 0} : Set SpaceTime4),
-      freeCovarianceKernel m z = (m / (4 * Real.pi^2 * ‖z‖)) * besselK1 (m * ‖z‖) := by
+      freeCovarianceKernel4 m z = (m / (4 * Real.pi^2 * ‖z‖)) * besselK1 (m * ‖z‖) := by
     intro z hz
     simp only [Set.mem_setOf_eq] at hz
-    unfold freeCovarianceKernel freeCovariance4 freeCovarianceBessel
+    unfold freeCovarianceKernel4 freeCovariance4 freeCovarianceBessel
     simp only [zero_sub, norm_neg]
     have h_norm_ne : ‖z‖ ≠ 0 := norm_ne_zero_iff.mpr hz
     simp only [h_norm_ne, ↓reduceIte]
@@ -1986,18 +1986,18 @@ lemma freeCovarianceKernel_continuousOn (m : ℝ) (hm : 0 < m) :
 theorem freeCovarianceℂ_bilinear_integrable' (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ4) :
     Integrable (fun p : SpaceTime4 × SpaceTime4 =>
       (f p.1) * (freeCovariance4 m p.1 p.2 : ℂ) * (g p.2)) volume := by
-  have h_transl_inv : ∀ x y, freeCovariance4 m x y = freeCovarianceKernel m (x - y) := by
+  have h_transl_inv : ∀ x y, freeCovariance4 m x y = freeCovarianceKernel4 m (x - y) := by
     intro x y
-    simp only [freeCovarianceKernel, freeCovariance4, freeCovarianceBessel, zero_sub, norm_neg]
+    simp only [freeCovarianceKernel4, freeCovariance4, freeCovarianceBessel, zero_sub, norm_neg]
   have h_eq : (fun p : SpaceTime4 × SpaceTime4 => f p.1 * (freeCovariance4 m p.1 p.2 : ℂ) * g p.2) =
-      (fun p => f p.1 * ((freeCovarianceKernel m (p.1 - p.2) : ℝ) : ℂ) * g p.2) := by
+      (fun p => f p.1 * ((freeCovarianceKernel4 m (p.1 - p.2) : ℝ) : ℂ) * g p.2) := by
     ext p
     rw [h_transl_inv p.1 p.2]
   rw [h_eq]
-  have hK_int : Integrable (fun z : SpaceTime4 => (freeCovarianceKernel m z : ℂ)) volume := by
-    exact Integrable.ofReal (freeCovarianceKernel_integrable m (Fact.out))
+  have hK_int : Integrable (fun z : SpaceTime4 => (freeCovarianceKernel4 m z : ℂ)) volume := by
+    exact Integrable.ofReal (freeCovarianceKernel4_integrable m (Fact.out))
   exact schwartz_bilinear_integrable_of_translationInvariant_L1
-    (fun z => (freeCovarianceKernel m z : ℂ)) hK_int f g
+    (fun z => (freeCovarianceKernel4 m z : ℂ)) hK_int f g
 
 /-- Negation as a linear isometry equivalence on SpaceTime4. -/
 def negSpaceTime : SpaceTime4 ≃ₗᵢ[ℝ] SpaceTime4 where

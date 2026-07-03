@@ -397,12 +397,12 @@ lemma integrable :
   filter_upwards [compl_mem_ae_iff.mpr (measure_singleton (0 : EuclideanSpace ℝ (Fin d)))] with x hx
   exact (schwinger_eq ‖x‖ (norm_pos_iff.mpr (by simpa using hx))).symm
 
-/-- `Cprofile` has pointwise exponential decay: for some `A ≥ 0` and `R₀ > 0`,
-    `|Cprofile r| ≤ A · e^{-(m/2)r}` whenever `R₀ ≤ r`; the decay input for OS4 clustering. -/
-lemma decayBound : ∃ A R₀ : ℝ, 0 ≤ A ∧ 0 < R₀ ∧
-    ∀ r : ℝ, R₀ ≤ r → |Cprofile (d := d) (m := m) r| ≤ A * Real.exp (-(m / 2) * r) := by
+/-- `Cprofile` has pointwise exponential decay: for some `A ≥ 0`,
+    `|Cprofile r| ≤ A · e^{-(m/2)r}` whenever `1 ≤ r`; the decay input for OS4 clustering. -/
+lemma decayBound : ∃ A : ℝ, 0 ≤ A ∧
+    ∀ r : ℝ, 1 ≤ r → |Cprofile (d := d) (m := m) r| ≤ A * Real.exp (-(m / 2) * r) := by
   obtain ⟨A, hA, hbound⟩ := properTimeCovariance_decay d m Fact.out
-  refine ⟨A, 1, hA, one_pos, fun r hr => ?_⟩
+  refine ⟨A, hA, fun r hr => ?_⟩
   have hr0 : (0 : ℝ) < r := lt_of_lt_of_le one_pos hr
   rw [schwinger_eq r hr0, abs_of_nonneg (properTimeCovariance_nonneg d m r)]
   exact hbound r hr

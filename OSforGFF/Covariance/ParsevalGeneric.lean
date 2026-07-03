@@ -999,4 +999,87 @@ lemma schwartz_normSq_integrable (f : TestFunctionℂ d) :
 
 end MomentumWeight
 
+/-! ### The centered covariance kernel and its decay -/
+
+/-- The centered position-space covariance kernel `K(z) = C(0, z) = Cprofile ‖z‖`. -/
+noncomputable def freeCovarianceKernel (d : ℕ) (m : ℝ) [Fact (0 < m)] [Fact (2 ≤ d)]
+    [GFFPropagator d m] (z : SpaceTime d) : ℝ :=
+  freeCovariance d m 0 z
+
+section CovarianceKernel
+
+variable {d : ℕ} {m : ℝ} [Fact (0 < m)] [Fact (2 ≤ d)] [GFFPropagator d m]
+
+/-- Translation invariance: `C(x, y) = K(x - y)`. -/
+lemma freeCovariance_eq_kernel (x y : SpaceTime d) :
+    freeCovariance d m x y = freeCovarianceKernel d m (x - y) := by
+  simp only [freeCovariance, freeCovarianceKernel]
+  rw [zero_sub, norm_neg]
+
+/-- The centered kernel is continuous away from the origin: it is the radial profile
+    `Cprofile ‖z‖`, which agrees with the proper-time integral on `(0, ∞)`. -/
+lemma freeCovarianceKernel_continuousOn :
+    ContinuousOn (freeCovarianceKernel d m) {z : SpaceTime d | z ≠ 0} := by
+  have hm : (0 : ℝ) < m := Fact.out
+  have hC : ContinuousOn ((properTimeCovariance d m) ∘ (fun z : SpaceTime d => ‖z‖))
+      {z : SpaceTime d | z ≠ 0} :=
+    (properTimeCovariance_continuousOn d m hm).comp continuous_norm.continuousOn
+      (fun z hz => Set.mem_Ioi.mpr (norm_pos_iff.mpr hz))
+  refine hC.congr fun z hz => ?_
+  show freeCovarianceKernel d m z = properTimeCovariance d m ‖z‖
+  simp only [freeCovarianceKernel, freeCovariance, zero_sub, norm_neg]
+  exact GFFPropagator.schwinger_eq ‖z‖ (norm_pos_iff.mpr hz)
+
+/-- The centered kernel is integrable (`GFFPropagator.integrable` in centered form). -/
+lemma freeCovarianceKernel_integrable :
+    Integrable (freeCovarianceKernel d m) := by
+  refine (GFFPropagator.integrable (d := d) (m := m)).congr
+    (Filter.Eventually.of_forall fun z => ?_)
+  simp only [freeCovarianceKernel, freeCovariance, zero_sub, norm_neg]
+
+/-- Exponential decay of the centered kernel beyond unit radius, with rate `m/2`. -/
+lemma freeCovarianceKernel_exp_decay :
+    ∃ A : ℝ, 0 < A ∧ ∀ z : SpaceTime d, 1 ≤ ‖z‖ →
+      |freeCovarianceKernel d m z| ≤ A * Real.exp (-(m / 2) * ‖z‖) := by
+  obtain ⟨A, hA, hbound⟩ := GFFPropagator.decayBound (d := d) (m := m)
+  refine ⟨A + 1, by linarith, fun z hz => ?_⟩
+  have hK : |freeCovarianceKernel d m z|
+      = |GFFPropagator.Cprofile (d := d) (m := m) ‖z‖| := by
+    simp only [freeCovarianceKernel, freeCovariance, zero_sub, norm_neg]
+  rw [hK]
+  refine le_trans (hbound ‖z‖ hz) ?_
+  have hexp : (0 : ℝ) ≤ Real.exp (-(m / 2) * ‖z‖) := Real.exp_nonneg _
+  nlinarith
+
+/-- Polynomial decay of the centered kernel beyond unit radius: `|K(z)| ≤ C / ‖z‖²`
+    (from the exponential decay via `e^{-x} ≤ 2/x²`). -/
+lemma freeCovarianceKernel_decay_bound :
+    ∃ C : ℝ, 0 < C ∧ ∀ z : SpaceTime d, 1 ≤ ‖z‖ →
+      |freeCovarianceKernel d m z| ≤ C / ‖z‖ ^ (2 : ℝ) := by
+  have hm : (0 : ℝ) < m := Fact.out
+  obtain ⟨A, hA, hbound⟩ := freeCovarianceKernel_exp_decay (d := d) (m := m)
+  refine ⟨A * (8 / m ^ 2), by positivity, fun z hz => ?_⟩
+  have hz0 : (0 : ℝ) < ‖z‖ := lt_of_lt_of_le one_pos hz
+  have hx : (0 : ℝ) < m / 2 * ‖z‖ := by positivity
+  have h2 : ((m / 2 * ‖z‖) ^ 2 / 2 : ℝ) ≤ Real.exp (m / 2 * ‖z‖) := by
+    have h := Real.pow_div_factorial_le_exp (m / 2 * ‖z‖) hx.le 2
+    simpa [Nat.factorial] using h
+  have hlow : (0 : ℝ) < (m / 2 * ‖z‖) ^ 2 / 2 := by positivity
+  have hexp : Real.exp (-(m / 2) * ‖z‖) ≤ 2 / (m / 2 * ‖z‖) ^ 2 := by
+    calc Real.exp (-(m / 2) * ‖z‖)
+        = (Real.exp (m / 2 * ‖z‖))⁻¹ := by
+          rw [← Real.exp_neg]; congr 1; ring
+      _ ≤ ((m / 2 * ‖z‖) ^ 2 / 2)⁻¹ := inv_anti₀ hlow h2
+      _ = 2 / (m / 2 * ‖z‖) ^ 2 := by rw [inv_div]
+  have hpow : ‖z‖ ^ (2 : ℝ) = ‖z‖ ^ (2 : ℕ) := Real.rpow_two ‖z‖
+  calc |freeCovarianceKernel d m z|
+      ≤ A * Real.exp (-(m / 2) * ‖z‖) := hbound z hz
+    _ ≤ A * (2 / (m / 2 * ‖z‖) ^ 2) := mul_le_mul_of_nonneg_left hexp (le_of_lt hA)
+    _ = A * (8 / m ^ 2) / ‖z‖ ^ (2 : ℕ) := by
+        field_simp
+        ring
+    _ = A * (8 / m ^ 2) / ‖z‖ ^ (2 : ℝ) := by rw [hpow]
+
+end CovarianceKernel
+
 end
