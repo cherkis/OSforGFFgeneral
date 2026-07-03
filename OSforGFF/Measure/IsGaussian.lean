@@ -15,14 +15,14 @@ interchange. From Z[tf+sg] = exp(−½ Q(tf+sg, tf+sg)):
 
 - ∂²/∂t∂s|₀ via Gaussian formula gives −Q(f,g)
 - ∂²/∂t∂s|₀ via integral interchange (OS0) gives −S₂(f,g)
-- Hence S₂(f,g) = Q(f,g) = freeCovarianceℂ(f,g)
+- Hence S₂(f,g) = Q(f,g) = freeCovarianceℂ4(f,g)
 
 This imports OS0 because it uses the proved analyticity to justify the derivative
 interchange, not because of OS0-specific infrastructure.
 
 ## Main results
 
-- `gff_two_point_equals_covarianceℂ_free`: S₂(f,g) = freeCovarianceℂ(f,g)
+- `gff_two_point_equals_covarianceℂ_free`: S₂(f,g) = freeCovarianceℂ4(f,g)
 - `isGaussianGJ_gaussianFreeField_free`: the free GFF is Gaussian
 -/
 
@@ -221,7 +221,7 @@ lemma gff_cf_agrees_on_reals_OS0 (f g : TestFunction4) (t s : ℝ) :
 theorem gff_complex_characteristic_OS0 :
     ∀ J : TestFunctionℂ4,
       GJGeneratingFunctionalℂ (gaussianFreeField_free m) J =
-        Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear m J J) := by
+        Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear4 m J J) := by
   intro J
   -- Decompose J = f + I*g where f, g are real test functions
   let f := (complex_testfunction_decompose J).1
@@ -313,14 +313,14 @@ theorem gff_complex_characteristic_OS0 :
     simp [one_smul]
 
   -- Step 6: Simplify RHS using Qc formula
-  have h_RHS : Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear m J J) = G 1 Complex.I := by
+  have h_RHS : Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear4 m J J) = G 1 Complex.I := by
     simp only [G]
     congr 1
-    -- freeCovarianceℂ_bilinear of J = f + I*g
+    -- freeCovarianceℂ_bilinear4 of J = f + I*g
     -- Qc(f+Ig, f+Ig) = Q(f,f) - Q(g,g) + 2I*Q(f,g)
     -- Compare with: 1²Q(f,f) + 2*1*I*Q(f,g) + I²*Q(g,g)
     --             = Q(f,f) + 2I*Q(f,g) - Q(g,g)
-    have h_Qc : freeCovarianceℂ_bilinear m J J =
+    have h_Qc : freeCovarianceℂ_bilinear4 m J J =
         freeCovarianceFormR m f f - freeCovarianceFormR m g g +
           2 * Complex.I * freeCovarianceFormR m f g := by
       rw [hJ]
@@ -424,12 +424,12 @@ theorem schwinger_eq_covariance_real (f g : TestFunction4) :
     equals the complex covariance. -/
 lemma schwinger_eq_covarianceℂ_on_reals (f g : TestFunction4) :
     SchwingerFunctionℂ₂ (gaussianFreeField_free m) (toComplex f) (toComplex g) =
-      freeCovarianceℂ_bilinear m (toComplex f) (toComplex g) := by
+      freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex g) := by
   -- Use distributionPairingℂ_real_toComplex to reduce to real pairings
   simp only [SchwingerFunctionℂ₂, SchwingerFunctionℂ, Fin.prod_univ_two,
     Matrix.cons_val_zero, Matrix.cons_val_one,
     distributionPairingℂ_real_toComplex]
-  -- Now we have: ∫ ω, ↑(ω f) * ↑(ω g) dμ = freeCovarianceℂ_bilinear m (toComplex f) (toComplex g)
+  -- Now we have: ∫ ω, ↑(ω f) * ↑(ω g) dμ = freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex g)
   -- Step 1: Rewrite ↑a * ↑b = ↑(a * b) pointwise using ofReal_mul
   simp_rw [← Complex.ofReal_mul]
   -- Step 2: Integrability of the product
@@ -454,14 +454,14 @@ end GFFIsGaussian
 
 /-- For complex test functions, the Schwinger 2-point function equals the complex covariance.
 
-    S₂(μ, f, g) = freeCovarianceℂ_bilinear m f g
+    S₂(μ, f, g) = freeCovarianceℂ_bilinear4 m f g
 
     This extends schwinger_eq_covariance_real to complex test functions by bilinearity:
-    both S₂ and freeCovarianceℂ_bilinear are bilinear, and they agree on real inputs.
+    both S₂ and freeCovarianceℂ_bilinear4 are bilinear, and they agree on real inputs.
 
     For any complex f = fRe + I•fIm, g = gRe + I•gIm, we expand by bilinearity. -/
 theorem gff_two_point_equals_covarianceℂ_free (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ4) :
-    SchwingerFunctionℂ₂ (gaussianFreeField_free m) f g = freeCovarianceℂ_bilinear m f g := by
+    SchwingerFunctionℂ₂ (gaussianFreeField_free m) f g = freeCovarianceℂ_bilinear4 m f g := by
   -- Decompose complex test functions into real and imaginary parts
   let fRe := (complex_testfunction_decompose f).1
   let fIm := (complex_testfunction_decompose f).2
@@ -503,7 +503,7 @@ theorem gff_two_point_equals_covarianceℂ_free (m : ℝ) [Fact (0 < m)] (f g : 
   -- Expand LHS: S₂(frC + I•fiC, grC + I•giC)
   rw [S2_add_left, S2_add_right, S2_add_right, S2_smul_left, S2_smul_left, S2_smul_right,
       S2_smul_right]
-  -- Expand RHS: freeCovarianceℂ_bilinear(frC + I•fiC, grC + I•giC)
+  -- Expand RHS: freeCovarianceℂ_bilinear4(frC + I•fiC, grC + I•giC)
   simp only [freeCovarianceℂ_bilinear_add_left, freeCovarianceℂ_bilinear_add_right,
     freeCovarianceℂ_bilinear_smul_left, freeCovarianceℂ_bilinear_smul_right]
   -- Both sides have 4 terms. Rewrite S₂(toComplex ?, toComplex ?) = C(toComplex ?, toComplex ?)
@@ -525,9 +525,9 @@ theorem gff_complex_generating (m : ℝ) [Fact (0 < m)] :
       GJGeneratingFunctionalℂ (gaussianFreeField_free m) J =
         Complex.exp (-(1/2 : ℂ) * SchwingerFunctionℂ₂ (gaussianFreeField_free m) J J) := by
   intro J
-  -- Use gff_two_point_equals_covarianceℂ_free: S₂ = freeCovarianceℂ_bilinear
+  -- Use gff_two_point_equals_covarianceℂ_free: S₂ = freeCovarianceℂ_bilinear4
   rw [gff_two_point_equals_covarianceℂ_free]
-  -- Now goal is: Z[J] = exp(-½ freeCovarianceℂ_bilinear m J J)
+  -- Now goal is: Z[J] = exp(-½ freeCovarianceℂ_bilinear4 m J J)
   -- Use gff_complex_characteristic_OS0 (via OS0 + identity theorem, no MinlosAnalytic dependency)
   exact GFFIsGaussian.gff_complex_characteristic_OS0 m J
 

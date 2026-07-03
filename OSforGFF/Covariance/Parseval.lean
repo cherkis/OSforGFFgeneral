@@ -732,7 +732,7 @@ theorem bilinear_covariance_regulated_tendstoℂ (m : ℝ) [Fact (0 < m)] (f g :
   -- Define the dominating function (scaled Bessel form)
   let bound : SpaceTime4 × SpaceTime4 → ℝ := fun p =>
     Real.exp (m^2) * ‖f p.1‖ * |freeCovariance4 m p.1 p.2| * ‖g p.2‖
-  -- The bound is integrable (scaling of freeCovarianceℂ_bilinear_integrable)
+  -- The bound is integrable (scaling of freeCovarianceℂ_bilinear_integrable4)
   have h_bound_int : Integrable bound (volume.prod volume) := by
     -- Use freeCovarianceℂ_bilinear_integrable': f * C * g is integrable
     -- Then Integrable.norm gives ‖f‖ * |C| * ‖g‖ integrable, and const_mul scales by exp(m²)
@@ -926,7 +926,7 @@ open scoped InnerProductSpace
 /-- Bilinear extension of the covariance for complex test functions.
     This is the distributional formulation: the double integral is well-defined
     for Schwartz test functions due to the L¹ integrability of the Bessel kernel. -/
-noncomputable def freeCovarianceℂ_bilinear (m : ℝ) (f g : TestFunctionℂ4) : ℂ :=
+noncomputable def freeCovarianceℂ_bilinear4 (m : ℝ) (f g : TestFunctionℂ4) : ℂ :=
   ∫ x, ∫ y, (f x) * (freeCovariance4 m x y) * (g y)
 
 end GlobalBilinearDefs

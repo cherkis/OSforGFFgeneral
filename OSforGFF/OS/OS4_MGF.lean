@@ -160,8 +160,8 @@ lemma euclidean_action_timeTranslationE (t : ℝ) (f : TestFunctionℂ4) :
 /-- The GFF covariance is invariant under simultaneous time translation. -/
 lemma freeCovarianceℂ_bilinear_timeTranslation_invariant (m : ℝ) [Fact (0 < m)] (t : ℝ)
     (f g : TestFunctionℂ4) :
-    freeCovarianceℂ_bilinear m (timeTranslationSchwartzℂ t f) (timeTranslationSchwartzℂ t g) =
-    freeCovarianceℂ_bilinear m f g := by
+    freeCovarianceℂ_bilinear4 m (timeTranslationSchwartzℂ t f) (timeTranslationSchwartzℂ t g) =
+    freeCovarianceℂ_bilinear4 m f g := by
   rw [← euclidean_action_timeTranslationE t f, ← euclidean_action_timeTranslationE t g]
   exact QFT.freeCovarianceℂ_bilinear_euclidean_invariant m (timeTranslationE t) f g
 
@@ -171,7 +171,7 @@ lemma freeCovarianceℂ_bilinear_timeTranslation_invariant (m : ℝ) [Fact (0 < 
     This follows from the characteristic function formula via substitution J → (-I)•J. -/
 lemma gff_mgf_formula (m : ℝ) [Fact (0 < m)] (J : TestFunctionℂ4) :
     (∫ ω, Complex.exp (distributionPairingℂ_real ω J) ∂(gaussianFreeField_free m).toMeasure) =
-    Complex.exp ((1/2 : ℂ) * freeCovarianceℂ_bilinear m J J) := by
+    Complex.exp ((1/2 : ℂ) * freeCovarianceℂ_bilinear4 m J J) := by
   let negI : ℂ := -Complex.I
   have h_to_cf : (∫ ω, Complex.exp (distributionPairingℂ_real ω J)
       ∂(gaussianFreeField_free m).toMeasure) =
@@ -190,8 +190,8 @@ lemma gff_mgf_formula (m : ℝ) [Fact (0 < m)] (J : TestFunctionℂ4) :
     ring_nf
     simp [Complex.I_sq]
   rw [h_to_cf, GFFIsGaussian.gff_complex_characteristic_OS0 m]
-  have h_cov : freeCovarianceℂ_bilinear m (negI • J) (negI • J) =
-      -freeCovarianceℂ_bilinear m J J := by
+  have h_cov : freeCovarianceℂ_bilinear4 m (negI • J) (negI • J) =
+      -freeCovarianceℂ_bilinear4 m J J := by
     rw [freeCovarianceℂ_bilinear_smul_left, freeCovarianceℂ_bilinear_smul_right]
     simp only [negI]
     ring_nf
@@ -237,7 +237,7 @@ lemma gff_joint_mgf_factorization (m : ℝ) [Fact (0 < m)] (f g : TestFunction�
       freeCovarianceℂ_bilinear_add_right]
   rw [← Complex.exp_add, ← Complex.exp_add]
   congr 1
-  have h_sym : freeCovarianceℂ_bilinear m g f = freeCovarianceℂ_bilinear m f g :=
+  have h_sym : freeCovarianceℂ_bilinear4 m g f = freeCovarianceℂ_bilinear4 m f g :=
     freeCovarianceℂ_bilinear_symm m g f
   rw [h_sym]
   ring

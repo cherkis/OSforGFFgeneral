@@ -414,10 +414,10 @@ lemma gff_covariance_timeTranslation_continuous (m : ℝ) [Fact (0 < m)]
     (f g : TestFunctionℂ4) :
     Continuous (fun s => SchwingerFunctionℂ₂ (gaussianFreeField_free m)
       (timeTranslationSchwartzℂ s f) g) := by
-  -- Step 1: S₂ = freeCovarianceℂ_bilinear for the GFF
+  -- Step 1: S₂ = freeCovarianceℂ_bilinear4 for the GFF
   simp_rw [gff_two_point_equals_covarianceℂ_free]
   -- Step 2: Expand the bilinear form definition
-  unfold freeCovarianceℂ_bilinear
+  unfold freeCovarianceℂ_bilinear4
   -- L^∞ bounds for Schwartz functions
   obtain ⟨Cf, hCf⟩ := bounded_of_continuous_tendsto_zero f.continuous (schwartz_tendsto_zero f)
   obtain ⟨Cg, hCg⟩ := bounded_of_continuous_tendsto_zero g.continuous (schwartz_tendsto_zero g)
@@ -431,7 +431,7 @@ lemma gff_covariance_timeTranslation_continuous (m : ℝ) [Fact (0 < m)]
       ∫ p : SpaceTime4 × SpaceTime4, (timeTranslationSchwartzℂ s f) p.1 * (freeCovariance4 m p.1 p.2 : ℂ) * g p.2
         ∂(volume.prod volume) := by
     intro s
-    have h_int := freeCovarianceℂ_bilinear_integrable m (timeTranslationSchwartzℂ s f) g
+    have h_int := freeCovarianceℂ_bilinear_integrable4 m (timeTranslationSchwartzℂ s f) g
     rw [Measure.volume_eq_prod] at h_int
     exact (MeasureTheory.integral_prod _ h_int).symm
   simp_rw [h_fubini]
@@ -478,7 +478,7 @@ lemma gff_covariance_timeTranslation_continuous (m : ℝ) [Fact (0 < m)]
   -- Apply continuous_of_dominated
   apply MeasureTheory.continuous_of_dominated
   · intro s
-    have h_int := freeCovarianceℂ_bilinear_integrable m (timeTranslationSchwartzℂ s f) g
+    have h_int := freeCovarianceℂ_bilinear_integrable4 m (timeTranslationSchwartzℂ s f) g
     rw [Measure.volume_eq_prod] at h_int
     exact h_int.aestronglyMeasurable
   · intro s; exact Filter.Eventually.of_forall (h_bdd' s)

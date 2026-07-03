@@ -35,7 +35,7 @@ parameters zᵢ.
 For a centered Gaussian measure with covariance C, the complex generating
 functional has the closed form:
   Z[f] = exp(-½ C_ℂ(f, f))
-where C_ℂ is the complexified covariance bilinear form (freeCovarianceℂ_bilinear).
+where C_ℂ is the complexified covariance bilinear form (freeCovarianceℂ_bilinear4).
 
 Since C_ℂ is ℂ-bilinear:
   Z[∑ᵢ zᵢ Jᵢ] = exp(-½ ∑ᵢⱼ zᵢ zⱼ C_ℂ(Jᵢ, Jⱼ))
@@ -659,7 +659,7 @@ lemma gff_cf_slice_entire (f_re f_im : TestFunction4) :
     `gff_real_characteristic`), extend to ℂ via the identity theorem. -/
 theorem gff_complex_CF_covariance (f : TestFunctionℂ4) :
     GJGeneratingFunctionalℂ (μ_GFF m) f =
-    cexp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear m f f) := by
+    cexp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear4 m f f) := by
   -- Decompose f = toComplex f_re + I • toComplex f_im
   let f_re := (complex_testfunction_decompose f).1
   let f_im := (complex_testfunction_decompose f).2
@@ -732,7 +732,7 @@ theorem gff_complex_CF_covariance (f : TestFunctionℂ4) :
   -- Step 6: Relate L(I) to LHS and R(I) to RHS
   have h_LHS : GJGeneratingFunctionalℂ (μ_GFF m) f = L Complex.I := by
     simp only [L]; congr 1
-  have h_RHS : cexp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear m f f) = R Complex.I := by
+  have h_RHS : cexp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear4 m f f) = R Complex.I := by
     simp only [R]; congr 1; congr 1
     -- Expand C_ℂ(f, f) using bilinearity and agrees_on_reals
     conv_lhs => rw [hf]
@@ -749,26 +749,26 @@ theorem gff_complex_CF_covariance (f : TestFunctionℂ4) :
 
 /-! ## Bilinear Expansion for Finite Sums
 
-Using the ℂ-bilinearity of `freeCovarianceℂ_bilinear`, we expand
+Using the ℂ-bilinearity of `freeCovarianceℂ_bilinear4`, we expand
 C_ℂ(∑ᵢ zᵢ Jᵢ, ∑ⱼ zⱼ Jⱼ) = ∑ᵢ ∑ⱼ zᵢ zⱼ C_ℂ(Jᵢ, Jⱼ). -/
 
 /-- C_ℂ(f, 0) = 0, derived from smul_right with c = 0. -/
 private lemma freeCovarianceℂ_bilinear_zero_right (f : TestFunctionℂ4) :
-    freeCovarianceℂ_bilinear m f 0 = 0 := by
+    freeCovarianceℂ_bilinear4 m f 0 = 0 := by
   have h := freeCovarianceℂ_bilinear_smul_right m (0 : ℂ) f (0 : TestFunctionℂ4)
   simp at h; exact h
 
 /-- C_ℂ(0, g) = 0, derived from smul_left with c = 0. -/
 private lemma freeCovarianceℂ_bilinear_zero_left (g : TestFunctionℂ4) :
-    freeCovarianceℂ_bilinear m 0 g = 0 := by
+    freeCovarianceℂ_bilinear4 m 0 g = 0 := by
   have h := freeCovarianceℂ_bilinear_smul_left m (0 : ℂ) (0 : TestFunctionℂ4) g
   simp at h; exact h
 
 /-- Right linearity over finite sums for the complexified covariance. -/
 private lemma freeCovarianceℂ_sum_right (f : TestFunctionℂ4)
     (s : Finset (Fin n)) (z : Fin n → ℂ) (J : Fin n → TestFunctionℂ4) :
-    freeCovarianceℂ_bilinear m f (∑ i ∈ s, z i • J i) =
-    ∑ i ∈ s, z i * freeCovarianceℂ_bilinear m f (J i) := by
+    freeCovarianceℂ_bilinear4 m f (∑ i ∈ s, z i • J i) =
+    ∑ i ∈ s, z i * freeCovarianceℂ_bilinear4 m f (J i) := by
   induction s using Finset.cons_induction with
   | empty => simp [freeCovarianceℂ_bilinear_zero_right]
   | cons a s ha ih =>
@@ -779,8 +779,8 @@ private lemma freeCovarianceℂ_sum_right (f : TestFunctionℂ4)
 private lemma freeCovarianceℂ_sum_left
     (s : Finset (Fin n)) (z : Fin n → ℂ) (J : Fin n → TestFunctionℂ4)
     (g : TestFunctionℂ4) :
-    freeCovarianceℂ_bilinear m (∑ i ∈ s, z i • J i) g =
-    ∑ i ∈ s, z i * freeCovarianceℂ_bilinear m (J i) g := by
+    freeCovarianceℂ_bilinear4 m (∑ i ∈ s, z i • J i) g =
+    ∑ i ∈ s, z i * freeCovarianceℂ_bilinear4 m (J i) g := by
   induction s using Finset.cons_induction with
   | empty => simp [freeCovarianceℂ_bilinear_zero_left]
   | cons a s ha ih =>
@@ -790,9 +790,9 @@ private lemma freeCovarianceℂ_sum_left
 /-- Full bilinear expansion of C_ℂ(∑ zᵢ Jᵢ, ∑ zⱼ Jⱼ) as a finite double sum. -/
 theorem freeCovarianceℂ_bilinear_sum_expansion {n : ℕ}
     (J : Fin n → TestFunctionℂ4) (z : Fin n → ℂ) :
-    freeCovarianceℂ_bilinear m (∑ i, z i • J i) (∑ j, z j • J j) =
+    freeCovarianceℂ_bilinear4 m (∑ i, z i • J i) (∑ j, z j • J j) =
     ∑ i : Fin n, ∑ j : Fin n,
-      z i * z j * freeCovarianceℂ_bilinear m (J i) (J j) := by
+      z i * z j * freeCovarianceℂ_bilinear4 m (J i) (J j) := by
   rw [freeCovarianceℂ_sum_left m Finset.univ z J]
   congr 1; ext i
   rw [freeCovarianceℂ_sum_right m (J i) Finset.univ z J]
@@ -803,7 +803,7 @@ theorem gff_generating_eq_exp_quadratic {n : ℕ}
     (J : Fin n → TestFunctionℂ4) (z : Fin n → ℂ) :
     GJGeneratingFunctionalℂ (μ_GFF m) (∑ i, z i • J i) =
     cexp (-(1/2 : ℂ) * ∑ i : Fin n, ∑ j : Fin n,
-      z i * z j * freeCovarianceℂ_bilinear m (J i) (J j)) := by
+      z i * z j * freeCovarianceℂ_bilinear4 m (J i) (J j)) := by
   rw [gff_complex_CF_covariance, freeCovarianceℂ_bilinear_sum_expansion]
 
 /-! ## Analyticity of exp(finite quadratic form)
@@ -835,14 +835,14 @@ theorem gaussianFreeField_satisfies_OS0 : OS0_Analyticity (μ_GFF m) := by
   have h_eq : ∀ z : Fin n → ℂ,
       GJGeneratingFunctionalℂ (μ_GFF m) (∑ i, z i • J i) =
       cexp (-(1/2 : ℂ) * ∑ i : Fin n, ∑ j : Fin n,
-        z i * z j * freeCovarianceℂ_bilinear m (J i) (J j)) :=
+        z i * z j * freeCovarianceℂ_bilinear4 m (J i) (J j)) :=
     fun z => gff_generating_eq_exp_quadratic m J z
   -- Step 2: The quadratic form is analytic
   have h_analytic : AnalyticOn ℂ (fun z : Fin n → ℂ =>
       cexp (-(1/2 : ℂ) * ∑ i : Fin n, ∑ j : Fin n,
-        z i * z j * freeCovarianceℂ_bilinear m (J i) (J j))) Set.univ :=
+        z i * z j * freeCovarianceℂ_bilinear4 m (J i) (J j))) Set.univ :=
     (analyticOn_const.mul (analyticOn_finite_quadratic
-      (fun i j => freeCovarianceℂ_bilinear m (J i) (J j)))).cexp
+      (fun i j => freeCovarianceℂ_bilinear4 m (J i) (J j)))).cexp
   -- Step 3: Conclude by pointwise equality
   exact h_analytic.congr (fun z _ => (h_eq z))
 

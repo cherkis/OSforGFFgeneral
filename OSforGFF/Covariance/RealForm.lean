@@ -49,9 +49,9 @@ noncomputable def freeCovarianceFormR (m : ℝ) (f g : TestFunction4) : ℝ :=
 
 theorem freeCovarianceℂ_bilinear_agrees_on_reals
   (m : ℝ) (f g : TestFunction4) :
-    freeCovarianceℂ_bilinear m (toComplex f) (toComplex g)
+    freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex g)
       = (freeCovarianceFormR m f g : ℂ) := by
-  unfold freeCovarianceℂ_bilinear freeCovarianceFormR
+  unfold freeCovarianceℂ_bilinear4 freeCovarianceFormR
   simp only [toComplex_apply]
   have h : ∀ (x y : SpaceTime4),
     ((f x : ℂ)) * ((freeCovariance4 m x y : ℂ)) * ((g y : ℂ))
@@ -236,11 +236,11 @@ lemma toComplex_star (f : TestFunction4) (x : SpaceTime4) :
     starRingEnd ℂ (toComplex f x) = toComplex f x := by
   simp [toComplex_apply]
 
-/-- For real test functions, freeCovarianceℂ agrees with freeCovarianceℂ_bilinear. -/
+/-- For real test functions, freeCovarianceℂ4 agrees with freeCovarianceℂ_bilinear4. -/
 lemma freeCovarianceℂ_eq_bilinear_on_reals (m : ℝ) (f g : TestFunction4) :
-    freeCovarianceℂ m (toComplex f) (toComplex g)
-      = freeCovarianceℂ_bilinear m (toComplex f) (toComplex g) := by
-  unfold freeCovarianceℂ freeCovarianceℂ_bilinear
+    freeCovarianceℂ4 m (toComplex f) (toComplex g)
+      = freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex g) := by
+  unfold freeCovarianceℂ4 freeCovarianceℂ_bilinear4
   congr 1 with x
   congr 1 with y
   rw [toComplex_star]
@@ -281,19 +281,19 @@ lemma sqrtPropagatorMap_norm_eq_covariance (m : ℝ) [Fact (0 < m)] (f : TestFun
   -- momentumWeight_mathlib = freePropagatorMomentum_mathlib by definition
   have h_integral_eq :
       ∫ k, ‖F k‖ ^ 2 * momentumWeight_mathlib m k ∂volume
-        = (freeCovarianceℂ m (toComplex f) (toComplex f)).re := by
+        = (freeCovarianceℂ4 m (toComplex f) (toComplex f)).re := by
     -- momentumWeight_mathlib = freePropagatorMomentum_mathlib
     have h_eq : ∀ k, momentumWeight_mathlib m k = freePropagatorMomentum_mathlib m k := fun _ => rfl
     simp_rw [h_eq]
     exact (parseval_covariance_schwartz_bessel (m := m) (f := toComplex f)).symm
   have h_real_cov :
-      (freeCovarianceℂ m (toComplex f) (toComplex f)).re = freeCovarianceFormR m f f := by
+      (freeCovarianceℂ4 m (toComplex f) (toComplex f)).re = freeCovarianceFormR m f f := by
     have h_complex :
-        freeCovarianceℂ m (toComplex f) (toComplex f)
+        freeCovarianceℂ4 m (toComplex f) (toComplex f)
           = (freeCovarianceFormR m f f : ℂ) := by
       calc
-        freeCovarianceℂ m (toComplex f) (toComplex f)
-            = freeCovarianceℂ_bilinear m (toComplex f) (toComplex f) :=
+        freeCovarianceℂ4 m (toComplex f) (toComplex f)
+            = freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex f) :=
                 freeCovarianceℂ_eq_bilinear_on_reals m f f
         _ = (freeCovarianceFormR m f f : ℂ) :=
                 freeCovarianceℂ_bilinear_agrees_on_reals m f f
@@ -302,7 +302,7 @@ lemma sqrtPropagatorMap_norm_eq_covariance (m : ℝ) [Fact (0 < m)] (f : TestFun
   calc
     sqrtPropagatorMap_norm_sq m f
         = ∫ k, ‖F k‖ ^ 2 * momentumWeight_mathlib m k ∂volume := h_norm_int
-    _ = (freeCovarianceℂ m (toComplex f) (toComplex f)).re := h_integral_eq
+    _ = (freeCovarianceℂ4 m (toComplex f) (toComplex f)).re := h_integral_eq
     _ = freeCovarianceFormR m f f := h_real_cov
 
 /-! ## The Proof of sqrtPropagatorEmbedding -/
@@ -522,13 +522,13 @@ theorem freeCovarianceFormR_continuous (m : ℝ) [Fact (0 < m)] :
 theorem freeCovarianceFormR_pos (m : ℝ) [Fact (0 < m)] :
     ∀ f : TestFunction4, 0 ≤ freeCovarianceFormR m f f := by
   intro f
-  have h1 : freeCovarianceℂ_bilinear m (toComplex f) (toComplex f) = (freeCovarianceFormR m f f : ℂ) :=
+  have h1 : freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex f) = (freeCovarianceFormR m f f : ℂ) :=
     freeCovarianceℂ_bilinear_agrees_on_reals m f f
-  have h2 : freeCovarianceℂ m (toComplex f) (toComplex f)
-              = freeCovarianceℂ_bilinear m (toComplex f) (toComplex f) :=
+  have h2 : freeCovarianceℂ4 m (toComplex f) (toComplex f)
+              = freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex f) :=
     freeCovarianceℂ_eq_bilinear_on_reals m f f
-  have h3 : 0 ≤ (freeCovarianceℂ m (toComplex f) (toComplex f)).re :=
-    freeCovarianceℂ_positive m (toComplex f)
+  have h3 : 0 ≤ (freeCovarianceℂ4 m (toComplex f) (toComplex f)).re :=
+    freeCovarianceℂ_positive4 m (toComplex f)
   rw [h2, h1] at h3
   simpa using h3
 
@@ -537,9 +537,9 @@ theorem freeCovarianceFormR_symm (m : ℝ) [Fact (0 < m)] (f g : TestFunction4) 
     freeCovarianceFormR m f g = freeCovarianceFormR m g f := by
   apply Complex.ofReal_injective
   calc (freeCovarianceFormR m f g : ℂ)
-      = freeCovarianceℂ_bilinear m (toComplex f) (toComplex g) := by
+      = freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex g) := by
           rw [← freeCovarianceℂ_bilinear_agrees_on_reals m f g]
-    _ = freeCovarianceℂ_bilinear m (toComplex g) (toComplex f) := by
+    _ = freeCovarianceℂ_bilinear4 m (toComplex g) (toComplex f) := by
           rw [freeCovarianceℂ_bilinear_symm m (toComplex f) (toComplex g)]
     _ = (freeCovarianceFormR m g f : ℂ) := by
           rw [freeCovarianceℂ_bilinear_agrees_on_reals m g f]
@@ -552,7 +552,7 @@ lemma freeCovarianceFormR_add_left (m : ℝ) [Fact (0 < m)] (f₁ f₂ g : TestF
     freeCovarianceℂ_bilinear_add_left m (toComplex f₁) (toComplex f₂) (toComplex g)
   have hL :
       (freeCovarianceFormR m (f₁ + f₂) g : ℂ)
-        = freeCovarianceℂ_bilinear m (toComplex f₁ + toComplex f₂) (toComplex g) := by
+        = freeCovarianceℂ_bilinear4 m (toComplex f₁ + toComplex f₂) (toComplex g) := by
     simpa [toComplex_add]
       using (freeCovarianceℂ_bilinear_agrees_on_reals m (f₁ + f₂) g).symm
   have h' :
@@ -560,9 +560,9 @@ lemma freeCovarianceFormR_add_left (m : ℝ) [Fact (0 < m)] (f₁ f₂ g : TestF
         = (freeCovarianceFormR m f₁ g : ℂ) + (freeCovarianceFormR m f₂ g : ℂ) := by
     calc
       (freeCovarianceFormR m (f₁ + f₂) g : ℂ)
-          = freeCovarianceℂ_bilinear m (toComplex f₁ + toComplex f₂) (toComplex g) := hL
-      _ = freeCovarianceℂ_bilinear m (toComplex f₁) (toComplex g)
-            + freeCovarianceℂ_bilinear m (toComplex f₂) (toComplex g) := h
+          = freeCovarianceℂ_bilinear4 m (toComplex f₁ + toComplex f₂) (toComplex g) := hL
+      _ = freeCovarianceℂ_bilinear4 m (toComplex f₁) (toComplex g)
+            + freeCovarianceℂ_bilinear4 m (toComplex f₂) (toComplex g) := h
       _ = (freeCovarianceFormR m f₁ g : ℂ) + (freeCovarianceFormR m f₂ g : ℂ) := by
             rw [freeCovarianceℂ_bilinear_agrees_on_reals m f₁ g,
                 freeCovarianceℂ_bilinear_agrees_on_reals m f₂ g]
@@ -576,20 +576,20 @@ lemma freeCovarianceFormR_smul_left (m : ℝ) [Fact (0 < m)] (c : ℝ) (f g : Te
     freeCovarianceℂ_bilinear_smul_left m (c : ℂ) (toComplex f) (toComplex g)
   have hL :
       (freeCovarianceFormR m (c • f) g : ℂ)
-        = freeCovarianceℂ_bilinear m ((c : ℂ) • toComplex f) (toComplex g) := by
+        = freeCovarianceℂ_bilinear4 m ((c : ℂ) • toComplex f) (toComplex g) := by
     simpa [toComplex_apply]
       using (freeCovarianceℂ_bilinear_agrees_on_reals m (c • f) g).symm
   have hR :
       (freeCovarianceFormR m f g : ℂ)
-        = freeCovarianceℂ_bilinear m (toComplex f) (toComplex g) :=
+        = freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex g) :=
     (freeCovarianceℂ_bilinear_agrees_on_reals m f g).symm
   have h' :
       (freeCovarianceFormR m (c • f) g : ℂ)
         = (c : ℂ) * (freeCovarianceFormR m f g : ℂ) := by
     calc
       (freeCovarianceFormR m (c • f) g : ℂ)
-          = freeCovarianceℂ_bilinear m ((c : ℂ) • toComplex f) (toComplex g) := hL
-      _ = (c : ℂ) * freeCovarianceℂ_bilinear m (toComplex f) (toComplex g) := h
+          = freeCovarianceℂ_bilinear4 m ((c : ℂ) • toComplex f) (toComplex g) := hL
+      _ = (c : ℂ) * freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex g) := h
       _ = (c : ℂ) * (freeCovarianceFormR m f g : ℂ) := by
             rw [hR]
   simpa [Complex.ofReal_mul] using h'
@@ -602,7 +602,7 @@ lemma freeCovarianceFormR_add_right (m : ℝ) [Fact (0 < m)] (f g₁ g₂ : Test
     freeCovarianceℂ_bilinear_add_right m (toComplex f) (toComplex g₁) (toComplex g₂)
   have hL :
       (freeCovarianceFormR m f (g₁ + g₂) : ℂ)
-        = freeCovarianceℂ_bilinear m (toComplex f) (toComplex g₁ + toComplex g₂) := by
+        = freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex g₁ + toComplex g₂) := by
     simpa [toComplex_add]
       using (freeCovarianceℂ_bilinear_agrees_on_reals m f (g₁ + g₂)).symm
   have h' :
@@ -610,9 +610,9 @@ lemma freeCovarianceFormR_add_right (m : ℝ) [Fact (0 < m)] (f g₁ g₂ : Test
         = (freeCovarianceFormR m f g₁ : ℂ) + (freeCovarianceFormR m f g₂ : ℂ) := by
     calc
       (freeCovarianceFormR m f (g₁ + g₂) : ℂ)
-          = freeCovarianceℂ_bilinear m (toComplex f) (toComplex g₁ + toComplex g₂) := hL
-      _ = freeCovarianceℂ_bilinear m (toComplex f) (toComplex g₁)
-            + freeCovarianceℂ_bilinear m (toComplex f) (toComplex g₂) := h
+          = freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex g₁ + toComplex g₂) := hL
+      _ = freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex g₁)
+            + freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex g₂) := h
       _ = (freeCovarianceFormR m f g₁ : ℂ) + (freeCovarianceFormR m f g₂ : ℂ) := by
             rw [freeCovarianceℂ_bilinear_agrees_on_reals m f g₁,
                 freeCovarianceℂ_bilinear_agrees_on_reals m f g₂]
@@ -626,20 +626,20 @@ lemma freeCovarianceFormR_smul_right (m : ℝ) [Fact (0 < m)] (c : ℝ) (f g : T
     freeCovarianceℂ_bilinear_smul_right m (c : ℂ) (toComplex f) (toComplex g)
   have hL :
     (freeCovarianceFormR m f (c • g) : ℂ)
-        = freeCovarianceℂ_bilinear m (toComplex f) ((c : ℂ) • toComplex g) := by
+        = freeCovarianceℂ_bilinear4 m (toComplex f) ((c : ℂ) • toComplex g) := by
     simpa [toComplex_apply]
       using (freeCovarianceℂ_bilinear_agrees_on_reals m f (c • g)).symm
   have hR :
       (freeCovarianceFormR m f g : ℂ)
-        = freeCovarianceℂ_bilinear m (toComplex f) (toComplex g) :=
+        = freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex g) :=
     (freeCovarianceℂ_bilinear_agrees_on_reals m f g).symm
   have h' :
       (freeCovarianceFormR m f (c • g) : ℂ)
         = (c : ℂ) * (freeCovarianceFormR m f g : ℂ) := by
     calc
       (freeCovarianceFormR m f (c • g) : ℂ)
-          = freeCovarianceℂ_bilinear m (toComplex f) ((c : ℂ) • toComplex g) := hL
-      _ = (c : ℂ) * freeCovarianceℂ_bilinear m (toComplex f) (toComplex g) := h
+          = freeCovarianceℂ_bilinear4 m (toComplex f) ((c : ℂ) • toComplex g) := hL
+      _ = (c : ℂ) * freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex g) := h
       _ = (c : ℂ) * (freeCovarianceFormR m f g : ℂ) := by
             rw [hR]
   simpa [Complex.ofReal_mul] using h'
@@ -684,14 +684,14 @@ lemma freeCovarianceFormR_reflection_invariant
             * (freeCovariance4 m p.1 p.2 : ℂ)
             * (QFT.compTimeReflection gc) p.2)
         (volume.prod volume) :=
-    freeCovarianceℂ_bilinear_integrable (m := m)
+    freeCovarianceℂ_bilinear_integrable4 (m := m)
       (f := QFT.compTimeReflection fc) (g := QFT.compTimeReflection gc)
   have h_double :=
     double_integral_timeReflection_covariance (m := m)
       (f := fc) (g := QFT.compTimeReflection gc) h_integrable
   have h_complex :
-      freeCovarianceℂ_bilinear m (QFT.compTimeReflection fc) (QFT.compTimeReflection gc)
-        = freeCovarianceℂ_bilinear m fc gc := by
+      freeCovarianceℂ_bilinear4 m (QFT.compTimeReflection fc) (QFT.compTimeReflection gc)
+        = freeCovarianceℂ_bilinear4 m fc gc := by
     have h_double' := h_double
     simp_rw [covariance_timeReflection_invariant m] at h_double'
     have h_double'' :
@@ -716,16 +716,16 @@ lemma freeCovarianceFormR_reflection_invariant
                     ∫ x, ∫ y,
                         fc x * (freeCovariance4 m x y : ℂ) * h y ∂volume ∂volume)
                   (h_comp_invol gc)
-    unfold freeCovarianceℂ_bilinear
+    unfold freeCovarianceℂ_bilinear4
     exact h_double''
   have h₁ :
-      freeCovarianceℂ_bilinear m (QFT.compTimeReflection fc) (QFT.compTimeReflection gc)
+      freeCovarianceℂ_bilinear4 m (QFT.compTimeReflection fc) (QFT.compTimeReflection gc)
         = (freeCovarianceFormR m (QFT.compTimeReflectionReal f) (QFT.compTimeReflectionReal g) : ℂ) := by
     simpa [h_toComplex_comp f, h_toComplex_comp g, fc, gc]
       using (freeCovarianceℂ_bilinear_agrees_on_reals
         (m := m) (f := QFT.compTimeReflectionReal f) (g := QFT.compTimeReflectionReal g))
   have h₂ :
-      freeCovarianceℂ_bilinear m fc gc
+      freeCovarianceℂ_bilinear4 m fc gc
         = (freeCovarianceFormR m f g : ℂ) :=
     (freeCovarianceℂ_bilinear_agrees_on_reals (m := m) f g)
   have h_complex_eq :
@@ -733,8 +733,8 @@ lemma freeCovarianceFormR_reflection_invariant
         = (freeCovarianceFormR m f g : ℂ) := by
     calc
       (freeCovarianceFormR m (QFT.compTimeReflectionReal f) (QFT.compTimeReflectionReal g) : ℂ)
-          = freeCovarianceℂ_bilinear m (QFT.compTimeReflection fc) (QFT.compTimeReflection gc) := h₁.symm
-      _ = freeCovarianceℂ_bilinear m fc gc := h_complex
+          = freeCovarianceℂ_bilinear4 m (QFT.compTimeReflection fc) (QFT.compTimeReflection gc) := h₁.symm
+      _ = freeCovarianceℂ_bilinear4 m fc gc := h_complex
       _ = (freeCovarianceFormR m f g : ℂ) := h₂
   exact ofReal_inj.mp h_complex_eq
 

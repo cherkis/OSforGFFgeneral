@@ -507,11 +507,11 @@ variable (m : ℝ) [Fact (0 < m)]
     Proved from `freeCovarianceℂ_bilinear_add_left/right` and `_smul_left/right`. -/
 private lemma freeCovarianceℂ_bilinear_sub_sub
     (f g : TestFunctionℂ4) :
-    freeCovarianceℂ_bilinear m (f - g) (f - g) =
-      freeCovarianceℂ_bilinear m f f
-      - freeCovarianceℂ_bilinear m f g
-      - freeCovarianceℂ_bilinear m g f
-      + freeCovarianceℂ_bilinear m g g := by
+    freeCovarianceℂ_bilinear4 m (f - g) (f - g) =
+      freeCovarianceℂ_bilinear4 m f f
+      - freeCovarianceℂ_bilinear4 m f g
+      - freeCovarianceℂ_bilinear4 m g f
+      + freeCovarianceℂ_bilinear4 m g g := by
   have h_sub_eq : f - g = f + (-1 : ℂ) • g := by rw [neg_one_smul, sub_eq_add_neg]
   simp only [h_sub_eq]
   simp only [freeCovarianceℂ_bilinear_add_left, freeCovarianceℂ_bilinear_add_right,
@@ -526,9 +526,9 @@ private lemma freeCovarianceℂ_bilinear_sub_sub
     `= ∫∫ conj(f(x)) K(x−y) conj(g(y)) dx dy = conj(∫∫ f(x) K(x−y) g(y) dx dy)`. -/
 private lemma freeCovarianceℂ_bilinear_star_star_conj
     (f g : TestFunctionℂ4) :
-    freeCovarianceℂ_bilinear m (star f) (star g) =
-      starRingEnd ℂ (freeCovarianceℂ_bilinear m f g) := by
-  unfold freeCovarianceℂ_bilinear
+    freeCovarianceℂ_bilinear4 m (star f) (star g) =
+      starRingEnd ℂ (freeCovarianceℂ_bilinear4 m f g) := by
+  unfold freeCovarianceℂ_bilinear4
   -- After unfolding:
   -- LHS = ∫∫ (star f)(x) · ↑K(x,y) · (star g)(y)
   --     = ∫∫ conj(f(Θx)) · ↑K(x,y) · conj(g(Θy))   (definitionally, by star_apply = rfl)
@@ -563,7 +563,7 @@ private lemma freeCovarianceℂ_bilinear_star_star_conj
   -- Now LHS = ∫∫ G(Θx,Θy), RHS = ∫∫ G(x,y).
   -- Apply double_integral_timeReflection.
   -- Need integrability of (x,y) ↦ G(x,y) = conj(f(x)) · K(x,y) · conj(g(y)).
-  -- This follows from freeCovarianceℂ_bilinear_integrable applied to star f, star g,
+  -- This follows from freeCovarianceℂ_bilinear_integrable4 applied to star f, star g,
   -- which are test functions. But we need it for the "unstarred conj" versions.
   -- star f is already a TestFunctionℂ4, so we can use its integrability directly.
   have h_int : Integrable (fun p : SpaceTime4 × SpaceTime4 =>
@@ -572,8 +572,8 @@ private lemma freeCovarianceℂ_bilinear_star_star_conj
     -- (star f)(x) = conj(f(Θx)), so conj(f(x)) = (star f)(Θ⁻¹ x) = (star f)(Θx) since Θ² = id
     -- Actually, let's build the Schwartz functions conj ∘ f and conj ∘ g directly.
     -- These are exactly what starTestFunction constructs (without the time-reflection part).
-    -- We can use freeCovarianceℂ_bilinear_integrable with appropriate test functions.
-    -- Key insight: the integrand is just the integrand for freeCovarianceℂ_bilinear
+    -- We can use freeCovarianceℂ_bilinear_integrable4 with appropriate test functions.
+    -- Key insight: the integrand is just the integrand for freeCovarianceℂ_bilinear4
     -- applied to the Schwartz functions x ↦ conj(f(x)) and x ↦ conj(g(x)).
     -- These are test functions (since conj is a smooth linear isometry).
     let f_conj : TestFunctionℂ4 :=
@@ -600,7 +600,7 @@ private lemma freeCovarianceℂ_bilinear_star_star_conj
             = ‖x‖ ^ k * ‖iteratedFDeriv ℝ n g x‖ := by
               rw [starRingEnd_iteratedFDeriv_norm_eq]
           _ ≤ C := hC x⟩
-    exact freeCovarianceℂ_bilinear_integrable m f_conj g_conj
+    exact freeCovarianceℂ_bilinear_integrable4 m f_conj g_conj
   exact double_integral_timeReflection
     (fun x y => starRingEnd ℂ (f x) * (freeCovariance4 m x y : ℂ) * starRingEnd ℂ (g y)) h_int
 
@@ -625,12 +625,12 @@ private lemma star_star_testFunctionℂ (f : TestFunctionℂ4) : star (star f) =
     `= C(star f_i, star(star f_j))` by star involution `= conj(C(f_i, star f_j))` by star_star_conj. -/
 private lemma reflection_matrix_IsHermitian
     {n : ℕ} (f : Fin n → PositiveTimeTestFunctionℂ4) :
-    IsHermitianMatrix fun i j => freeCovarianceℂ_bilinear m (f i).val (star (f j).val) := by
+    IsHermitianMatrix fun i j => freeCovarianceℂ_bilinear4 m (f i).val (star (f j).val) := by
   intro i j
   -- Goal (after beta-reduction):
   -- C(f_j, star f_i) = conj(C(f_i, star f_j))
-  show freeCovarianceℂ_bilinear m (f j).val (star (f i).val) =
-    starRingEnd ℂ (freeCovarianceℂ_bilinear m (f i).val (star (f j).val))
+  show freeCovarianceℂ_bilinear4 m (f j).val (star (f i).val) =
+    starRingEnd ℂ (freeCovarianceℂ_bilinear4 m (f i).val (star (f j).val))
   rw [freeCovarianceℂ_bilinear_symm m (f j).val (star (f i).val)]
   -- Goal: C(star f_i, f_j) = conj(C(f_i, star f_j))
   -- Write f_j = star(star f_j) on LHS
@@ -827,10 +827,10 @@ private lemma entrywiseExp_IsRePSD
     `Z[fᵢ − star fⱼ] = Aᵢ · conj(Aⱼ) · exp(Rᵢⱼ)`
     where `Aᵢ = exp(−½ C(fᵢ,fᵢ))` and `Rᵢⱼ = C(fᵢ, star fⱼ)`. -/
 private lemma gff_complexZ_entry_factor (fi fj : TestFunctionℂ4) :
-    Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear m (fi - star fj) (fi - star fj)) =
-    Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear m fi fi) *
-    starRingEnd ℂ (Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear m fj fj)) *
-    Complex.exp (freeCovarianceℂ_bilinear m fi (star fj)) := by
+    Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear4 m (fi - star fj) (fi - star fj)) =
+    Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear4 m fi fi) *
+    starRingEnd ℂ (Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear4 m fj fj)) *
+    Complex.exp (freeCovarianceℂ_bilinear4 m fi (star fj)) := by
   -- Expand C(f-star g, f-star g)
   rw [freeCovarianceℂ_bilinear_sub_sub]
   -- Use symmetry: C(star fj, fi) = C(fi, star fj)
@@ -839,9 +839,9 @@ private lemma gff_complexZ_entry_factor (fi fj : TestFunctionℂ4) :
   rw [freeCovarianceℂ_bilinear_star_star_conj]
   -- Now goal is algebraic: exp(-½(α - 2R + conj(β))) = exp(-½α) · conj(exp(-½β)) · exp(R)
   -- where α = C(fi,fi), β = C(fj,fj), R = C(fi, star fj)
-  set α := freeCovarianceℂ_bilinear m fi fi
-  set β := freeCovarianceℂ_bilinear m fj fj
-  set R := freeCovarianceℂ_bilinear m fi (star fj)
+  set α := freeCovarianceℂ_bilinear4 m fi fi
+  set β := freeCovarianceℂ_bilinear4 m fj fj
+  set R := freeCovarianceℂ_bilinear4 m fi (star fj)
   -- conj(exp(z)) = exp(conj(z)) by Complex.exp_conj
   have h_conj_exp : starRingEnd ℂ (Complex.exp (-(1/2 : ℂ) * β)) =
       Complex.exp (starRingEnd ℂ (-(1/2 : ℂ) * β)) := (Complex.exp_conj _).symm
@@ -870,11 +870,11 @@ private lemma star_sum_antilinear {n : ℕ} (v : Fin n → ℂ) (g : Fin n → T
   congr 1; ext j
   rw [map_mul, RCLike.conj_conj, star_apply]
 
-/-- Left-sum expansion for `freeCovarianceℂ_bilinear`. -/
+/-- Left-sum expansion for `freeCovarianceℂ_bilinear4`. -/
 private lemma freeCovarianceℂ_bilinear_sum_left {n : ℕ}
     (a : Fin n → TestFunctionℂ4) (u : Fin n → ℂ) (g : TestFunctionℂ4) :
-    freeCovarianceℂ_bilinear m (∑ i, u i • a i) g =
-    ∑ i, u i * freeCovarianceℂ_bilinear m (a i) g := by
+    freeCovarianceℂ_bilinear4 m (∑ i, u i • a i) g =
+    ∑ i, u i * freeCovarianceℂ_bilinear4 m (a i) g := by
   refine Finset.induction_on (Finset.univ : Finset (Fin n)) ?_ ?_
   · simp only [Finset.sum_empty]
     have h := freeCovarianceℂ_bilinear_smul_left m (0 : ℂ) g g
@@ -883,11 +883,11 @@ private lemma freeCovarianceℂ_bilinear_sum_left {n : ℕ}
     rw [Finset.sum_insert ha', Finset.sum_insert ha',
         freeCovarianceℂ_bilinear_add_left, freeCovarianceℂ_bilinear_smul_left, ih]
 
-/-- Right-sum expansion for `freeCovarianceℂ_bilinear`. -/
+/-- Right-sum expansion for `freeCovarianceℂ_bilinear4`. -/
 private lemma freeCovarianceℂ_bilinear_sum_right {n : ℕ}
     (f : TestFunctionℂ4) (b : Fin n → TestFunctionℂ4) (w : Fin n → ℂ) :
-    freeCovarianceℂ_bilinear m f (∑ j, w j • b j) =
-    ∑ j, w j * freeCovarianceℂ_bilinear m f (b j) := by
+    freeCovarianceℂ_bilinear4 m f (∑ j, w j • b j) =
+    ∑ j, w j * freeCovarianceℂ_bilinear4 m f (b j) := by
   refine Finset.induction_on (Finset.univ : Finset (Fin n)) ?_ ?_
   · simp only [Finset.sum_empty]
     have h := freeCovarianceℂ_bilinear_smul_right m (0 : ℂ) f f
@@ -896,11 +896,11 @@ private lemma freeCovarianceℂ_bilinear_sum_right {n : ℕ}
     rw [Finset.sum_insert ha', Finset.sum_insert ha',
         freeCovarianceℂ_bilinear_add_right, freeCovarianceℂ_bilinear_smul_right, ih]
 
-/-- Bilinearity of `freeCovarianceℂ_bilinear` on finite sums. -/
+/-- Bilinearity of `freeCovarianceℂ_bilinear4` on finite sums. -/
 private lemma freeCovarianceℂ_bilinear_sum_sum {n : ℕ}
     (a b : Fin n → TestFunctionℂ4) (u w : Fin n → ℂ) :
-    freeCovarianceℂ_bilinear m (∑ i, u i • a i) (∑ j, w j • b j) =
-    ∑ i, ∑ j, u i * w j * freeCovarianceℂ_bilinear m (a i) (b j) := by
+    freeCovarianceℂ_bilinear4 m (∑ i, u i • a i) (∑ j, w j • b j) =
+    ∑ i, ∑ j, u i * w j * freeCovarianceℂ_bilinear4 m (a i) (b j) := by
   rw [freeCovarianceℂ_bilinear_sum_left]
   congr 1; ext i
   rw [freeCovarianceℂ_bilinear_sum_right, Finset.mul_sum]
@@ -914,7 +914,7 @@ private lemma freeCovarianceℂ_bilinear_sum_sum {n : ℕ}
     `Re(rpInnerProduct(h)) ≥ 0` by `freeCovariance_reflection_positive_bilinear`. -/
 private lemma reflection_matrix_IsRePSD
     {n : ℕ} (f : Fin n → PositiveTimeTestFunctionℂ4) :
-    IsRePSD fun i j => freeCovarianceℂ_bilinear m (f i).val (star (f j).val) := by
+    IsRePSD fun i j => freeCovarianceℂ_bilinear4 m (f i).val (star (f j).val) := by
   intro v
   -- Define h = ∑ conj(v_j) f_j (positive-time test function)
   set h : TestFunctionℂ4 := ∑ j, starRingEnd ℂ (v j) • (f j).val with h_def
@@ -936,7 +936,7 @@ private lemma reflection_matrix_IsRePSD
   -- Expand rpInnerProduct(h) = C(star h, h) by bilinearity
   have h_expand : rpInnerProduct m h =
       ∑ i, ∑ j, v i * starRingEnd ℂ (v j) *
-        freeCovarianceℂ_bilinear m (star (f i).val) ((f j).val) := by
+        freeCovarianceℂ_bilinear4 m (star (f i).val) ((f j).val) := by
     unfold rpInnerProduct
     rw [h_star, h_def]
     exact freeCovarianceℂ_bilinear_sum_sum m
@@ -945,9 +945,9 @@ private lemma reflection_matrix_IsRePSD
   -- by symmetry C(star f_i, f_j) = C(f_j, star f_i) and swapping i↔j
   have h_swap :
       (∑ i, ∑ j, v i * starRingEnd ℂ (v j) *
-        freeCovarianceℂ_bilinear m (star (f i).val) ((f j).val)).re =
+        freeCovarianceℂ_bilinear4 m (star (f i).val) ((f j).val)).re =
       (∑ i, ∑ j, starRingEnd ℂ (v i) * v j *
-        freeCovarianceℂ_bilinear m (f i).val (star (f j).val)).re := by
+        freeCovarianceℂ_bilinear4 m (f i).val (star (f j).val)).re := by
     congr 1
     rw [Finset.sum_comm]
     congr 1; ext i; congr 1; ext j
@@ -970,12 +970,12 @@ private lemma gff_complexOS3_matrix
   -- Step 3: Algebraic rewrite: conj(c_i) c_j A_i conj(A_j) E_ij = conj(w_i) w_j E_ij
   have h_rewrite : ∀ i j : Fin n,
       starRingEnd ℂ (c i) * c j *
-        (Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear m (f i).val (f i).val) *
-         starRingEnd ℂ (Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear m (f j).val (f j).val)) *
-         Complex.exp (freeCovarianceℂ_bilinear m (f i).val (star (f j).val))) =
-      starRingEnd ℂ (c i * starRingEnd ℂ (Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear m (f i).val (f i).val))) *
-      (c j * starRingEnd ℂ (Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear m (f j).val (f j).val))) *
-      Complex.exp (freeCovarianceℂ_bilinear m (f i).val (star (f j).val)) := by
+        (Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear4 m (f i).val (f i).val) *
+         starRingEnd ℂ (Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear4 m (f j).val (f j).val)) *
+         Complex.exp (freeCovarianceℂ_bilinear4 m (f i).val (star (f j).val))) =
+      starRingEnd ℂ (c i * starRingEnd ℂ (Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear4 m (f i).val (f i).val))) *
+      (c j * starRingEnd ℂ (Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear4 m (f j).val (f j).val))) *
+      Complex.exp (freeCovarianceℂ_bilinear4 m (f i).val (star (f j).val)) := by
     intro i j; simp only [map_mul, RCLike.conj_conj]; ring
   simp_rw [h_rewrite]
   -- Step 4: Apply IsRePSD chain directly

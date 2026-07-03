@@ -34,7 +34,7 @@ C(x,y) = ∫₀^∞ e^{−sm²} H(s,|x−y|) ds via the heat kernel.
 
 ## Main definitions
 
-- `freeCovarianceℂ_bilinear`: bilinear form ⟨f, Cg⟩ = ∫∫ f(x) C(x,y) g(y) dx dy
+- `freeCovarianceℂ_bilinear4`: bilinear form ⟨f, Cg⟩ = ∫∫ f(x) C(x,y) g(y) dx dy
 
 ## Key Results
 
@@ -48,7 +48,7 @@ open scoped Real InnerProductSpace BigOperators
 
 /-! ## Dependencies
 
-No axioms declared here. Uses `freeCovarianceℂ_bilinear_integrable` transitively
+No axioms declared here. Uses `freeCovarianceℂ_bilinear_integrable4` transitively
 via `parseval_triple_integrand_integrable` in `Covariance.Parseval`.
 -/
 
@@ -192,14 +192,14 @@ All results assume m > 0 (positive mass) which is required for integrability. -/
 
 /-- The position-space integrand for the complex covariance bilinear form is integrable
     for Schwartz test functions, using translation-invariant L¹ kernel integrability. -/
-theorem freeCovarianceℂ_bilinear_integrable
+theorem freeCovarianceℂ_bilinear_integrable4
     (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ4) :
     Integrable (fun p : SpaceTime4 × SpaceTime4 =>
       (f p.1) * (freeCovariance4 m p.1 p.2) * (g p.2)) volume := by
   exact freeCovarianceℂ_bilinear_integrable' m f g
 
 /-- Integrability of the covariance kernel evaluated on a time-reflected test function.
-    This follows directly from `freeCovarianceℂ_bilinear_integrable` since `compTimeReflection`
+    This follows directly from `freeCovarianceℂ_bilinear_integrable4` since `compTimeReflection`
     maps test functions to test functions. -/
 lemma integrable_compTimeReflection_covariance
   (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) :
@@ -207,7 +207,7 @@ lemma integrable_compTimeReflection_covariance
       (QFT.compTimeReflection f) p.1 * (freeCovariance4 m p.1 p.2 : ℂ) * f p.2)
     (volume.prod volume) := by
   rw [← Measure.volume_eq_prod]
-  exact freeCovarianceℂ_bilinear_integrable m (QFT.compTimeReflection f) f
+  exact freeCovarianceℂ_bilinear_integrable4 m (QFT.compTimeReflection f) f
 
 
 /-- Relationship between compTimeReflection of toComplex and compTimeReflectionReal:
@@ -400,15 +400,15 @@ lemma covariance_timeReflection_invariant (m : ℝ) :
 
 /-! ## Complex Extension
 
-Note: `freeCovarianceℂ_bilinear` is defined in Parseval.lean (imported above).
+Note: `freeCovarianceℂ_bilinear4` is defined in Parseval.lean (imported above).
 The following lemmas prove properties of this bilinear form. -/
 
 /-- For each fixed `x`, the inner integral in the complex bilinear form is absolutely integrable.
-    This follows from product integrability (`freeCovarianceℂ_bilinear_integrable`) plus Fubini. -/
+    This follows from product integrability (`freeCovarianceℂ_bilinear_integrable4`) plus Fubini. -/
 lemma freeCovarianceℂ_bilinear_inner_integrable
   (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ4) :
   Integrable (fun x => ∫ y, (f x) * (freeCovariance4 m x y) * (g y) ∂volume) volume := by
-  have h := freeCovarianceℂ_bilinear_integrable m f g
+  have h := freeCovarianceℂ_bilinear_integrable4 m f g
   rw [Measure.volume_eq_prod] at h
   exact h.integral_prod_left
 
@@ -418,19 +418,19 @@ lemma freeCovarianceℂ_bilinear_inner_integrable
 lemma freeCovarianceℂ_bilinear_slice_integrable
   (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ4) :
   ∀ᵐ x ∂volume, Integrable (fun y => (f x) * (freeCovariance4 m x y) * (g y)) volume := by
-  have h := freeCovarianceℂ_bilinear_integrable m f g
+  have h := freeCovarianceℂ_bilinear_integrable4 m f g
   rw [Measure.volume_eq_prod] at h
   exact h.prod_right_ae
 
 /-- Generalized bilinearity in the first argument: scalar multiplication and addition combined. -/
 theorem freeCovarianceℂ_bilinear_add_smul_left
   (m : ℝ) [Fact (0 < m)] (c : ℂ) (f₁ f₂ g : TestFunctionℂ4) :
-    freeCovarianceℂ_bilinear m (c • f₁ + f₂) g
-      = c * freeCovarianceℂ_bilinear m f₁ g + freeCovarianceℂ_bilinear m f₂ g := by
+    freeCovarianceℂ_bilinear4 m (c • f₁ + f₂) g
+      = c * freeCovarianceℂ_bilinear4 m f₁ g + freeCovarianceℂ_bilinear4 m f₂ g := by
   classical
   -- Expand the definition and introduce convenient abbreviations for the
   -- outer integrands that appear in the bilinear form.
-  simp only [freeCovarianceℂ_bilinear]
+  simp only [freeCovarianceℂ_bilinear4]
   set F := fun x : SpaceTime4 =>
     ∫ y, ((c • f₁ + f₂) x) * (freeCovariance4 m x y : ℂ) * (g y) ∂volume
   set F₁ := fun x : SpaceTime4 =>
@@ -495,8 +495,8 @@ theorem freeCovarianceℂ_bilinear_add_smul_left
 
 theorem freeCovarianceℂ_bilinear_add_left
   (m : ℝ) [Fact (0 < m)] (f₁ f₂ g : TestFunctionℂ4) :
-    freeCovarianceℂ_bilinear m (f₁ + f₂) g
-      = freeCovarianceℂ_bilinear m f₁ g + freeCovarianceℂ_bilinear m f₂ g := by
+    freeCovarianceℂ_bilinear4 m (f₁ + f₂) g
+      = freeCovarianceℂ_bilinear4 m f₁ g + freeCovarianceℂ_bilinear4 m f₂ g := by
   -- Use the generalized lemma with c = 1
   have h := freeCovarianceℂ_bilinear_add_smul_left m 1 f₁ f₂ g
   -- Simplify 1 • f₁ = f₁ and 1 * (...) = (...)
@@ -505,14 +505,14 @@ theorem freeCovarianceℂ_bilinear_add_left
 
 theorem freeCovarianceℂ_bilinear_smul_left
   (m : ℝ) [Fact (0 < m)] (c : ℂ) (f g : TestFunctionℂ4) :
-    freeCovarianceℂ_bilinear m (c • f) g = c * freeCovarianceℂ_bilinear m f g := by
+    freeCovarianceℂ_bilinear4 m (c • f) g = c * freeCovarianceℂ_bilinear4 m f g := by
   -- Use the generalized lemma with f₁ = f and f₂ = 0
   have h := freeCovarianceℂ_bilinear_add_smul_left m c f 0 g
   -- Simplify: c • f + 0 = c • f
   rw [add_zero] at h
-  -- Need to show freeCovarianceℂ_bilinear m 0 g = 0
-  have zero_bilinear : freeCovarianceℂ_bilinear m 0 g = 0 := by
-    unfold freeCovarianceℂ_bilinear
+  -- Need to show freeCovarianceℂ_bilinear4 m 0 g = 0
+  have zero_bilinear : freeCovarianceℂ_bilinear4 m 0 g = 0 := by
+    unfold freeCovarianceℂ_bilinear4
     -- 0 x = 0, so the integrand becomes 0 * ... = 0
     have h : ∀ x y, (0 : TestFunctionℂ4) x * (freeCovariance4 m x y : ℂ) * g y = 0 := by
       intro x y
@@ -528,17 +528,17 @@ theorem freeCovarianceℂ_bilinear_smul_left
 /-- Symmetry of the complex bilinear form: swapping arguments gives the same result. -/
 theorem freeCovarianceℂ_bilinear_symm
   (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ4) :
-    freeCovarianceℂ_bilinear m f g = freeCovarianceℂ_bilinear m g f := by
-  unfold freeCovarianceℂ_bilinear
+    freeCovarianceℂ_bilinear4 m f g = freeCovarianceℂ_bilinear4 m g f := by
+  unfold freeCovarianceℂ_bilinear4
   -- Use the symmetry of the underlying covariance kernel freeCovariance4 m x y = freeCovariance4 m y x
   -- Apply change of variables: swap x ↔ y in the integration domain
   have h : ∫ x, ∫ y, (f x) * (freeCovariance4 m x y) * (g y) ∂volume ∂volume
          = ∫ y, ∫ x, (f x) * (freeCovariance4 m x y) * (g y) ∂volume ∂volume := by
     -- Swap the order of integration (follows from Fubini's theorem)
-    -- We have the necessary integrability condition from freeCovarianceℂ_bilinear_integrable
+    -- We have the necessary integrability condition from freeCovarianceℂ_bilinear_integrable4
     apply MeasureTheory.integral_integral_swap
     -- The integrand is integrable on the product space
-    exact freeCovarianceℂ_bilinear_integrable m f g
+    exact freeCovarianceℂ_bilinear_integrable4 m f g
   rw [h]
   -- Now apply variable relabeling: swap variable names x ↔ y in the second integral
   -- ∫ y, ∫ x, f x * freeCovariance4 m x y * g y = ∫ x, ∫ y, f y * freeCovariance4 m y x * g x
@@ -556,25 +556,25 @@ theorem freeCovarianceℂ_bilinear_symm
 
 theorem freeCovarianceℂ_bilinear_smul_right
   (m : ℝ) [Fact (0 < m)] (c : ℂ) (f g : TestFunctionℂ4) :
-    freeCovarianceℂ_bilinear m f (c • g) = c * freeCovarianceℂ_bilinear m f g := by
+    freeCovarianceℂ_bilinear4 m f (c • g) = c * freeCovarianceℂ_bilinear4 m f g := by
   -- Use symmetry to convert right scalar multiplication to left scalar multiplication
-  -- freeCovarianceℂ_bilinear m f (c • g) = freeCovarianceℂ_bilinear m (c • g) f
+  -- freeCovarianceℂ_bilinear4 m f (c • g) = freeCovarianceℂ_bilinear4 m (c • g) f
   rw [freeCovarianceℂ_bilinear_symm m f (c • g)]
-  -- Apply left scalar multiplication: freeCovarianceℂ_bilinear m (c • g) f = c * freeCovarianceℂ_bilinear m g f
+  -- Apply left scalar multiplication: freeCovarianceℂ_bilinear4 m (c • g) f = c * freeCovarianceℂ_bilinear4 m g f
   rw [freeCovarianceℂ_bilinear_smul_left m c g f]
-  -- Use symmetry again: c * freeCovarianceℂ_bilinear m g f = c * freeCovarianceℂ_bilinear m f g
+  -- Use symmetry again: c * freeCovarianceℂ_bilinear4 m g f = c * freeCovarianceℂ_bilinear4 m f g
   rw [freeCovarianceℂ_bilinear_symm m g f]
 
 theorem freeCovarianceℂ_bilinear_add_right
   (m : ℝ) [Fact (0 < m)] (f g₁ g₂ : TestFunctionℂ4) :
-    freeCovarianceℂ_bilinear m f (g₁ + g₂)
-      = freeCovarianceℂ_bilinear m f g₁ + freeCovarianceℂ_bilinear m f g₂ := by
+    freeCovarianceℂ_bilinear4 m f (g₁ + g₂)
+      = freeCovarianceℂ_bilinear4 m f g₁ + freeCovarianceℂ_bilinear4 m f g₂ := by
   -- Use symmetry to convert right addition to left addition
-  -- freeCovarianceℂ_bilinear m f (g₁ + g₂) = freeCovarianceℂ_bilinear m (g₁ + g₂) f
+  -- freeCovarianceℂ_bilinear4 m f (g₁ + g₂) = freeCovarianceℂ_bilinear4 m (g₁ + g₂) f
   rw [freeCovarianceℂ_bilinear_symm m f (g₁ + g₂)]
-  -- Apply left addition: freeCovarianceℂ_bilinear m (g₁ + g₂) f = freeCovarianceℂ_bilinear m g₁ f + freeCovarianceℂ_bilinear m g₂ f
+  -- Apply left addition: freeCovarianceℂ_bilinear4 m (g₁ + g₂) f = freeCovarianceℂ_bilinear4 m g₁ f + freeCovarianceℂ_bilinear4 m g₂ f
   rw [freeCovarianceℂ_bilinear_add_left m g₁ g₂ f]
-  -- Use symmetry on each term: freeCovarianceℂ_bilinear m g₁ f + freeCovarianceℂ_bilinear m g₂ f = freeCovarianceℂ_bilinear m f g₁ + freeCovarianceℂ_bilinear m f g₂
+  -- Use symmetry on each term: freeCovarianceℂ_bilinear4 m g₁ f + freeCovarianceℂ_bilinear4 m g₂ f = freeCovarianceℂ_bilinear4 m f g₁ + freeCovarianceℂ_bilinear4 m f g₂
   rw [freeCovarianceℂ_bilinear_symm m g₁ f, freeCovarianceℂ_bilinear_symm m g₂ f]
 
 /-- Complex extension of the covariance for complex test functions (using regulated Fourier form). -/
@@ -595,21 +595,21 @@ theorem freeCovarianceℂ_regulated_positive (α : ℝ) (hα : 0 < α) (m : ℝ)
   · exact freePropagatorMomentum_mathlib_nonneg m (Fact.out) k
 
 /-- Complex extension of the covariance for complex test functions (limit form via Bessel). -/
-def freeCovarianceℂ (m : ℝ) (f g : TestFunctionℂ4) : ℂ :=
+def freeCovarianceℂ4 (m : ℝ) (f g : TestFunctionℂ4) : ℂ :=
   ∫ x, ∫ y, (f x) * (freeCovariance4 m x y) * (starRingEnd ℂ (g y)) ∂volume ∂volume
 
 /-- The complex covariance (Bessel form) is positive definite. -/
-theorem freeCovarianceℂ_positive (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) :
-    0 ≤ (freeCovarianceℂ m f f).re := by
+theorem freeCovarianceℂ_positive4 (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) :
+    0 ≤ (freeCovarianceℂ4 m f f).re := by
   -- The regulated form converges to the Bessel form as α → 0⁺
   -- Use the specialized f = f version which leverages momentum-space DCT
   have h_tendsto := bilinear_covariance_regulated_tendsto_self m f
-  -- This is the same as: freeCovarianceℂ_regulated α m f f → freeCovarianceℂ m f f
+  -- This is the same as: freeCovarianceℂ_regulated α m f f → freeCovarianceℂ4 m f f
   have h_tendsto' : Filter.Tendsto (fun α => freeCovarianceℂ_regulated α m f f)
-      (nhdsWithin 0 (Set.Ioi 0)) (nhds (freeCovarianceℂ m f f)) := h_tendsto
+      (nhdsWithin 0 (Set.Ioi 0)) (nhds (freeCovarianceℂ4 m f f)) := h_tendsto
   -- By continuity of .re, the real parts also converge
   have h_tendsto_re : Filter.Tendsto (fun α => (freeCovarianceℂ_regulated α m f f).re)
-      (nhdsWithin 0 (Set.Ioi 0)) (nhds (freeCovarianceℂ m f f).re) :=
+      (nhdsWithin 0 (Set.Ioi 0)) (nhds (freeCovarianceℂ4 m f f).re) :=
     Complex.continuous_re.continuousAt.tendsto.comp h_tendsto'
   -- The regulated forms are nonnegative for α > 0
   have h_nonneg : ∀ᶠ α in nhdsWithin 0 (Set.Ioi 0),
@@ -627,16 +627,16 @@ theorem freeCovarianceℂ_positive (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ
     well-defined pointwise. The equality holds because the Bessel form equals the limit
     of the regulated forms. -/
 theorem parseval_covariance_schwartz_bessel (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) :
-    (freeCovarianceℂ m f f).re
+    (freeCovarianceℂ4 m f f).re
     = ∫ k, ‖(SchwartzMap.fourierTransformCLM ℂ f) k‖^2 * freePropagatorMomentum_mathlib m k ∂volume := by
   -- Strategy: Use uniqueness of limits
   -- 1. bilinear_covariance_regulated_tendsto_self: lim (regulated) = Bessel (in ℂ) for f = f case
   -- 2. parseval_covariance_schwartz_correct: lim (regulated).re = momentum (in ℝ)
   -- 3. By continuity of .re: (Bessel).re = momentum
 
-  -- The Bessel form is defined as freeCovarianceℂ
-  -- freeCovarianceℂ m f f = ∫∫ f(x) * C(x,y) * conj(f(y))
-  have h_bessel_eq : freeCovarianceℂ m f f =
+  -- The Bessel form is defined as freeCovarianceℂ4
+  -- freeCovarianceℂ4 m f f = ∫∫ f(x) * C(x,y) * conj(f(y))
+  have h_bessel_eq : freeCovarianceℂ4 m f f =
       ∫ x, ∫ y, f x * (freeCovariance4 m x y : ℂ) * (starRingEnd ℂ (f y)) := rfl
 
   -- The complex bilinear form converges to the Bessel form

@@ -73,7 +73,7 @@ lemma schwinger2_sum_expansion (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ4)
   -- Use symmetry: S₂(f,g) = S₂(g,f)
   have h_sym : SchwingerFunctionℂ₂ (gaussianFreeField_free m) g f =
       SchwingerFunctionℂ₂ (gaussianFreeField_free m) f g := by
-    -- Both equal freeCovarianceℂ_bilinear, which is symmetric
+    -- Both equal freeCovarianceℂ_bilinear4, which is symmetric
     rw [gff_two_point_equals_covarianceℂ_free, gff_two_point_equals_covarianceℂ_free]
     exact freeCovarianceℂ_bilinear_symm m g f
   -- Expand
@@ -153,17 +153,17 @@ lemma gff_generating_norm_le_one_real (m : ℝ) [Fact (0 < m)] (f : TestFunction
       -(1/2) * (SchwingerFunctionℂ₂ (gaussianFreeField_free m) (toComplex f) (toComplex f)).re := by
     simp [Complex.mul_re]
   rw [h_re, gff_two_point_equals_covarianceℂ_free]
-  -- For real test functions, freeCovarianceℂ_bilinear = freeCovarianceℂ (no conjugation needed)
-  have heq : freeCovarianceℂ_bilinear m (toComplex f) (toComplex f) =
-             freeCovarianceℂ m (toComplex f) (toComplex f) := by
-    unfold freeCovarianceℂ_bilinear freeCovarianceℂ
+  -- For real test functions, freeCovarianceℂ_bilinear4 = freeCovarianceℂ4 (no conjugation needed)
+  have heq : freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex f) =
+             freeCovarianceℂ4 m (toComplex f) (toComplex f) := by
+    unfold freeCovarianceℂ_bilinear4 freeCovarianceℂ4
     congr 1; ext x; congr 1; ext y
     have : starRingEnd ℂ (toComplex f y) = toComplex f y := by simp [toComplex_apply]
     rw [this]
   rw [heq]
-  have h_nonneg : 0 ≤ (freeCovarianceℂ m (toComplex f) (toComplex f)).re :=
-    freeCovarianceℂ_positive m (toComplex f)
-  calc Real.exp (-(1/2) * (freeCovarianceℂ m (toComplex f) (toComplex f)).re)
+  have h_nonneg : 0 ≤ (freeCovarianceℂ4 m (toComplex f) (toComplex f)).re :=
+    freeCovarianceℂ_positive4 m (toComplex f)
+  calc Real.exp (-(1/2) * (freeCovarianceℂ4 m (toComplex f) (toComplex f)).re)
       ≤ Real.exp 0 := by apply Real.exp_le_exp.mpr; nlinarith
     _ = 1 := Real.exp_zero
 
@@ -590,10 +590,10 @@ lemma schwinger2_time_translated_eq_bilinear (m : ℝ) [Fact (0 < m)] (f g : Tes
     SchwingerFunctionℂ₂ (gaussianFreeField_free m) f (TimeTranslation.timeTranslationSchwartzℂ (-s) g) =
     ∫ x : SpaceTime4, ∫ y : SpaceTime4,
       f x * (freeCovarianceKernel m (x - y) : ℂ) * g (y - TimeTranslation.timeShiftConst s) := by
-  -- S₂(f, T_{-s} g) = freeCovarianceℂ_bilinear m f (T_{-s} g)
+  -- S₂(f, T_{-s} g) = freeCovarianceℂ_bilinear4 m f (T_{-s} g)
   rw [gff_two_point_equals_covarianceℂ_free]
-  -- freeCovarianceℂ_bilinear m f g = ∫∫ f(x) · freeCovariance4(x,y) · g(y) dx dy
-  unfold freeCovarianceℂ_bilinear
+  -- freeCovarianceℂ_bilinear4 m f g = ∫∫ f(x) · freeCovariance4(x,y) · g(y) dx dy
+  unfold freeCovarianceℂ_bilinear4
   -- Expand T_{-s} g at point y and use kernel identity
   congr 1 with x
   congr 1 with y

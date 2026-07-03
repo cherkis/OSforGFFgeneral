@@ -217,7 +217,7 @@ Elementary bound on the GFF generating function using complex exponential proper
     |exp(z)| = exp(Re z). -/
 lemma gff_generating_norm_eq (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) :
   ‖GJGeneratingFunctionalℂ (gaussianFreeField_free m) f‖ =
-    Real.exp (-(1/2) * (freeCovarianceℂ_bilinear m f f).re) := by
+    Real.exp (-(1/2) * (freeCovarianceℂ_bilinear4 m f f).re) := by
   rw [gff_complex_generating, gff_two_point_equals_covarianceℂ_free, Complex.norm_exp]
   simp only [Complex.neg_re, Complex.mul_re]
   norm_num
@@ -226,8 +226,8 @@ lemma gff_generating_norm_eq (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) :
     satisfies Re C(f,f) = C(Re f, Re f) - C(Im f, Im f). Combined with monotonicity
     of exp, this gives the bound exp(-1/2 Re C(f,f)) ≤ exp(1/2 C(Im f, Im f)). -/
 lemma gff_generating_bound_by_imaginary (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) :
-  Real.exp (-(1/2) * (freeCovarianceℂ_bilinear m f f).re) ≤
-    Real.exp ((1/2) * (freeCovarianceℂ_bilinear m (toComplex (complex_testfunction_decompose f).2)
+  Real.exp (-(1/2) * (freeCovarianceℂ_bilinear4 m f f).re) ≤
+    Real.exp ((1/2) * (freeCovarianceℂ_bilinear4 m (toComplex (complex_testfunction_decompose f).2)
                                                      (toComplex (complex_testfunction_decompose f).2)).re) := by
   -- Apply monotonicity of exp: it suffices to show -(1/2) Re C(f,f) ≤ (1/2) C(Im f, Im f)
   apply Real.exp_le_exp.mpr
@@ -235,8 +235,8 @@ lemma gff_generating_bound_by_imaginary (m : ℝ) [Fact (0 < m)] (f : TestFuncti
   set fIm := (complex_testfunction_decompose f).2
   set fRe := (complex_testfunction_decompose f).1
   -- Equivalently: -Re C(f,f) ≤ Re C(toComplex fIm, toComplex fIm)
-  suffices h : -(freeCovarianceℂ_bilinear m f f).re ≤
-               (freeCovarianceℂ_bilinear m (toComplex fIm) (toComplex fIm)).re by linarith
+  suffices h : -(freeCovarianceℂ_bilinear4 m f f).re ≤
+               (freeCovarianceℂ_bilinear4 m (toComplex fIm) (toComplex fIm)).re by linarith
   -- Expand using toComplex to connect with the bilinear expansion
   let frC := toComplex fRe
   let fiC := toComplex fIm
@@ -245,54 +245,54 @@ lemma gff_generating_bound_by_imaginary (m : ℝ) [Fact (0 < m)] (f : TestFuncti
     simpa [frC, fiC, toComplex_apply, smul_eq_mul, complex_testfunction_decompose]
       using complex_testfunction_decompose_recompose f x
   -- Expand the bilinear form using bilinearity
-  have h_expand : freeCovarianceℂ_bilinear m f f =
-      freeCovarianceℂ_bilinear m frC frC + Complex.I * freeCovarianceℂ_bilinear m frC fiC +
-      Complex.I * freeCovarianceℂ_bilinear m fiC frC - freeCovarianceℂ_bilinear m fiC fiC := by
-    calc freeCovarianceℂ_bilinear m f f
-      _ = freeCovarianceℂ_bilinear m (frC + Complex.I • fiC) (frC + Complex.I • fiC) := by rw [hf]
-      _ = freeCovarianceℂ_bilinear m frC (frC + Complex.I • fiC) +
-          freeCovarianceℂ_bilinear m (Complex.I • fiC) (frC + Complex.I • fiC) := by
+  have h_expand : freeCovarianceℂ_bilinear4 m f f =
+      freeCovarianceℂ_bilinear4 m frC frC + Complex.I * freeCovarianceℂ_bilinear4 m frC fiC +
+      Complex.I * freeCovarianceℂ_bilinear4 m fiC frC - freeCovarianceℂ_bilinear4 m fiC fiC := by
+    calc freeCovarianceℂ_bilinear4 m f f
+      _ = freeCovarianceℂ_bilinear4 m (frC + Complex.I • fiC) (frC + Complex.I • fiC) := by rw [hf]
+      _ = freeCovarianceℂ_bilinear4 m frC (frC + Complex.I • fiC) +
+          freeCovarianceℂ_bilinear4 m (Complex.I • fiC) (frC + Complex.I • fiC) := by
         rw [freeCovarianceℂ_bilinear_add_left]
-      _ = freeCovarianceℂ_bilinear m frC frC + freeCovarianceℂ_bilinear m frC (Complex.I • fiC) +
-          (freeCovarianceℂ_bilinear m (Complex.I • fiC) frC +
-           freeCovarianceℂ_bilinear m (Complex.I • fiC) (Complex.I • fiC)) := by
+      _ = freeCovarianceℂ_bilinear4 m frC frC + freeCovarianceℂ_bilinear4 m frC (Complex.I • fiC) +
+          (freeCovarianceℂ_bilinear4 m (Complex.I • fiC) frC +
+           freeCovarianceℂ_bilinear4 m (Complex.I • fiC) (Complex.I • fiC)) := by
         rw [freeCovarianceℂ_bilinear_add_right, freeCovarianceℂ_bilinear_add_right]
-      _ = freeCovarianceℂ_bilinear m frC frC + Complex.I * freeCovarianceℂ_bilinear m frC fiC +
-          Complex.I * freeCovarianceℂ_bilinear m fiC frC - freeCovarianceℂ_bilinear m fiC fiC := by
+      _ = freeCovarianceℂ_bilinear4 m frC frC + Complex.I * freeCovarianceℂ_bilinear4 m frC fiC +
+          Complex.I * freeCovarianceℂ_bilinear4 m fiC frC - freeCovarianceℂ_bilinear4 m fiC fiC := by
         rw [freeCovarianceℂ_bilinear_smul_right, freeCovarianceℂ_bilinear_smul_left,
             freeCovarianceℂ_bilinear_smul_left, freeCovarianceℂ_bilinear_smul_right]
         -- Now we have I * (I * ...) which equals -(...) by I^2 = -1
-        rw [show Complex.I * (Complex.I * freeCovarianceℂ_bilinear m fiC fiC) =
-                 -(freeCovarianceℂ_bilinear m fiC fiC) by
+        rw [show Complex.I * (Complex.I * freeCovarianceℂ_bilinear4 m fiC fiC) =
+                 -(freeCovarianceℂ_bilinear4 m fiC fiC) by
                  rw [← mul_assoc, Complex.I_mul_I]; ring]
         ring
   -- Take real part: Re C(f,f) = Re C(frC,frC) - Re C(fiC,fiC)
   -- The cross terms with I have zero real part, so they vanish
-  have h_re : (freeCovarianceℂ_bilinear m f f).re =
-              (freeCovarianceℂ_bilinear m frC frC).re - (freeCovarianceℂ_bilinear m fiC fiC).re := by
+  have h_re : (freeCovarianceℂ_bilinear4 m f f).re =
+              (freeCovarianceℂ_bilinear4 m frC frC).re - (freeCovarianceℂ_bilinear4 m fiC fiC).re := by
     rw [h_expand]
     simp only [Complex.add_re, Complex.sub_re, Complex.mul_re, Complex.I_re, Complex.I_im]
     -- For real test functions frC and fiC, the bilinear form produces real values
     -- so the imaginary parts are zero
-    have h_im_zero : (freeCovarianceℂ_bilinear m frC fiC).im = 0 := by
+    have h_im_zero : (freeCovarianceℂ_bilinear4 m frC fiC).im = 0 := by
       -- Use agreement with the real covariance on real test functions
       have h := QFT.freeCovarianceℂ_bilinear_agrees_on_reals m fRe fIm
       -- Take imaginary parts; RHS is ofReal, hence zero imaginary part
       simpa [frC, fiC, Complex.ofReal_im] using congrArg Complex.im h
-    have h_im_zero' : (freeCovarianceℂ_bilinear m fiC frC).im = 0 := by
+    have h_im_zero' : (freeCovarianceℂ_bilinear4 m fiC frC).im = 0 := by
       -- Use symmetry
-      have : freeCovarianceℂ_bilinear m fiC frC = freeCovarianceℂ_bilinear m frC fiC :=
+      have : freeCovarianceℂ_bilinear4 m fiC frC = freeCovarianceℂ_bilinear4 m frC fiC :=
         freeCovarianceℂ_bilinear_symm m fiC frC
       rw [this, h_im_zero]
     simp [h_im_zero, h_im_zero']
   -- Therefore: -Re C(f,f) = -Re C(frC,frC) + Re C(fiC,fiC)
   rw [h_re]
   -- Since Re C(frC,frC) ≥ 0 by positivity, we have the bound
-  have h_pos : 0 ≤ (freeCovarianceℂ_bilinear m frC frC).re := by
+  have h_pos : 0 ≤ (freeCovarianceℂ_bilinear4 m frC frC).re := by
     -- For real test functions frC = toComplex fRe, the complex conjugate is the identity
-    -- so freeCovarianceℂ_bilinear agrees with freeCovarianceℂ
+    -- so freeCovarianceℂ_bilinear4 agrees with freeCovarianceℂ4
     rw [← freeCovarianceℂ_eq_bilinear_on_reals m]
-    exact freeCovarianceℂ_positive m frC
+    exact freeCovarianceℂ_positive4 m frC
   linarith
 
 /-
@@ -301,7 +301,7 @@ This uses the momentum space representation and the bound 1/(‖k‖² + m²) �
 plus Plancherel and the pointwise bound |Im f| ≤ |f|.
 -/
 lemma covariance_imaginary_L2_bound (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) :
-  (freeCovarianceℂ_bilinear m (toComplex (complex_testfunction_decompose f).2)
+  (freeCovarianceℂ_bilinear4 m (toComplex (complex_testfunction_decompose f).2)
                                (toComplex (complex_testfunction_decompose f).2)).re ≤
     (1 / m^2) * ∫ x, ‖f x‖^2 ∂volume := by
   -- Abbreviations
@@ -310,18 +310,18 @@ lemma covariance_imaginary_L2_bound (m : ℝ) [Fact (0 < m)] (f : TestFunction�
 
   -- Parseval: real part of the covariance equals the momentum-space integral
   have h_parsevalC :
-      (freeCovarianceℂ m (toComplex fIm) (toComplex fIm)).re
+      (freeCovarianceℂ4 m (toComplex fIm) (toComplex fIm)).re
         = ∫ k, ‖(SchwartzMap.fourierTransformCLM ℂ (toComplex fIm)) k‖^2 * freePropagatorMomentum_mathlib m k ∂volume :=
     parseval_covariance_schwartz_bessel m (toComplex fIm)
 
   -- For real test functions, complex covariance equals the complex bilinear form
   have h_eq_bilin :
-      freeCovarianceℂ m (toComplex fIm) (toComplex fIm)
-        = freeCovarianceℂ_bilinear m (toComplex fIm) (toComplex fIm) :=
+      freeCovarianceℂ4 m (toComplex fIm) (toComplex fIm)
+        = freeCovarianceℂ_bilinear4 m (toComplex fIm) (toComplex fIm) :=
     QFT.freeCovarianceℂ_eq_bilinear_on_reals m fIm fIm
 
   have h_re_eq :
-      (freeCovarianceℂ_bilinear m (toComplex fIm) (toComplex fIm)).re
+      (freeCovarianceℂ_bilinear4 m (toComplex fIm) (toComplex fIm)).re
         = ∫ k, ‖F k‖^2 * freePropagatorMomentum_mathlib m k ∂volume := by
     simpa [h_eq_bilin, F]
       using h_parsevalC
@@ -386,7 +386,7 @@ lemma covariance_imaginary_L2_bound (m : ℝ) [Fact (0 < m)] (f : TestFunction�
       _ = (1 / m^2) * ∫ k, ‖F k‖^2 ∂volume := h_const_pull
 
   -- Combine with Parseval to reach a bound in terms of ‖F‖²
-  have : (freeCovarianceℂ_bilinear m (toComplex fIm) (toComplex fIm)).re ≤
+  have : (freeCovarianceℂ_bilinear4 m (toComplex fIm) (toComplex fIm)).re ≤
       (1 / m^2) * (∫ k, ‖F k‖^2 ∂volume) := by
     simpa [h_re_eq] using h_weight_pull
 
@@ -428,7 +428,7 @@ lemma covariance_imaginary_L2_bound (m : ℝ) [Fact (0 < m)] (f : TestFunction�
       hf_sq_int (by intro x; exact sq_nonneg _) (by intro x; simpa using h_im_pointwise x)
 
   -- Final chain of inequalities
-  calc (freeCovarianceℂ_bilinear m (toComplex fIm) (toComplex fIm)).re
+  calc (freeCovarianceℂ_bilinear4 m (toComplex fIm) (toComplex fIm)).re
       ≤ (1 / m^2) * (∫ k, ‖F k‖^2 ∂volume) := this
     _ = (1 / m^2) * ∫ x, ‖(toComplex fIm) x‖^2 ∂volume := by simp [h_plancherel]
     _ ≤ (1 / m^2) * ∫ x, ‖f x‖^2 ∂volume := by
@@ -443,8 +443,8 @@ lemma gff_generating_L2_bound (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) :
     Real.exp ((1 / (2 * m^2)) * ∫ x, ‖f x‖^2 ∂volume) := by
   set fIm := (complex_testfunction_decompose f).2
   calc ‖GJGeneratingFunctionalℂ (gaussianFreeField_free m) f‖
-    _ = Real.exp (-(1/2) * (freeCovarianceℂ_bilinear m f f).re) := gff_generating_norm_eq m f
-    _ ≤ Real.exp ((1/2) * (freeCovarianceℂ_bilinear m (toComplex fIm) (toComplex fIm)).re) :=
+    _ = Real.exp (-(1/2) * (freeCovarianceℂ_bilinear4 m f f).re) := gff_generating_norm_eq m f
+    _ ≤ Real.exp ((1/2) * (freeCovarianceℂ_bilinear4 m (toComplex fIm) (toComplex fIm)).re) :=
         gff_generating_bound_by_imaginary m f
     _ ≤ Real.exp ((1/2) * ((1 / m^2) * ∫ x, ‖f x‖^2 ∂volume)) := by
         apply Real.exp_le_exp.mpr

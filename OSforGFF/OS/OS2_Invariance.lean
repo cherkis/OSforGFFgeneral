@@ -104,9 +104,9 @@ set_option linter.unusedSectionVars false in
 
     Need to carefully apply integral_prod and MeasurePreserving.prod to complete. -/
 theorem freeCovarianceℂ_bilinear_euclidean_invariant (g : E4) (f h : TestFunctionℂ4) :
-    freeCovarianceℂ_bilinear m (euclidean_action g f) (euclidean_action g h) =
-    freeCovarianceℂ_bilinear m f h := by
-  unfold freeCovarianceℂ_bilinear
+    freeCovarianceℂ_bilinear4 m (euclidean_action g f) (euclidean_action g h) =
+    freeCovarianceℂ_bilinear4 m f h := by
+  unfold freeCovarianceℂ_bilinear4
   simp only [euclidean_action_apply]
   -- Goal: ∫∫ f(g⁻¹•x) C(x,y) h(g⁻¹•y) dx dy = ∫∫ f(u) C(u,v) h(v) du dv
   -- Step 1: Rewrite C(x,y) using the identity x = g•(g⁻¹•x)
@@ -146,7 +146,7 @@ theorem freeCovarianceℂ_bilinear_euclidean_invariant (g : E4) (f h : TestFunct
 theorem CovarianceEuclideanInvariantℂ_μ_GFF :
     CovarianceEuclideanInvariantℂ (μ_GFF m) := by
   intro g f h
-  -- Reduce SchwingerFunctionℂ₂ to freeCovarianceℂ_bilinear via the Gaussian structure
+  -- Reduce SchwingerFunctionℂ₂ to freeCovarianceℂ_bilinear4 via the Gaussian structure
   -- μ_GFF m = gaussianFreeField_free m
   simp only [μ_GFF]
   rw [gff_two_point_equals_covarianceℂ_free, gff_two_point_equals_covarianceℂ_free]
