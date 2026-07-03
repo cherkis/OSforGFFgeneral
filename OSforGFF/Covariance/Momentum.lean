@@ -37,7 +37,7 @@ via Fourier transform.
 ## Main Definitions
 
 - `freePropagatorMomentum`: Momentum space propagator 1/(‖k‖²+m²)
-- `freeCovariance`: Position space covariance via Fourier transform
+- `freeCovariance4`: Position space covariance via Fourier transform
 - `freeCovarianceKernel`: Alternative name for compatibility
 - `propagatorMultiplication`: Linear operator for multiplication by propagator
 
@@ -459,7 +459,7 @@ noncomputable def freeCovarianceBessel (m : ℝ) (x y : SpaceTime4) : ℝ :=
   else (m / (4 * Real.pi^2 * r)) * besselK1 (m * r)
 
 /-- The free covariance in position space (abbreviation for the Bessel representation). -/
-noncomputable abbrev freeCovariance (m : ℝ) (x y : SpaceTime4) : ℝ :=
+noncomputable abbrev freeCovariance4 (m : ℝ) (x y : SpaceTime4) : ℝ :=
   freeCovarianceBessel m x y
 
 /-- The Bessel covariance is symmetric. -/
@@ -1196,8 +1196,8 @@ theorem freeCovariance_regulated_tendsto_bessel (m : ℝ) (hm : 0 < m) (x y : Sp
     The regulator exp(-α‖k‖²) makes the integral absolutely convergent for any α > 0.
     The limit exists and equals the Bessel form for x ≠ y. -/
 theorem freeCovariance_regulated_limit_eq_freeCovariance (m : ℝ) (hm : 0 < m) (x y : SpaceTime4) (hxy : x ≠ y) :
-    Filter.Tendsto (fun α => freeCovariance_regulated α m x y) (nhdsWithin 0 (Set.Ioi 0)) (nhds (freeCovariance m x y)) :=
-  -- This is exactly freeCovariance_regulated_tendsto_bessel since freeCovariance = freeCovarianceBessel
+    Filter.Tendsto (fun α => freeCovariance_regulated α m x y) (nhdsWithin 0 (Set.Ioi 0)) (nhds (freeCovariance4 m x y)) :=
+  -- This is exactly freeCovariance_regulated_tendsto_bessel since freeCovariance4 = freeCovarianceBessel
   freeCovariance_regulated_tendsto_bessel m hm x y hxy
 
 /-- **Domination bound (Schwinger):** The Schwinger-regulated covariance is bounded by a constant
@@ -1313,12 +1313,12 @@ lemma covarianceSchwingerRegulated_le_const_mul (m : ℝ) (hm : 0 < m) (r : ℝ)
 
 /-- **Domination bound:** For α ∈ (0, 1] and x ≠ y, the regulated covariance is bounded
     by a constant times the Bessel form:
-      |freeCovariance_regulated α m x y| ≤ exp(m²) × freeCovariance m x y
+      |freeCovariance_regulated α m x y| ≤ exp(m²) × freeCovariance4 m x y
 
     This bound enables dominated convergence for the bilinear form. -/
 lemma freeCovariance_regulated_le_const_mul_freeCovariance (m : ℝ) (hm : 0 < m)
     (x y : SpaceTime4) (hxy : x ≠ y) (α : ℝ) (hα : 0 < α) (hα1 : α ≤ 1) :
-    |freeCovariance_regulated α m x y| ≤ Real.exp (m^2) * freeCovariance m x y := by
+    |freeCovariance_regulated α m x y| ≤ Real.exp (m^2) * freeCovariance4 m x y := by
   have hr : 0 < ‖x - y‖ := norm_pos_iff.mpr (sub_ne_zero.mpr hxy)
   -- The regulated covariance is nonnegative (integral of positive integrand)
   have h_nonneg : 0 ≤ freeCovariance_regulated α m x y := by
@@ -1336,7 +1336,7 @@ lemma freeCovariance_regulated_le_const_mul_freeCovariance (m : ℝ) (hm : 0 < m
   -- Convert Schwinger to Bessel
   calc covarianceSchwingerRegulated α m ‖x - y‖
       ≤ Real.exp (m^2) * covarianceSchwingerRep m ‖x - y‖ := h_bound
-    _ = Real.exp (m^2) * freeCovariance m x y := by
+    _ = Real.exp (m^2) * freeCovariance4 m x y := by
         rw [covarianceSchwingerRep_eq_freeCovarianceBessel m hm x y hxy]
 
 /-- The Gaussian regulator exp(-α‖k‖²) is integrable on SpaceTime4 for α > 0. -/
@@ -1529,7 +1529,7 @@ lemma aestronglyMeasurable_freeCovariance_regulated (α : ℝ) (hα : 0 < α) (m
     Continuity implies strong measurability, hence AEStronglyMeasurable. -/
 lemma aestronglyMeasurable_freeCovariance (m : ℝ) [Fact (0 < m)] :
     AEStronglyMeasurable
-      (fun p : SpaceTime4 × SpaceTime4 => (freeCovariance m p.1 p.2 : ℂ))
+      (fun p : SpaceTime4 × SpaceTime4 => (freeCovariance4 m p.1 p.2 : ℂ))
       (volume.prod volume) := by
   -- The Bessel covariance is continuous off the diagonal, and the diagonal has measure zero.
   -- Strategy: Show continuity on the off-diagonal (which is conull), then lift to full space.
@@ -1569,9 +1569,9 @@ lemma aestronglyMeasurable_freeCovariance (m : ℝ) [Fact (0 < m)] :
   · rw [compl_compl]; exact h_diag_null
   -- Step 5: Show continuity on the off-diagonal
   have hS_open : IsOpen S := isOpen_compl_iff.mpr isClosed_diagonal
-  have hcont : ContinuousOn (fun p : SpaceTime4 × SpaceTime4 => (freeCovariance m p.1 p.2 : ℂ)) S := by
+  have hcont : ContinuousOn (fun p : SpaceTime4 × SpaceTime4 => (freeCovariance4 m p.1 p.2 : ℂ)) S := by
     apply Complex.continuous_ofReal.comp_continuousOn
-    -- freeCovariance m p.1 p.2 = (m / (4π²‖p.1-p.2‖)) * K₁(m‖p.1-p.2‖) on off-diagonal
+    -- freeCovariance4 m p.1 p.2 = (m / (4π²‖p.1-p.2‖)) * K₁(m‖p.1-p.2‖) on off-diagonal
     -- This factors as g ∘ (‖fst - snd‖) where g(r) = (m/(4π²r)) * K₁(mr)
     have h_norm_cont : Continuous (fun p : SpaceTime4 × SpaceTime4 => ‖p.1 - p.2‖) :=
       continuous_norm.comp (continuous_fst.sub continuous_snd)
@@ -1587,12 +1587,12 @@ lemma aestronglyMeasurable_freeCovariance (m : ℝ) [Fact (0 < m)] :
         exact mul_pos hm hr
     -- Show the composed function is continuous on S
     -- On S, the function equals the formula (since ‖p.1 - p.2‖ ≠ 0)
-    have h_eq : Set.EqOn (fun p => freeCovariance m p.1 p.2)
+    have h_eq : Set.EqOn (fun p => freeCovariance4 m p.1 p.2)
         (fun p => (m / (4 * Real.pi^2 * ‖p.1 - p.2‖)) * besselK1 (m * ‖p.1 - p.2‖)) S := by
       intro p hp
       rw [Set.mem_compl_iff, Set.mem_diagonal_iff] at hp
       have hr_ne : ‖p.1 - p.2‖ ≠ 0 := norm_ne_zero_iff.mpr (sub_ne_zero.mpr hp)
-      unfold freeCovariance freeCovarianceBessel
+      unfold freeCovariance4 freeCovarianceBessel
       simp only [hr_ne, ↓reduceIte]
     -- The formula is continuous on S (composition of continuous functions)
     have h_comp_cont : ContinuousOn
@@ -1669,7 +1669,7 @@ theorem freeCovariance_regulated_bilinear_integrable (α : ℝ) (hα : 0 < α) (
 
 /-- The free covariance kernel (alternative name for compatibility) -/
 noncomputable def freeCovarianceKernel (m : ℝ) (z : SpaceTime4) : ℝ :=
-  freeCovariance m 0 z
+  freeCovariance4 m 0 z
 
 /-- The Bessel covariance kernel is L¹ (integrable on SpaceTime4).
 
@@ -1684,7 +1684,7 @@ lemma freeCovarianceKernel_integrable (m : ℝ) (hm : 0 < m) :
   let f : ℝ → ℝ := fun r => if r = 0 then 0 else (m / (4 * Real.pi^2 * r)) * besselK1 (m * r)
   have h_kernel_eq : ∀ z : SpaceTime4, freeCovarianceKernel m z = f ‖z‖ := by
     intro z
-    simp only [freeCovarianceKernel, freeCovariance, freeCovarianceBessel]
+    simp only [freeCovarianceKernel, freeCovariance4, freeCovarianceBessel]
     simp only [zero_sub, norm_neg]
     rfl
   rw [show (freeCovarianceKernel m) = (fun z => f ‖z‖) from funext h_kernel_eq]
@@ -1721,14 +1721,14 @@ lemma freeCovarianceKernel_decay_bound (m : ℝ) (hm : 0 < m) :
   by_cases hz : ‖z‖ = 0
   · -- z = 0: kernel is 0, bound is trivially satisfied since 0^(-2) = 0
     have hz' : z = 0 := norm_eq_zero.mp hz
-    simp only [hz', norm_zero, freeCovarianceKernel, freeCovariance, freeCovarianceBessel,
+    simp only [hz', norm_zero, freeCovarianceKernel, freeCovariance4, freeCovarianceBessel,
                sub_zero, if_true, abs_zero]
     rw [Real.zero_rpow (by norm_num : (-2 : ℝ) ≠ 0), mul_zero]
   · -- z ≠ 0: use Bessel bounds
     have hr_pos : 0 < ‖z‖ := norm_pos_iff.mpr (norm_ne_zero_iff.mp hz)
     -- Rewrite kernel in terms of Bessel function
     have h_kernel : freeCovarianceKernel m z = (m / (4 * Real.pi^2 * ‖z‖)) * besselK1 (m * ‖z‖) := by
-      simp only [freeCovarianceKernel, freeCovariance, freeCovarianceBessel, zero_sub, norm_neg, hz,
+      simp only [freeCovarianceKernel, freeCovariance4, freeCovarianceBessel, zero_sub, norm_neg, hz,
                  if_false]
     rw [h_kernel]
     -- The kernel is nonnegative for m > 0 and z ≠ 0
@@ -1869,7 +1869,7 @@ lemma freeCovarianceKernel_decay_bound (m : ℝ) (hm : 0 < m) :
     - The condition m‖u-v‖ ≥ 1, which implies ‖u-v‖ ≥ 1/m, so m/‖u-v‖ ≤ m² -/
 lemma freeCovariance_exponential_bound (m : ℝ) (hm : 0 < m) (u v : SpaceTime4)
     (h_sep : 1 ≤ m * ‖u - v‖) :
-    |freeCovariance m u v| ≤ (m^2 * (Real.sinh 1 + 2) / (4 * Real.pi^2)) * Real.exp (-m * ‖u - v‖) := by
+    |freeCovariance4 m u v| ≤ (m^2 * (Real.sinh 1 + 2) / (4 * Real.pi^2)) * Real.exp (-m * ‖u - v‖) := by
   -- The covariance is positive for distinct points, so |C| = C
   have huv : u ≠ v := by
     intro heq
@@ -1930,7 +1930,7 @@ for compatibility with code that uses the Fact type class. -/
 /-- Exponential bound with `[Fact (0 < m)]` type class. -/
 lemma freeCovariance_exponential_bound' (m : ℝ) [Fact (0 < m)] (u v : SpaceTime4)
     (h_sep : 1 ≤ m * ‖u - v‖) :
-    |freeCovariance m u v| ≤ (m^2 * (Real.sinh 1 + 2) / (4 * Real.pi^2)) * Real.exp (-m * ‖u - v‖) :=
+    |freeCovariance4 m u v| ≤ (m^2 * (Real.sinh 1 + 2) / (4 * Real.pi^2)) * Real.exp (-m * ‖u - v‖) :=
   freeCovariance_exponential_bound m Fact.out u v h_sep
 
 /-- **Continuity of the free covariance kernel away from the origin.**
@@ -1974,7 +1974,7 @@ lemma freeCovarianceKernel_continuousOn (m : ℝ) (hm : 0 < m) :
       freeCovarianceKernel m z = (m / (4 * Real.pi^2 * ‖z‖)) * besselK1 (m * ‖z‖) := by
     intro z hz
     simp only [Set.mem_setOf_eq] at hz
-    unfold freeCovarianceKernel freeCovariance freeCovarianceBessel
+    unfold freeCovarianceKernel freeCovariance4 freeCovarianceBessel
     simp only [zero_sub, norm_neg]
     have h_norm_ne : ‖z‖ ≠ 0 := norm_ne_zero_iff.mpr hz
     simp only [h_norm_ne, ↓reduceIte]
@@ -1985,11 +1985,11 @@ lemma freeCovarianceKernel_continuousOn (m : ℝ) (hm : 0 < m) :
     This uses the L¹ integrability of the translation-invariant Bessel kernel. -/
 theorem freeCovarianceℂ_bilinear_integrable' (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ4) :
     Integrable (fun p : SpaceTime4 × SpaceTime4 =>
-      (f p.1) * (freeCovariance m p.1 p.2 : ℂ) * (g p.2)) volume := by
-  have h_transl_inv : ∀ x y, freeCovariance m x y = freeCovarianceKernel m (x - y) := by
+      (f p.1) * (freeCovariance4 m p.1 p.2 : ℂ) * (g p.2)) volume := by
+  have h_transl_inv : ∀ x y, freeCovariance4 m x y = freeCovarianceKernel m (x - y) := by
     intro x y
-    simp only [freeCovarianceKernel, freeCovariance, freeCovarianceBessel, zero_sub, norm_neg]
-  have h_eq : (fun p : SpaceTime4 × SpaceTime4 => f p.1 * (freeCovariance m p.1 p.2 : ℂ) * g p.2) =
+    simp only [freeCovarianceKernel, freeCovariance4, freeCovarianceBessel, zero_sub, norm_neg]
+  have h_eq : (fun p : SpaceTime4 × SpaceTime4 => f p.1 * (freeCovariance4 m p.1 p.2 : ℂ) * g p.2) =
       (fun p => f p.1 * ((freeCovarianceKernel m (p.1 - p.2) : ℝ) : ℂ) * g p.2) := by
     ext p
     rw [h_transl_inv p.1 p.2]
@@ -2014,17 +2014,17 @@ theorem integral_comp_neg_spacetime {E : Type*} [NormedAddCommGroup E] [NormedSp
 
 /-- Position-space free covariance is symmetric: `C(x,y) = C(y,x)`. -/
 lemma freeCovariance_symmetric (m : ℝ) (x y : SpaceTime4) :
-    freeCovariance m x y = freeCovariance m y x :=
+    freeCovariance4 m x y = freeCovariance4 m y x :=
   freeCovarianceBessel_symm m x y
 
 /-- The position-space free covariance is real-valued after ℂ coercion. -/
 @[simp] lemma freeCovariance_star (m : ℝ) (x y : SpaceTime4) :
-  star (freeCovariance m x y : ℂ) = (freeCovariance m x y : ℂ) := by
+  star (freeCovariance4 m x y : ℂ) = (freeCovariance4 m x y : ℂ) := by
   simp
 
 /-- Hermiticity of the complex-lifted position-space kernel. -/
 @[simp] lemma freeCovariance_hermitian (m : ℝ) (x y : SpaceTime4) :
-  (freeCovariance m x y : ℂ) = star (freeCovariance m y x : ℂ) := by
+  (freeCovariance4 m x y : ℂ) = star (freeCovariance4 m y x : ℂ) := by
   -- symmetry plus real-valuedness
   simp [freeCovariance_symmetric m x y]
 

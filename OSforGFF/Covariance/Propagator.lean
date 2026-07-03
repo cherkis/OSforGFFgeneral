@@ -430,3 +430,32 @@ end GFFPropagator
 end
 
 end OSforGFF
+
+noncomputable section
+
+open OSforGFF
+
+/-- The position-space free covariance kernel: `C(x, y) = Cprofile ‖x - y‖`, radial in the
+    separation. The per-`d` closed form enters only through `GFFPropagator.Cprofile`. -/
+def freeCovariance (d : ℕ) (m : ℝ) [Fact (0 < m)] [Fact (2 ≤ d)] [GFFPropagator d m]
+    (x y : EuclideanSpace ℝ (Fin d)) : ℝ :=
+  GFFPropagator.Cprofile (d := d) (m := m) ‖x - y‖
+
+variable {d : ℕ} {m : ℝ} [Fact (0 < m)] [Fact (2 ≤ d)] [GFFPropagator d m]
+
+/-- The covariance kernel is symmetric: `C(x, y) = C(y, x)`. -/
+lemma freeCovariance_symm (x y : EuclideanSpace ℝ (Fin d)) :
+    freeCovariance d m x y = freeCovariance d m y x := by
+  unfold freeCovariance
+  rw [norm_sub_rev]
+
+/-- The covariance kernel is invariant under simultaneous isometric moves of both points:
+    for a linear isometry `R` and translation `t`, `C(Rx + t, Ry + t) = C(x, y)`. -/
+lemma freeCovariance_isometry_invariant
+    (R : LinearIsometry (RingHom.id ℝ) (EuclideanSpace ℝ (Fin d)) (EuclideanSpace ℝ (Fin d)))
+    (t : EuclideanSpace ℝ (Fin d)) (x y : EuclideanSpace ℝ (Fin d)) :
+    freeCovariance d m (R x + t) (R y + t) = freeCovariance d m x y := by
+  unfold freeCovariance
+  rw [show R x + t - (R y + t) = R (x - y) by rw [map_sub]; abel, R.norm_map]
+
+end

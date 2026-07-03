@@ -112,16 +112,16 @@ theorem schwingerTwoPointFunction_eq_GFF (m : ℝ) [Fact (0 < m)] (x : SpaceTime
     simp only [distributionPairing]
     -- Step 2: For GFF, ∫ω (ωf)(ωg) = freeCovarianceFormR via schwinger_eq_covariance_real
     rw [GFFIsGaussian.schwinger_eq_covariance_real m f g]
-    -- Step 3: freeCovarianceFormR = ∫∫ f(u) * freeCovariance(u,v) * g(v)
+    -- Step 3: freeCovarianceFormR = ∫∫ f(u) * freeCovariance4(u,v) * g(v)
     unfold freeCovarianceFormR
-    -- Step 4: freeCovariance(x,y) = freeCovarianceKernel(x-y) by translation invariance
+    -- Step 4: freeCovariance4(x,y) = freeCovarianceKernel(x-y) by translation invariance
     congr 1
     ext u
     congr 1
     ext v
     -- The kernel is translation invariant
-    have h_transl : freeCovariance m u v = freeCovarianceKernel m (u - v) := by
-      simp only [freeCovarianceKernel, freeCovariance, freeCovarianceBessel, zero_sub, norm_neg]
+    have h_transl : freeCovariance4 m u v = freeCovarianceKernel m (u - v) := by
+      simp only [freeCovarianceKernel, freeCovariance4, freeCovarianceBessel, zero_sub, norm_neg]
     rw [h_transl]
   -- Apply the general kernel theorem
   rw [schwingerTwoPointFunction_eq_kernel (gaussianFreeField_free m) x hx

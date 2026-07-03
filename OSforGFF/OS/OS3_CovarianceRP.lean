@@ -77,7 +77,7 @@ noncomputable def spatialDot (k_spatial x_spatial : SpatialCoords4) : ℝ :=
   ∑ i, k_spatial i * x_spatial i
 
 noncomputable def freeCovarianceℂ_bilinear (m : ℝ) (f g : TestFunctionℂ4) : ℂ :=
-  ∫ x, ∫ y, (f x) * (_root_.freeCovariance m x y) * (g y)
+  ∫ x, ∫ y, (f x) * (_root_.freeCovariance4 m x y) * (g y)
 
 noncomputable def weightedLaplaceFourier (m : ℝ) (f : TestFunctionℂ4) (k_sp : SpatialCoords4) : ℂ :=
   let ω := Real.sqrt (‖k_sp‖^2 + m^2)
@@ -98,7 +98,7 @@ omit [Fact (0 < m)] in
 theorem rpInnerProduct_eq_bessel_reflected (f : TestFunctionℂ4) :
     rpInnerProduct m f =
       ∫ x : SpaceTime4, ∫ y : SpaceTime4,
-        (starRingEnd ℂ (f x)) * (_root_.freeCovariance m (timeReflection x) y : ℂ) * f y := by
+        (starRingEnd ℂ (f x)) * (_root_.freeCovariance4 m (timeReflection x) y : ℂ) * f y := by
   unfold rpInnerProduct freeCovarianceℂ_bilinear
   have h_star : ∀ x, (star f) x = starRingEnd ℂ (f (timeReflection x)) := star_apply f
   simp_rw [h_star]
@@ -106,7 +106,7 @@ theorem rpInnerProduct_eq_bessel_reflected (f : TestFunctionℂ4) :
   have h_inv : ∀ x : SpaceTime4, timeReflection (timeReflection x) = x := fun x => by
     simp [timeReflection, Function.update]
   let G := fun x => ∫ y, (starRingEnd ℂ (f (timeReflection x))) *
-      (_root_.freeCovariance m x y : ℂ) * f y
+      (_root_.freeCovariance4 m x y : ℂ) * f y
   have h_cov : ∫ x, G x = ∫ x, G (timeReflection x) :=
     (h_mp.integral_comp QFT.timeReflectionLE.toMeasurableEquiv.measurableEmbedding G).symm
   conv_lhs => rw [h_cov]
@@ -387,7 +387,7 @@ end RPProof
     so this equality holds by definition (rfl). -/
 lemma rpInnerProduct_eq_rpProof (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) :
     rpInnerProduct m f = RPProof.rpInnerProduct m f := by
-  -- Both sides expand to the same integral using freeCovariance (Bessel)
+  -- Both sides expand to the same integral using freeCovariance4 (Bessel)
   unfold rpInnerProduct RPProof.rpInnerProduct
   unfold freeCovarianceℂ_bilinear RPProof.freeCovarianceℂ_bilinear
   rfl
@@ -435,7 +435,7 @@ lemma rpInnerProduct_toComplex_eq (m : ℝ) (f : TestFunction4) :
 /-- For real test functions, the reflection positivity inner product is non-negative. -/
 theorem freeCovariance_reflection_positive_bilinear_real (m : ℝ) [Fact (0 < m)] (f : TestFunction4)
     (hf_supp : ∀ x : SpaceTime4, x 0 ≤ 0 → f x = 0) :
-  0 ≤ ∫ x, ∫ y, (QFT.compTimeReflectionReal f) x * freeCovariance m x y * f y := by
+  0 ≤ ∫ x, ∫ y, (QFT.compTimeReflectionReal f) x * freeCovariance4 m x y * f y := by
   -- Use the complex theorem for toComplex f
   have h_complex := freeCovariance_reflection_positive_bilinear m (toComplex f) (by
     intro x hx
@@ -445,7 +445,7 @@ theorem freeCovariance_reflection_positive_bilinear_real (m : ℝ) [Fact (0 < m)
   -- Connect the real integral to the complex one via real_integral_eq_complex_re
   rw [real_integral_eq_complex_re m f]
   -- Show that the complex integral equals rpInnerProduct
-  have h_eq : (∫ x, ∫ y, (QFT.compTimeReflection (toComplex f)) x * (freeCovariance m x y : ℂ)
+  have h_eq : (∫ x, ∫ y, (QFT.compTimeReflection (toComplex f)) x * (freeCovariance4 m x y : ℂ)
         * (toComplex f) y ∂volume ∂volume)
       = rpInnerProduct m (toComplex f) := by
     rw [rpInnerProduct_toComplex_eq]
@@ -456,7 +456,7 @@ theorem freeCovariance_reflection_positive_bilinear_real (m : ℝ) [Fact (0 < m)
 /-- Alias for `freeCovariance_reflection_positive_bilinear_real` to match expected name. -/
 theorem freeCovariance_reflection_positive_real (m : ℝ) [Fact (0 < m)] (f : TestFunction4)
     (hf_supp : ∀ x : SpaceTime4, x 0 ≤ 0 → f x = 0) :
-  0 ≤ ∫ x, ∫ y, (QFT.compTimeReflectionReal f) x * freeCovariance m x y * f y :=
+  0 ≤ ∫ x, ∫ y, (QFT.compTimeReflectionReal f) x * freeCovariance4 m x y * f y :=
   freeCovariance_reflection_positive_bilinear_real m f hf_supp
 
 end QFT

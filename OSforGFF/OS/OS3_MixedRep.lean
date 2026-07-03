@@ -1237,19 +1237,19 @@ theorem schwinger_fubini_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) :
     This follows from `covarianceSchwingerRep_eq_freeCovarianceBessel`. -/
 lemma freeCovariance_eq_schwingerRep (m : ℝ) (hm : 0 < m) (x y : SpaceTime4)
     (hxy : timeReflection x ≠ y) :
-    (freeCovariance m (timeReflection x) y : ℂ) =
+    (freeCovariance4 m (timeReflection x) y : ℂ) =
     ∫ s in Set.Ioi 0, (Real.exp (-s * m^2) : ℂ) *
       heatKernelPositionSpace s ‖timeReflection x - y‖ := by
   -- Use covarianceSchwingerRep_eq_freeCovarianceBessel + definitions
   have h := covarianceSchwingerRep_eq_freeCovarianceBessel m hm (timeReflection x) y hxy
   -- h : covarianceSchwingerRep m ‖Θx - y‖ = freeCovarianceBessel m (Θx) y
-  -- freeCovariance = freeCovarianceBessel by definition (abbrev)
-  -- So h says: covarianceSchwingerRep m ‖Θx-y‖ = freeCovariance m (Θx) y
+  -- freeCovariance4 = freeCovarianceBessel by definition (abbrev)
+  -- So h says: covarianceSchwingerRep m ‖Θx-y‖ = freeCovariance4 m (Θx) y
   -- Unfold covarianceSchwingerRep in h
   simp only [covarianceSchwingerRep] at h
   -- Now h : ∫ t in Ioi 0, exp(-t*m²) * H(t, ‖Θx-y‖) = freeCovarianceBessel m (Θx) y
-  -- Since freeCovariance = freeCovarianceBessel (by abbrev):
-  have h' : freeCovariance m (timeReflection x) y =
+  -- Since freeCovariance4 = freeCovarianceBessel (by abbrev):
+  have h' : freeCovariance4 m (timeReflection x) y =
       ∫ t in Set.Ioi 0, Real.exp (-t * m^2) * heatKernelPositionSpace t ‖timeReflection x - y‖ :=
     h.symm
   -- Cast to complex
@@ -1267,7 +1267,7 @@ lemma freeCovariance_eq_schwingerRep (m : ℝ) (hm : 0 < m) (x y : SpaceTime4)
 
     This follows from:
     1. **Kernel equality** (a.e.): For Θx ≠ y (which is a.e. in the product measure),
-       freeCovariance(Θx, y) = covarianceSchwingerRep(|Θx - y|) = ∫₀^∞ e^{-sm²} H(s, |Θx-y|) ds
+       freeCovariance4(Θx, y) = covarianceSchwingerRep(|Θx - y|) = ∫₀^∞ e^{-sm²} H(s, |Θx-y|) ds
        This is proven via `covarianceSchwingerRep_eq_freeCovarianceBessel`.
 
     2. **Fubini swap**: Exchanging the s-integral with the x,y-integrals.
@@ -1278,7 +1278,7 @@ lemma freeCovariance_eq_schwingerRep (m : ℝ) (hm : 0 < m) (x y : SpaceTime4)
 -/
 theorem bilinear_schwinger_eq_heatKernel (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) :
     ∫ x : SpaceTime4, ∫ y : SpaceTime4,
-      (starRingEnd ℂ (f x)) * (freeCovariance m (timeReflection x) y : ℂ) * f y =
+      (starRingEnd ℂ (f x)) * (freeCovariance4 m (timeReflection x) y : ℂ) * f y =
     ∫ s in Set.Ioi 0, (Real.exp (-s * m^2) : ℂ) *
       ∫ x : SpaceTime4, ∫ y : SpaceTime4,
         (starRingEnd ℂ (f x)) * f y * heatKernelPositionSpace s ‖timeReflection x - y‖ := by
@@ -1291,7 +1291,7 @@ theorem bilinear_schwinger_eq_heatKernel (m : ℝ) [Fact (0 < m)] (f : TestFunct
   have h_int := schwinger_bilinear_integrable m f
 
   -- Step 1: Rewrite LHS by substituting kernel equality for each (x,y)
-  -- For Θx ≠ y: freeCovariance m (Θx) y = ∫ s, exp(-sm²) H(s, ‖Θx-y‖)
+  -- For Θx ≠ y: freeCovariance4 m (Θx) y = ∫ s, exp(-sm²) H(s, ‖Θx-y‖)
   -- The set {(x,y) : Θx = y} has measure zero in SpaceTime4 × SpaceTime4
 
   -- The integrand transformation:
@@ -1318,7 +1318,7 @@ theorem bilinear_schwinger_eq_heatKernel (m : ℝ) [Fact (0 < m)] (f : TestFunct
   -- Step 1: Rewrite LHS using kernel equality
   -- For each (x,y) with Θx ≠ y, substitute the Schwinger representation
   have h_kernel_eq : ∀ x y, timeReflection x ≠ y →
-      (starRingEnd ℂ (f x)) * (freeCovariance m (timeReflection x) y : ℂ) * f y =
+      (starRingEnd ℂ (f x)) * (freeCovariance4 m (timeReflection x) y : ℂ) * f y =
       (starRingEnd ℂ (f x)) * f y *
         (∫ s in Set.Ioi 0, (Real.exp (-s * m^2) : ℂ) *
           heatKernelPositionSpace s ‖timeReflection x - y‖) := by
@@ -1333,7 +1333,7 @@ theorem bilinear_schwinger_eq_heatKernel (m : ℝ) [Fact (0 < m)] (f : TestFunct
   -- The set where Θx = y is a proper affine subspace, hence has measure zero
   -- For each x, {y : Θx = y} is a singleton, which has measure zero (NoAtoms).
   have h_ae : ∀ᵐ x ∂(volume : Measure SpaceTime4), ∀ᵐ y ∂volume,
-      (starRingEnd ℂ (f x)) * (freeCovariance m (timeReflection x) y : ℂ) * f y =
+      (starRingEnd ℂ (f x)) * (freeCovariance4 m (timeReflection x) y : ℂ) * f y =
       (starRingEnd ℂ (f x)) * f y *
         (∫ s in Set.Ioi 0, (Real.exp (-s * m^2) : ℂ) *
           heatKernelPositionSpace s ‖timeReflection x - y‖) := by
@@ -1355,7 +1355,7 @@ theorem bilinear_schwinger_eq_heatKernel (m : ℝ) [Fact (0 < m)] (f : TestFunct
 
   -- Step 3: Rewrite LHS using a.e. equality
   have lhs_eq : ∫ x : SpaceTime4, ∫ y : SpaceTime4,
-        (starRingEnd ℂ (f x)) * (freeCovariance m (timeReflection x) y : ℂ) * f y =
+        (starRingEnd ℂ (f x)) * (freeCovariance4 m (timeReflection x) y : ℂ) * f y =
       ∫ x : SpaceTime4, ∫ y : SpaceTime4,
         (starRingEnd ℂ (f x)) * f y *
           (∫ s in Set.Ioi 0, (Real.exp (-s * m^2) : ℂ) *
@@ -1670,7 +1670,7 @@ theorem bessel_bilinear_eq_mixed_representation (m : ℝ) [Fact (0 < m)] (f : Te
     (hf_supp : ∀ x, x 0 ≤ 0 → f x = 0) :
   ∫ x : SpaceTime4, ∫ y : SpaceTime4,
     (starRingEnd ℂ (f x)) *
-    (freeCovariance m (timeReflection x) y : ℂ) *
+    (freeCovariance4 m (timeReflection x) y : ℂ) *
     f y =
   (1 / (2 * (2 * π) ^ (STDimension - 1)) : ℝ) *
   ∫ k_spatial : SpatialCoords4, ∫ x : SpaceTime4, ∫ y : SpaceTime4,
@@ -1731,7 +1731,7 @@ theorem bilinear_to_k0_inside (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4)
     (hf_supp : ∀ x, x 0 ≤ 0 → f x = 0) :
   ∫ x : SpaceTime4, ∫ y : SpaceTime4,
     (starRingEnd ℂ (f x)) *
-    (freeCovariance m (timeReflection x) y : ℂ) *
+    (freeCovariance4 m (timeReflection x) y : ℂ) *
     f y =
   (1 / (2 * π) ^ STDimension : ℝ) *
   ∫ k_spatial : SpatialCoords4, ∫ x : SpaceTime4, ∫ y : SpaceTime4,

@@ -405,22 +405,22 @@ theorem schwartz_cross_covariance_decay_real (m : ℝ) [Fact (0 < m)]
           rw [h_schwinger1]
           simp only [distributionPairing]
           exact h_schwinger2
-        -- Step 6c: freeCovarianceFormR uses freeCovariance = freeCovarianceKernel (x - y)
-        -- freeCovarianceFormR m f h = ∫∫ f(x) freeCovariance(x,y) h(y) dx dy
+        -- Step 6c: freeCovarianceFormR uses freeCovariance4 = freeCovarianceKernel (x - y)
+        -- freeCovarianceFormR m f h = ∫∫ f(x) freeCovariance4(x,y) h(y) dx dy
         -- and (g.translate a)(y) = g(y - a)
         rw [h_schwinger]
         -- Convert the real integral to complex
-        -- Key: freeCovarianceFormR = ∫∫ f(x) * freeCovariance(x,y) * h(y)
-        -- and freeCovariance m x y = freeCovarianceKernel m (x - y)
+        -- Key: freeCovarianceFormR = ∫∫ f(x) * freeCovariance4(x,y) * h(y)
+        -- and freeCovariance4 m x y = freeCovarianceKernel m (x - y)
         congr 1
         -- Show: (freeCovarianceFormR m f (g.translate a) : ℂ)
         --     = ∫∫ (toComplex f) x * (freeCovarianceKernel m (x-y) : ℂ) * (toComplex g) (y-a)
         unfold freeCovarianceFormR
-        -- Now LHS = (∫∫ f(x) * freeCovariance(x,y) * (g.translate a)(y) : ℂ)
-        -- Use translation invariance: freeCovariance m x y = freeCovarianceKernel m (x - y)
-        have h_transl_inv : ∀ x y, freeCovariance m x y = freeCovarianceKernel m (x - y) := by
+        -- Now LHS = (∫∫ f(x) * freeCovariance4(x,y) * (g.translate a)(y) : ℂ)
+        -- Use translation invariance: freeCovariance4 m x y = freeCovarianceKernel m (x - y)
+        have h_transl_inv : ∀ x y, freeCovariance4 m x y = freeCovarianceKernel m (x - y) := by
           intro x y
-          unfold freeCovarianceKernel freeCovariance freeCovarianceBessel
+          unfold freeCovarianceKernel freeCovariance4 freeCovarianceBessel
           simp only [zero_sub, norm_neg]
         -- Use translate_apply: (g.translate a) y = g (y - a)
         simp_rw [SchwartzMap.translate_apply, h_transl_inv, toComplex_apply]
@@ -573,14 +573,14 @@ lemma timeTranslationSchwartzℂ_neg_eq_sub (s : ℝ) (g : TestFunctionℂ4) (y 
   simp only [PiLp.add_apply, PiLp.sub_apply]
   split_ifs <;> ring
 
-/-- freeCovariance is translation-invariant: C(x,y) = C(0, x-y) = freeCovarianceKernel(x-y). -/
+/-- freeCovariance4 is translation-invariant: C(x,y) = C(0, x-y) = freeCovarianceKernel(x-y). -/
 lemma freeCovariance_eq_kernel (m : ℝ) (x y : SpaceTime4) :
-    freeCovariance m x y = freeCovarianceKernel m (x - y) := by
-  -- freeCovariance m x y = freeCovarianceBessel m x y = (m / (4π²r)) K₁(mr) where r = ‖x - y‖
-  -- freeCovarianceKernel m z = freeCovariance m 0 z = freeCovarianceBessel m 0 z
+    freeCovariance4 m x y = freeCovarianceKernel m (x - y) := by
+  -- freeCovariance4 m x y = freeCovarianceBessel m x y = (m / (4π²r)) K₁(mr) where r = ‖x - y‖
+  -- freeCovarianceKernel m z = freeCovariance4 m 0 z = freeCovarianceBessel m 0 z
   --   = (m / (4π²r')) K₁(mr') where r' = ‖0 - z‖ = ‖z‖
   -- For z = x - y: r' = ‖x - y‖ = r
-  unfold freeCovarianceKernel freeCovariance freeCovarianceBessel
+  unfold freeCovarianceKernel freeCovariance4 freeCovarianceBessel
   -- Goal: ‖x - y‖ = ‖0 - (x - y)‖
   rw [zero_sub, norm_neg]
 
@@ -592,7 +592,7 @@ lemma schwinger2_time_translated_eq_bilinear (m : ℝ) [Fact (0 < m)] (f g : Tes
       f x * (freeCovarianceKernel m (x - y) : ℂ) * g (y - TimeTranslation.timeShiftConst s) := by
   -- S₂(f, T_{-s} g) = freeCovarianceℂ_bilinear m f (T_{-s} g)
   rw [gff_two_point_equals_covarianceℂ_free]
-  -- freeCovarianceℂ_bilinear m f g = ∫∫ f(x) · freeCovariance(x,y) · g(y) dx dy
+  -- freeCovarianceℂ_bilinear m f g = ∫∫ f(x) · freeCovariance4(x,y) · g(y) dx dy
   unfold freeCovarianceℂ_bilinear
   -- Expand T_{-s} g at point y and use kernel identity
   congr 1 with x
@@ -632,7 +632,7 @@ theorem gaussianFreeField_satisfies_OS4_PolynomialClustering (m : ℝ) [Fact (0 
       simp only [Set.mem_compl_iff, Metric.mem_closedBall, dist_zero_right, not_le] at hz
       exact norm_ne_zero_iff.mp (ne_of_gt (lt_of_lt_of_le (by positivity) (le_of_lt hz)))
 
-  -- Convert exponential bound from freeCovariance to freeCovarianceKernel
+  -- Convert exponential bound from freeCovariance4 to freeCovarianceKernel
   have hK_decay : ∀ z : SpaceTime4, ‖z‖ ≥ 1/m → |freeCovarianceKernel m z| ≤ C_exp * Real.exp (-m * ‖z‖) := by
     intro z hz
     have hmz : m * ‖z‖ ≥ 1 := by
@@ -640,7 +640,7 @@ theorem gaussianFreeField_satisfies_OS4_PolynomialClustering (m : ℝ) [Fact (0 
         _ = 1 := by field_simp
     have h_norm_eq : ‖(0 : SpaceTime4) - z‖ = ‖z‖ := by simp
     have h := freeCovariance_exponential_bound m hm 0 z (by rw [h_norm_eq]; exact hmz)
-    simp only [freeCovarianceKernel, freeCovariance, h_norm_eq] at h ⊢; exact h
+    simp only [freeCovarianceKernel, freeCovariance4, h_norm_eq] at h ⊢; exact h
 
   -- Step 3: Apply the quantitative decay lemma
   have ⟨c_decay, hc_nonneg, hBound⟩ := schwartz_bilinear_translation_decay_polynomial_proof

@@ -427,8 +427,8 @@ lemma gff_covariance_timeTranslation_continuous (m : ℝ) [Fact (0 < m)]
     simp only [timeTranslationSchwartzℂ_apply]
     exact hCf (timeShift s x)
   -- Convert to product integral for continuous_of_dominated
-  have h_fubini : ∀ s, ∫ x, ∫ y, (timeTranslationSchwartzℂ s f) x * (freeCovariance m x y : ℂ) * g y =
-      ∫ p : SpaceTime4 × SpaceTime4, (timeTranslationSchwartzℂ s f) p.1 * (freeCovariance m p.1 p.2 : ℂ) * g p.2
+  have h_fubini : ∀ s, ∫ x, ∫ y, (timeTranslationSchwartzℂ s f) x * (freeCovariance4 m x y : ℂ) * g y =
+      ∫ p : SpaceTime4 × SpaceTime4, (timeTranslationSchwartzℂ s f) p.1 * (freeCovariance4 m p.1 p.2 : ℂ) * g p.2
         ∂(volume.prod volume) := by
     intro s
     have h_int := freeCovarianceℂ_bilinear_integrable m (timeTranslationSchwartzℂ s f) g
@@ -436,28 +436,28 @@ lemma gff_covariance_timeTranslation_continuous (m : ℝ) [Fact (0 < m)]
     exact (MeasureTheory.integral_prod _ h_int).symm
   simp_rw [h_fubini]
   -- Bound using |g(y)| instead of Cg
-  let bound' : SpaceTime4 × SpaceTime4 → ℝ := fun p => Cf * ‖(freeCovariance m p.1 p.2 : ℂ)‖ * ‖g p.2‖
+  let bound' : SpaceTime4 × SpaceTime4 → ℝ := fun p => Cf * ‖(freeCovariance4 m p.1 p.2 : ℂ)‖ * ‖g p.2‖
   -- Pointwise bound
-  have h_bdd' : ∀ s p, ‖(timeTranslationSchwartzℂ s f) p.1 * (freeCovariance m p.1 p.2 : ℂ) * g p.2‖ ≤ bound' p := by
+  have h_bdd' : ∀ s p, ‖(timeTranslationSchwartzℂ s f) p.1 * (freeCovariance4 m p.1 p.2 : ℂ) * g p.2‖ ≤ bound' p := by
     intro s ⟨x, y⟩
     simp only [bound']
-    calc ‖(timeTranslationSchwartzℂ s f) x * (freeCovariance m x y : ℂ) * g y‖
-        = ‖(timeTranslationSchwartzℂ s f) x‖ * ‖(freeCovariance m x y : ℂ)‖ * ‖g y‖ := by
+    calc ‖(timeTranslationSchwartzℂ s f) x * (freeCovariance4 m x y : ℂ) * g y‖
+        = ‖(timeTranslationSchwartzℂ s f) x‖ * ‖(freeCovariance4 m x y : ℂ)‖ * ‖g y‖ := by
           rw [norm_mul, norm_mul]
-      _ ≤ Cf * ‖(freeCovariance m x y : ℂ)‖ * ‖g y‖ := by
+      _ ≤ Cf * ‖(freeCovariance4 m x y : ℂ)‖ * ‖g y‖ := by
           apply mul_le_mul_of_nonneg_right
           apply mul_le_mul_of_nonneg_right (hTsf_bdd s x) (norm_nonneg _)
           exact norm_nonneg _
   -- The bound is integrable via convolution estimate
   have h_bound_int : Integrable bound' (volume.prod volume) := by
     simp only [bound']
-    have h_eq : (fun p : SpaceTime4 × SpaceTime4 => Cf * ‖(freeCovariance m p.1 p.2 : ℂ)‖ * ‖g p.2‖) =
-        (fun p => Cf * (‖(freeCovariance m p.1 p.2 : ℂ)‖ * ‖g p.2‖)) := by ext p; ring
+    have h_eq : (fun p : SpaceTime4 × SpaceTime4 => Cf * ‖(freeCovariance4 m p.1 p.2 : ℂ)‖ * ‖g p.2‖) =
+        (fun p => Cf * (‖(freeCovariance4 m p.1 p.2 : ℂ)‖ * ‖g p.2‖)) := by ext p; ring
     rw [h_eq]
     apply Integrable.const_mul
-    have h_transl : ∀ x y, freeCovariance m x y = freeCovarianceKernel m (x - y) := by
-      intro x y; simp only [freeCovariance, freeCovarianceBessel, freeCovarianceKernel, zero_sub, norm_neg]
-    have h_eq2 : (fun p : SpaceTime4 × SpaceTime4 => ‖(freeCovariance m p.1 p.2 : ℂ)‖ * ‖g p.2‖) =
+    have h_transl : ∀ x y, freeCovariance4 m x y = freeCovarianceKernel m (x - y) := by
+      intro x y; simp only [freeCovariance4, freeCovarianceBessel, freeCovarianceKernel, zero_sub, norm_neg]
+    have h_eq2 : (fun p : SpaceTime4 × SpaceTime4 => ‖(freeCovariance4 m p.1 p.2 : ℂ)‖ * ‖g p.2‖) =
         (fun p => ‖(freeCovarianceKernel m (p.1 - p.2) : ℂ)‖ * ‖g p.2‖) := by ext p; rw [h_transl]
     rw [h_eq2]
     have hK_int : Integrable (freeCovarianceKernel m) (volume : Measure SpaceTime4) :=

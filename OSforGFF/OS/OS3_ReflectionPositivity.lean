@@ -553,10 +553,10 @@ private lemma freeCovarianceℂ_bilinear_star_star_conj
   -- where G(x,y) = conj(f(x)) · ↑K(x,y) · conj(g(y)).
   have h_eq_lhs : ∀ x y,
       starRingEnd ℂ (f (QFT.timeReflection x)) *
-        (freeCovariance m x y : ℂ) *
+        (freeCovariance4 m x y : ℂ) *
         starRingEnd ℂ (g (QFT.timeReflection y))
       = starRingEnd ℂ (f (QFT.timeReflection x)) *
-        (freeCovariance m (QFT.timeReflection x) (QFT.timeReflection y) : ℂ) *
+        (freeCovariance4 m (QFT.timeReflection x) (QFT.timeReflection y) : ℂ) *
         starRingEnd ℂ (g (QFT.timeReflection y)) := by
     intro x y; rw [covariance_timeReflection_invariant]
   simp_rw [h_eq_lhs]
@@ -567,7 +567,7 @@ private lemma freeCovarianceℂ_bilinear_star_star_conj
   -- which are test functions. But we need it for the "unstarred conj" versions.
   -- star f is already a TestFunctionℂ4, so we can use its integrability directly.
   have h_int : Integrable (fun p : SpaceTime4 × SpaceTime4 =>
-      starRingEnd ℂ (f p.1) * (freeCovariance m p.1 p.2 : ℂ) * starRingEnd ℂ (g p.2))
+      starRingEnd ℂ (f p.1) * (freeCovariance4 m p.1 p.2 : ℂ) * starRingEnd ℂ (g p.2))
       (MeasureTheory.volume.prod MeasureTheory.volume) := by
     -- (star f)(x) = conj(f(Θx)), so conj(f(x)) = (star f)(Θ⁻¹ x) = (star f)(Θx) since Θ² = id
     -- Actually, let's build the Schwartz functions conj ∘ f and conj ∘ g directly.
@@ -602,7 +602,7 @@ private lemma freeCovarianceℂ_bilinear_star_star_conj
           _ ≤ C := hC x⟩
     exact freeCovarianceℂ_bilinear_integrable m f_conj g_conj
   exact double_integral_timeReflection
-    (fun x y => starRingEnd ℂ (f x) * (freeCovariance m x y : ℂ) * starRingEnd ℂ (g y)) h_int
+    (fun x y => starRingEnd ℂ (f x) * (freeCovariance4 m x y : ℂ) * starRingEnd ℂ (g y)) h_int
 
 /-- A complex matrix has nonneg Hermitian quadratic form:
     `Re(∑ᵢⱼ v̄ᵢ vⱼ Mᵢⱼ) ≥ 0` for all `v`.

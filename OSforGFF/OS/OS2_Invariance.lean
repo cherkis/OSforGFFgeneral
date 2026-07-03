@@ -110,8 +110,8 @@ theorem freeCovarianceℂ_bilinear_euclidean_invariant (g : E4) (f h : TestFunct
   simp only [euclidean_action_apply]
   -- Goal: ∫∫ f(g⁻¹•x) C(x,y) h(g⁻¹•y) dx dy = ∫∫ f(u) C(u,v) h(v) du dv
   -- Step 1: Rewrite C(x,y) using the identity x = g•(g⁻¹•x)
-  have h_rewrite : ∀ x y, freeCovariance m x y =
-      freeCovariance m (act g (euclidean_pullback g x)) (act g (euclidean_pullback g y)) := by
+  have h_rewrite : ∀ x y, freeCovariance4 m x y =
+      freeCovariance4 m (act g (euclidean_pullback g x)) (act g (euclidean_pullback g y)) := by
     intro x y
     simp only [act_euclidean_pullback]
   -- Step 2: Apply freeCovariance_euclidean_invariant

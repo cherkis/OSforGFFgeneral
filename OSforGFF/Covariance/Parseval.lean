@@ -19,7 +19,7 @@ For a Schwartz test function f : TestFunctionℂ4 and mass m > 0:
   (∫∫ f(x) * C(x,y) * conj(f(y)) dx dy).re = ∫ |f̂(k)|² * P(k) dk
 
 where:
-- C(x,y) = freeCovariance m x y is the position-space propagator
+- C(x,y) = freeCovariance4 m x y is the position-space propagator
 - P(k) = freePropagatorMomentum m k = 1/(‖k‖² + m²) is the momentum-space propagator
 - f̂ = SchwartzMap.fourierTransformCLM ℂ f is the Fourier transform
 
@@ -61,7 +61,7 @@ noncomputable def fourierNormalization (d : ℕ) : ℝ := (2 * Real.pi) ^ d
 
 /-! ### Bridge Lemmas
 
-These lemmas connect the physics-convention Fourier transform (used in freeCovariance)
+These lemmas connect the physics-convention Fourier transform (used in freeCovariance4)
 to Mathlib's convention (used in SchwartzMap.fourierTransformCLM).
 -/
 
@@ -73,7 +73,7 @@ to Mathlib's convention (used in SchwartzMap.fourierTransformCLM).
 **Mathlib convention** (from `Real.fourierIntegral_eq`):
   `𝓕 f(k) = ∫ f(x) exp(-2πi⟨x, k⟩) dx`
 
-**Physics convention** (used in `freeCovariance`):
+**Physics convention** (used in `freeCovariance4`):
   `f̂_phys(k) = ∫ f(x) exp(-i⟨k, x⟩) dx`
 
 **Relationship**:
@@ -721,17 +721,17 @@ theorem bilinear_covariance_regulated_tendstoℂ (m : ℝ) [Fact (0 < m)] (f g :
     Filter.Tendsto
       (fun α => ∫ x, ∫ y, f x * (freeCovariance_regulated α m x y : ℂ) * (starRingEnd ℂ (g y)))
       (nhdsWithin 0 (Set.Ioi 0))
-      (nhds (∫ x, ∫ y, f x * (freeCovariance m x y : ℂ) * (starRingEnd ℂ (g y)))) := by
+      (nhds (∫ x, ∫ y, f x * (freeCovariance4 m x y : ℂ) * (starRingEnd ℂ (g y)))) := by
   -- **Proof Strategy:** DCT on the product space SpaceTime4 × SpaceTime4.
   have hm : 0 < m := Fact.out
   -- Define the integrands on product space
   let F : ℝ → SpaceTime4 × SpaceTime4 → ℂ := fun α p =>
     f p.1 * (freeCovariance_regulated α m p.1 p.2 : ℂ) * starRingEnd ℂ (g p.2)
   let F_limit : SpaceTime4 × SpaceTime4 → ℂ := fun p =>
-    f p.1 * (freeCovariance m p.1 p.2 : ℂ) * starRingEnd ℂ (g p.2)
+    f p.1 * (freeCovariance4 m p.1 p.2 : ℂ) * starRingEnd ℂ (g p.2)
   -- Define the dominating function (scaled Bessel form)
   let bound : SpaceTime4 × SpaceTime4 → ℝ := fun p =>
-    Real.exp (m^2) * ‖f p.1‖ * |freeCovariance m p.1 p.2| * ‖g p.2‖
+    Real.exp (m^2) * ‖f p.1‖ * |freeCovariance4 m p.1 p.2| * ‖g p.2‖
   -- The bound is integrable (scaling of freeCovarianceℂ_bilinear_integrable)
   have h_bound_int : Integrable bound (volume.prod volume) := by
     -- Use freeCovarianceℂ_bilinear_integrable': f * C * g is integrable
@@ -739,11 +739,11 @@ theorem bilinear_covariance_regulated_tendstoℂ (m : ℝ) [Fact (0 < m)] (f g :
     have h_int := freeCovarianceℂ_bilinear_integrable' m f g
     -- The norm of f(x) * C(x,y) * g(y) equals ‖f(x)‖ * |C(x,y)| * ‖g(y)‖
     have h_norm_eq : ∀ p : SpaceTime4 × SpaceTime4,
-        ‖f p.1 * (freeCovariance m p.1 p.2 : ℂ) * g p.2‖ = ‖f p.1‖ * |freeCovariance m p.1 p.2| * ‖g p.2‖ := by
+        ‖f p.1 * (freeCovariance4 m p.1 p.2 : ℂ) * g p.2‖ = ‖f p.1‖ * |freeCovariance4 m p.1 p.2| * ‖g p.2‖ := by
       intro p
       rw [norm_mul, norm_mul, Complex.norm_real, Real.norm_eq_abs]
     -- Rewrite bound in terms of the norm
-    have h_bound_eq : bound = fun p => Real.exp (m^2) * ‖f p.1 * (freeCovariance m p.1 p.2 : ℂ) * g p.2‖ := by
+    have h_bound_eq : bound = fun p => Real.exp (m^2) * ‖f p.1 * (freeCovariance4 m p.1 p.2 : ℂ) * g p.2‖ := by
       ext p
       simp only [bound, h_norm_eq]
       ring
@@ -816,12 +816,12 @@ theorem bilinear_covariance_regulated_tendstoℂ (m : ℝ) [Fact (0 < m)] (f g :
     calc ‖f p.1 * (freeCovariance_regulated α m p.1 p.2 : ℂ) * starRingEnd ℂ (g p.2)‖
         = ‖f p.1‖ * |freeCovariance_regulated α m p.1 p.2| * ‖g p.2‖ := by
           rw [norm_mul, norm_mul, Complex.norm_real, Real.norm_eq_abs, RCLike.norm_conj]
-      _ ≤ ‖f p.1‖ * (Real.exp (m^2) * freeCovariance m p.1 p.2) * ‖g p.2‖ := by
+      _ ≤ ‖f p.1‖ * (Real.exp (m^2) * freeCovariance4 m p.1 p.2) * ‖g p.2‖ := by
           apply mul_le_mul_of_nonneg_right
           apply mul_le_mul_of_nonneg_left h_cov_bound (norm_nonneg _)
           exact norm_nonneg _
-      _ = Real.exp (m^2) * ‖f p.1‖ * freeCovariance m p.1 p.2 * ‖g p.2‖ := by ring
-      _ = Real.exp (m^2) * ‖f p.1‖ * |freeCovariance m p.1 p.2| * ‖g p.2‖ := by
+      _ = Real.exp (m^2) * ‖f p.1‖ * freeCovariance4 m p.1 p.2 * ‖g p.2‖ := by ring
+      _ = Real.exp (m^2) * ‖f p.1‖ * |freeCovariance4 m p.1 p.2| * ‖g p.2‖ := by
           congr 1
           rw [abs_of_nonneg (le_of_lt (freeCovarianceBessel_pos m hm p.1 p.2 hxy))]
   -- Each F α is AE strongly measurable
@@ -877,12 +877,12 @@ theorem bilinear_covariance_regulated_tendstoℂ (m : ℝ) [Fact (0 < m)] (f g :
     -- Apply Fubini: ∫ F α ∂(prod) = ∫∫ F α (x,y) dy dx
     exact MeasureTheory.integral_prod (F α) h_int_F
   have h_fubini_limit : ∫ p, F_limit p ∂(volume.prod volume) =
-      ∫ x, ∫ y, f x * (freeCovariance m x y : ℂ) * starRingEnd ℂ (g y) := by
+      ∫ x, ∫ y, f x * (freeCovariance4 m x y : ℂ) * starRingEnd ℂ (g y) := by
     -- Same structure as h_fubini_reg: F_limit is integrable and Fubini applies
     have h_int := freeCovarianceℂ_bilinear_integrable' m f g
     -- Transfer integrability using norm equality ‖conj z‖ = ‖z‖
     have h_norm_eq : ∀ p : SpaceTime4 × SpaceTime4,
-        ‖f p.1 * (freeCovariance m p.1 p.2 : ℂ) * g p.2‖ = ‖F_limit p‖ := fun p => by
+        ‖f p.1 * (freeCovariance4 m p.1 p.2 : ℂ) * g p.2‖ = ‖F_limit p‖ := fun p => by
       simp only [F_limit, norm_mul, RCLike.norm_conj]
     have hF_meas : AEStronglyMeasurable F_limit (volume.prod volume) := by
       simp only [F_limit]
@@ -908,7 +908,7 @@ theorem bilinear_covariance_regulated_tendsto_self (m : ℝ) [Fact (0 < m)] (f :
     Filter.Tendsto
       (fun α => ∫ x, ∫ y, f x * (freeCovariance_regulated α m x y : ℂ) * (starRingEnd ℂ (f y)))
       (nhdsWithin 0 (Set.Ioi 0))
-      (nhds (∫ x, ∫ y, f x * (freeCovariance m x y : ℂ) * (starRingEnd ℂ (f y)))) :=
+      (nhds (∫ x, ∫ y, f x * (freeCovariance4 m x y : ℂ) * (starRingEnd ℂ (f y)))) :=
   bilinear_covariance_regulated_tendstoℂ m f f
 
 end ParsevalCovariance
@@ -927,6 +927,6 @@ open scoped InnerProductSpace
     This is the distributional formulation: the double integral is well-defined
     for Schwartz test functions due to the L¹ integrability of the Bessel kernel. -/
 noncomputable def freeCovarianceℂ_bilinear (m : ℝ) (f g : TestFunctionℂ4) : ℂ :=
-  ∫ x, ∫ y, (f x) * (freeCovariance m x y) * (g y)
+  ∫ x, ∫ y, (f x) * (freeCovariance4 m x y) * (g y)
 
 end GlobalBilinearDefs

@@ -45,7 +45,7 @@ namespace QFT
 
 /-- Real covariance bilinear form induced by the free covariance kernel. -/
 noncomputable def freeCovarianceFormR (m : ℝ) (f g : TestFunction4) : ℝ :=
-  ∫ x, ∫ y, (f x) * (freeCovariance m x y) * (g y) ∂volume ∂volume
+  ∫ x, ∫ y, (f x) * (freeCovariance4 m x y) * (g y) ∂volume ∂volume
 
 theorem freeCovarianceℂ_bilinear_agrees_on_reals
   (m : ℝ) (f g : TestFunction4) :
@@ -54,13 +54,13 @@ theorem freeCovarianceℂ_bilinear_agrees_on_reals
   unfold freeCovarianceℂ_bilinear freeCovarianceFormR
   simp only [toComplex_apply]
   have h : ∀ (x y : SpaceTime4),
-    ((f x : ℂ)) * ((freeCovariance m x y : ℂ)) * ((g y : ℂ))
-    = (((f x) * (freeCovariance m x y) * (g y) : ℝ) : ℂ) := by
+    ((f x : ℂ)) * ((freeCovariance4 m x y : ℂ)) * ((g y : ℂ))
+    = (((f x) * (freeCovariance4 m x y) * (g y) : ℝ) : ℂ) := by
     intro x y
     simp only [ofReal_mul]
   simp_rw [h]
-  have step1 : ∫ x, ∫ y, ((f x * freeCovariance m x y * g y : ℝ) : ℂ)
-             = ∫ x, ((∫ y, f x * freeCovariance m x y * g y : ℝ) : ℂ) := by
+  have step1 : ∫ x, ∫ y, ((f x * freeCovariance4 m x y * g y : ℝ) : ℂ)
+             = ∫ x, ((∫ y, f x * freeCovariance4 m x y * g y : ℝ) : ℂ) := by
     congr 1 with x
     exact integral_ofReal
   rw [step1]
@@ -681,7 +681,7 @@ lemma freeCovarianceFormR_reflection_invariant
       Integrable
         (fun p : SpaceTime4 × SpaceTime4 =>
           (QFT.compTimeReflection fc) p.1
-            * (freeCovariance m p.1 p.2 : ℂ)
+            * (freeCovariance4 m p.1 p.2 : ℂ)
             * (QFT.compTimeReflection gc) p.2)
         (volume.prod volume) :=
     freeCovarianceℂ_bilinear_integrable (m := m)
@@ -696,25 +696,25 @@ lemma freeCovarianceFormR_reflection_invariant
     simp_rw [covariance_timeReflection_invariant m] at h_double'
     have h_double'' :
         ∫ x, ∫ y,
-            (QFT.compTimeReflection fc) x * (freeCovariance m x y : ℂ)
+            (QFT.compTimeReflection fc) x * (freeCovariance4 m x y : ℂ)
               * (QFT.compTimeReflection gc) y ∂volume ∂volume
           =
         ∫ x, ∫ y,
-            fc x * (freeCovariance m x y : ℂ) * gc y ∂volume ∂volume := by
+            fc x * (freeCovariance4 m x y : ℂ) * gc y ∂volume ∂volume := by
       calc
         ∫ x, ∫ y,
-            (QFT.compTimeReflection fc) x * (freeCovariance m x y : ℂ)
+            (QFT.compTimeReflection fc) x * (freeCovariance4 m x y : ℂ)
               * (QFT.compTimeReflection gc) y ∂volume ∂volume
           = ∫ x, ∫ y,
-              fc x * (freeCovariance m x y : ℂ)
+              fc x * (freeCovariance4 m x y : ℂ)
                 * (QFT.compTimeReflection (QFT.compTimeReflection gc)) y ∂volume ∂volume := h_double'
         _ = ∫ x, ∫ y,
-                fc x * (freeCovariance m x y : ℂ) * gc y ∂volume ∂volume := by
+                fc x * (freeCovariance4 m x y : ℂ) * gc y ∂volume ∂volume := by
               exact
                 congrArg
                   (fun h : TestFunctionℂ4 =>
                     ∫ x, ∫ y,
-                        fc x * (freeCovariance m x y : ℂ) * h y ∂volume ∂volume)
+                        fc x * (freeCovariance4 m x y : ℂ) * h y ∂volume ∂volume)
                   (h_comp_invol gc)
     unfold freeCovarianceℂ_bilinear
     exact h_double''
