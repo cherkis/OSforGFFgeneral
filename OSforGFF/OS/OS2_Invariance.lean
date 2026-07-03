@@ -11,11 +11,12 @@ import OSforGFF.Measure.GaussianFreeField
 /-!
 # OS2 — Euclidean Invariance
 
-Proves Z[Ef] = Z[f] for any Euclidean transformation E ∈ E(4). The argument:
+Proves Z[Ef] = Z[f] for any Euclidean transformation E ∈ E(d) (rotation/reflection
+plus translation). The argument:
 
 1. Change variables x → E⁻¹x, y → E⁻¹y in the covariance integral
-2. C(x,y) depends only on |x−y|, so C(E⁻¹x, E⁻¹y) = C(x,y)
-3. Lebesgue measure is invariant: d⁴(E⁻¹x) = d⁴x (since |det R| = 1)
+2. C(x,y) = Cprofile |x−y| depends only on |x−y|, so C(E⁻¹x, E⁻¹y) = C(x,y)
+3. Lebesgue measure on ℝ^d is invariant: dᵈ(E⁻¹x) = dᵈx (since |det R| = 1)
 
 Hence S(Ef) = ∫∫ f*(x) C(x,y) f(y) dx dy = S(f).
 

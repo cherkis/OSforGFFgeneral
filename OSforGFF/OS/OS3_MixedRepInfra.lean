@@ -38,18 +38,29 @@ import OSforGFF.General.LaplaceIntegral
 
 The naive Fourier representation of covariance reflection positivity requires exchanging
 the k₀ integral with the x,y integrals, but the integrand 1/√(k²+m²) is NOT absolutely
-integrable in 3D k-space. The Schwinger parametrization resolves this:
+integrable in the (d−1)-dimensional spatial momentum space. The Schwinger parametrization
+resolves this:
 
-  ⟨Θf, Cf⟩ = ∫₀^∞ e^{−sm²} [∫_x ∫_y f*(x) f(y) H(s, |Θx−y|)] ds
+  ⟨Θf, Cf⟩ = ∫₀^∞ e^{−sm²} [∫_x ∫_y f*(x) f(y) H_d(s, |Θx−y|)] ds
 
-where H(s,r) = (4πs)^{−2} exp(−r²/4s) is the heat kernel, bounded by s^{−2}.
-The integrand is absolutely integrable: Schwartz functions are bounded, H is bounded,
-and e^{−sm²} provides exponential decay in s.
+where H_d(s,r) = (4πs)^{−d/2} exp(−r²/4s) is the heat kernel (`heatKernelProfile`); this
+representation is exactly the `schwinger_eq` field of `GFFPropagator`, so the whole chain is
+uniform in the dimension d. The integrand is absolutely integrable: Schwartz functions are
+bounded, H_d is bounded for fixed s > 0, and e^{−sm²} provides exponential decay in s.
 
 This file proves the Fubini theorems justifying integration order exchanges between
 proper-time s, spatial momenta k_sp, and spacetime points x,y. The integrability
 bounds use |f(x)||f(y)| ≤ C · x₀y₀ / (1+|x̄|²)^N(1+|ȳ|²)^N for positive-time
 test functions, combined with Gaussian moment formulas for the time integrals.
+
+**Where the dimension enters.** A test function vanishing on {x₀ ≤ 0} vanishes to first
+order at the boundary, and the resulting x₀y₀-moment of the time Gaussian gives the s^{3/2}
+in the dominating function `dominate_G ∼ s^{3/2} e^{−s(‖k‖²+m²)}` — an s-power independent
+of d, because the (4πs)^{−d/2} prefactor cancels against the (4πs)^{(d−1)/2} volume factor of
+the spatial Fourier transform, leaving the one-dimensional time factor (4πs)^{−1/2}. The
+spatial k-integral of the dominator is then ∼ s^{(4−d)/2} e^{−sm²}, integrable near s = 0
+exactly when d ≤ 5. This is the only place the hypothesis `Fact (d ≤ 5)` is used
+(`integrable_dominate_G`, `fubini_s_ksp_swap`); it propagates from here to the OS3 axiom.
 -/
 
 open MeasureTheory Complex Real Filter QFT OSforGFF
@@ -123,7 +134,7 @@ lemma timeReflection_involutive (x : (SpaceTime d)) :
 The key step in the reflection positivity proof is to convert the Bessel bilinear form
 to a momentum representation where the k₀ integral is innermost.
 
-**Important mathematical point**: The naive d⁴k momentum integral does NOT converge
+**Important mathematical point**: The naive dᵈk momentum integral does NOT converge
 as a Lebesgue integral (it decays like 1/k² which is not integrable in 4D).
 The correct procedure uses the "mixed representation" of the Bessel kernel:
 
@@ -399,7 +410,7 @@ lemma heatKernelPositionSpace_integral_translated (s : ℝ) (hs : 0 < s) (a : (S
     rw [h_norm_eq y]
   rw [h_fun]
   -- Use translation invariance: ∫ f(y - a) dy = ∫ f(z) dz
-  -- (SpaceTime d) = EuclideanSpace ℝ (Fin 4) has translation-invariant Lebesgue measure
+  -- (SpaceTime d) = EuclideanSpace ℝ (Fin d) has translation-invariant Lebesgue measure
   have h_transl := @MeasureTheory.integral_sub_right_eq_self (SpaceTime d) ℝ _ _ _
     (volume : Measure (SpaceTime d)) _ _ _
     (fun z => heatKernelProfile d s ‖z‖) a
@@ -897,7 +908,7 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5)
     rw [h_eq]
 
     -- Strategy: Bound the inner integral, then show outer integral is finite
-    -- G₀(s,k) = s^(3/2) * exp(-sm²) * exp(-s|k|²) for s > 0, k ∈ ℝ³
+    -- G₀(s,k) = s^(3/2) * exp(-sm²) * exp(-s|k|²) for s > 0, spatial momentum k
 
     -- The inner integral ∫_k s^(3/2) exp(-sm²) exp(-s|k|²) dk
     -- = s^(3/2) * exp(-sm²) * (π/s)^(3/2)  [Gaussian integral]
@@ -1879,7 +1890,7 @@ lemma heatKernelMoment_setIntegral_integrableOn (s : ℝ) (hs : 0 < s) (c : ℝ)
     heat kernel factor is bounded by K · s^{3/2} for some constant K > 0.
 
     **Proof strategy** (Tonelli factorization):
-    1. Use `spatialNormIntegral_linear_bound`: G(t) := ∫_{ℝ³} ‖f(t,x)‖ dx ≤ C_sp · t
+    1. Use `spatialNormIntegral_linear_bound`: G(t) := ∫_{ℝ^{d−1}} ‖f(t,x)‖ dx ≤ C_sp · t
     2. Factor via Tonelli: ∫∫_{(SpaceTime d)²} = ∫_{time²} G(t₁)·G(t₂) · √(π/s)·exp(...)
     3. Bound: ≤ C_sp² · ∫_{time²} t₁·t₂ · √(π/s)·exp(-(t₁+t₂)²/(4s))
     4. Apply `heat_kernel_moment_integral_bound`: ≤ C_sp² · 10 · s^{3/2}
@@ -1901,7 +1912,7 @@ lemma spacetime_fubini_linear_vanishing_bound (f : (TestFunctionℂ d))
   -- Step 2: For any s > 0, prove the bound
   intro s hs
 
-  -- We have the spatial integral bound: G(t) := ∫_{ℝ³} ‖f(t,x_sp)‖ dx_sp ≤ C_sp · t for t > 0
+  -- We have the spatial integral bound: G(t) := ∫ ‖f(t,x_sp)‖ dx_sp ≤ C_sp · t for t > 0
   -- (from h_spatial : spatialNormIntegral_linear_bound f hf_supp)
 
   -- The integrand is non-negative
@@ -1915,7 +1926,7 @@ lemma spacetime_fubini_linear_vanishing_bound (f : (TestFunctionℂ d))
     · exact Real.exp_nonneg _
 
   -- The proof uses Tonelli factorization:
-  -- Step A: Decompose (SpaceTime d) × (SpaceTime d) ≃ₘ (ℝ × ℝ³) × (ℝ × ℝ³) ≃ₘ (ℝ × ℝ) × (ℝ³ × ℝ³)
+  -- Step A: Decompose (SpaceTime d)² ≃ₘ (ℝ × ℝ^{d−1})² ≃ₘ (ℝ × ℝ) × (ℝ^{d−1} × ℝ^{d−1})
   -- Step B: Apply Tonelli to swap to time-first: ∫_{time²} ∫_{space²}
   -- Step C: The spatial integrals factor: ∫_{space²} = G(t₁) · G(t₂)
   -- Step D: Apply h_spatial: G(t) ≤ C_sp · t when t > 0, G(t) = 0 when t ≤ 0
@@ -1923,7 +1934,7 @@ lemma spacetime_fubini_linear_vanishing_bound (f : (TestFunctionℂ d))
 
   -- Mathematical argument (with references):
   -- ∫∫_{(SpaceTime d)²} ‖f x‖·‖f y‖·√(π/s)·exp(-(t₁+t₂)²/(4s))
-  -- = ∫_{ℝ²} √(π/s)·exp(-(t₁+t₂)²/(4s)) · [∫_{ℝ³} ‖f(t₁,·)‖] · [∫_{ℝ³} ‖f(t₂,·)‖] dt  [Tonelli]
+  -- = ∫_{ℝ²} √(π/s)·exp(-(t₁+t₂)²/(4s)) · [∫ ‖f(t₁,·)‖] · [∫ ‖f(t₂,·)‖] dt  [Tonelli]
   -- = ∫_{ℝ²} √(π/s)·exp(-(t₁+t₂)²/(4s)) · G(t₁) · G(t₂) dt                            [definition]
   -- = ∫_{(0,∞)²} ... (since G(t) = 0 for t ≤ 0 by hf_supp)
   -- ≤ C_sp² · ∫_{(0,∞)²} t₁·t₂·√(π/s)·exp(-(t₁+t₂)²/(4s)) dt                         [h_spatial]
@@ -1979,11 +1990,11 @@ lemma spacetime_fubini_linear_vanishing_bound (f : (TestFunctionℂ d))
     mul_nonneg (Real.sqrt_nonneg _) (Real.exp_nonneg _)
 
   -- Step 2: The integrand factors as G(t₁) * G(t₂) * K(t₁, t₂) after Tonelli
-  -- This is the key Tonelli step: decompose (SpaceTime d) × (SpaceTime d) ≃ (ℝ × ℝ) × (ℝ³ × ℝ³)
+  -- This is the key Tonelli step: decompose (SpaceTime d)² ≃ (ℝ × ℝ) × (ℝ^{d−1} × ℝ^{d−1})
   -- and factor the spatial integrals.
   --
   -- ∫∫_{(SpaceTime d)²} ‖f x‖·‖f y‖·K(x₀,y₀) dx dy
-  -- = ∫∫_{ℝ²} K(t₁,t₂) · [∫_{ℝ³} ‖f(t₁,·)‖] · [∫_{ℝ³} ‖f(t₂,·)‖] dt₁ dt₂  [Tonelli]
+  -- = ∫∫_{ℝ²} K(t₁,t₂) · [∫ ‖f(t₁,·)‖] · [∫ ‖f(t₂,·)‖] dt₁ dt₂  [Tonelli]
   -- = ∫∫_{ℝ²} K(t₁,t₂) · G(t₁) · G(t₂) dt₁ dt₂
 
   -- Step 3: Bound using G(t) ≤ C_sp * t for t > 0
@@ -2472,7 +2483,7 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : (TestFunct
   -- = C_lin² · (4/3)√π · s^{3/2}  (by heat_kernel_moment_integral)
   -- < C_lin² · 5 · s^{3/2}  (since (4/3)√π ≈ 2.36 < 5)
 
-  -- The full proof follows this outline. The technical challenge is that (SpaceTime d) = ℝ⁴
+  -- The full proof follows this outline. The technical challenge is that SpaceTime d
   -- while heat_kernel_moment_integral is stated for time coordinates only.
   -- We need to integrate out the spatial coordinates (which are bounded by Schwartz decay).
 
@@ -2610,7 +2621,7 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : (TestFunct
   --
   -- The formalization requires:
   -- (a) A refined pointwise bound keeping the heat kernel factor
-  -- (b) Decomposing (SpaceTime d) = ℝ × ℝ³ via Fubini
+  -- (b) Decomposing (SpaceTime d) = ℝ × ℝ^{d−1} via Fubini
   -- (c) Showing spatial integrals are bounded (Schwartz decay)
   -- (d) Applying heat_kernel_moment_integral to time integrals
   --
@@ -2751,7 +2762,7 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : (TestFunct
 /-- **Fubini swap for s ↔ p̄ integrals.**
 
     Swaps integration order:
-    ∫₀^∞ ds ∫_ℝ³ d³p̄ F(s, p̄) = ∫_ℝ³ d³p̄ ∫₀^∞ ds F(s, p̄)
+    ∫₀^∞ ds ∫ dp̄ F(s, p̄) = ∫ dp̄ ∫₀^∞ ds F(s, p̄)
 
     where the integrand contains:
     - √(π/s) · exp(-t²/(4s)) from the k₀ Gaussian integral
@@ -2761,7 +2772,7 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : (TestFunct
     **Justification:** Fubini applies because:
     1. The p̄-dependence is Schwartz (Fourier transform of Schwartz test functions)
     2. The s-integrand decays as exp(-s·ω²) where ω² = |p̄|² + m² > 0
-    3. Combined integrability on ℝ³ × (0,∞) follows from `Integrable.prod_mul`
+    3. Combined integrability on (0,∞) × ℝ^{d−1} follows from `Integrable.prod_mul`
 
     **Note:** This is the most delicate step. Requires splitting the region into
     "small s" (UV, controlling 1/r² singularity) and "large s" (IR, using mass m).
@@ -2791,7 +2802,7 @@ theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5)] (f : (TestFu
         Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
         Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y))
 
-  -- The key integrability: F is integrable on (0,∞) × ℝ³
+  -- The key integrability: F is integrable on (0,∞) × ℝ^{d−1}
   have hm : 0 < m := Fact.out
   have hm2 : 0 < m^2 := sq_pos_of_pos hm
 
@@ -2806,7 +2817,7 @@ theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5)] (f : (TestFu
 
   have h_int : Integrable F ((volume.restrict (Set.Ioi 0)).prod volume) := by
     /-
-    **Integrability of F on (0,∞) × ℝ³:**
+    **Integrability of F on (0,∞) × ℝ^{d−1}:**
 
     The integrand F(s, k_sp) involves:
     - Heat kernel factor: √(π/s) · exp(-(x₀+y₀)²/(4s))
@@ -2831,7 +2842,7 @@ theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5)] (f : (TestFu
     - s-integral: ∫₀^∞ s^{-1/2} · exp(-t_min²/(4s)) · exp(-s·m²) ds
       This converges at s→0 due to exp(-t_min²/(4s)) → 0 faster than any polynomial,
       and at s→∞ due to exp(-s·m²).
-    - k_sp-integral: ∫_{ℝ³} exp(-s·‖k_sp‖²) dk_sp = (π/s)^{3/2}
+    - k_sp-integral: ∫ exp(-s·‖k_sp‖²) dk_sp = (π/s)^{(d−1)/2}
       Combined with s^{-1/2} gives s^{-2}, still regularized by exp(-t_min²/(4s)).
     -/
 

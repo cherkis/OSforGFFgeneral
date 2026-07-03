@@ -30,7 +30,9 @@ The proof follows Steps 1–6 of §4.4.5:
 4. S₂(f,T_{−s}g) = ∫∫ f(x) K(x−y) g(y−τ_s) dy dx with K = free covariance kernel
 5. Quantitative decay: |∫∫ f(x) K(x−y) g(y−a) dy dx| ≤ c·(1+‖a‖)^{−α}
    via the convolution decay lemma (domain split at ‖y‖ = ‖x‖/2) applied to the
-   exponentially decaying kernel |K(z)| ≤ C·e^{−m‖z‖}
+   exponentially decaying kernel: |K(z)| ≤ C·e^{−(m/2)‖z‖} for ‖z‖ ≥ 1
+   (`freeCovarianceKernel_exp_decay`, from the proper-time representation — the
+   mass gap, uniform in the dimension d)
 6. Combine with |e^z−1| ≤ |z|·e^{|z|} to close.
 
 ## Main result

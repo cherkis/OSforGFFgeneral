@@ -1,13 +1,23 @@
 # Architecture
 
-How the 47 files fit together. For proof details see the paper (§4).
+How the 48 files fit together. For proof details see the paper (§4); for the
+dimension-generic design (the `GFFPropagator` typeclass and where the dimension
+enters each axiom) see `dimension_generic.md`.
 
 ## Dependency layers
 
 ```
 General ──→ Spacetime ──→ Covariance ──→ Schwinger ──→ Measure ──→ OS
-  (12)        (9)           (4)           (3)           (6)       (12)
+  (12)        (9)           (3)           (3)           (6)       (13)
+                               ↑
+                          Instances (2): the per-dimension closed forms
+                          (4D Bessel), consumed only by the d = 4
+                          headline theorem and OS/NonTrivial's UV statement
 ```
+
+All proof files are parameterized by the spacetime dimension `d` and consume the
+covariance only through the `GFFPropagator d m` typeclass
+(`Covariance/Propagator.lean`).
 
 Imports flow left to right with one cross-cutting edge:
 
@@ -18,16 +28,13 @@ This is not circular: OS0 depends on `Measure/Construct` (the measure must
 exist before we can prove analyticity), and `IsGaussian` feeds back into
 the later OS proofs (OS1–OS4 need S₂ = C).
 
-## Three assumed axioms
+## No assumed axioms
 
-| Axiom | Why needed | Difficulty to prove |
-|-------|-----------|-------------------|
-| `schwartz_nuclear` | Minlos requires a nuclear source space | Hard — needs the full Hilbert–Schmidt embedding theory for Schwartz seminorms |
-| `minlos_theorem` | Existence + uniqueness of the GFF measure | Hard — Gel'fand–Vilenkin proof uses projective limits of finite-dim Gaussians |
-| `differentiable_analyticAt_finDim` | Hartogs' theorem for OS0 | Medium — needs Cauchy integral formula in several variables; partially in Mathlib |
-
-Everything else is proved. The `#print axioms` output for the master theorem
-shows exactly these three plus the standard Lean/Mathlib axioms (propext, Quot.sound, Classical.choice).
+Everything is proved: `#print axioms` for the master theorem (both the
+dimension-generic form and its four-dimensional instance) shows exactly Lean's
+three foundational axioms — `propext`, `Classical.choice`, `Quot.sound`.
+`Guardrails.lean` freezes this footprint and the exact statement of the
+four-dimensional theorem into the build, so any regression fails `lake build`.
 
 ## OS3: the longest proof chain
 
@@ -36,8 +43,9 @@ OS3 (reflection positivity) is the most technically involved axiom, spanning
 
 1. **MixedRepInfra** (~3800 lines): Schwinger parametrization makes all
    integrals absolutely convergent (the naive momentum-space approach fails
-   because 1/√(k²+m²) is not L¹ in 3D). Proves ~36 Fubini exchange and
-   integrability lemmas.
+   because 1/√(k²+m²) is not L¹ in the spatial momentum space). Proves ~36
+   Fubini exchange and integrability lemmas; the single place the hypothesis
+   `d ≤ 5` is used (see `dimension_generic.md`).
 
 2. **MixedRep** (~1900 lines): Chains the exchanges to reach the mixed
    representation ⟨Θf, Cf⟩ = ∫ (1/ω)|F_ω(k̄)|² dk̄, going through
@@ -69,15 +77,16 @@ OS3 (reflection positivity) is the most technically involved axiom, spanning
 
 1. **Clustering** (OS4_Clustering): Gaussian factorization reduces the
    clustering bound to estimating S₂(f, T_{−s}g), which decays as
-   (1+|s|)^{−α} by Schwartz convolution decay with the exponential kernel
-   e^{−m|x|}.
+   (1+|s|)^{−α} by Schwartz convolution decay with the exponentially decaying
+   kernel |C(z)| ≤ A e^{−(m/2)|z|} for |z| ≥ 1 (the mass gap, from the
+   proper-time representation).
 
 2. **Ergodicity** (OS4_Ergodicity): Polynomial clustering with α = 6 feeds
    into an L² time-average bound: ‖(1/t)∫₀ᵗ A(T_s φ) ds − 𝔼[A]‖² ≤ C/t → 0.
 
 ## Key design choices
 
-- **Schwartz over D**: We use S(ℝ⁴) rather than D(ℝ⁴) because Mathlib has
+- **Schwartz over D**: We use S(ℝ^d) rather than D(ℝ^d) because Mathlib has
   SchwartzSpace but not test function spaces with compact support. Since
   D ⊂ S and S' ⊂ D', our axioms imply the Glimm–Jaffe versions.
 
@@ -86,10 +95,14 @@ OS3 (reflection positivity) is the most technically involved axiom, spanning
   C = ∫₀^∞ e^{−sm²} H_s ds introduces the heat kernel as a regularizer,
   making all integrals absolutely convergent.
 
-- **Gaussian regulator for Parseval**: A factor e^{−α|k|²} is introduced
-  in the Parseval identity and removed as α → 0⁺, avoiding convergence
-  issues with the bare propagator 1/(|k|²+m²) in L¹.
+- **Proper-time kernel for Parseval**: The Parseval identity
+  ⟨f, C f̄⟩ = ∫ ‖𝓕f‖²/((2π)²‖k‖²+m²) is derived against the proper-time
+  covariance (which is L¹ with an explicit Fourier transform), avoiding
+  convergence issues with the bare propagator — no regulator needed
+  (`Covariance/ParsevalGeneric.lean`).
 
-- **Bessel K₁ for position-space covariance**: Rather than Fourier-transforming
-  the propagator directly (conditionally convergent), we define C(x,y) via
-  the closed-form (m/4π²r)K₁(mr) and prove it equals the Schwinger integral.
+- **Closed form behind a typeclass**: Rather than Fourier-transforming the
+  propagator directly (conditionally convergent), C(x,y) is the radial profile
+  `Cprofile |x−y|` of a `GFFPropagator d m` instance, identified with the
+  Schwinger integral by the instance's one obligation `schwinger_eq`. The 4D
+  instance supplies (m/4π²r)K₁(mr) (`Instances/Dim4.lean`).

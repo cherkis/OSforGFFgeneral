@@ -32,7 +32,7 @@ Defines gaussianFreeField_free (d := d) m as a ProbabilityMeasure and proves two
 
 - OS0 (alternative via quadratic form): Z[∑ᵢ zᵢJᵢ] = exp(−½ ∑ᵢⱼ zᵢzⱼ⟨Jᵢ,CJⱼ⟩) is entire
   (the primary OS0 proof via Hartogs is in `OS.OS0_Analyticity`)
-- OS2 (Euclidean invariance): Z[gf] = Z[f] when covariance is E(4)-invariant
+- OS2 (Euclidean invariance): Z[gf] = Z[f] when covariance is E(d)-invariant
 -/
 
 open MeasureTheory Complex

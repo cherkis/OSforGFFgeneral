@@ -29,10 +29,9 @@ and tempered distributions. These are fundamental for the OS4 (Ergodicity) axiom
 
 ## Notation
 
-We work in spacetime ℝ × ℝ³ where:
+We work in spacetime ℝ × ℝ^(d−1) where:
 - The first coordinate is time (index 0)
-- The remaining 3 coordinates are space (indices 1,2,3)
-- This matches STDimension = 4 from Basic.lean
+- The remaining d−1 coordinates are space (indices 1,…,d−1)
 
 ## Main Theorems
 

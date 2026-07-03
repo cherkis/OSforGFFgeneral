@@ -16,10 +16,12 @@ The OS axiom verification in `OS.Master` would be trivially satisfied by the Dir
 measure at ω = 0 (the "zero field").  This file closes that loophole by proving
 the GFF measure is **strictly non-degenerate**:
 
-1. The square-root propagator embedding `T : S(ℝ⁴) → L²` is injective.
+1. The square-root propagator embedding `T : S(ℝ^d) → L²` is injective.
 2. The smeared covariance `C(f,f) > 0` for every nonzero test function `f`.
-3. Every field pairing `⟨ω,f⟩` has strictly positive variance under `μ_GFF`.
-4. The pointwise kernel `C(x,y) → +∞` as `x → y` (UV divergence).
+3. Every field pairing `⟨ω,f⟩` has strictly positive variance under the free GFF.
+4. The pointwise kernel `C(x,y) → +∞` as `x → y` (UV divergence) — proved for the
+   four-dimensional Bessel instance, where the short-distance behaviour
+   `(m/4π²r)K₁(mr) ∼ 1/(4π²r²)` is available in closed form.
 
 ## Proof strategy
 

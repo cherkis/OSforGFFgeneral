@@ -1,5 +1,9 @@
 # Dimension Dependence
 
+> **Note.** This document analyzes the *pre-unification* four-dimensional
+> code. The library is now dimension-generic; see `dimension_generic.md` for
+> the current architecture. Kept for reference.
+
 This document inventories where the spacetime dimension $d = 4$ (and spatial dimension $d-1 = 3$) enters the proofs. The project defines `STDimension := 4` in `Spacetime/Basic.lean`  changing this value would require updates to every file listed below as **essential** or **spatial**.
 
 ## Classification

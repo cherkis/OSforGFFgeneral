@@ -15,25 +15,41 @@ import OSforGFF.Covariance.Propagator
 /-!
 # The dimension-generic Parseval bridge
 
-The complex covariance pairings of Schwartz test functions against the radial kernel
-`freeCovariance d m`, and their momentum-space form. The central identity is the Parseval
-bridge for the quadratic pairing,
+Everything the OS proofs need about the covariance pairing of Schwartz test functions,
+derived once for every dimension `d` from the two `GFFPropagator` fields. The central
+identity is the Parseval bridge for the quadratic pairing,
 
-`(freeCovarianceℂ m f f).re = ∫ k, ‖𝓕f(k)‖² · P(k) dk`,
+  `(freeCovarianceℂ m f f).re = ∫ k, ‖𝓕f(k)‖² · P(k) dk`,   `P = freePropagatorMom d m`,
 
-with `P = freePropagatorMom d m` the momentum-space propagator; positivity of the covariance
-pairing follows. The kernel enters only through its `L¹`-integrability and the Fourier
-transform of the proper-time covariance (`properTimeCovariance_fourier`), so the whole bridge
-is uniform in the dimension `d`.
+from which positivity of the covariance is immediate: the momentum weight
+`P(k) = 1/((2π)²‖k‖² + m²)` is pointwise positive.
 
-## Main definitions
+**The derivation** never touches the closed-form kernel. Since `C(x,y) = Cprofile ‖x−y‖`
+agrees with the proper-time covariance `C_S` away from the (null) diagonal, the pairing may
+be computed against `C_S` throughout:
 
-- `freeCovarianceℂ_bilinear`: the bilinear pairing `∫∫ f(x) C(x,y) g(y)`
-- `freeCovarianceℂ`: the sesquilinear pairing `∫∫ f(x) C(x,y) conj (g y)`
+1. *Shear/Fubini.* The change of variables `(x,y) ↦ (x, x−y)` turns the double integral
+   into `∫ C_S(‖z‖) · A(z) dz`, where `A(z) = ∫ f(x) conj (f (x−z))` is the autocorrelation.
+2. *Reflection.* The kernel is even and `A(−z) = conj (A z)`, so `A` may be replaced by
+   `conj ∘ A`.
+3. *Fourier inversion.* `conj ∘ A` is the forward Fourier transform of the momentum density
+   `B(k) = 𝓕f(k) · conj (𝓕f(k))` (both `A` and `B` are integrable for Schwartz `f`).
+4. *Multiplication formula.* `∫ C_S · 𝓕B = ∫ 𝓕C_S · B`, and `𝓕C_S = P`
+   (`properTimeCovariance_fourier`), giving the momentum-space form.
 
-## Main results
+## Contents
 
-- `freeCovarianceℂ_bilinear_integrable`: product-space integrability of the pairing integrand
+- proper-time kernel regularity: measurability, integrability of the `s`-slices, and
+  continuity of `C_S` on `(0,∞)` — the analytic inputs for OS1 and OS4;
+- the pairings `freeCovarianceℂ_bilinear` `= ∫∫ f(x) C(x,y) g(y)` and `freeCovarianceℂ`
+  (sesquilinear), with product-space integrability (`freeCovarianceℂ_bilinear_integrable`);
+- the Parseval bridge `parseval_covariance_schwartz` and positivity `freeCovarianceℂ_positive`;
+- time-reflection and Euclidean invariance of the kernel and of the double integrals;
+- bilinearity of the pairing (additivity/homogeneity in each slot, symmetry);
+- the momentum weights `freePropagatorMom` and `freePropagatorMomSqrt = 1/√((2π)²‖k‖²+m²)`
+  with the `L∞`-multiplier machinery used by the square-root propagator embedding;
+- the centered kernel `freeCovarianceKernel d m z = C(0,z)` with continuity off the origin,
+  integrability, and exponential/polynomial decay beyond unit radius — the OS4 inputs.
 -/
 
 open MeasureTheory Complex OSforGFF

@@ -19,10 +19,13 @@ by performing the Fubini exchanges justified in `OS3_MixedRepInfra`. The chain i
 
 The final result (Bessel K_{1/2} identity) is:
 
-  ⟨Θf, Cf⟩ = (1/2(2π)³) ∫_{k̄} ∫∫ f*(x) f(y) (1/ω) e^{−ω|x₀+y₀|} e^{ik̄·(x̄−ȳ)} dk̄ dx dy
+  ⟨Θf, Cf⟩ = (1/(2(2π)^{d−1})) ∫_{k̄} ∫∫ f*(x) f(y) (1/ω) e^{−ω|x₀+y₀|} e^{ik̄·(x̄−ȳ)} dk̄ dx dy
 
+with ω = √(‖k̄‖² + m²) the relativistic energy of the spatial momentum k̄ ∈ ℝ^{d−1}.
 This is the integration order exchange from eq. (4.19) that the naive approach could
-not justify due to the non-absolute-integrability of 1/√(k²+m²) in 3D.
+not justify due to the non-absolute-integrability of 1/√(k²+m²) in the spatial
+momentum space. The entry point is `GFFPropagator.schwinger_eq`, so the derivation
+holds for every dimension d (with `Fact (d ≤ 5)` inherited from the Fubini layer).
 
 5. **Fubini Theorems** (from `OS3_MixedRepInfra`): Justify all changes in integration order
    using the integrability bounds.
@@ -463,9 +466,9 @@ lemma omega_pos (k_sp : (SpatialCoords d)) (m : ℝ) (hm : 0 < m) :
     0 < Real.sqrt (‖k_sp‖^2 + m^2) := by positivity
 
 /-- The normalization constant relation:
-    (1/(2π)⁴) × π = 1/(2(2π)³)
+    (1/(2π)^d) × π = 1/(2(2π)^{d−1})
 
-    Proof: (2π)⁴ = 2 × (2π)³ × π, so π/(2π)⁴ = 1/(2(2π)³) -/
+    Proof: (2π)^d = 2 × (2π)^{d−1} × π, so π/(2π)^d = 1/(2(2π)^{d−1}) -/
 lemma normalization_constant_laplace :
     (1 / (2 * π) ^ 4 : ℝ) * π = 1 / (2 * (2 * π) ^ 3) := by field_simp
 
@@ -692,10 +695,10 @@ lemma s_integral_complex_eval (k_sp : (SpatialCoords d)) (x y : (SpaceTime d)) (
     This transforms the Schwinger proper-time representation into the
     Euclidean propagator in mixed (p̄, x₀) representation:
 
-    1/(2π)⁴ · ∫_p̄ ∫₀^∞ √(π/s) exp(-t²/(4s)) exp(-s(|p̄|² + m²)) exp(-ip̄·r̄) ds d³p̄
-    = 1/(2(2π)³) · ∫_p̄ (1/ω) exp(-ω|t|) exp(-ip̄·r̄) d³p̄
+    1/(2π)^d · ∫_p̄ ∫₀^∞ √(π/s) exp(-t²/(4s)) exp(-s(|p̄|² + m²)) exp(-ip̄·r̄) ds dp̄
+    = 1/(2(2π)^{d−1}) · ∫_p̄ (1/ω) exp(-ω|t|) exp(-ip̄·r̄) dp̄
 
-    **Normalization:** (1/(2π)⁴) × π = 1/(2(2π)³) ✓
+    **Normalization:** (1/(2π)^d) × π = 1/(2(2π)^{d−1}) ✓
 
     **Proof:** Uses `fubini_s_xy_swap` to move s inside, then
     `s_integral_eval` to evaluate the Laplace transform. -/
@@ -1355,7 +1358,7 @@ theorem bilinear_schwinger_eq_heatKernel (m : ℝ) [Fact (0 < m)] [GFFPropagator
     4. Fubini swap: exchange s and k_sp integrals (justified by Schwartz decay)
     5. Do s-integral using `laplace_integral_half_power` with a = t²/4, b = |k_sp|² + m²:
        √π ∫₀^∞ s^{-1/2} exp(-t²/(4s) - (|k_sp|²+m²)s) ds = (π/ω) exp(-ω|t|)
-    6. Normalize: (1/(2π)^4) × π = 1/(2(2π)³)
+    6. Normalize: (1/(2π)^d) × π = 1/(2(2π)^{d−1})
 
     **Dependencies:**
     - `heatKernel_eq_gaussianFT` (PROVEN, line 153)
@@ -1393,7 +1396,7 @@ theorem heatKernel_bilinear_to_mixed_rep (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5
     LHS becomes: ∫_s e^{-sm²} ∫_x ∫_y f̄(x) f(y) · (1/(2π)^4) · ∫_k e^{-ik·z} e^{-s|k|²}
     where z = Θx - y = (-x₀-y₀, x_sp - y_sp)
 
-  Step 2: Decompose k = (k₀, k_sp) ∈ ℝ × ℝ³
+  Step 2: Decompose k = (k₀, k_sp) ∈ ℝ × ℝ^{d−1}
     k·z = k₀·(-x₀-y₀) + k_sp·(x_sp - y_sp) = -k₀·t + k_sp·r_sp
     where t = x₀ + y₀, r_sp = x_sp - y_sp
     This requires: lemma integral_spacetime_split
@@ -1410,7 +1413,7 @@ theorem heatKernel_bilinear_to_mixed_rep (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5
     where ω = √(|k_sp|² + m²)
 
   Step 6: Normalize constants
-    (1/(2π)^4) × π = π/(16π⁴) = 1/(16π³) = 1/(2(2π)³) ✓
+    (1/(2π)^d) × π = 1/(2(2π)^{d−1}) ✓
 
   INFRASTRUCTURE (complete):
   - `spacetime_inner_decompose` (PROVEN): ⟪k, z⟫ = k₀z₀ + spatialDot(k_sp, z_sp)
@@ -1471,7 +1474,7 @@ theorem heatKernel_bilinear_to_mixed_rep (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5
     where ω = √(‖k_sp‖² + m²)
 
   **Stage 7:** Verify normalization:
-    (1/(2π)^4) × π = 1/(2(2π)³) ✓
+    (1/(2π)^d) × π = 1/(2(2π)^{d−1}) ✓
   -/
 
   -- The complete proof requires careful tracking of integral domains and
@@ -1541,7 +1544,7 @@ theorem heatKernel_bilinear_to_mixed_rep (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5
   --   where ω = √(‖k_sp‖² + m²), t = -x₀ - y₀
   --
   -- Stage 7: Verify normalization constants:
-  --   (1/(2π)^4) × π = 1/(2(2π)³) ✓
+  --   (1/(2π)^d) × π = 1/(2(2π)^{d−1}) ✓
 
   -- Stage 4: After splitting k and applying gaussian_fourier_1d
   -- The form after k₀ integration matches fubini_s_ksp_swap LHS
@@ -1575,7 +1578,7 @@ theorem heatKernel_bilinear_to_mixed_rep (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5
 
   -- Stage 6-7: Apply laplace_integral_half_power and normalize
   -- The s-integral evaluates to (π/ω) exp(-ω|t|)
-  -- Combined with normalization: (1/(2π)^4) × π = 1/(2(2π)³)
+  -- Combined with normalization: (1/(2π)^d) × π = 1/(2(2π)^{d−1})
   have h_stage67 : (1 / (2 * π) ^ d : ℝ) *
       ∫ k_sp : (SpatialCoords d), ∫ s in Set.Ioi 0, ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
         (starRingEnd ℂ (f x)) * f y *
@@ -1639,7 +1642,7 @@ theorem heatKernel_bilinear_to_mixed_rep (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5
     6. **Do s-integral**: By `laplace_integral_half_power` (THEOREM) with a = t²/4, b = ω²:
        √π · ∫₀^∞ s^{-1/2} exp(-t²/(4s) - ω²s) ds = (π/ω) exp(-ω|t|)
 
-    7. **Normalize**: (1/(2π)^4) × π = 1/(2(2π)³) ✓
+    7. **Normalize**: (1/(2π)^d) × π = 1/(2(2π)^{d−1}) ✓
 
     **Note**: Working directly at bilinear level ensures absolute convergence
     (Schwartz test functions provide decay even when t = 0). -/

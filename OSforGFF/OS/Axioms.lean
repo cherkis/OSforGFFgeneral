@@ -167,7 +167,7 @@ def OS4_Ergodicity (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Pr
       Filter.atTop
       (nhds 0)
 
-/-- OS4 (Polynomial Clustering): For any f, g ∈ S(ℝ × ℝ³) and any exponent α > 0,
+/-- OS4 (Polynomial Clustering): For any f, g ∈ S(ℝ × ℝ^{d−1}) and any exponent α > 0,
     there exists c such that:
 
     |𝔼_μ[e^{⟨φ,f⟩ + ⟨T_s φ, g⟩}] - 𝔼_μ[e^{⟨φ,f⟩}] 𝔼_μ[e^{⟨φ,g⟩}]| ≤ c (1 + s)^{-α}

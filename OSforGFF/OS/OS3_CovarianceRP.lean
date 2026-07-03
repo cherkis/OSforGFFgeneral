@@ -17,7 +17,7 @@ import Mathlib.MeasureTheory.Integral.Bochner.ContinuousLinearMap
 Proves ⟨Θf, Cf⟩ ≥ 0 for positive-time test functions f, using the mixed
 representation derived in `OS3_MixedRep`:
 
-  ⟨Θf, Cf⟩ = (1/2(2π)³) ∫_{k̄} (1/ω) |∫ f̃(t, k̄) e^{−ωt} dt|² dk̄ ≥ 0
+  ⟨Θf, Cf⟩ = (1/(2(2π)^{d−1})) ∫_{k̄} (1/ω) |∫ f̃(t, k̄) e^{−ωt} dt|² dk̄ ≥ 0
 
 The key factorization: for f supported at positive time, |x₀+y₀| = x₀+y₀,
 so e^{−ω|x₀+y₀|} = e^{−ωx₀} · e^{−ωy₀} and the bilinear form becomes a

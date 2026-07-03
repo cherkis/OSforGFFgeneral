@@ -45,7 +45,8 @@ Proves (1/t)∫₀ᵗ A(T_s φ) ds → 𝔼[A] in L²(μ) as t → ∞. The redu
 3. Polynomial clustering gives |𝔼[…]| ≤ c·(1+|s−s'|)^{−2}
 4. Final bound: ≤ (c/t) ∫_{−∞}^{∞} (1+|s|)^{−2} ds → 0
 
-Uses α = 6 from the spatial dimension d = 3 (mass gap).
+Any clustering exponent α ≥ 2 suffices for step 3; the mass gap gives every
+polynomial rate, and `OS.Master` instantiates α = 6.
 
 ## Main result
 
@@ -75,7 +76,7 @@ export OS4infra (
 We define intermediate formulations of OS4 that are easier to prove directly.
 -/
 
-/-- OS4' (Ergodicity on generating functions): For any f ∈ S(ℝ × ℝ³),
+/-- OS4' (Ergodicity on generating functions): For any f ∈ S(ℝ × ℝ^{d−1}),
     lim_{t→∞} (1/t) ∫₀ᵗ e^{⟨T_s φ, f⟩} ds → 𝔼_μ[e^{⟨φ,f⟩}] in L²(μ_GFF)
 -/
 def OS4'_Ergodicity_generating (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] : Prop :=

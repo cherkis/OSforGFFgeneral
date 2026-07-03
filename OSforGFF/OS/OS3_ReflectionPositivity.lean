@@ -36,10 +36,14 @@ where `star f = conj ∘ f ∘ Θ`.  The factorisation gives `Z_ℂ[fᵢ − sta
 conj(Aᵢ)·Aⱼ·exp(Rᵢⱼ)` with Hermitian PSD R, requiring the complex entrywise
 exponential PSD theorem.
 
+Both versions hold in every dimension `2 ≤ d ≤ 5` with a `GFFPropagator d m` instance;
+the upper bound is inherited from the proper-time Fubini layer (`OS3_MixedRepInfra`),
+while the Schur–Hadamard lifting in this file is dimension-free.
+
 ## Main results
 
-- `gaussianFreeField_OS3_real`: `OS3_ReflectionPositivity_real (μ_GFF m)`
-- `gaussianFreeField_OS3`: `OS3_ReflectionPositivity (μ_GFF m)`  (complex)
+- `gaussianFreeField_OS3_real`: real reflection positivity of the free GFF
+- `gaussianFreeField_OS3`: complex (star) reflection positivity of the free GFF
 -/
 
 open MeasureTheory Complex Matrix OSforGFF

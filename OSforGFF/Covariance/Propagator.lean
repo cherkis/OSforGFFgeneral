@@ -21,6 +21,11 @@ transported to `Cprofile` through `schwinger_eq`: `L¹`-integrability (`GFFPropa
 pointwise exponential decay (`GFFPropagator.decayBound`). The momentum-space propagator
 `freePropagatorMom d m k = 1/((2π)²‖k‖²+m²)` is the forward Fourier transform of
 `x ↦ properTimeCovariance d m ‖x‖`.
+
+The position-space kernel of the theory is `freeCovariance d m x y := Cprofile ‖x − y‖`,
+symmetric and invariant under simultaneous isometries of both arguments by radiality.
+Instances (`Instances/`) provide the closed form and its Schwinger-integral evaluation;
+everything else in the library consumes only the class.
 -/
 
 open MeasureTheory Real Complex

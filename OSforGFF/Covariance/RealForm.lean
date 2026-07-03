@@ -22,15 +22,24 @@ import OSforGFF.Covariance.ParsevalGeneric
 /-!
 # Real Covariance Form and Square Root Propagator Embedding
 
-This file provides the real covariance form infrastructure along with the proof of the
-square root propagator embedding theorem.
+The real covariance bilinear form `C(f,g) = ∫∫ f(x) C(x,y) g(y)` on real test functions,
+realized as a squared `L²`-norm: composing the Fourier transform with multiplication by
+`√P(k) = 1/√((2π)²‖k‖² + m²)` gives a linear embedding `T : S(ℝ^d) → L²` with
+
+  `C(f, f) = ‖T f‖²_{L²}`  (Parseval bridge + `√P · √P = P`).
+
+This factorization carries the analytic content of the construction: it yields positivity
+and continuity of the quadratic form in the Schwartz topology — the hypotheses of the
+Minlos theorem, by which the Gaussian measure exists on the space of tempered
+distributions (`Measure/Construct.lean`) — and its injectivity (`OS/NonTrivial.lean`)
+makes the field non-degenerate.
 
 ## Main Results
 
-- `freeCovarianceFormR`: The real covariance bilinear form
-- `sqrtPropagatorEmbedding`: Existence of linear embedding realizing covariance as squared norm
-- `freeCovarianceFormR_continuous`: Continuity of the quadratic form f ↦ C(f,f)
-- `freeCovarianceFormR_pos`: Positivity of the quadratic form
+- `freeCovarianceFormR`: the real covariance bilinear form
+- `sqrtPropagatorEmbedding`: the embedding realizing the covariance as a squared norm
+- `freeCovarianceFormR_continuous`: continuity of `f ↦ C(f,f)` in the Schwartz topology
+- `freeCovarianceFormR_pos`: positivity of the quadratic form
 -/
 
 open MeasureTheory Complex Matrix OSforGFF

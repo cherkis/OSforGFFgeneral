@@ -495,7 +495,7 @@ theorem locallyIntegrable_of_rpow_decay_real {d : ℕ} (hd : d ≥ 3)
 
     This is a standard result: decay rate 4 > dimension 3 ensures integrability.
 
-    **Mathematical content**: In ℝ³ with spherical coordinates,
+    **Mathematical content**: In the spatial slice with spherical coordinates,
     ∫ 1/(1+r)^4 · r² dr dΩ = 4π ∫₀^∞ r²/(1+r)^4 dr < ∞
     since the integrand decays as r⁻² for large r.
 

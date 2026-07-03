@@ -39,7 +39,7 @@ import OSforGFF.Spacetime.ComplexTestFunction
 /-!
 # GFF Measure Construction via Minlos Theorem
 
-Constructs the Gaussian Free Field measure μ on S'(ℝ⁴) from the free covariance:
+Constructs the Gaussian Free Field measure μ on S'(ℝ^d) from the free covariance:
 
   covariance → characteristic functional exp(−½⟨f,Cf⟩) → Minlos → μ
 
