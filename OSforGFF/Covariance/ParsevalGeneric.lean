@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 import Mathlib.Analysis.Fourier.Inversion
+import Mathlib.Analysis.Distribution.SchwartzSpace.Fourier
 import OSforGFF.Spacetime.Basic
 import OSforGFF.Covariance.Propagator
 
@@ -155,5 +156,337 @@ theorem freeCovarianceℂ_bilinear_integrable {d : ℕ} (m : ℝ) [Fact (0 < m)]
   refine (properTime_bilinear_integrable (m := m) f g).congr ?_
   filter_upwards [freeCovariance_ae_properTime (d := d) (m := m)] with p hp
   rw [hp]
+
+/-! ### The autocorrelation and the momentum-space identity -/
+
+/-- The autocorrelation of a Schwartz function: `A(z) = ∫ f(x) · conj (f (x − z))`. -/
+def schwartzAutocorr {d : ℕ} (f : TestFunctionℂ d) (z : SpaceTime d) : ℂ :=
+  ∫ x : SpaceTime d, f x * starRingEnd ℂ (f (x - z))
+
+section Autocorr
+
+variable {d : ℕ} {m : ℝ} [Fact (0 < m)] [Fact (2 ≤ d)]
+
+omit [Fact (0 < m)] [Fact (2 ≤ d)] in
+/-- Conjugated autocorrelation as an integral: `conj (A z) = ∫ conj (f x) · f (x − z)`. -/
+lemma schwartzAutocorr_conj (f : TestFunctionℂ d) (z : SpaceTime d) :
+    starRingEnd ℂ (schwartzAutocorr f z)
+      = ∫ x : SpaceTime d, starRingEnd ℂ (f x) * f (x - z) := by
+  unfold schwartzAutocorr
+  refine Eq.trans
+    (integral_conj (f := fun x : SpaceTime d => f x * starRingEnd ℂ (f (x - z)))).symm ?_
+  exact integral_congr_ae (Filter.Eventually.of_forall fun x => by
+    simp only [map_mul, Complex.conj_conj])
+
+omit [Fact (0 < m)] [Fact (2 ≤ d)] in
+/-- Reflecting the autocorrelation argument conjugates its value: `A(−z) = conj (A z)`. -/
+lemma schwartzAutocorr_neg (f : TestFunctionℂ d) (z : SpaceTime d) :
+    schwartzAutocorr f (-z) = starRingEnd ℂ (schwartzAutocorr f z) := by
+  rw [schwartzAutocorr_conj]
+  unfold schwartzAutocorr
+  rw [← integral_add_right_eq_self (fun x => starRingEnd ℂ (f x) * f (x - z)) z]
+  exact integral_congr_ae (Filter.Eventually.of_forall fun x => by
+    simp only [sub_neg_eq_add, add_sub_cancel_right]
+    ring)
+
+omit [Fact (0 < m)] [Fact (2 ≤ d)] in
+/-- The complex coercion of `𝐞` is multiplicative. -/
+private lemma fourierChar_coe_mul (a b : ℝ) :
+    (Real.fourierChar a : ℂ) * (Real.fourierChar b : ℂ) = (Real.fourierChar (a + b) : ℂ) := by
+  rw [← Circle.coe_mul, ← AddChar.map_add_eq_mul]
+
+omit [Fact (0 < m)] [Fact (2 ≤ d)] in
+/-- Complex conjugation reflects the character: `conj (𝐞 r) = 𝐞 (−r)`. -/
+private lemma fourierChar_coe_conj (r : ℝ) :
+    starRingEnd ℂ (Real.fourierChar r : ℂ) = (Real.fourierChar (-r) : ℂ) := by
+  rw [AddChar.map_neg_eq_inv]
+  exact (Circle.coe_inv_eq_conj _).symm
+
+omit [Fact (0 < m)] [Fact (2 ≤ d)] in
+/-- The squared-modulus function `k ↦ 𝓕f(k) · conj (𝓕f(k))` of the Fourier transform of a
+    Schwartz function is integrable. -/
+lemma fourier_normSq_integrable (f : TestFunctionℂ d) :
+    Integrable (fun k : SpaceTime d =>
+      (SchwartzMap.fourierTransformCLM ℂ f) k
+        * starRingEnd ℂ ((SchwartzMap.fourierTransformCLM ℂ f) k)) := by
+  set F := SchwartzMap.fourierTransformCLM ℂ f with hF
+  obtain ⟨M, hM0, hMd⟩ := F.decay 0 0
+  refine F.integrable.mul_bdd (c := M)
+    (Complex.continuous_conj.comp F.continuous).aestronglyMeasurable ?_
+  filter_upwards with k
+  have := hMd k
+  simpa [norm_iteratedFDeriv_zero, RCLike.norm_conj] using this
+
+omit [Fact (0 < m)] [Fact (2 ≤ d)] in
+/-- The Fourier transform of `k ↦ 𝓕f(k) · conj (𝓕f(k))` is the conjugated autocorrelation:
+    `𝓕[𝓕f · conj (𝓕f)](z) = conj (A(z))` (Fubini against the character, then Fourier
+    inversion of the Schwartz function). -/
+lemma fourier_normSq_eq_conj_autocorr (f : TestFunctionℂ d) (z : SpaceTime d) :
+    FourierTransform.fourier (fun k : SpaceTime d =>
+        (SchwartzMap.fourierTransformCLM ℂ f) k
+          * starRingEnd ℂ ((SchwartzMap.fourierTransformCLM ℂ f) k)) z
+      = starRingEnd ℂ (schwartzAutocorr f z) := by
+  set F := SchwartzMap.fourierTransformCLM ℂ f with hFdef
+  have hFapp : ∀ w : SpaceTime d,
+      F w = ∫ y : SpaceTime d, (Real.fourierChar (-⟪y, w⟫) : ℂ) * f y := by
+    intro w
+    have h0 : F w = FourierTransform.fourier (⇑f) w := rfl
+    rw [h0, Real.fourier_eq]
+    simp_rw [Circle.smul_def, smul_eq_mul]
+  have hconjF : ∀ k : SpaceTime d, starRingEnd ℂ (F k)
+      = ∫ y : SpaceTime d, (Real.fourierChar ⟪y, k⟫ : ℂ) * starRingEnd ℂ (f y) := by
+    intro k
+    rw [hFapp k]
+    refine Eq.trans (integral_conj (f := fun y : SpaceTime d =>
+      (Real.fourierChar (-⟪y, k⟫) : ℂ) * f y)).symm ?_
+    exact integral_congr_ae (Filter.Eventually.of_forall fun y => by
+      simp only [map_mul, fourierChar_coe_conj, neg_neg])
+  have hdouble : ∀ w : SpaceTime d,
+      FourierTransform.fourier (F : SpaceTime d → ℂ) w = f (-w) := by
+    intro w
+    have h1 : FourierTransform.fourier (F : SpaceTime d → ℂ) w
+        = FourierTransform.fourierInv (FourierTransform.fourier (⇑f)) (-w) := by
+      rw [Real.fourierInv_eq_fourier_neg, neg_neg]
+      rfl
+    rw [h1]
+    exact f.integrable.fourierInv_fourier_eq F.integrable f.continuous.continuousAt
+  have hGint : Integrable (Function.uncurry fun (k y : SpaceTime d) =>
+      starRingEnd ℂ (f y) * ((Real.fourierChar (-⟪k, z - y⟫) : ℂ) * F k))
+      ((volume : Measure (SpaceTime d)).prod volume) := by
+    have hdom : Integrable (fun q : SpaceTime d × SpaceTime d => ‖F q.1‖ * ‖f q.2‖)
+        ((volume : Measure (SpaceTime d)).prod volume) :=
+      F.integrable.norm.mul_prod f.integrable.norm
+    have hcont : Continuous (Function.uncurry fun (k y : SpaceTime d) =>
+        starRingEnd ℂ (f y) * ((Real.fourierChar (-⟪k, z - y⟫) : ℂ) * F k)) := by
+      apply Continuous.mul
+      · exact Complex.continuous_conj.comp (f.continuous.comp continuous_snd)
+      · apply Continuous.mul
+        · exact continuous_subtype_val.comp (Real.continuous_fourierChar.comp
+            (continuous_fst.inner (continuous_const.sub continuous_snd)).neg)
+        · exact F.continuous.comp continuous_fst
+    refine hdom.mono' hcont.aestronglyMeasurable ?_
+    filter_upwards with q
+    obtain ⟨k, y⟩ := q
+    simp only [Function.uncurry_apply_pair, norm_mul, RCLike.norm_conj, Circle.norm_coe, one_mul]
+    exact le_of_eq (mul_comm _ _)
+  have hexp : FourierTransform.fourier
+      (fun k : SpaceTime d => F k * starRingEnd ℂ (F k)) z
+      = ∫ k : SpaceTime d, ∫ y : SpaceTime d,
+          starRingEnd ℂ (f y) * ((Real.fourierChar (-⟪k, z - y⟫) : ℂ) * F k) := by
+    rw [Real.fourier_eq]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun k => ?_)
+    simp only [Circle.smul_def, smul_eq_mul]
+    calc (Real.fourierChar (-⟪k, z⟫) : ℂ) * (F k * starRingEnd ℂ (F k))
+        = ((Real.fourierChar (-⟪k, z⟫) : ℂ) * F k) * starRingEnd ℂ (F k) := by ring
+      _ = ((Real.fourierChar (-⟪k, z⟫) : ℂ) * F k)
+            * ∫ y : SpaceTime d, (Real.fourierChar ⟪y, k⟫ : ℂ) * starRingEnd ℂ (f y) := by
+          rw [hconjF k]
+      _ = ∫ y : SpaceTime d, ((Real.fourierChar (-⟪k, z⟫) : ℂ) * F k)
+            * ((Real.fourierChar ⟪y, k⟫ : ℂ) * starRingEnd ℂ (f y)) :=
+          (MeasureTheory.integral_const_mul _ _).symm
+      _ = ∫ y : SpaceTime d,
+            starRingEnd ℂ (f y) * ((Real.fourierChar (-⟪k, z - y⟫) : ℂ) * F k) := by
+          refine integral_congr_ae (Filter.Eventually.of_forall fun y => ?_)
+          have hchar : (Real.fourierChar (-⟪k, z⟫) : ℂ) * (Real.fourierChar ⟪y, k⟫ : ℂ)
+              = (Real.fourierChar (-⟪k, z - y⟫) : ℂ) := by
+            rw [fourierChar_coe_mul]
+            congr 1
+            rw [inner_sub_right, real_inner_comm y k]
+            ring_nf
+          calc ((Real.fourierChar (-⟪k, z⟫) : ℂ) * F k)
+                * ((Real.fourierChar ⟪y, k⟫ : ℂ) * starRingEnd ℂ (f y))
+              = starRingEnd ℂ (f y) * (((Real.fourierChar (-⟪k, z⟫) : ℂ)
+                  * (Real.fourierChar ⟪y, k⟫ : ℂ)) * F k) := by ring
+            _ = starRingEnd ℂ (f y) * ((Real.fourierChar (-⟪k, z - y⟫) : ℂ) * F k) := by
+                rw [hchar]
+  rw [hexp, MeasureTheory.integral_integral_swap hGint]
+  have hinner : ∀ y : SpaceTime d,
+      (∫ k : SpaceTime d, starRingEnd ℂ (f y)
+          * ((Real.fourierChar (-⟪k, z - y⟫) : ℂ) * F k))
+        = starRingEnd ℂ (f y) * f (y - z) := by
+    intro y
+    calc (∫ k : SpaceTime d, starRingEnd ℂ (f y)
+            * ((Real.fourierChar (-⟪k, z - y⟫) : ℂ) * F k))
+        = starRingEnd ℂ (f y)
+            * ∫ k : SpaceTime d, (Real.fourierChar (-⟪k, z - y⟫) : ℂ) * F k :=
+          MeasureTheory.integral_const_mul _ _
+      _ = starRingEnd ℂ (f y) * f (y - z) := by
+          have h2 : (∫ k : SpaceTime d, (Real.fourierChar (-⟪k, z - y⟫) : ℂ) * F k)
+              = FourierTransform.fourier (F : SpaceTime d → ℂ) (z - y) := by
+            rw [Real.fourier_eq]
+            simp_rw [Circle.smul_def, smul_eq_mul]
+          rw [h2, hdouble (z - y), neg_sub]
+  rw [integral_congr_ae (Filter.Eventually.of_forall hinner), schwartzAutocorr_conj]
+
+omit [Fact (2 ≤ d)] in
+/-- Fubini/shear form of the proper-time sesquilinear pairing: the pairing collapses against
+    the autocorrelation, `∫∫ f(x) C_S(‖x−y‖) conj (f y) = ∫ C_S(‖z‖) · A(z)`. -/
+lemma properTime_pairing_eq_autocorr (f : TestFunctionℂ d) :
+    (∫ x, ∫ y, f x * (properTimeCovariance d m ‖x - y‖ : ℂ) * starRingEnd ℂ (f y))
+      = ∫ z, (properTimeCovariance d m ‖z‖ : ℂ) * schwartzAutocorr f z := by
+  have hm : (0 : ℝ) < m := Fact.out
+  obtain ⟨M, hM0, hMd⟩ := f.decay 0 0
+  have hM : ∀ x, ‖f x‖ ≤ M := by
+    intro x
+    have := hMd x
+    simpa [norm_iteratedFDeriv_zero] using this
+  have hCS : Integrable (fun z : SpaceTime d => properTimeCovariance d m ‖z‖) :=
+    properTimeCovariance_integrable d m hm
+  -- joint integrability of `(x, z) ↦ f(x) · C_S(‖z‖) · conj (f (x − z))`
+  have hJ : Integrable (fun p : SpaceTime d × SpaceTime d =>
+      f p.1 * (properTimeCovariance d m ‖p.2‖ : ℂ) * starRingEnd ℂ (f (p.1 - p.2)))
+      ((volume : Measure (SpaceTime d)).prod volume) := by
+    have hdom : Integrable (fun p : SpaceTime d × SpaceTime d =>
+        ‖f p.1‖ * (M * properTimeCovariance d m ‖p.2‖))
+        ((volume : Measure (SpaceTime d)).prod volume) :=
+      f.integrable.norm.mul_prod (hCS.const_mul M)
+    have hmeas : AEStronglyMeasurable (fun p : SpaceTime d × SpaceTime d =>
+        f p.1 * (properTimeCovariance d m ‖p.2‖ : ℂ) * starRingEnd ℂ (f (p.1 - p.2)))
+        ((volume : Measure (SpaceTime d)).prod volume) := by
+      refine AEStronglyMeasurable.mul (AEStronglyMeasurable.mul ?_ ?_) ?_
+      · exact f.continuous.aestronglyMeasurable.comp_fst
+      · exact (Complex.measurable_ofReal.comp ((properTimeCovariance_norm_measurable d m).comp
+          measurable_snd)).aestronglyMeasurable
+      · exact (Complex.continuous_conj.comp
+          (f.continuous.comp (continuous_fst.sub continuous_snd))).aestronglyMeasurable
+    refine hdom.mono' hmeas ?_
+    filter_upwards with p
+    have h1 : 0 ≤ properTimeCovariance d m ‖p.2‖ := properTimeCovariance_nonneg _ _ _
+    calc ‖f p.1 * (properTimeCovariance d m ‖p.2‖ : ℂ) * starRingEnd ℂ (f (p.1 - p.2))‖
+        = ‖f p.1‖ * properTimeCovariance d m ‖p.2‖ * ‖f (p.1 - p.2)‖ := by
+          rw [norm_mul, norm_mul, Complex.norm_real, Real.norm_of_nonneg h1, RCLike.norm_conj]
+      _ ≤ ‖f p.1‖ * properTimeCovariance d m ‖p.2‖ * M := by
+          gcongr
+          exact hM _
+      _ = ‖f p.1‖ * (M * properTimeCovariance d m ‖p.2‖) := by ring
+  -- inner change of variables `y := x − z` at each fixed `x`
+  have hinner : ∀ x : SpaceTime d,
+      (∫ y, f x * (properTimeCovariance d m ‖x - y‖ : ℂ) * starRingEnd ℂ (f y))
+        = ∫ z, f x * (properTimeCovariance d m ‖z‖ : ℂ) * starRingEnd ℂ (f (x - z)) := by
+    intro x
+    rw [← integral_sub_left_eq_self
+      (fun z => f x * (properTimeCovariance d m ‖z‖ : ℂ) * starRingEnd ℂ (f (x - z)))
+      (volume : Measure (SpaceTime d)) x]
+    exact integral_congr_ae (Filter.Eventually.of_forall fun y => by
+      simp only [sub_sub_cancel])
+  rw [integral_congr_ae (Filter.Eventually.of_forall hinner)]
+  -- swap the two integrals and collapse the inner one to the autocorrelation
+  rw [MeasureTheory.integral_integral_swap hJ]
+  refine integral_congr_ae (Filter.Eventually.of_forall fun z => ?_)
+  unfold schwartzAutocorr
+  calc (∫ x, f x * (properTimeCovariance d m ‖z‖ : ℂ) * starRingEnd ℂ (f (x - z)))
+      = ∫ x, (properTimeCovariance d m ‖z‖ : ℂ) * (f x * starRingEnd ℂ (f (x - z))) :=
+        integral_congr_ae (Filter.Eventually.of_forall fun x => by ring)
+    _ = (properTimeCovariance d m ‖z‖ : ℂ) * ∫ x, f x * starRingEnd ℂ (f (x - z)) :=
+        MeasureTheory.integral_const_mul _ _
+
+end Autocorr
+
+section Parseval
+
+variable {d : ℕ} {m : ℝ} [Fact (0 < m)] [Fact (2 ≤ d)] [GFFPropagator d m]
+
+/-- The sesquilinear pairing with the `freeCovariance` kernel agrees with the proper-time
+    kernel pairing (the kernels agree away from the null diagonal). -/
+lemma freeCovarianceℂ_self_eq_properTime (f : TestFunctionℂ d) :
+    freeCovarianceℂ m f f
+      = ∫ x, ∫ y, f x * (properTimeCovariance d m ‖x - y‖ : ℂ) * starRingEnd ℂ (f y) := by
+  have hd : 0 < d := by have := (Fact.out : 2 ≤ d); omega
+  have : Nonempty (Fin d) := ⟨⟨0, hd⟩⟩
+  have : Nontrivial (SpaceTime d) := inferInstance
+  unfold freeCovarianceℂ
+  refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
+  refine integral_congr_ae ?_
+  filter_upwards [compl_mem_ae_iff.mpr (measure_singleton x)] with y hy
+  have hxy : x - y ≠ 0 := sub_ne_zero.mpr fun h => hy (h ▸ rfl)
+  unfold freeCovariance
+  rw [GFFPropagator.schwinger_eq ‖x - y‖ (norm_pos_iff.mpr hxy)]
+
+/-- **The complex Parseval identity for the covariance pairing**: the quadratic pairing
+    equals the (real, nonnegative) momentum-space integral of `‖𝓕f‖²` against the propagator,
+    `⟨f, C f̄⟩ = ∫ ‖𝓕f(k)‖² · P(k) dk`. -/
+theorem freeCovarianceℂ_self_eq_momentum (f : TestFunctionℂ d) :
+    freeCovarianceℂ m f f
+      = ((∫ k : SpaceTime d, ‖(SchwartzMap.fourierTransformCLM ℂ f) k‖ ^ 2
+          * freePropagatorMom d m k : ℝ) : ℂ) := by
+  have hm : (0 : ℝ) < m := Fact.out
+  have hCSint : Integrable (fun x : SpaceTime d => (properTimeCovariance d m ‖x‖ : ℂ)) :=
+    (properTimeCovariance_integrable d m hm).ofReal
+  have hBint : Integrable (fun k : SpaceTime d =>
+      (SchwartzMap.fourierTransformCLM ℂ f) k
+        * starRingEnd ℂ ((SchwartzMap.fourierTransformCLM ℂ f) k)) :=
+    fourier_normSq_integrable f
+  -- reflect `z ↦ −z`: the kernel is even and the autocorrelation reflects to its conjugate
+  have h2 : (∫ z : SpaceTime d, (properTimeCovariance d m ‖z‖ : ℂ) * schwartzAutocorr f z)
+      = ∫ z : SpaceTime d,
+          (properTimeCovariance d m ‖z‖ : ℂ) * starRingEnd ℂ (schwartzAutocorr f z) := by
+    refine Eq.trans (integral_neg_eq_self
+      (fun z : SpaceTime d => (properTimeCovariance d m ‖z‖ : ℂ) * schwartzAutocorr f z)
+      (volume : Measure (SpaceTime d))).symm ?_
+    exact integral_congr_ae (Filter.Eventually.of_forall fun z => by
+      simp only [norm_neg, schwartzAutocorr_neg])
+  -- replace the conjugated autocorrelation by the Fourier transform of `‖𝓕f‖²`
+  have h3 : (∫ z : SpaceTime d,
+        (properTimeCovariance d m ‖z‖ : ℂ) * starRingEnd ℂ (schwartzAutocorr f z))
+      = ∫ z : SpaceTime d, (properTimeCovariance d m ‖z‖ : ℂ)
+          * FourierTransform.fourier (fun k : SpaceTime d =>
+              (SchwartzMap.fourierTransformCLM ℂ f) k
+                * starRingEnd ℂ ((SchwartzMap.fourierTransformCLM ℂ f) k)) z :=
+    integral_congr_ae (Filter.Eventually.of_forall fun z =>
+      congrArg ((properTimeCovariance d m ‖z‖ : ℂ) * ·)
+        (fourier_normSq_eq_conj_autocorr f z).symm)
+  -- the multiplication formula `∫ 𝓕C · B = ∫ C · 𝓕B`
+  have h4 : (∫ k : SpaceTime d,
+        FourierTransform.fourier
+            (fun x : SpaceTime d => (properTimeCovariance d m ‖x‖ : ℂ)) k
+          * ((SchwartzMap.fourierTransformCLM ℂ f) k
+              * starRingEnd ℂ ((SchwartzMap.fourierTransformCLM ℂ f) k)))
+      = ∫ z : SpaceTime d, (properTimeCovariance d m ‖z‖ : ℂ)
+          * FourierTransform.fourier (fun k : SpaceTime d =>
+              (SchwartzMap.fourierTransformCLM ℂ f) k
+                * starRingEnd ℂ ((SchwartzMap.fourierTransformCLM ℂ f) k)) z := by
+    have hL : Continuous fun p : SpaceTime d × SpaceTime d => (innerₗ (SpaceTime d)) p.1 p.2 :=
+      continuous_inner
+    have h := VectorFourier.integral_bilin_fourierIntegral_eq_flip
+      (M := ContinuousLinearMap.mul ℂ ℂ) (e := Real.fourierChar)
+      (L := innerₗ (SpaceTime d)) (μ := (volume : Measure (SpaceTime d)))
+      (ν := (volume : Measure (SpaceTime d)))
+      Real.continuous_fourierChar hL hCSint hBint
+    rw [flip_innerₗ] at h
+    exact h
+  -- evaluate `𝓕C = P` and `B = ‖𝓕f‖²` pointwise
+  have h5 : (∫ k : SpaceTime d,
+        FourierTransform.fourier
+            (fun x : SpaceTime d => (properTimeCovariance d m ‖x‖ : ℂ)) k
+          * ((SchwartzMap.fourierTransformCLM ℂ f) k
+              * starRingEnd ℂ ((SchwartzMap.fourierTransformCLM ℂ f) k)))
+      = ((∫ k : SpaceTime d, ‖(SchwartzMap.fourierTransformCLM ℂ f) k‖ ^ 2
+          * freePropagatorMom d m k : ℝ) : ℂ) := by
+    refine Eq.trans (integral_congr_ae (Filter.Eventually.of_forall fun k => ?_))
+      integral_complex_ofReal
+    simp only [properTimeCovariance_fourier d m hm, Complex.mul_conj, Complex.normSq_eq_norm_sq]
+    push_cast
+    ring
+  exact ((freeCovarianceℂ_self_eq_properTime f).trans
+    (properTime_pairing_eq_autocorr f)).trans (h2.trans (h3.trans (h4.symm.trans h5)))
+
+/-- **Parseval identity** for the covariance pairing, real form: the real part of the
+    quadratic pairing is the momentum-space integral `∫ ‖𝓕f(k)‖² · P(k) dk`. -/
+theorem parseval_covariance_schwartz (f : TestFunctionℂ d) :
+    (freeCovarianceℂ m f f).re
+      = ∫ k : SpaceTime d, ‖(SchwartzMap.fourierTransformCLM ℂ f) k‖ ^ 2
+          * freePropagatorMom d m k := by
+  rw [freeCovarianceℂ_self_eq_momentum f]
+  exact Complex.ofReal_re _
+
+/-- Positivity of the covariance pairing: `0 ≤ Re ⟨f, C f̄⟩`. -/
+theorem freeCovarianceℂ_positive (f : TestFunctionℂ d) :
+    0 ≤ (freeCovarianceℂ m f f).re := by
+  rw [parseval_covariance_schwartz f]
+  refine integral_nonneg fun k => mul_nonneg (sq_nonneg _) ?_
+  unfold OSforGFF.freePropagatorMom
+  positivity
+
+end Parseval
 
 end
