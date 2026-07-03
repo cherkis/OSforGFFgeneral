@@ -537,7 +537,7 @@ theorem gff_complex_generating (m : ℝ) [Fact (0 < m)] :
     1. Centering: E[⟨ω,φ⟩] = 0 (from gaussianFreeField_free_centered)
     2. Gaussian CF: Z[J] = exp(-½ S₂(J,J)) (from gff_complex_generating) -/
 theorem isGaussianGJ_gaussianFreeField_free (m : ℝ) [Fact (0 < m)] :
-    isGaussianGJ (gaussianFreeField_free m) := by
+    isGaussianGJ (gaussianFreeField_free (d := STDimension) m) := by
   constructor
   · exact gaussianFreeField_free_centered m
   · exact fun J => gff_complex_generating m J

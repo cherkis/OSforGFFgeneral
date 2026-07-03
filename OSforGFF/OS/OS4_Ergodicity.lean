@@ -220,7 +220,7 @@ lemma gff_exp_L2_norm_constant (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) (
       ∂(gaussianFreeField_free m).toMeasure =
     ∫ ω, ‖Complex.exp (distributionPairingℂ_real ω f)‖^2
       ∂(gaussianFreeField_free m).toMeasure := by
-  let μ := (gaussianFreeField_free m).toMeasure
+  let μ := (gaussianFreeField_free (d := STDimension) m).toMeasure
   -- Step 1: Time translation duality ⟨T_s ω, f⟩ = ⟨ω, T_{-s} f⟩
   have h_duality : ∀ ω, Complex.exp (distributionPairingℂ_real (timeTranslationDistribution s ω) f) =
       Complex.exp (distributionPairingℂ_real ω (timeTranslationSchwartzℂ (-s) f)) := fun ω =>
@@ -267,7 +267,7 @@ lemma time_average_memLp_two (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) (T 
     MemLp (fun ω => (1/T : ℂ) * ∫ s in Set.Icc (0 : ℝ) T,
         Complex.exp (distributionPairingℂ_real (timeTranslationDistribution s ω) f))
       2 (gaussianFreeField_free m).toMeasure := by
-  let μ := (gaussianFreeField_free m).toMeasure
+  let μ := (gaussianFreeField_free (d := STDimension) m).toMeasure
   let A := fun s ω => Complex.exp (distributionPairingℂ_real (timeTranslationDistribution s ω) f)
   -- A_s is in L² for each s
   have h_As_L2 : ∀ s, MemLp (A s) 2 μ := fun s => gff_exp_time_translated_memLp_two m s f
@@ -314,7 +314,7 @@ lemma gff_err_sq_integrable (m : ℝ) [Fact (0 < m)] (T : ℝ) (hT : T > 0) (f :
           Complex.exp (distributionPairingℂ_real (timeTranslationDistribution s ω) f))
         - ∫ ω', Complex.exp (distributionPairingℂ_real ω' f) ∂(gaussianFreeField_free m).toMeasure‖^2)
       (gaussianFreeField_free m).toMeasure := by
-  let μ := (gaussianFreeField_free m).toMeasure
+  let μ := (gaussianFreeField_free (d := STDimension) m).toMeasure
   let A := fun s ω => Complex.exp (distributionPairingℂ_real (timeTranslationDistribution s ω) f)
   let EA := ∫ ω, A 0 ω ∂μ
   -- Step 1: Time average is in L²
@@ -1071,7 +1071,7 @@ lemma norm_sq_weighted_sum_le {n : ℕ} (w : Fin n → ℂ) (a : Fin n → ℂ) 
 theorem OS4'_implies_OS4 (m : ℝ) [Fact (0 < m)] :
     OS4'_Ergodicity_generating m → OS4_Ergodicity (gaussianFreeField_free m) := by
   intro h_erg n z f
-  let μ := (gaussianFreeField_free m).toMeasure
+  let μ := (gaussianFreeField_free (d := STDimension) m).toMeasure
   let A : FieldConfiguration4 → ℂ := fun ω => ∑ j, z j * Complex.exp (distributionPairingℂ_real ω (f j))
 
   -- Define the "error" for each generating function

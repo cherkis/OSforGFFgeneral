@@ -236,8 +236,8 @@ lemma GFF_OS4_from_small_decay_real (m : ℝ) [Fact (0 < m)]
     exact generating_euclidean_invariant _ h_OS2 ⟨1, a⟩ gC
 
   -- Combine: Z[fC + T_a_gC] = Z[fC]·Z[gC]·exp(-S₂(fC, T_a_gC))
-  set Z := GJGeneratingFunctionalℂ (gaussianFreeField_free m)
-  set S₂ := SchwingerFunctionℂ₂ (gaussianFreeField_free m)
+  set Z := GJGeneratingFunctionalℂ (gaussianFreeField_free (d := STDimension) m)
+  set S₂ := SchwingerFunctionℂ₂ (gaussianFreeField_free (d := STDimension) m)
 
   have h_combined : Z (fC + T_a_gC) = Z fC * Z gC * Complex.exp (-S₂ fC T_a_gC) := by
     rw [h_factor, h_transl]

@@ -240,7 +240,7 @@ theorem gaussian_pairing_product_integrable_free_2point
 /-- **Corollary**: The complex covariance is well-defined via the general integrability. -/
 theorem covariance_bilinear_from_general
   (m : ℝ) [Fact (0 < m)] :
-  CovarianceBilinear (gaussianFreeField_free m) := by
+  CovarianceBilinear (gaussianFreeField_free (d := STDimension) m) := by
   -- Apply the general construction from integrability
   apply CovarianceBilinear_of_integrable
   exact fun φ ψ => gaussian_pairing_product_integrable_free_2point m φ ψ
