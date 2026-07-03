@@ -1594,7 +1594,7 @@ theorem heatKernel_bilinear_to_mixed_rep (m : ℝ) [Fact (0 < m)] (f : TestFunct
           Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
           Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y)) := by
     congr 1
-    exact @fubini_s_ksp_swap m _ f hf_supp
+    exact fubini_s_ksp_swap (d := STDimension) m f hf_supp
 
   -- Stage 6-7: Apply laplace_integral_half_power and normalize
   -- The s-integral evaluates to (π/ω) exp(-ω|t|)

@@ -63,6 +63,8 @@ abbrev SpaceTime4 := SpaceTime STDimension
 
 instance : Fact (2 ≤ STDimension) := ⟨by norm_num⟩
 
+instance : Fact (STDimension ≤ 5) := ⟨by norm_num⟩
+
 /-- Dimensions admitting a time/space split are nonzero, so `(0 : Fin d)` is available. -/
 instance {d : ℕ} [Fact (2 ≤ d)] : NeZero d := ⟨by have h : 2 ≤ d := Fact.out; omega⟩
 
