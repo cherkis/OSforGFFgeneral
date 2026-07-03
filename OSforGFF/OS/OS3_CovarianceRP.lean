@@ -442,8 +442,8 @@ theorem freeCovariance_reflection_positive_bilinear_real (m : ℝ) [Fact (0 < m)
     simp only [toComplex_apply]
     rw [hf_supp x hx]
     simp)
-  -- Connect the real integral to the complex one via real_integral_eq_complex_re
-  rw [real_integral_eq_complex_re m f]
+  -- Connect the real integral to the complex one via real_integral_eq_complex_re4
+  rw [real_integral_eq_complex_re4 m f]
   -- Show that the complex integral equals rpInnerProduct
   have h_eq : (∫ x, ∫ y, (QFT.compTimeReflection (toComplex f)) x * (freeCovariance4 m x y : ℂ)
         * (toComplex f) y ∂volume ∂volume)

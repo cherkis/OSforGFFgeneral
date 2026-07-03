@@ -24,6 +24,7 @@ import OSforGFF.General.FunctionalAnalysis
 import OSforGFF.Covariance.Momentum
 import OSforGFF.General.FourierTransforms
 import OSforGFF.Covariance.Parseval
+import OSforGFF.Covariance.ParsevalGeneric
 
 /-!
 # Position-Space Free Covariance
@@ -38,8 +39,8 @@ C(x,y) = ∫₀^∞ e^{−sm²} H(s,|x−y|) ds via the heat kernel.
 
 ## Key Results
 
-- `freeCovariance_euclidean_invariant`: Euclidean invariance of the covariance
-- `covariance_timeReflection_invariant`: Time reflection invariance
+- `freeCovariance_euclidean_invariant4`: Euclidean invariance of the covariance
+- `covariance_timeReflection_invariant4`: Time reflection invariance
 -/
 
 open MeasureTheory Complex Real Filter
@@ -118,30 +119,12 @@ theorem parseval_covariance_schwartz_regulated' (α : ℝ) (hα : 0 < α) (m : �
   = ∫ k, Real.exp (-α * (2 * Real.pi)^2 * ‖k‖^2) * ‖(SchwartzMap.fourierTransformCLM ℂ f) k‖^2 * freePropagatorMomentum_mathlib m k ∂volume :=
   _root_.parseval_covariance_schwartz_regulated α hα m f
 
-/-- **(Time Reflection Change of Variables):**
-    Integrating a function over spacetime is unchanged when both variables are composed with
-    geometric time reflection.  This packages the measure-preserving property of time reflection
-    together with Fubini's theorem for later use in reflection-positivity arguments. -/
-lemma double_integral_timeReflection
-  (G : SpaceTime4 → SpaceTime4 → ℂ)
-  (_hG : Integrable (fun p : SpaceTime4 × SpaceTime4 => G p.1 p.2) (volume.prod volume)) :
-  ∫ x, ∫ y, G (QFT.timeReflection x) (QFT.timeReflection y) ∂volume ∂volume
-    = ∫ x, ∫ y, G x y ∂volume ∂volume := by
-  have hmp := QFT.timeReflection_measurePreserving (d := STDimension)
-  have hmeas := (QFT.timeReflectionLE (d := STDimension)).toMeasurableEquiv.measurableEmbedding
-  -- Apply change of variables for inner integral first
-  have h_inner : ∀ x, ∫ y, G x (QFT.timeReflection y) = ∫ y, G x y :=
-    fun x => hmp.integral_comp hmeas (fun y => G x y)
-  simp_rw [h_inner]
-  -- Then apply change of variables for outer integral
-  exact hmp.integral_comp hmeas (fun x => ∫ y, G x y)
-
 /-- Specialized time-reflection change of variables for covariance-type kernels.
     This packages the combination of `double_integral_timeReflection` and the
     observation that `compTimeReflection` is just composition with
     `timeReflection`, so we can reuse the general measure-preserving lemma
     without re-establishing integrability each time. -/
-lemma double_integral_timeReflection_covariance
+lemma double_integral_timeReflection_covariance4
   (m : ℝ) (f g : TestFunctionℂ4)
   (hf : Integrable (fun p : SpaceTime4 × SpaceTime4 =>
       (QFT.compTimeReflection f) p.1 * (freeCovariance4 m p.1 p.2 : ℂ) * g p.2)
@@ -201,7 +184,7 @@ theorem freeCovarianceℂ_bilinear_integrable4
 /-- Integrability of the covariance kernel evaluated on a time-reflected test function.
     This follows directly from `freeCovarianceℂ_bilinear_integrable4` since `compTimeReflection`
     maps test functions to test functions. -/
-lemma integrable_compTimeReflection_covariance
+lemma integrable_compTimeReflection_covariance4
   (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ4) :
   Integrable (fun p : SpaceTime4 × SpaceTime4 =>
       (QFT.compTimeReflection f) p.1 * (freeCovariance4 m p.1 p.2 : ℂ) * f p.2)
@@ -210,30 +193,14 @@ lemma integrable_compTimeReflection_covariance
   exact freeCovarianceℂ_bilinear_integrable4 m (QFT.compTimeReflection f) f
 
 
-/-- Relationship between compTimeReflection of toComplex and compTimeReflectionReal:
-    they agree pointwise as complex values. -/
-lemma compTimeReflection_toComplex_eq_ofReal
-  (f : TestFunction4) (x : SpaceTime4) :
-  (QFT.compTimeReflection (toComplex f)) x = ((QFT.compTimeReflectionReal f) x : ℂ) := by
-  simp only [QFT.compTimeReflection, QFT.compTimeReflectionReal,
-    SchwartzMap.compCLM_apply, Function.comp_apply, toComplex_apply]
-
-/-- The real part of a complex integral of a real-valued function equals the real integral.
-    This uses `integral_ofReal_eq` and `Complex.ofReal_re`. -/
-lemma re_integral_ofReal {α : Type*} [MeasurableSpace α] (μ : Measure α) (h : α → ℝ)
-    (hf : Integrable h μ) :
-    (∫ x, (h x : ℂ) ∂μ).re = ∫ x, h x ∂μ := by
-  rw [integral_ofReal_eq μ h hf]
-  exact Complex.ofReal_re _
-
 /-- Integrability of the real covariance kernel obtained from a real test function. -/
-lemma integrable_real_covariance_kernel
+lemma integrable_real_covariance_kernel4
   (m : ℝ) [Fact (0 < m)] (f : TestFunction4) :
   Integrable (fun p : SpaceTime4 × SpaceTime4 =>
       (QFT.compTimeReflectionReal f) p.1 * freeCovariance4 m p.1 p.2 * f p.2)
     (volume.prod volume) := by
   -- Get integrability from complex lemma
-  have h_complex := integrable_compTimeReflection_covariance m (toComplex f)
+  have h_complex := integrable_compTimeReflection_covariance4 m (toComplex f)
   -- Show the integrands match (after casting)
   -- The complex integrand with toComplex f equals the real integrand cast to ℂ
   have h_eq : (fun p : SpaceTime4 × SpaceTime4 =>
@@ -271,7 +238,7 @@ lemma integrable_real_covariance_kernel
     rw [← h_norm_eq p]
 
 /-- Fubini helper: rewrite the real kernel double integral over the product measure. -/
-lemma integral_prod_real_covariance_kernel
+lemma integral_prod_real_covariance_kernel4
   (m : ℝ) [Fact (0 < m)] (f : TestFunction4) :
   ∫ p : SpaceTime4 × SpaceTime4,
       (QFT.compTimeReflectionReal f) p.1 * freeCovariance4 m p.1 p.2 * f p.2 ∂(volume.prod volume)
@@ -279,10 +246,10 @@ lemma integral_prod_real_covariance_kernel
       ∫ x, ∫ y,
         (QFT.compTimeReflectionReal f) x * freeCovariance4 m x y * f y ∂volume ∂volume := by
   rw [MeasureTheory.integral_prod]
-  exact integrable_real_covariance_kernel m f
+  exact integrable_real_covariance_kernel4 m f
 
-/-- Complex Fubini helper mirroring `integral_prod_real_covariance_kernel`. -/
-lemma integral_prod_complex_covariance_kernel
+/-- Complex Fubini helper mirroring `integral_prod_real_covariance_kernel4`. -/
+lemma integral_prod_complex_covariance_kernel4
   (m : ℝ) [Fact (0 < m)] (f : TestFunction4) :
   ∫ p : SpaceTime4 × SpaceTime4,
       (QFT.compTimeReflection (toComplex f)) p.1 * (freeCovariance4 m p.1 p.2 : ℂ)
@@ -292,7 +259,7 @@ lemma integral_prod_complex_covariance_kernel
         (QFT.compTimeReflection (toComplex f)) x * (freeCovariance4 m x y : ℂ)
           * (toComplex f) y ∂volume ∂volume := by
   rw [MeasureTheory.integral_prod]
-  exact integrable_compTimeReflection_covariance m (toComplex f)
+  exact integrable_compTimeReflection_covariance4 m (toComplex f)
 
 /-- ** (Real-Complex Integral Correspondence):**
   The real integral with compTimeReflectionReal equals the real part of the
@@ -302,7 +269,7 @@ lemma integral_prod_complex_covariance_kernel
   (using `compTimeReflection_toComplex_eq_ofReal` and `toComplex_apply`).
   For real-valued integrands, the `.re` of the complex integral equals the real integral
   via `integral_ofReal_eq` applied twice. -/
-lemma real_integral_eq_complex_re
+lemma real_integral_eq_complex_re4
   (m : ℝ) [Fact (0 < m)] (f : TestFunction4) :
   ∫ x, ∫ y, (QFT.compTimeReflectionReal f) x * freeCovariance4 m x y * f y ∂volume ∂volume
     = (∫ x, ∫ y, (QFT.compTimeReflection (toComplex f)) x * (freeCovariance4 m x y : ℂ)
@@ -315,7 +282,7 @@ lemma real_integral_eq_complex_re
     simp only [compTimeReflection_toComplex_eq_ofReal, toComplex_apply]
   -- Strategy: use Fubini to convert to product measure, apply re_integral_ofReal, convert back
   -- First rewrite RHS using Fubini for complex (before h_eq rewrite)
-  rw [← integral_prod_complex_covariance_kernel m f]
+  rw [← integral_prod_complex_covariance_kernel4 m f]
   -- Now RHS is (∫ p, complex_integrand(p)).re
   -- Rewrite the complex integrand using h_eq
   have h_eq_prod : ∀ p : SpaceTime4 × SpaceTime4,
@@ -330,34 +297,12 @@ lemma real_integral_eq_complex_re
   simp only [← Complex.ofReal_mul]
   -- Now RHS has the single cast form ↑(a * b * c)
   -- Use Fubini on LHS
-  rw [← integral_prod_real_covariance_kernel m f]
+  rw [← integral_prod_real_covariance_kernel4 m f]
   -- Now goal is: ∫ r(p) = (∫ (r(p) : ℂ)).re
   symm
   exact re_integral_ofReal (volume.prod volume)
     (fun p => (QFT.compTimeReflectionReal f) p.1 * freeCovariance4 m p.1 p.2 * f p.2)
-    (integrable_real_covariance_kernel m f)
-
-/-- ** (Complex Conjugate Identity for Real Functions):**
-  For real-valued test functions lifted to complex, the complex conjugate equals the original.
-  This allows us to match the Parseval identity which uses starRingEnd. -/
-lemma toComplex_star_eq
-  (f : TestFunction4) (x : SpaceTime4) :
-  starRingEnd ℂ ((toComplex f) x) = (toComplex f) x := by
-  -- toComplex f x = (f x : ℂ) by definition
-  simp only [toComplex_apply]
-  -- The conjugate of a real number (lifted to ℂ) is itself
-  exact Complex.conj_ofReal (f x)
-
-/-- The time-reflected complexification of a real test function remains real-valued. -/
-lemma compTimeReflection_toComplex_star_eq
-  (f : TestFunction4) (x : SpaceTime4) :
-  starRingEnd ℂ ((QFT.compTimeReflection (toComplex f)) x)
-    = (QFT.compTimeReflection (toComplex f)) x := by
-  -- compTimeReflection is composition with timeReflectionCLM
-  simp only [QFT.compTimeReflection, SchwartzMap.compCLM_apply, Function.comp_apply]
-  -- Now we have (toComplex f) (QFT.timeReflectionCLM x)
-  -- Use the fact that toComplex produces real values
-  exact toComplex_star_eq f (QFT.timeReflectionCLM x)
+    (integrable_real_covariance_kernel4 m f)
 
 -- and theorem spatial_reduction_to_heat_kernel that depended on them
 
@@ -371,7 +316,7 @@ lemma compTimeReflection_toComplex_star_eq
 /-- Euclidean invariance of the free covariance.
     Since freeCovariance4 only depends on ‖x - y‖ (via the Bessel form), and Euclidean
     transformations preserve distances, this follows immediately. -/
-theorem freeCovariance_euclidean_invariant (m : ℝ)
+theorem freeCovariance_euclidean_invariant4 (m : ℝ)
   (g : QFT.E4) (x y : SpaceTime4) :
   freeCovariance4 m (QFT.act g x) (QFT.act g y) = freeCovariance4 m x y := by
   -- freeCovariance4 = freeCovarianceBessel only depends on ‖x - y‖
@@ -382,21 +327,21 @@ theorem freeCovariance_euclidean_invariant (m : ℝ)
   simp only [h_diff, g.R.norm_map]
 
 /-- Time reflection as an element of the Euclidean group (rotation with no translation). -/
-def timeReflectionE : QFT.E4 := ⟨QFT.timeReflectionLE.toLinearIsometry, 0⟩
+def timeReflectionE4 : QFT.E4 := ⟨QFT.timeReflectionLE.toLinearIsometry, 0⟩
 
-/-- The Euclidean action of timeReflectionE equals timeReflection. -/
-lemma act_timeReflectionE (x : SpaceTime4) : QFT.act timeReflectionE x = QFT.timeReflection x := by
-  simp only [timeReflectionE, QFT.act, add_zero, LinearIsometryEquiv.coe_toLinearIsometry]
+/-- The Euclidean action of timeReflectionE4 equals timeReflection. -/
+lemma act_timeReflectionE4 (x : SpaceTime4) : QFT.act timeReflectionE4 x = QFT.timeReflection x := by
+  simp only [timeReflectionE4, QFT.act, add_zero, LinearIsometryEquiv.coe_toLinearIsometry]
   rfl
 
 /-- ** (Time Reflection Invariance - Position Space):**
   The position-space covariance kernel is invariant under geometric time reflection.
   This follows from general Euclidean invariance since time reflection is in O(4). -/
-lemma covariance_timeReflection_invariant (m : ℝ) :
+lemma covariance_timeReflection_invariant4 (m : ℝ) :
     ∀ x y, freeCovariance4 m (QFT.timeReflection x) (QFT.timeReflection y) = freeCovariance4 m x y := by
   intro x y
-  rw [← act_timeReflectionE x, ← act_timeReflectionE y]
-  exact freeCovariance_euclidean_invariant m timeReflectionE x y
+  rw [← act_timeReflectionE4 x, ← act_timeReflectionE4 y]
+  exact freeCovariance_euclidean_invariant4 m timeReflectionE4 x y
 
 /-! ## Complex Extension
 
@@ -405,7 +350,7 @@ The following lemmas prove properties of this bilinear form. -/
 
 /-- For each fixed `x`, the inner integral in the complex bilinear form is absolutely integrable.
     This follows from product integrability (`freeCovarianceℂ_bilinear_integrable4`) plus Fubini. -/
-lemma freeCovarianceℂ_bilinear_inner_integrable
+lemma freeCovarianceℂ_bilinear_inner_integrable4
   (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ4) :
   Integrable (fun x => ∫ y, (f x) * (freeCovariance4 m x y) * (g y) ∂volume) volume := by
   have h := freeCovarianceℂ_bilinear_integrable4 m f g
@@ -415,7 +360,7 @@ lemma freeCovarianceℂ_bilinear_inner_integrable
 /-- For each fixed `x`, the inner integral defining the bilinear form is integrable in `y`.
     Together with the previous lemma, this allows iterated integration.
     Follows from product integrability via Fubini (`Integrable.prod_right_ae`). -/
-lemma freeCovarianceℂ_bilinear_slice_integrable
+lemma freeCovarianceℂ_bilinear_slice_integrable4
   (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ4) :
   ∀ᵐ x ∂volume, Integrable (fun y => (f x) * (freeCovariance4 m x y) * (g y)) volume := by
   have h := freeCovarianceℂ_bilinear_integrable4 m f g
@@ -423,7 +368,7 @@ lemma freeCovarianceℂ_bilinear_slice_integrable
   exact h.prod_right_ae
 
 /-- Generalized bilinearity in the first argument: scalar multiplication and addition combined. -/
-theorem freeCovarianceℂ_bilinear_add_smul_left
+theorem freeCovarianceℂ_bilinear_add_smul_left4
   (m : ℝ) [Fact (0 < m)] (c : ℂ) (f₁ f₂ g : TestFunctionℂ4) :
     freeCovarianceℂ_bilinear4 m (c • f₁ + f₂) g
       = c * freeCovarianceℂ_bilinear4 m f₁ g + freeCovarianceℂ_bilinear4 m f₂ g := by
@@ -438,18 +383,18 @@ theorem freeCovarianceℂ_bilinear_add_smul_left
   set F₂ := fun x : SpaceTime4 =>
     ∫ y, f₂ x * (freeCovariance4 m x y : ℂ) * (g y) ∂volume
   have hF : Integrable F volume :=
-    freeCovarianceℂ_bilinear_inner_integrable m (c • f₁ + f₂) g
+    freeCovarianceℂ_bilinear_inner_integrable4 m (c • f₁ + f₂) g
   have hF₁ : Integrable F₁ volume :=
-    freeCovarianceℂ_bilinear_inner_integrable m f₁ g
+    freeCovarianceℂ_bilinear_inner_integrable4 m f₁ g
   have hF₂ : Integrable F₂ volume :=
-    freeCovarianceℂ_bilinear_inner_integrable m f₂ g
+    freeCovarianceℂ_bilinear_inner_integrable4 m f₂ g
   -- For almost every x we can expand the inner integral using linearity.
   have h_add_smul_ae :
       F =ᵐ[volume] fun x => c * F₁ x + F₂ x := by
     have h_slice₁ :=
-      freeCovarianceℂ_bilinear_slice_integrable m f₁ g
+      freeCovarianceℂ_bilinear_slice_integrable4 m f₁ g
     have h_slice₂ :=
-      freeCovarianceℂ_bilinear_slice_integrable m f₂ g
+      freeCovarianceℂ_bilinear_slice_integrable4 m f₂ g
     refine (h_slice₁.and h_slice₂).mono ?_
     intro x hx
     rcases hx with ⟨hf₁x, hf₂x⟩
@@ -493,21 +438,21 @@ theorem freeCovarianceℂ_bilinear_add_smul_left
     _ = c * (∫ x, F₁ x ∂volume) + (∫ x, F₂ x ∂volume) := by
         congr 1; exact MeasureTheory.integral_const_mul _ _
 
-theorem freeCovarianceℂ_bilinear_add_left
+theorem freeCovarianceℂ_bilinear_add_left4
   (m : ℝ) [Fact (0 < m)] (f₁ f₂ g : TestFunctionℂ4) :
     freeCovarianceℂ_bilinear4 m (f₁ + f₂) g
       = freeCovarianceℂ_bilinear4 m f₁ g + freeCovarianceℂ_bilinear4 m f₂ g := by
   -- Use the generalized lemma with c = 1
-  have h := freeCovarianceℂ_bilinear_add_smul_left m 1 f₁ f₂ g
+  have h := freeCovarianceℂ_bilinear_add_smul_left4 m 1 f₁ f₂ g
   -- Simplify 1 • f₁ = f₁ and 1 * (...) = (...)
   simp only [one_smul, one_mul] at h
   exact h
 
-theorem freeCovarianceℂ_bilinear_smul_left
+theorem freeCovarianceℂ_bilinear_smul_left4
   (m : ℝ) [Fact (0 < m)] (c : ℂ) (f g : TestFunctionℂ4) :
     freeCovarianceℂ_bilinear4 m (c • f) g = c * freeCovarianceℂ_bilinear4 m f g := by
   -- Use the generalized lemma with f₁ = f and f₂ = 0
-  have h := freeCovarianceℂ_bilinear_add_smul_left m c f 0 g
+  have h := freeCovarianceℂ_bilinear_add_smul_left4 m c f 0 g
   -- Simplify: c • f + 0 = c • f
   rw [add_zero] at h
   -- Need to show freeCovarianceℂ_bilinear4 m 0 g = 0
@@ -526,7 +471,7 @@ theorem freeCovarianceℂ_bilinear_smul_left
   exact h
 
 /-- Symmetry of the complex bilinear form: swapping arguments gives the same result. -/
-theorem freeCovarianceℂ_bilinear_symm
+theorem freeCovarianceℂ_bilinear_symm4
   (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ4) :
     freeCovarianceℂ_bilinear4 m f g = freeCovarianceℂ_bilinear4 m g f := by
   unfold freeCovarianceℂ_bilinear4
@@ -554,28 +499,28 @@ theorem freeCovarianceℂ_bilinear_symm
   -- Rearrange: g x * freeCovariance4 m x y * f y = g x * freeCovariance4 m x y * f y
   ring
 
-theorem freeCovarianceℂ_bilinear_smul_right
+theorem freeCovarianceℂ_bilinear_smul_right4
   (m : ℝ) [Fact (0 < m)] (c : ℂ) (f g : TestFunctionℂ4) :
     freeCovarianceℂ_bilinear4 m f (c • g) = c * freeCovarianceℂ_bilinear4 m f g := by
   -- Use symmetry to convert right scalar multiplication to left scalar multiplication
   -- freeCovarianceℂ_bilinear4 m f (c • g) = freeCovarianceℂ_bilinear4 m (c • g) f
-  rw [freeCovarianceℂ_bilinear_symm m f (c • g)]
+  rw [freeCovarianceℂ_bilinear_symm4 m f (c • g)]
   -- Apply left scalar multiplication: freeCovarianceℂ_bilinear4 m (c • g) f = c * freeCovarianceℂ_bilinear4 m g f
-  rw [freeCovarianceℂ_bilinear_smul_left m c g f]
+  rw [freeCovarianceℂ_bilinear_smul_left4 m c g f]
   -- Use symmetry again: c * freeCovarianceℂ_bilinear4 m g f = c * freeCovarianceℂ_bilinear4 m f g
-  rw [freeCovarianceℂ_bilinear_symm m g f]
+  rw [freeCovarianceℂ_bilinear_symm4 m g f]
 
-theorem freeCovarianceℂ_bilinear_add_right
+theorem freeCovarianceℂ_bilinear_add_right4
   (m : ℝ) [Fact (0 < m)] (f g₁ g₂ : TestFunctionℂ4) :
     freeCovarianceℂ_bilinear4 m f (g₁ + g₂)
       = freeCovarianceℂ_bilinear4 m f g₁ + freeCovarianceℂ_bilinear4 m f g₂ := by
   -- Use symmetry to convert right addition to left addition
   -- freeCovarianceℂ_bilinear4 m f (g₁ + g₂) = freeCovarianceℂ_bilinear4 m (g₁ + g₂) f
-  rw [freeCovarianceℂ_bilinear_symm m f (g₁ + g₂)]
+  rw [freeCovarianceℂ_bilinear_symm4 m f (g₁ + g₂)]
   -- Apply left addition: freeCovarianceℂ_bilinear4 m (g₁ + g₂) f = freeCovarianceℂ_bilinear4 m g₁ f + freeCovarianceℂ_bilinear4 m g₂ f
-  rw [freeCovarianceℂ_bilinear_add_left m g₁ g₂ f]
+  rw [freeCovarianceℂ_bilinear_add_left4 m g₁ g₂ f]
   -- Use symmetry on each term: freeCovarianceℂ_bilinear4 m g₁ f + freeCovarianceℂ_bilinear4 m g₂ f = freeCovarianceℂ_bilinear4 m f g₁ + freeCovarianceℂ_bilinear4 m f g₂
-  rw [freeCovarianceℂ_bilinear_symm m g₁ f, freeCovarianceℂ_bilinear_symm m g₂ f]
+  rw [freeCovarianceℂ_bilinear_symm4 m g₁ f, freeCovarianceℂ_bilinear_symm4 m g₂ f]
 
 /-- Complex extension of the covariance for complex test functions (using regulated Fourier form). -/
 def freeCovarianceℂ_regulated (α : ℝ) (m : ℝ) (f g : TestFunctionℂ4) : ℂ :=

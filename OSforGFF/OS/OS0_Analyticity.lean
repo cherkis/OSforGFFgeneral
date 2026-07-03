@@ -736,9 +736,9 @@ theorem gff_complex_CF_covariance (f : TestFunctionℂ4) :
     simp only [R]; congr 1; congr 1
     -- Expand C_ℂ(f, f) using bilinearity and agrees_on_reals
     conv_lhs => rw [hf]
-    rw [freeCovarianceℂ_bilinear_add_left, freeCovarianceℂ_bilinear_add_right,
-        freeCovarianceℂ_bilinear_add_right]
-    simp only [freeCovarianceℂ_bilinear_smul_left, freeCovarianceℂ_bilinear_smul_right]
+    rw [freeCovarianceℂ_bilinear_add_left4, freeCovarianceℂ_bilinear_add_right4,
+        freeCovarianceℂ_bilinear_add_right4]
+    simp only [freeCovarianceℂ_bilinear_smul_left4, freeCovarianceℂ_bilinear_smul_right4]
     rw [freeCovarianceℂ_bilinear_agrees_on_reals m f_re f_re,
         freeCovarianceℂ_bilinear_agrees_on_reals m f_re f_im,
         freeCovarianceℂ_bilinear_agrees_on_reals m f_im f_re,
@@ -755,13 +755,13 @@ C_ℂ(∑ᵢ zᵢ Jᵢ, ∑ⱼ zⱼ Jⱼ) = ∑ᵢ ∑ⱼ zᵢ zⱼ C_ℂ(Jᵢ, 
 /-- C_ℂ(f, 0) = 0, derived from smul_right with c = 0. -/
 private lemma freeCovarianceℂ_bilinear_zero_right (f : TestFunctionℂ4) :
     freeCovarianceℂ_bilinear4 m f 0 = 0 := by
-  have h := freeCovarianceℂ_bilinear_smul_right m (0 : ℂ) f (0 : TestFunctionℂ4)
+  have h := freeCovarianceℂ_bilinear_smul_right4 m (0 : ℂ) f (0 : TestFunctionℂ4)
   simp at h; exact h
 
 /-- C_ℂ(0, g) = 0, derived from smul_left with c = 0. -/
 private lemma freeCovarianceℂ_bilinear_zero_left (g : TestFunctionℂ4) :
     freeCovarianceℂ_bilinear4 m 0 g = 0 := by
-  have h := freeCovarianceℂ_bilinear_smul_left m (0 : ℂ) (0 : TestFunctionℂ4) g
+  have h := freeCovarianceℂ_bilinear_smul_left4 m (0 : ℂ) (0 : TestFunctionℂ4) g
   simp at h; exact h
 
 /-- Right linearity over finite sums for the complexified covariance. -/
@@ -772,8 +772,8 @@ private lemma freeCovarianceℂ_sum_right (f : TestFunctionℂ4)
   induction s using Finset.cons_induction with
   | empty => simp [freeCovarianceℂ_bilinear_zero_right]
   | cons a s ha ih =>
-    rw [Finset.sum_cons, freeCovarianceℂ_bilinear_add_right,
-        freeCovarianceℂ_bilinear_smul_right, ih, Finset.sum_cons]
+    rw [Finset.sum_cons, freeCovarianceℂ_bilinear_add_right4,
+        freeCovarianceℂ_bilinear_smul_right4, ih, Finset.sum_cons]
 
 /-- Left linearity over finite sums for the complexified covariance. -/
 private lemma freeCovarianceℂ_sum_left
@@ -784,8 +784,8 @@ private lemma freeCovarianceℂ_sum_left
   induction s using Finset.cons_induction with
   | empty => simp [freeCovarianceℂ_bilinear_zero_left]
   | cons a s ha ih =>
-    rw [Finset.sum_cons, freeCovarianceℂ_bilinear_add_left,
-        freeCovarianceℂ_bilinear_smul_left, ih, Finset.sum_cons]
+    rw [Finset.sum_cons, freeCovarianceℂ_bilinear_add_left4,
+        freeCovarianceℂ_bilinear_smul_left4, ih, Finset.sum_cons]
 
 /-- Full bilinear expansion of C_ℂ(∑ zᵢ Jᵢ, ∑ zⱼ Jⱼ) as a finite double sum. -/
 theorem freeCovarianceℂ_bilinear_sum_expansion {n : ℕ}

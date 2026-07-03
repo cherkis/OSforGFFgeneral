@@ -10,7 +10,7 @@ import OSforGFF.Measure.Construct
 import OSforGFF.Measure.IsGaussian
 import OSforGFF.Measure.GaussianFreeField -- For gaussian_satisfies_OS2
 import OSforGFF.OS.OS2_Invariance -- For CovarianceEuclideanInvariantℂ_μ_GFF
-import OSforGFF.Covariance.Position  -- For freeCovarianceℂ_bilinear_symm
+import OSforGFF.Covariance.Position  -- For freeCovarianceℂ_bilinear_symm4
 import OSforGFF.Covariance.Momentum
 import OSforGFF.OS.Axioms
 import OSforGFF.General.FunctionalAnalysis
@@ -75,7 +75,7 @@ lemma schwinger2_sum_expansion (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ4)
       SchwingerFunctionℂ₂ (gaussianFreeField_free m) f g := by
     -- Both equal freeCovarianceℂ_bilinear4, which is symmetric
     rw [gff_two_point_equals_covarianceℂ_free, gff_two_point_equals_covarianceℂ_free]
-    exact freeCovarianceℂ_bilinear_symm m g f
+    exact freeCovarianceℂ_bilinear_symm4 m g f
   -- Expand
   rw [S2_add_left, S2_add_right, S2_add_right, h_sym]
   ring

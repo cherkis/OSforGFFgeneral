@@ -83,7 +83,7 @@ set_option linter.unusedSectionVars false in
 
     **What needs to be proven:**
     Starting from:
-    - `freeCovariance_euclidean_invariant`: C(g•x, g•y) = C(x, y) (proven in Covariance.lean)
+    - `freeCovariance_euclidean_invariant4`: C(g•x, g•y) = C(x, y) (proven in Covariance.lean)
     - `measurePreserving_act`: act g preserves Lebesgue measure (proven in Euclidean.lean)
 
     We need to show:
@@ -91,7 +91,7 @@ set_option linter.unusedSectionVars false in
 
     **Proof sketch:**
     1. Rewrite C(x,y) = C(g•(g⁻¹•x), g•(g⁻¹•y)) using act_euclidean_pullback
-    2. Apply freeCovariance_euclidean_invariant to get C(g⁻¹•x, g⁻¹•y)
+    2. Apply freeCovariance_euclidean_invariant4 to get C(g⁻¹•x, g⁻¹•y)
     3. Now the integrand is F(g⁻¹•x, g⁻¹•y) where F(u,v) = f(u) C(u,v) h(v)
     4. Change variables u = g⁻¹•x, v = g⁻¹•y (measure-preserving on product space)
     5. Use MeasurePreserving.prod to get measure preservation on SpaceTime4 × SpaceTime4
@@ -114,10 +114,10 @@ theorem freeCovarianceℂ_bilinear_euclidean_invariant (g : E4) (f h : TestFunct
       freeCovariance4 m (act g (euclidean_pullback g x)) (act g (euclidean_pullback g y)) := by
     intro x y
     simp only [act_euclidean_pullback]
-  -- Step 2: Apply freeCovariance_euclidean_invariant
+  -- Step 2: Apply freeCovariance_euclidean_invariant4
   conv_lhs =>
     arg 2; ext x; arg 2; ext y
-    rw [h_rewrite x y, freeCovariance_euclidean_invariant]
+    rw [h_rewrite x y, freeCovariance_euclidean_invariant4]
   -- Now: ∫∫ f(g⁻¹•x) C(g⁻¹•x, g⁻¹•y) h(g⁻¹•y) dx dy = ∫∫ f(u) C(u,v) h(v) du dv
   -- Step 3: Change variables using measure-preserving property
   -- Use the measure-preserving property of actEquiv g

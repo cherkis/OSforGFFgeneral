@@ -252,15 +252,15 @@ lemma gff_generating_bound_by_imaginary (m : ℝ) [Fact (0 < m)] (f : TestFuncti
       _ = freeCovarianceℂ_bilinear4 m (frC + Complex.I • fiC) (frC + Complex.I • fiC) := by rw [hf]
       _ = freeCovarianceℂ_bilinear4 m frC (frC + Complex.I • fiC) +
           freeCovarianceℂ_bilinear4 m (Complex.I • fiC) (frC + Complex.I • fiC) := by
-        rw [freeCovarianceℂ_bilinear_add_left]
+        rw [freeCovarianceℂ_bilinear_add_left4]
       _ = freeCovarianceℂ_bilinear4 m frC frC + freeCovarianceℂ_bilinear4 m frC (Complex.I • fiC) +
           (freeCovarianceℂ_bilinear4 m (Complex.I • fiC) frC +
            freeCovarianceℂ_bilinear4 m (Complex.I • fiC) (Complex.I • fiC)) := by
-        rw [freeCovarianceℂ_bilinear_add_right, freeCovarianceℂ_bilinear_add_right]
+        rw [freeCovarianceℂ_bilinear_add_right4, freeCovarianceℂ_bilinear_add_right4]
       _ = freeCovarianceℂ_bilinear4 m frC frC + Complex.I * freeCovarianceℂ_bilinear4 m frC fiC +
           Complex.I * freeCovarianceℂ_bilinear4 m fiC frC - freeCovarianceℂ_bilinear4 m fiC fiC := by
-        rw [freeCovarianceℂ_bilinear_smul_right, freeCovarianceℂ_bilinear_smul_left,
-            freeCovarianceℂ_bilinear_smul_left, freeCovarianceℂ_bilinear_smul_right]
+        rw [freeCovarianceℂ_bilinear_smul_right4, freeCovarianceℂ_bilinear_smul_left4,
+            freeCovarianceℂ_bilinear_smul_left4, freeCovarianceℂ_bilinear_smul_right4]
         -- Now we have I * (I * ...) which equals -(...) by I^2 = -1
         rw [show Complex.I * (Complex.I * freeCovarianceℂ_bilinear4 m fiC fiC) =
                  -(freeCovarianceℂ_bilinear4 m fiC fiC) by
@@ -282,7 +282,7 @@ lemma gff_generating_bound_by_imaginary (m : ℝ) [Fact (0 < m)] (f : TestFuncti
     have h_im_zero' : (freeCovarianceℂ_bilinear4 m fiC frC).im = 0 := by
       -- Use symmetry
       have : freeCovarianceℂ_bilinear4 m fiC frC = freeCovarianceℂ_bilinear4 m frC fiC :=
-        freeCovarianceℂ_bilinear_symm m fiC frC
+        freeCovarianceℂ_bilinear_symm4 m fiC frC
       rw [this, h_im_zero]
     simp [h_im_zero, h_im_zero']
   -- Therefore: -Re C(f,f) = -Re C(frC,frC) + Re C(fiC,fiC)

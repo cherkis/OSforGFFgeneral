@@ -324,9 +324,9 @@ theorem gff_complex_characteristic_OS0 :
         freeCovarianceFormR m f f - freeCovarianceFormR m g g +
           2 * Complex.I * freeCovarianceFormR m f g := by
       rw [hJ]
-      rw [freeCovarianceℂ_bilinear_add_left, freeCovarianceℂ_bilinear_add_right,
-          freeCovarianceℂ_bilinear_add_right]
-      simp only [freeCovarianceℂ_bilinear_smul_left, freeCovarianceℂ_bilinear_smul_right]
+      rw [freeCovarianceℂ_bilinear_add_left4, freeCovarianceℂ_bilinear_add_right4,
+          freeCovarianceℂ_bilinear_add_right4]
+      simp only [freeCovarianceℂ_bilinear_smul_left4, freeCovarianceℂ_bilinear_smul_right4]
       have h_ff := freeCovarianceℂ_bilinear_agrees_on_reals (m := m) f f
       have h_fg := freeCovarianceℂ_bilinear_agrees_on_reals (m := m) f g
       have h_gf := freeCovarianceℂ_bilinear_agrees_on_reals (m := m) g f
@@ -504,8 +504,8 @@ theorem gff_two_point_equals_covarianceℂ_free (m : ℝ) [Fact (0 < m)] (f g : 
   rw [S2_add_left, S2_add_right, S2_add_right, S2_smul_left, S2_smul_left, S2_smul_right,
       S2_smul_right]
   -- Expand RHS: freeCovarianceℂ_bilinear4(frC + I•fiC, grC + I•giC)
-  simp only [freeCovarianceℂ_bilinear_add_left, freeCovarianceℂ_bilinear_add_right,
-    freeCovarianceℂ_bilinear_smul_left, freeCovarianceℂ_bilinear_smul_right]
+  simp only [freeCovarianceℂ_bilinear_add_left4, freeCovarianceℂ_bilinear_add_right4,
+    freeCovarianceℂ_bilinear_smul_left4, freeCovarianceℂ_bilinear_smul_right4]
   -- Both sides have 4 terms. Rewrite S₂(toComplex ?, toComplex ?) = C(toComplex ?, toComplex ?)
   -- frC = toComplex fRe, fiC = toComplex fIm, grC = toComplex gRe, giC = toComplex gIm
   rw [GFFIsGaussian.schwinger_eq_covarianceℂ_on_reals m fRe gRe,

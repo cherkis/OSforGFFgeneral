@@ -540,7 +540,7 @@ theorem freeCovarianceFormR_symm (m : ℝ) [Fact (0 < m)] (f g : TestFunction4) 
       = freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex g) := by
           rw [← freeCovarianceℂ_bilinear_agrees_on_reals m f g]
     _ = freeCovarianceℂ_bilinear4 m (toComplex g) (toComplex f) := by
-          rw [freeCovarianceℂ_bilinear_symm m (toComplex f) (toComplex g)]
+          rw [freeCovarianceℂ_bilinear_symm4 m (toComplex f) (toComplex g)]
     _ = (freeCovarianceFormR m g f : ℂ) := by
           rw [freeCovarianceℂ_bilinear_agrees_on_reals m g f]
 
@@ -549,7 +549,7 @@ lemma freeCovarianceFormR_add_left (m : ℝ) [Fact (0 < m)] (f₁ f₂ g : TestF
     freeCovarianceFormR m (f₁ + f₂) g = freeCovarianceFormR m f₁ g + freeCovarianceFormR m f₂ g := by
   apply Complex.ofReal_injective
   have h :=
-    freeCovarianceℂ_bilinear_add_left m (toComplex f₁) (toComplex f₂) (toComplex g)
+    freeCovarianceℂ_bilinear_add_left4 m (toComplex f₁) (toComplex f₂) (toComplex g)
   have hL :
       (freeCovarianceFormR m (f₁ + f₂) g : ℂ)
         = freeCovarianceℂ_bilinear4 m (toComplex f₁ + toComplex f₂) (toComplex g) := by
@@ -573,7 +573,7 @@ lemma freeCovarianceFormR_smul_left (m : ℝ) [Fact (0 < m)] (c : ℝ) (f g : Te
     freeCovarianceFormR m (c • f) g = c * freeCovarianceFormR m f g := by
   apply Complex.ofReal_injective
   have h :=
-    freeCovarianceℂ_bilinear_smul_left m (c : ℂ) (toComplex f) (toComplex g)
+    freeCovarianceℂ_bilinear_smul_left4 m (c : ℂ) (toComplex f) (toComplex g)
   have hL :
       (freeCovarianceFormR m (c • f) g : ℂ)
         = freeCovarianceℂ_bilinear4 m ((c : ℂ) • toComplex f) (toComplex g) := by
@@ -599,7 +599,7 @@ lemma freeCovarianceFormR_add_right (m : ℝ) [Fact (0 < m)] (f g₁ g₂ : Test
     freeCovarianceFormR m f (g₁ + g₂) = freeCovarianceFormR m f g₁ + freeCovarianceFormR m f g₂ := by
   apply Complex.ofReal_injective
   have h :=
-    freeCovarianceℂ_bilinear_add_right m (toComplex f) (toComplex g₁) (toComplex g₂)
+    freeCovarianceℂ_bilinear_add_right4 m (toComplex f) (toComplex g₁) (toComplex g₂)
   have hL :
       (freeCovarianceFormR m f (g₁ + g₂) : ℂ)
         = freeCovarianceℂ_bilinear4 m (toComplex f) (toComplex g₁ + toComplex g₂) := by
@@ -623,7 +623,7 @@ lemma freeCovarianceFormR_smul_right (m : ℝ) [Fact (0 < m)] (c : ℝ) (f g : T
     freeCovarianceFormR m f (c • g) = c * freeCovarianceFormR m f g := by
   apply Complex.ofReal_injective
   have h :=
-    freeCovarianceℂ_bilinear_smul_right m (c : ℂ) (toComplex f) (toComplex g)
+    freeCovarianceℂ_bilinear_smul_right4 m (c : ℂ) (toComplex f) (toComplex g)
   have hL :
     (freeCovarianceFormR m f (c • g) : ℂ)
         = freeCovarianceℂ_bilinear4 m (toComplex f) ((c : ℂ) • toComplex g) := by
@@ -687,13 +687,13 @@ lemma freeCovarianceFormR_reflection_invariant
     freeCovarianceℂ_bilinear_integrable4 (m := m)
       (f := QFT.compTimeReflection fc) (g := QFT.compTimeReflection gc)
   have h_double :=
-    double_integral_timeReflection_covariance (m := m)
+    double_integral_timeReflection_covariance4 (m := m)
       (f := fc) (g := QFT.compTimeReflection gc) h_integrable
   have h_complex :
       freeCovarianceℂ_bilinear4 m (QFT.compTimeReflection fc) (QFT.compTimeReflection gc)
         = freeCovarianceℂ_bilinear4 m fc gc := by
     have h_double' := h_double
-    simp_rw [covariance_timeReflection_invariant m] at h_double'
+    simp_rw [covariance_timeReflection_invariant4 m] at h_double'
     have h_double'' :
         ∫ x, ∫ y,
             (QFT.compTimeReflection fc) x * (freeCovariance4 m x y : ℂ)

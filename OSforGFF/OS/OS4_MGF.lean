@@ -192,7 +192,7 @@ lemma gff_mgf_formula (m : ℝ) [Fact (0 < m)] (J : TestFunctionℂ4) :
   rw [h_to_cf, GFFIsGaussian.gff_complex_characteristic_OS0 m]
   have h_cov : freeCovarianceℂ_bilinear4 m (negI • J) (negI • J) =
       -freeCovarianceℂ_bilinear4 m J J := by
-    rw [freeCovarianceℂ_bilinear_smul_left, freeCovarianceℂ_bilinear_smul_right]
+    rw [freeCovarianceℂ_bilinear_smul_left4, freeCovarianceℂ_bilinear_smul_right4]
     simp only [negI]
     ring_nf
     simp [Complex.I_sq]
@@ -233,12 +233,12 @@ lemma gff_joint_mgf_factorization (m : ℝ) [Fact (0 < m)] (f g : TestFunction�
   rw [h_lhs]
   rw [gff_mgf_formula, gff_mgf_formula, gff_mgf_formula]
   rw [gff_two_point_equals_covarianceℂ_free]
-  rw [freeCovarianceℂ_bilinear_add_left, freeCovarianceℂ_bilinear_add_right,
-      freeCovarianceℂ_bilinear_add_right]
+  rw [freeCovarianceℂ_bilinear_add_left4, freeCovarianceℂ_bilinear_add_right4,
+      freeCovarianceℂ_bilinear_add_right4]
   rw [← Complex.exp_add, ← Complex.exp_add]
   congr 1
   have h_sym : freeCovarianceℂ_bilinear4 m g f = freeCovarianceℂ_bilinear4 m f g :=
-    freeCovarianceℂ_bilinear_symm m g f
+    freeCovarianceℂ_bilinear_symm4 m g f
   rw [h_sym]
   ring
 

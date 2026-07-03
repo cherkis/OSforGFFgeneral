@@ -6,6 +6,9 @@ Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 import Mathlib.Analysis.Fourier.Inversion
 import Mathlib.Analysis.Distribution.SchwartzSpace.Fourier
 import OSforGFF.Spacetime.Basic
+import OSforGFF.Spacetime.ComplexTestFunction
+import OSforGFF.Spacetime.DiscreteSymmetry
+import OSforGFF.Spacetime.Euclidean
 import OSforGFF.Covariance.Propagator
 
 /-!
@@ -488,5 +491,336 @@ theorem freeCovarianceℂ_positive (f : TestFunctionℂ d) :
   positivity
 
 end Parseval
+
+/-! ### Real-valued test functions and time reflection -/
+
+section ReflectionBasics
+
+variable {d : ℕ}
+
+/-- The complexification of a real test function is fixed by complex conjugation. -/
+lemma toComplex_star_eq (f : TestFunction d) (x : SpaceTime d) :
+    starRingEnd ℂ ((toComplex f) x) = (toComplex f) x := by
+  simp only [toComplex_apply]
+  exact Complex.conj_ofReal (f x)
+
+/-- The real part of a complex integral of (the coercion of) a real-valued function is the
+    real integral. -/
+lemma re_integral_ofReal {α : Type*} [MeasurableSpace α] (μ : Measure α) (h : α → ℝ)
+    (_hf : Integrable h μ) :
+    (∫ x, (h x : ℂ) ∂μ).re = ∫ x, h x ∂μ := by
+  have h1 : (∫ x, (h x : ℂ) ∂μ) = ((∫ x, h x ∂μ : ℝ) : ℂ) := integral_ofReal
+  rw [h1]
+  exact Complex.ofReal_re _
+
+variable [Fact (2 ≤ d)]
+
+/-- Complexification commutes with composition by time reflection. -/
+lemma compTimeReflection_toComplex_eq_ofReal (f : TestFunction d) (x : SpaceTime d) :
+    (QFT.compTimeReflection (toComplex f)) x = ((QFT.compTimeReflectionReal f) x : ℂ) := by
+  simp only [QFT.compTimeReflection, QFT.compTimeReflectionReal,
+    SchwartzMap.compCLM_apply, Function.comp_apply, toComplex_apply]
+
+/-- The time-reflected complexification of a real test function remains real-valued. -/
+lemma compTimeReflection_toComplex_star_eq (f : TestFunction d) (x : SpaceTime d) :
+    starRingEnd ℂ ((QFT.compTimeReflection (toComplex f)) x)
+      = (QFT.compTimeReflection (toComplex f)) x := by
+  simp only [QFT.compTimeReflection, SchwartzMap.compCLM_apply, Function.comp_apply]
+  exact toComplex_star_eq f (QFT.timeReflectionCLM x)
+
+/-- Integrating over spacetime is unchanged when both variables are composed with geometric
+    time reflection (measure preservation plus Fubini). -/
+lemma double_integral_timeReflection
+    (G : SpaceTime d → SpaceTime d → ℂ)
+    (_hG : Integrable (fun p : SpaceTime d × SpaceTime d => G p.1 p.2) (volume.prod volume)) :
+    ∫ x, ∫ y, G (QFT.timeReflection x) (QFT.timeReflection y) ∂volume ∂volume
+      = ∫ x, ∫ y, G x y ∂volume ∂volume := by
+  have hmp := QFT.timeReflection_measurePreserving (d := d)
+  have hmeas := (QFT.timeReflectionLE (d := d)).toMeasurableEquiv.measurableEmbedding
+  have h_inner : ∀ x, ∫ y, G x (QFT.timeReflection y) = ∫ y, G x y :=
+    fun x => hmp.integral_comp hmeas (fun y => G x y)
+  simp_rw [h_inner]
+  exact hmp.integral_comp hmeas (fun x => ∫ y, G x y)
+
+end ReflectionBasics
+
+/-! ### Invariance of the covariance kernel and the kernel pairings -/
+
+section KernelInvariance
+
+variable {d : ℕ} {m : ℝ} [Fact (0 < m)] [Fact (2 ≤ d)] [GFFPropagator d m]
+
+/-- Euclidean invariance of the free covariance: the kernel is radial and Euclidean motions
+    preserve distances. -/
+theorem freeCovariance_euclidean_invariant (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
+    (g : QFT.E d) (x y : SpaceTime d) :
+    freeCovariance d m (QFT.act g x) (QFT.act g y) = freeCovariance d m x y := by
+  unfold freeCovariance
+  have h_diff : QFT.act g x - QFT.act g y = g.R (x - y) := by simp [QFT.act]
+  simp only [h_diff, g.R.norm_map]
+
+/-- Time reflection as an element of the Euclidean group (rotation with no translation). -/
+def timeReflectionE : QFT.E d := ⟨QFT.timeReflectionLE.toLinearIsometry, 0⟩
+
+omit [Fact (0 < m)] [GFFPropagator d m] in
+/-- The Euclidean action of `timeReflectionE` is geometric time reflection. -/
+lemma act_timeReflectionE (x : SpaceTime d) :
+    QFT.act (timeReflectionE (d := d)) x = QFT.timeReflection x := by
+  simp only [timeReflectionE, QFT.act, add_zero, LinearIsometryEquiv.coe_toLinearIsometry]
+  rfl
+
+/-- Time-reflection invariance of the position-space covariance kernel. -/
+lemma covariance_timeReflection_invariant (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
+    ∀ x y, freeCovariance d m (QFT.timeReflection x) (QFT.timeReflection y)
+      = freeCovariance d m x y := by
+  intro x y
+  rw [← act_timeReflectionE x, ← act_timeReflectionE y]
+  exact freeCovariance_euclidean_invariant m timeReflectionE x y
+
+/-- Time-reflection change of variables for the covariance pairing: moving the reflection from
+    the first test function to the kernel and the second test function. -/
+lemma double_integral_timeReflection_covariance
+    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : TestFunctionℂ d)
+    (hf : Integrable (fun p : SpaceTime d × SpaceTime d =>
+        (QFT.compTimeReflection f) p.1 * (freeCovariance d m p.1 p.2 : ℂ) * g p.2)
+        (volume.prod volume)) :
+    ∫ x, ∫ y,
+        (QFT.compTimeReflection f) x * (freeCovariance d m x y : ℂ) * g y ∂volume ∂volume
+      = ∫ x, ∫ y,
+          f x * (freeCovariance d m (QFT.timeReflection x) (QFT.timeReflection y) : ℂ)
+            * (QFT.compTimeReflection g) y ∂volume ∂volume := by
+  have h_comp : ∀ h : TestFunctionℂ d, ∀ x,
+      (QFT.compTimeReflection h) x = h (QFT.timeReflection x) := by
+    intro h x
+    simp only [QFT.compTimeReflection, SchwartzMap.compCLM_apply, Function.comp_apply]
+    rfl
+  simp_rw [h_comp]
+  have hinv : ∀ z : SpaceTime d, QFT.timeReflection (QFT.timeReflection z) = z := by
+    intro z
+    exact QFT.timeReflectionLE.left_inv z
+  rw [← double_integral_timeReflection
+    (fun x y => f (QFT.timeReflection x) * (freeCovariance d m x y : ℂ) * g y) hf]
+  simp only [hinv]
+
+/-- Integrability of the covariance pairing integrand with a time-reflected first argument. -/
+lemma integrable_compTimeReflection_covariance
+    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : TestFunctionℂ d) :
+    Integrable (fun p : SpaceTime d × SpaceTime d =>
+        (QFT.compTimeReflection f) p.1 * (freeCovariance d m p.1 p.2 : ℂ) * f p.2)
+      (volume.prod volume) := by
+  rw [← Measure.volume_eq_prod]
+  exact freeCovarianceℂ_bilinear_integrable m (QFT.compTimeReflection f) f
+
+/-- Integrability of the real covariance kernel pairing of a real test function. -/
+lemma integrable_real_covariance_kernel
+    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : TestFunction d) :
+    Integrable (fun p : SpaceTime d × SpaceTime d =>
+        (QFT.compTimeReflectionReal f) p.1 * freeCovariance d m p.1 p.2 * f p.2)
+      (volume.prod volume) := by
+  have h_complex := integrable_compTimeReflection_covariance m (toComplex f)
+  have h_eq : (fun p : SpaceTime d × SpaceTime d =>
+      (QFT.compTimeReflection (toComplex f)) p.1 * (freeCovariance d m p.1 p.2 : ℂ)
+          * (toComplex f) p.2)
+      = (fun p => (((QFT.compTimeReflectionReal f) p.1 : ℂ)
+          * ((freeCovariance d m p.1 p.2 : ℝ) : ℂ) * ((f p.2 : ℝ) : ℂ))) := by
+    ext p
+    simp only [compTimeReflection_toComplex_eq_ofReal, toComplex_apply]
+  rw [h_eq] at h_complex
+  have h_re_eq : ∀ p : SpaceTime d × SpaceTime d,
+      (((QFT.compTimeReflectionReal f) p.1 : ℂ) * ((freeCovariance d m p.1 p.2 : ℝ) : ℂ)
+          * ((f p.2 : ℝ) : ℂ)).re
+      = (QFT.compTimeReflectionReal f) p.1 * freeCovariance d m p.1 p.2 * f p.2 := by
+    intro p
+    simp only [Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, mul_zero, sub_zero]
+  apply Integrable.mono' h_complex.norm
+  · convert h_complex.aestronglyMeasurable.re using 2 with p
+    exact (h_re_eq p).symm
+  · filter_upwards with p
+    have h_norm_eq : ‖((QFT.compTimeReflectionReal f) p.1 : ℂ)
+          * ((freeCovariance d m p.1 p.2 : ℝ) : ℂ) * ((f p.2 : ℝ) : ℂ)‖
+        = ‖(QFT.compTimeReflectionReal f) p.1 * freeCovariance d m p.1 p.2 * f p.2‖ := by
+      simp only [Complex.norm_mul, Complex.norm_real, Real.norm_eq_abs, abs_mul]
+    rw [← h_norm_eq]
+
+/-- Fubini form of the real covariance kernel pairing over the product measure. -/
+lemma integral_prod_real_covariance_kernel
+    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : TestFunction d) :
+    ∫ p : SpaceTime d × SpaceTime d,
+        (QFT.compTimeReflectionReal f) p.1 * freeCovariance d m p.1 p.2 * f p.2
+        ∂(volume.prod volume)
+      = ∫ x, ∫ y,
+          (QFT.compTimeReflectionReal f) x * freeCovariance d m x y * f y ∂volume ∂volume := by
+  rw [MeasureTheory.integral_prod]
+  exact integrable_real_covariance_kernel m f
+
+/-- Fubini form of the complex covariance kernel pairing over the product measure. -/
+lemma integral_prod_complex_covariance_kernel
+    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : TestFunction d) :
+    ∫ p : SpaceTime d × SpaceTime d,
+        (QFT.compTimeReflection (toComplex f)) p.1 * (freeCovariance d m p.1 p.2 : ℂ)
+          * (toComplex f) p.2 ∂(volume.prod volume)
+      = ∫ x, ∫ y,
+          (QFT.compTimeReflection (toComplex f)) x * (freeCovariance d m x y : ℂ)
+            * (toComplex f) y ∂volume ∂volume := by
+  rw [MeasureTheory.integral_prod]
+  exact integrable_compTimeReflection_covariance m (toComplex f)
+
+/-- The real reflected pairing is the real part of the complexified reflected pairing. -/
+lemma real_integral_eq_complex_re
+    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : TestFunction d) :
+    ∫ x, ∫ y,
+        (QFT.compTimeReflectionReal f) x * freeCovariance d m x y * f y ∂volume ∂volume
+      = (∫ x, ∫ y, (QFT.compTimeReflection (toComplex f)) x * (freeCovariance d m x y : ℂ)
+          * (toComplex f) y ∂volume ∂volume).re := by
+  rw [← integral_prod_complex_covariance_kernel m f]
+  have h_eq_prod : ∀ p : SpaceTime d × SpaceTime d,
+      (QFT.compTimeReflection (toComplex f)) p.1 * (freeCovariance d m p.1 p.2 : ℂ)
+          * (toComplex f) p.2
+      = ((QFT.compTimeReflectionReal f) p.1 * freeCovariance d m p.1 p.2 * f p.2 : ℂ) := by
+    intro p
+    simp only [compTimeReflection_toComplex_eq_ofReal, toComplex_apply]
+  simp_rw [h_eq_prod]
+  simp only [← Complex.ofReal_mul]
+  rw [← integral_prod_real_covariance_kernel m f]
+  symm
+  exact re_integral_ofReal (volume.prod volume)
+    (fun p => (QFT.compTimeReflectionReal f) p.1 * freeCovariance d m p.1 p.2 * f p.2)
+    (integrable_real_covariance_kernel m f)
+
+end KernelInvariance
+
+/-! ### Bilinearity of the covariance pairing -/
+
+section BilinearAlgebra
+
+variable {d : ℕ} {m : ℝ} [Fact (0 < m)] [Fact (2 ≤ d)] [GFFPropagator d m]
+
+/-- For each fixed `x`, the outer integrand of the bilinear pairing is integrable. -/
+lemma freeCovarianceℂ_bilinear_inner_integrable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
+    (f g : TestFunctionℂ d) :
+    Integrable (fun x => ∫ y, f x * (freeCovariance d m x y : ℂ) * g y ∂volume) volume := by
+  have h := freeCovarianceℂ_bilinear_integrable m f g
+  rw [Measure.volume_eq_prod] at h
+  exact h.integral_prod_left
+
+/-- For almost every `x`, the inner integrand of the bilinear pairing is integrable in `y`. -/
+lemma freeCovarianceℂ_bilinear_slice_integrable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
+    (f g : TestFunctionℂ d) :
+    ∀ᵐ x ∂(volume : Measure (SpaceTime d)),
+      Integrable (fun y => f x * (freeCovariance d m x y : ℂ) * g y) volume := by
+  have h := freeCovarianceℂ_bilinear_integrable m f g
+  rw [Measure.volume_eq_prod] at h
+  exact h.prod_right_ae
+
+/-- Bilinearity in the first argument: scalar multiplication and addition combined. -/
+theorem freeCovarianceℂ_bilinear_add_smul_left (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
+    (c : ℂ) (f₁ f₂ g : TestFunctionℂ d) :
+    freeCovarianceℂ_bilinear m (c • f₁ + f₂) g
+      = c * freeCovarianceℂ_bilinear m f₁ g + freeCovarianceℂ_bilinear m f₂ g := by
+  classical
+  simp only [freeCovarianceℂ_bilinear]
+  set F := fun x : SpaceTime d =>
+    ∫ y, ((c • f₁ + f₂) x) * (freeCovariance d m x y : ℂ) * (g y) ∂volume
+  set F₁ := fun x : SpaceTime d =>
+    ∫ y, f₁ x * (freeCovariance d m x y : ℂ) * (g y) ∂volume
+  set F₂ := fun x : SpaceTime d =>
+    ∫ y, f₂ x * (freeCovariance d m x y : ℂ) * (g y) ∂volume
+  have hF₁ : Integrable F₁ volume :=
+    freeCovarianceℂ_bilinear_inner_integrable m f₁ g
+  have hF₂ : Integrable F₂ volume :=
+    freeCovarianceℂ_bilinear_inner_integrable m f₂ g
+  have h_add_smul_ae : F =ᵐ[volume] fun x => c * F₁ x + F₂ x := by
+    have h_slice₁ := freeCovarianceℂ_bilinear_slice_integrable m f₁ g
+    have h_slice₂ := freeCovarianceℂ_bilinear_slice_integrable m f₂ g
+    refine (h_slice₁.and h_slice₂).mono ?_
+    intro x hx
+    rcases hx with ⟨hf₁x, hf₂x⟩
+    have hfun : (fun y => ((c • f₁ + f₂) x) * (freeCovariance d m x y : ℂ) * (g y))
+        = fun y => c * (f₁ x * (freeCovariance d m x y : ℂ) * (g y))
+            + f₂ x * (freeCovariance d m x y : ℂ) * (g y) := by
+      funext y
+      have h1 : (c • f₁ + f₂) x = c * f₁ x + f₂ x := rfl
+      rw [h1]
+      ring
+    calc F x
+        = ∫ y, ((c • f₁ + f₂) x) * (freeCovariance d m x y : ℂ) * (g y) ∂volume := rfl
+      _ = ∫ y, (c * (f₁ x * (freeCovariance d m x y : ℂ) * (g y)) +
+            f₂ x * (freeCovariance d m x y : ℂ) * (g y)) ∂volume := by rw [hfun]
+      _ = c * F₁ x + F₂ x := by
+          have h_const_out :
+              ∫ y, c * (f₁ x * (freeCovariance d m x y : ℂ) * (g y)) ∂volume
+                = c * ∫ y, (f₁ x * (freeCovariance d m x y : ℂ) * (g y)) ∂volume :=
+            MeasureTheory.integral_const_mul c _
+          rw [integral_add, h_const_out]
+          · exact hf₁x.const_mul c
+          · exact hf₂x
+  have h_int_eq : ∫ x, F x ∂volume = ∫ x, (c * F₁ x + F₂ x) ∂volume :=
+    integral_congr_ae h_add_smul_ae
+  have hF₁_smul : Integrable (fun x => c * F₁ x) volume := hF₁.const_mul c
+  have h_sum := integral_add hF₁_smul hF₂
+  calc ∫ x, F x ∂volume
+      = ∫ x, (c * F₁ x + F₂ x) ∂volume := h_int_eq
+    _ = (∫ x, c * F₁ x ∂volume) + (∫ x, F₂ x ∂volume) := h_sum
+    _ = c * (∫ x, F₁ x ∂volume) + (∫ x, F₂ x ∂volume) := by
+        congr 1
+        exact MeasureTheory.integral_const_mul _ _
+
+theorem freeCovarianceℂ_bilinear_add_left (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
+    (f₁ f₂ g : TestFunctionℂ d) :
+    freeCovarianceℂ_bilinear m (f₁ + f₂) g
+      = freeCovarianceℂ_bilinear m f₁ g + freeCovarianceℂ_bilinear m f₂ g := by
+  have h := freeCovarianceℂ_bilinear_add_smul_left m 1 f₁ f₂ g
+  simp only [one_smul, one_mul] at h
+  exact h
+
+theorem freeCovarianceℂ_bilinear_smul_left (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
+    (c : ℂ) (f g : TestFunctionℂ d) :
+    freeCovarianceℂ_bilinear m (c • f) g = c * freeCovarianceℂ_bilinear m f g := by
+  have h := freeCovarianceℂ_bilinear_add_smul_left m c f 0 g
+  rw [add_zero] at h
+  have zero_bilinear : freeCovarianceℂ_bilinear m (0 : TestFunctionℂ d) g = 0 := by
+    unfold freeCovarianceℂ_bilinear
+    have h0 : ∀ x y : SpaceTime d,
+        (0 : TestFunctionℂ d) x * (freeCovariance d m x y : ℂ) * g y = 0 := by
+      intro x y
+      have hx : (0 : TestFunctionℂ d) x = 0 := rfl
+      rw [hx]
+      simp only [zero_mul]
+    simp_rw [h0]
+    rw [integral_zero, integral_zero]
+  rw [zero_bilinear, add_zero] at h
+  exact h
+
+/-- Symmetry of the bilinear pairing (Fubini plus symmetry of the kernel). -/
+theorem freeCovarianceℂ_bilinear_symm (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
+    (f g : TestFunctionℂ d) :
+    freeCovarianceℂ_bilinear m f g = freeCovarianceℂ_bilinear m g f := by
+  unfold freeCovarianceℂ_bilinear
+  have h : ∫ x, ∫ y, (f x) * (freeCovariance d m x y : ℂ) * (g y) ∂volume ∂volume
+         = ∫ y, ∫ x, (f x) * (freeCovariance d m x y : ℂ) * (g y) ∂volume ∂volume := by
+    apply MeasureTheory.integral_integral_swap
+    exact freeCovarianceℂ_bilinear_integrable m f g
+  rw [h]
+  congr 1 with x
+  congr 1 with y
+  rw [freeCovariance_symm y x]
+  ring
+
+theorem freeCovarianceℂ_bilinear_smul_right (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
+    (c : ℂ) (f g : TestFunctionℂ d) :
+    freeCovarianceℂ_bilinear m f (c • g) = c * freeCovarianceℂ_bilinear m f g := by
+  rw [freeCovarianceℂ_bilinear_symm m f (c • g),
+    freeCovarianceℂ_bilinear_smul_left m c g f,
+    freeCovarianceℂ_bilinear_symm m g f]
+
+theorem freeCovarianceℂ_bilinear_add_right (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
+    (f g₁ g₂ : TestFunctionℂ d) :
+    freeCovarianceℂ_bilinear m f (g₁ + g₂)
+      = freeCovarianceℂ_bilinear m f g₁ + freeCovarianceℂ_bilinear m f g₂ := by
+  rw [freeCovarianceℂ_bilinear_symm m f (g₁ + g₂),
+    freeCovarianceℂ_bilinear_add_left m g₁ g₂ f,
+    freeCovarianceℂ_bilinear_symm m g₁ f, freeCovarianceℂ_bilinear_symm m g₂ f]
+
+end BilinearAlgebra
 
 end
