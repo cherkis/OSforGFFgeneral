@@ -58,6 +58,87 @@ lemma properTimeCovariance_norm_measurable (d : ℕ) (m : ℝ) :
     Measurable fun x : EuclideanSpace ℝ (Fin d) => properTimeCovariance d m ‖x‖ :=
   (properTimeCovariance_measurable d m).comp measurable_norm
 
+/-- For `r > 0`, the proper-time integrand `t ↦ e^{-t m²} H_d(t, r)` is integrable on `(0, ∞)`:
+    the heat-kernel singularity `t^{-d/2}` at `t = 0` is suppressed by `e^{-r²/(4t)}`. -/
+lemma properTime_slice_integrableOn (d : ℕ) (m : ℝ) (hm : 0 < m) {r : ℝ} (hr : 0 < r) :
+    MeasureTheory.IntegrableOn
+      (fun t => Real.exp (-t * m ^ 2) * heatKernelProfile d t r) (Set.Ioi 0) := by
+  have hgi : MeasureTheory.IntegrableOn
+      (fun t => t ^ ((d : ℝ) / 2) * Real.exp (-m ^ 2 * t)) (Set.Ioi 0) := by
+    have := integrableOn_rpow_mul_exp_neg_mul_rpow (s := (d : ℝ) / 2) (p := 1) (b := m ^ 2)
+      (by have h2 : (0 : ℝ) ≤ (d : ℝ) / 2 := (by positivity); linarith) (le_refl 1) (by positivity)
+    simpa [Real.rpow_one] using this
+  refine (hgi.const_mul ((4 * Real.pi) ^ (-(d : ℝ) / 2)
+    * ((d.factorial : ℝ) * (4 / r ^ 2) ^ d))).mono' ?_ ?_
+  · unfold heatKernelProfile
+    exact ((by fun_prop : Measurable fun t : ℝ =>
+      Real.exp (-t * m ^ 2) * ((4 * Real.pi * t) ^ (-(d : ℝ) / 2)
+        * Real.exp (-r ^ 2 / (4 * t))))).aestronglyMeasurable
+  · filter_upwards [MeasureTheory.ae_restrict_mem measurableSet_Ioi] with t ht
+    have ht0 : (0 : ℝ) < t := ht
+    unfold heatKernelProfile
+    rw [Real.norm_of_nonneg (by positivity)]
+    have hexp : Real.exp (-r ^ 2 / (4 * t)) ≤ (d.factorial : ℝ) * (4 / r ^ 2) ^ d * t ^ d := by
+      have hx : (0 : ℝ) ≤ r ^ 2 / (4 * t) := by positivity
+      have h := Real.pow_div_factorial_le_exp (r ^ 2 / (4 * t)) hx d
+      have hlow : (0 : ℝ) < (r ^ 2 / (4 * t)) ^ d / d.factorial := by positivity
+      rw [show -r ^ 2 / (4 * t) = -(r ^ 2 / (4 * t)) by ring, Real.exp_neg]
+      calc (Real.exp (r ^ 2 / (4 * t)))⁻¹
+          ≤ ((r ^ 2 / (4 * t)) ^ d / d.factorial)⁻¹ := inv_anti₀ hlow h
+        _ = (d.factorial : ℝ) * (4 / r ^ 2) ^ d * t ^ d := by
+            rw [inv_div, div_pow, div_div_eq_mul_div, div_pow]
+            field_simp
+            ring
+    have htd : t ^ (-(d : ℝ) / 2) * (t : ℝ) ^ d = t ^ ((d : ℝ) / 2) := by
+      rw [← Real.rpow_natCast t d, ← Real.rpow_add ht0]
+      ring_nf
+    calc Real.exp (-t * m ^ 2) * ((4 * Real.pi * t) ^ (-(d : ℝ) / 2)
+            * Real.exp (-r ^ 2 / (4 * t)))
+        ≤ Real.exp (-t * m ^ 2) * ((4 * Real.pi * t) ^ (-(d : ℝ) / 2)
+            * ((d.factorial : ℝ) * (4 / r ^ 2) ^ d * t ^ d)) := by
+          have h4 : (0 : ℝ) ≤ (4 * Real.pi * t) ^ (-(d : ℝ) / 2) :=
+            Real.rpow_nonneg (by positivity) _
+          have := mul_le_mul_of_nonneg_left hexp h4
+          exact mul_le_mul_of_nonneg_left this (Real.exp_nonneg _)
+      _ = (4 * Real.pi) ^ (-(d : ℝ) / 2) * ((d.factorial : ℝ) * (4 / r ^ 2) ^ d)
+            * (t ^ ((d : ℝ) / 2) * Real.exp (-m ^ 2 * t)) := by
+          rw [Real.mul_rpow (by positivity) ht0.le, ← htd]
+          ring_nf
+
+/-- The proper-time covariance is continuous on `(0, ∞)` (dominated convergence over the
+    proper-time integral, with the dominator taken at radius `r₀/2`). -/
+lemma properTimeCovariance_continuousOn (d : ℕ) (m : ℝ) (hm : 0 < m) :
+    ContinuousOn (properTimeCovariance d m) (Set.Ioi 0) := by
+  intro r₀ hr₀
+  have hr₀' : (0 : ℝ) < r₀ := hr₀
+  have hhalf : (0 : ℝ) < r₀ / 2 := by positivity
+  have hCA : ContinuousAt (fun r => ∫ t in Set.Ioi (0 : ℝ),
+      Real.exp (-t * m ^ 2) * heatKernelProfile d t r) r₀ := by
+    refine MeasureTheory.continuousAt_of_dominated ?_ ?_
+      (properTime_slice_integrableOn d m hm hhalf) ?_
+    · filter_upwards with r
+      unfold heatKernelProfile
+      exact ((by fun_prop : Measurable fun t : ℝ =>
+        Real.exp (-t * m ^ 2) * ((4 * Real.pi * t) ^ (-(d : ℝ) / 2)
+          * Real.exp (-r ^ 2 / (4 * t))))).aestronglyMeasurable
+    · filter_upwards [eventually_gt_nhds (by linarith : r₀ / 2 < r₀)] with r hr
+      filter_upwards [MeasureTheory.ae_restrict_mem measurableSet_Ioi] with t ht
+      have ht0 : (0 : ℝ) < t := ht
+      unfold heatKernelProfile
+      rw [Real.norm_of_nonneg (by positivity)]
+      have hmono : Real.exp (-r ^ 2 / (4 * t)) ≤ Real.exp (-(r₀ / 2) ^ 2 / (4 * t)) := by
+        apply Real.exp_le_exp.mpr
+        have h2 : (0 : ℝ) < 4 * t := by linarith
+        gcongr
+      exact mul_le_mul_of_nonneg_left
+        (mul_le_mul_of_nonneg_left hmono (Real.rpow_nonneg (by positivity) _))
+        (Real.exp_nonneg _)
+    · filter_upwards [MeasureTheory.ae_restrict_mem measurableSet_Ioi] with t ht
+      have ht0 : (0 : ℝ) < t := ht
+      unfold heatKernelProfile
+      fun_prop
+  exact hCA.continuousWithinAt
+
 end OSforGFF
 
 /-- The complex covariance bilinear pairing of two complex test functions against the
