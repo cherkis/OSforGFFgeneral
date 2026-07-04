@@ -6,15 +6,19 @@ construction is built are listed.
 
 ---
 
-## Axioms (3 total)
+## Axioms (0 total)
 
-These are the only `axiom` declarations in the project. Everything else is proved.
+There are **no `axiom` declarations reachable from the master theorem**. `#print axioms` on every
+headline shows exactly Lean's three foundational axioms — `propext`, `Classical.choice`,
+`Quot.sound` — and nothing else; this is build-frozen in `OSforGFF/Guardrails.lean`.
 
-| Axiom | File | Description |
-|-------|------|-------------|
-| `schwartz_nuclear` | [Measure/NuclearSpace.lean:145](../OSforGFF/Measure/NuclearSpace.lean#L145) | Schwartz space S(E, F) is nuclear for any finite-dimensional E. Well-known (Gel'fand–Vilenkin, Trèves), not yet in Mathlib. |
-| `minlos_theorem` | [Measure/Minlos.lean:73](../OSforGFF/Measure/Minlos.lean#L73) | A continuous positive-definite normalized functional on a nuclear space is the characteristic functional of a unique probability measure on the topological dual. (Minlos 1959) |
-| `differentiable_analyticAt_finDim` | [OS/OS0_Analyticity.lean:86](../OSforGFF/OS/OS0_Analyticity.lean#L86) | A ℂ-differentiable function on a finite-dimensional complex vector space is analytic (Goursat/Hartogs in n dimensions). |
+The nuclear-space, Minlos, and Bochner machinery is supplied by the external, axiom-free libraries
+`BochnerMinlos` / `GaussianField` (consumed as `Minlos.*` / `Bochner.*`), not by axioms in this
+project. (An earlier version of this document listed three custom axioms — `schwartz_nuclear`,
+`minlos_theorem`, `differentiable_analyticAt_finDim` — that expected a floating dependency state;
+at the pinned dependency revisions none are reachable: `minlos_theorem` is a proven theorem, the
+`schwartz_*` axioms live in an off-path `Test/` tree, and `differentiable_analyticAt_finDim` no
+longer exists.)
 
 ---
 
@@ -22,15 +26,17 @@ These are the only `axiom` declarations in the project. Everything else is prove
 
 ### Core types (`Spacetime/Basic.lean`)
 
-| Line | Name | Definition |
-|------|------|------------|
-| 56 | `STDimension` | `abbrev STDimension := 4` — spacetime dimension |
-| 57 | `SpaceTime` | `EuclideanSpace ℝ (Fin STDimension)` — Euclidean ℝ⁴ |
-| 78 | `TestFunction` | `SchwartzMap SpaceTime ℝ` — real Schwartz functions S(ℝ⁴, ℝ) |
-| 80 | `TestFunctionℂ` | `SchwartzMap SpaceTime ℂ` — complex Schwartz functions S(ℝ⁴, ℂ) |
-| 111 | `FieldConfiguration` | `WeakDual ℝ (SchwartzMap SpaceTime ℝ)` — tempered distributions S'(ℝ⁴) |
-| 268 | `SpatialCoords` | `EuclideanSpace ℝ (Fin (STDimension - 1))` — spatial ℝ³ |
-| 271 | `SpatialL2` | `Lp ℝ 2 (volume : Measure SpatialCoords)` — L²(ℝ³) |
+The library is **dimension-generic**: types are parameterized by `d : ℕ` (with `STDimension := 4`
+kept only for the verbatim four-dimensional instance).
+
+| Name | Definition |
+|------|------------|
+| `SpaceTime d` | `EuclideanSpace ℝ (Fin d)` — Euclidean ℝ^d (`SpaceTime4 := SpaceTime STDimension`) |
+| `TestFunction d` | `SchwartzMap (SpaceTime d) ℝ` — real Schwartz functions S(ℝ^d, ℝ) |
+| `TestFunctionℂ d` | `SchwartzMap (SpaceTime d) ℂ` — complex Schwartz functions S(ℝ^d, ℂ) |
+| `FieldConfiguration d` | `WeakDual ℝ (TestFunction d)` — tempered distributions S'(ℝ^d) |
+| `SpatialCoords d` | `EuclideanSpace ℝ (Fin (d - 1))` — spatial ℝ^{d−1} |
+| `SpatialL2 d` | `Lp ℝ 2 (volume : Measure (SpatialCoords d))` — L²(ℝ^{d−1}) |
 
 ### Pairings and generating functionals (`Spacetime/Basic.lean`)
 
@@ -107,43 +113,48 @@ These are the only `axiom` declarations in the project. Everything else is prove
 
 ## Free Covariance
 
-### Momentum space (`Covariance/Momentum.lean`)
+The covariance seam is the dimension-generic `GFFPropagator d m` typeclass: everything downstream
+consumes only the class and the lemmas derived once from its two fields.
 
-| Line | Name | Definition |
-|------|------|------------|
-| 122 | `freePropagatorMomentum` | P(k) = 1/(‖k‖² + m²) — free propagator (physics convention) |
-| 134 | `freePropagatorMomentum_mathlib` | 1/((2π)²‖k‖² + m²) — Mathlib Fourier convention |
-| 162 | `freeCovariance_regulated` | UV-regulated covariance: Fourier integral of P(k)·e^{−α‖k‖²} |
-| 195 | `schwingerIntegrand` | exp(−t(‖k‖² + m²)) — Schwinger proper-time integrand |
-| 230 | `heatKernelPositionSpace` | (4πt)^{−d/2} exp(−r²/(4t)) — position-space heat kernel |
-| 406 | `covarianceSchwingerRep` | ∫₀^∞ e^{−tm²} H(t,r) dt — Schwinger representation |
-| 456 | `freeCovarianceBessel` | (m/4π²r)·K₁(mr) — Bessel form of free covariance |
-| 462 | `freeCovariance` | **Principal alias** for the two-point function C(x,y) |
-| 2159 | `momentumWeightSqrt` | 1/√(‖k‖² + m²) — square-root propagator |
-| 2281 | `momentumWeightSqrt_mul_CLM` | Multiplication by √P as bounded operator on L² |
+### The propagator typeclass and generic kernels (`Covariance/Propagator.lean`)
 
-### Position space (`Covariance/Position.lean`)
+| Name | Definition |
+|------|------------|
+| `heatKernelProfile d t r` | (4πt)^{−d/2} exp(−r²/(4t)) — heat-kernel radial profile |
+| `properTimeCovariance d m r` | ∫₀^∞ e^{−tm²} H_d(t,r) dt — proper-time (Schwinger) covariance profile (`C_S`) |
+| `freePropagatorMom d m k` | 1/((2π)²‖k‖² + m²) — momentum-space propagator (Mathlib Fourier convention) |
+| `GFFPropagator d m` | `class` — fields `Cprofile` (per-d closed-form radial kernel) + `schwinger_eq` (it equals `properTimeCovariance` for r>0) |
+| `GFFPropagator.integrable / .fourier_eq / .decayBound` | derived once for all d: L¹, forward FT = `freePropagatorMom`, pointwise exponential decay |
+| `GFFPropagator.ofProperTime d m` | canonical instance (Cprofile := `properTimeCovariance`); discharges the class for every 2 ≤ d |
+| `freeCovariance d m x y` | **Principal two-point function** C(x,y) = `Cprofile ‖x − y‖` |
 
-| Line | Name | Definition |
-|------|------|------------|
-| 59 | `heatKernelMomentum` | Spatial heat kernel: exp(−t·E(k))/E(k) |
-| 580 | `freeCovarianceℂ_regulated` | Regulated complex bilinear form with UV cutoff |
-| 597 | `freeCovarianceℂ` | ∫∫ f̄(x) C(x,y) g(y) dx dy — complex covariance bilinear form |
+### Modified Bessel function and the master Schwinger identity (`General/BesselK.lean`)
+
+| Name | Definition |
+|------|------------|
+| `besselK ν z` | ∫₀^∞ e^{−z cosh t} cosh(νt) dt — modified Bessel function of order ν |
+| `schwingerIntegral_eq_besselK` | ∫₀^∞ t^{ν−1} e^{−m²t−r²/4t} dt = 2(r/2m)^ν K_ν(mr) — master identity |
 
 ### Real form and embedding (`Covariance/RealForm.lean`)
 
-| Line | Name | Definition |
-|------|------|------------|
-| 47 | `freeCovarianceFormR` | ∫∫ f(x) C(x,y) g(y) dx dy — real covariance bilinear form |
-| 89 | `sqrtPropagatorMap` | T: f ↦ FT(f)·(‖k‖²+m²)^{−1/2} — embedding into L² |
-| 270 | `embeddingMap` | ℝ-linear embedding T: TestFunction → L² |
-| 297 | `embeddingMapCLM` | Continuous linear version of the embedding |
+| Name | Definition |
+|------|------------|
+| `freeCovarianceFormR` | ∫∫ f(x) C(x,y) g(y) dx dy — real covariance bilinear form |
+| `sqrtPropagatorMap` | T: f ↦ FT(f)·(‖k‖²+m²)^{−1/2} — embedding into L² |
+| `embeddingMap` / `embeddingMapCLM` | ℝ-linear (resp. continuous) embedding T: TestFunction → L² |
+| `freePropagatorMomSqrt` | 1/√((2π)²‖k‖² + m²) — square-root propagator weight |
 
-### Parseval / Fourier (`Covariance/Parseval.lean`)
+### Parseval and the complex bilinear form (`Covariance/ParsevalGeneric.lean`)
 
-| Line | Name | Definition |
-|------|------|------------|
-| 138 | `physicsFourierTransform` | f̂(k) = ∫ f(x) e^{−i⟨k,x⟩} dx |
+| Name | Definition |
+|------|------------|
+| `freeCovarianceℂ_bilinear` | ∫∫ f̄(x) C(x,y) g(y) dx dy — complex covariance bilinear form |
+| `freeCovarianceKernel d m` | centered kernel `freeCovariance d m 0 ·` (continuity, integrability, exponential decay) |
+
+The four-dimensional Bessel kernel `freeCovarianceBessel` / `freeCovariance4` = (m/4π²r)K₁(mr)
+lives in `Instances/Dim4Bessel.lean`. The original momentum-space program (`freePropagatorMomentum`,
+`heatKernelPositionSpace`, `covarianceSchwingerRep`, `freeCovariance_regulated`, the momentum-weight
+operators) is preserved off the build graph in `OSforGFF/Legacy/`.
 
 ---
 
@@ -206,27 +217,40 @@ These are the only `axiom` declarations in the project. Everything else is prove
 |------|------|------------|
 | 73 | `OS0_Analyticity` | Z[∑ zᵢJᵢ] is analytic on ℂⁿ |
 | 83 | `OS1_Regularity` | ‖Z[f]‖ ≤ exp(c·‖f‖_Lp) |
-| 91 | `OS2_EuclideanInvariance` | Z[f] = Z[g·f] for all g ∈ E(4) |
+| 91 | `OS2_EuclideanInvariance` | Z[f] = Z[g·f] for all g ∈ E(d) |
 | 109 | `OS3_ReflectionPositivity` | Re(∑ c̄ᵢcⱼ Z_ℂ[fᵢ − star fⱼ]) ≥ 0 for complex positive-time fᵢ, star f = conj∘f∘Θ |
 | 123 | `OS4_Clustering` | Z[f + τ_a g] → Z[f]·Z[g] as ‖a‖ → ∞ |
 | 136 | `OS4_Ergodicity` | (1/T)∫₀ᵀ A(T_s ω) ds →_{L²} 𝔼[A] |
 | 173 | `SatisfiesAllOS` | `structure` — bundles OS0–OS4 |
 
-### Master theorem (`OS/Axioms.lean`)
+### Master theorem (`OS/Master.lean`)
+
+The dimension-generic master theorem, its all-dimensions corollary, and the four concrete instances:
 
 ```
-theorem gaussianFreeField_satisfies_all_OS_axioms (m : ℝ) [Fact (0 < m)] :
-    SatisfiesAllOS (μ_GFF m)
+theorem gaussianFreeField_satisfies_all_OS_axioms_generic
+    {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)] :
+    SatisfiesAllOS (gaussianFreeField_free (d := d) m)
+
+theorem gaussianFreeField_satisfies_all_OS_axioms_of_dim (d : ℕ) [Fact (2 ≤ d)]
+    (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5)] : … (via GFFPropagator.ofProperTime)
+
+theorem gaussianFreeField_satisfies_all_OS_axioms      (m) [Fact (0 < m)] : SatisfiesAllOS (μ_GFF m)   -- d = 4
+theorem gaussianFreeField_satisfies_all_OS_axioms_dim3 (m) [Fact (0 < m)] : SatisfiesAllOS (μ_GFF3 m)  -- d = 3
+theorem gaussianFreeField_satisfies_all_OS_axioms_dim2 (m) [Fact (0 < m)] : SatisfiesAllOS (μ_GFF2 m)  -- d = 2
+theorem gaussianFreeField_satisfies_all_OS_axioms_dim5 (m) [Fact (0 < m)] : SatisfiesAllOS (μ_GFF5 m)  -- d = 5
 ```
 
 ---
 
 ## General Mathematics (`General/`)
 
-| File | Line | Name | Definition |
-|------|------|------|------------|
-| BesselFunction.lean | 47 | `besselK1` | Modified Bessel function K₁(z) |
-| PositiveDefinite.lean | 36 | `IsPositiveDefinite` | ∑ c̄ᵢcⱼ φ(xᵢ−xⱼ) ≥ 0 |
-| GaussianRBF.lean | 35 | `IsPositiveDefiniteKernel` | ∑ c̄ᵢcⱼ K(xᵢ,xⱼ) ≥ 0 |
-| FunctionalAnalysis.lean | 245 | `schwartzToL2` | Continuous embedding S(ℝᵈ) ↪ L²(ℝᵈ) |
-| FunctionalAnalysis.lean | 804 | `SchwartzMap.translate` | f.translate(a)(x) = f(x−a) |
+| File | Name | Definition |
+|------|------|------------|
+| BesselK.lean | `besselK ν z` | Modified Bessel function of order ν + the master Schwinger identity |
+| BesselFunction.lean | `besselK1` | Modified Bessel function K₁(z) (def only; analytic lemmas in `Legacy/`) |
+| BesselK0.lean | `besselK0` | Modified Bessel function K₀(z) (def only) |
+| PositiveDefinite.lean | `IsPositiveDefinite` | ∑ c̄ᵢcⱼ φ(xᵢ−xⱼ) ≥ 0 |
+| GaussianRBF.lean | `IsPositiveDefiniteKernel` | ∑ c̄ᵢcⱼ K(xᵢ,xⱼ) ≥ 0 |
+| FunctionalAnalysis.lean | `schwartzToL2` | Continuous embedding S(ℝ^d) ↪ L²(ℝ^d) |
+| FunctionalAnalysis.lean | `SchwartzMap.translate` | f.translate(a)(x) = f(x−a) |
