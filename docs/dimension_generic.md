@@ -67,26 +67,36 @@ hypotheses of the Minlos theorem, by which the measure exists on `S′(ℝ^d)`.
 
 ## The instance layer
 
-`Instances/Dim4Bessel.lean` holds the four-dimensional momentum/Bessel analysis (the
-evaluation `∫₀^∞ e^{−sm²}(4πs)^{−2}e^{−r²/4s} ds = (m/4π²r)K₁(mr)` and its supporting
-special-function theory); `Instances/Dim4.lean` packages it as `GFFPropagator 4 m`, and at
-this instance the generic kernel is *definitionally* the Bessel kernel. `Instances/Dim3.lean`
-provides the three-dimensional instance: the Yukawa kernel `e^{−mr}/(4πr)`, obtained by
-reducing the proper-time integral to the `K_{1/2}` Laplace identity
-`LaplaceIntegral.laplace_integral_half_power` via the reciprocal substitution `t = 1/s`
-(`integral_comp_rpow_Ioi` at `p = −1`) — no new Bessel theory is needed. `Instances/Dim2.lean`
-provides the two-dimensional instance: the Bessel kernel `(1/2π)K₀(mr)`, obtained from the
-Schwinger evaluation `∫₀^∞ (1/t)e^{−m²t−r²/4t} dt = 2K₀(mr)` in `General/BesselK0.lean`
-(linear scaling to the symmetric kernel `(1/s)e^{−a(s+1/s)}`, the reciprocal involution
-`s ↦ 1/s` folding `(0,∞)` onto `(1,∞)`, and the substitution `s = eᵗ` matching the cosh
-representation of `K₀`). The master theorem
+Every instance owes exactly one closed-form evaluation of the proper-time integral, and all four
+go through **one** identity. `General/BesselK.lean` defines the modified Bessel function of
+arbitrary order `K_ν(z) = ∫₀^∞ e^{−z cosh t} cosh(νt) dt` and proves the master Schwinger identity
+
+    ∫₀^∞ t^{ν−1} e^{−m²t − r²/(4t)} dt = 2 (r/2m)^ν · K_ν(mr)
+
+(change of variables `t = (r/2m)eᵘ` + a ν-generic symmetrization). At dimension `d` the
+proper-time integrand carries `t^{−d/2}`, i.e. `ν = 1 − d/2`, so each instance is one order of the
+same identity, using `K_{−ν} = K_ν`:
+
+- `Instances/Dim2.lean` (`ν = 0`): the Bessel kernel `(1/2π)K₀(mr)`.
+- `Instances/Dim3.lean` (`ν = −1/2`): the Yukawa kernel `e^{−mr}/(4πr)`, using the elementary
+  `K_{1/2}(z) = √(π/2z) e^{−z}` (`besselK_half`, substitution `u = sinh(t/2)` → Gaussian).
+- `Instances/Dim4.lean` (`ν = −1`): the Bessel kernel `(m/4π²r)K₁(mr)`; at this instance the
+  generic kernel is *definitionally* the Bessel kernel `freeCovariance4` (`Instances/Dim4Bessel.lean`).
+- `Instances/Dim5.lean` (`ν = −3/2`): the `K_{3/2}` kernel `(1+mr)e^{−mr}/(8π²r³)`, using
+  `K_{3/2}(z) = √(π/2z) e^{−z}(1+1/z)` (`besselK_three_half`, Gaussian zeroth and second moments).
+
+`Covariance/Propagator.ofProperTime` additionally discharges the class in every dimension with the
+proper-time integral itself, needing no closed form. The master theorem
 
     gaussianFreeField_satisfies_all_OS_axioms_generic :
       ∀ {d} [Fact (2 ≤ d)] (m) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)],
         SatisfiesAllOS (gaussianFreeField_free d m)
 
-specializes to the original four-dimensional statement `SatisfiesAllOS (μ_GFF m)`, to the
-three-dimensional `SatisfiesAllOS (μ_GFF3 m)`, and to the two-dimensional
-`SatisfiesAllOS (μ_GFF2 m)`, each with the same axiom footprint (`propext`,
-`Classical.choice`, `Quot.sound` — nothing else); `Guardrails.lean` freezes those facts
-(generic, `d = 4`, `d = 3`, `d = 2`) into the build.
+specializes to the concrete headlines `SatisfiesAllOS (μ_GFF m)` (d = 4), `μ_GFF3`, `μ_GFF2`,
+`μ_GFF5`, and to the all-dimensions corollary `gaussianFreeField_satisfies_all_OS_axioms_of_dim`
+for every `2 ≤ d ≤ 5` — each with the same axiom footprint (`propext`, `Classical.choice`,
+`Quot.sound` — nothing else). `Guardrails.lean` freezes all six of these facts into the build.
+
+The original four-dimensional Bessel/momentum development (the regulated-covariance program and the
+K₁ analytic lemmas), superseded by the machinery above, is preserved off the build graph in
+`OSforGFF/Legacy/` with per-file supersession maps.

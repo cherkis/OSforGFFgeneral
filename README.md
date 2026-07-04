@@ -48,7 +48,7 @@ The Minlos proof uses the external library [kolmogorov_extension4](https://githu
 
 ## Project Structure
 
-The 54 library files are organized into 7 layers, with imports flowing from
+The 54 on-graph library files (plus 2 off-graph `Legacy/` files, below) are organized into 7 layers, with imports flowing from
 earlier to later sections. See [docs/architecture.md](docs/architecture.md) for dependency structure,
 design choices, and proof outlines, and [docs/dimension_generic.md](docs/dimension_generic.md)
 for the dimension-generic design. The dependency graph source is in
@@ -70,8 +70,9 @@ Pure extensions of Mathlib with no project-specific definitions.
 | [GaussianRBF](OSforGFF/General/GaussianRBF.lean) | [Gaussian RBF kernel exp(-‖x-y‖²) is positive definite](summary/OSforGFF/General/GaussianRBF.md) |
 | [FourierTransforms](OSforGFF/General/FourierTransforms.lean) | [1D Fourier identities: Lorentzian ↔ exponential decay](summary/OSforGFF/General/FourierTransforms.md) |
 | [LaplaceIntegral](OSforGFF/General/LaplaceIntegral.lean) | [Laplace integral identity (Bessel K_{1/2}): ∫ s^{-1/2} e^{-a/s-bs} ds](summary/OSforGFF/General/LaplaceIntegral.md) |
-| [BesselFunction](OSforGFF/General/BesselFunction.lean) | [Modified Bessel function K₁ via integral representation](summary/OSforGFF/General/BesselFunction.md) |
-| [BesselK0](OSforGFF/General/BesselK0.lean) | [Modified Bessel function K₀ and the Schwinger evaluation ∫ (1/t) e^{−m²t−r²/4t} dt = 2K₀(mr)](summary/OSforGFF/General/BesselK0.md) |
+| [BesselFunction](OSforGFF/General/BesselFunction.lean) | [The modified Bessel function K₁ via its cosh integral representation (def only; the analytic lemmas are in `Legacy/`)](summary/OSforGFF/General/BesselFunction.md) |
+| [BesselK0](OSforGFF/General/BesselK0.lean) | [The modified Bessel function K₀ via its cosh integral representation (def only)](summary/OSforGFF/General/BesselK0.md) |
+| [BesselK](OSforGFF/General/BesselK.lean) | [The modified Bessel function K_ν of arbitrary order and the master Schwinger identity ∫ t^{ν−1} e^{−m²t−r²/4t} dt = 2(r/2m)^ν K_ν(mr); the K₀/K₁ evaluations and K_{1/2} are corollaries](summary/OSforGFF/General/BesselK.md) |
 | [QuantitativeDecay](OSforGFF/General/QuantitativeDecay.lean) | [Schwartz bilinear forms with exponentially decaying kernels have polynomial decay](summary/OSforGFF/General/QuantitativeDecay.md) |
 | [SchwartzTranslationDecay](OSforGFF/General/SchwartzTranslationDecay.lean) | [Schwartz seminorm bounds under translation](summary/OSforGFF/General/SchwartzTranslationDecay.md) |
 | [L2TimeIntegral](OSforGFF/General/L2TimeIntegral.lean) | [L² bounds for time integrals: Cauchy-Schwarz, Fubini, Minkowski](summary/OSforGFF/General/L2TimeIntegral.md) |
@@ -169,11 +170,24 @@ Per-dimension closed forms of the covariance, packaged as `GFFPropagator` instan
 
 | File | Contents |
 |------|----------|
-| [Dim4Bessel](OSforGFF/Instances/Dim4Bessel.lean) | [4D momentum-space analysis and the Bessel evaluation (m/4π²r)K₁(mr) of the Schwinger integral](summary/OSforGFF/Instances/Dim4Bessel.md) |
+| [Dim4Bessel](OSforGFF/Instances/Dim4Bessel.lean) | [The live 4D Bessel covariance kernel `freeCovariance4` = (m/4π²r)K₁(mr) (the rest of the 4D program is quarantined in `Legacy/`)](summary/OSforGFF/Instances/Dim4Bessel.md) |
 | [Dim4](OSforGFF/Instances/Dim4.lean) | [The `GFFPropagator STDimension m` instance and the μ_GFF shorthand](summary/OSforGFF/Instances/Dim4.md) |
-| [Dim3](OSforGFF/Instances/Dim3.lean) | [The `GFFPropagator 3 m` instance: Yukawa kernel e^{−mr}/(4πr) via the reciprocal reduction of the proper-time integral to the K_{1/2} Laplace identity, the μ_GFF3 shorthand, and the UV divergence](summary/OSforGFF/Instances/Dim3.md) |
+| [Dim3](OSforGFF/Instances/Dim3.lean) | [The `GFFPropagator 3 m` instance: Yukawa kernel e^{−mr}/(4πr) via the order ν=−1/2 case of the master identity (besselK_half), the μ_GFF3 shorthand, and the UV divergence](summary/OSforGFF/Instances/Dim3.md) |
 | [Dim2](OSforGFF/Instances/Dim2.lean) | [The `GFFPropagator 2 m` instance: Bessel kernel (1/2π)K₀(mr) via the order-zero case of the master identity in `General/BesselK`, and the μ_GFF2 shorthand](summary/OSforGFF/Instances/Dim2.md) |
 | [Dim5](OSforGFF/Instances/Dim5.lean) | [The `GFFPropagator 5 m` instance: K_{3/2} kernel (1+mr)e^{−mr}/(8π²r³) via the order ν=−3/2 case of the master identity (besselK_three_half by Gaussian moments), and the μ_GFF5 shorthand](summary/OSforGFF/Instances/Dim5.md) |
+
+### Legacy (off the build graph)
+
+`OSforGFF/Legacy/` preserves genuine proven mathematics from the original four-dimensional
+development that has been superseded in role by the dimension-generic machinery. These files are
+**not** imported by `OSforGFF.lean` and are not compiled by `lake build`; each carries a module
+docstring with its supersession map, and is verified in isolation with `lake env lean` (build
+`BesselK1Analytics`'s olean first, since `Dim4Bessel` depends on it).
+
+| File | Description |
+| --- | --- |
+| [Legacy/Dim4Bessel](OSforGFF/Legacy/Dim4Bessel.lean) | The original 4D Bessel/momentum program: regulated-covariance / Fubini / momentum-space development, heat-kernel and Schwinger-representation defs, superseded by `Covariance/Propagator.lean` + `Covariance/ParsevalGeneric.lean` + `General/BesselK.lean` |
+| [Legacy/BesselK1Analytics](OSforGFF/Legacy/BesselK1Analytics.lean) | The K₁ analytic lemmas (positivity, continuity, asymptotic/near-origin bounds, radial integrability) that supported the 4D analysis |
 
 ---
 

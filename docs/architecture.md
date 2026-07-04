@@ -1,23 +1,30 @@
 # Architecture
 
-How the 48 files fit together. For proof details see the paper (§4); for the
-dimension-generic design (the `GFFPropagator` typeclass and where the dimension
-enters each axiom) see `dimension_generic.md`.
+How the 54 on-graph files fit together (plus 2 off-graph `Legacy/` files — see below).
+For proof details see the paper (§4); for the dimension-generic design (the `GFFPropagator`
+typeclass and where the dimension enters each axiom) see `dimension_generic.md`.
 
 ## Dependency layers
 
 ```
 General ──→ Spacetime ──→ Covariance ──→ Schwinger ──→ Measure ──→ OS
-  (12)        (9)           (3)           (3)           (6)       (13)
+  (14)        (9)           (3)           (3)           (6)       (13)
                                ↑
-                          Instances (2): the per-dimension closed forms
-                          (4D Bessel), consumed only by the d = 4
-                          headline theorem and OS/NonTrivial's UV statement
+                          Instances (5): the per-dimension closed forms
+                          (d = 2, 3, 4, 5), consumed by the per-dimension
+                          headline theorems and OS/NonTrivial's UV statement
 ```
 
 All proof files are parameterized by the spacetime dimension `d` and consume the
 covariance only through the `GFFPropagator d m` typeclass
-(`Covariance/Propagator.lean`).
+(`Covariance/Propagator.lean`). The genuine per-`d` input is a single closed-form kernel
+identified with the generic proper-time integral; the modified Bessel function of arbitrary
+order and the master Schwinger identity live in `General/BesselK.lean`.
+
+The `Legacy/` directory (off the root import graph, not built by `lake build`) preserves the
+original four-dimensional Bessel/momentum development — the regulated-covariance program and the
+K₁ analytic lemmas — that the dimension-generic machinery superseded. Each Legacy file carries a
+supersession map and is verified in isolation with `lake env lean`.
 
 Imports flow left to right with one cross-cutting edge:
 
@@ -30,11 +37,11 @@ the later OS proofs (OS1–OS4 need S₂ = C).
 
 ## No assumed axioms
 
-Everything is proved: `#print axioms` for the master theorem (both the
-dimension-generic form and its four-dimensional instance) shows exactly Lean's
-three foundational axioms — `propext`, `Classical.choice`, `Quot.sound`.
-`Guardrails.lean` freezes this footprint and the exact statement of the
-four-dimensional theorem into the build, so any regression fails `lake build`.
+Everything is proved: `#print axioms` for the master theorem — the dimension-generic form, the
+all-dimensions corollary (`2 ≤ d ≤ 5`), and each concrete instance (`d = 2, 3, 4, 5`) — shows
+exactly Lean's three foundational axioms: `propext`, `Classical.choice`, `Quot.sound`.
+`Guardrails.lean` freezes this footprint and the exact statement of all six headline theorems into
+the build, so any regression fails `lake build`.
 
 ## OS3: the longest proof chain
 
@@ -104,5 +111,9 @@ OS3 (reflection positivity) is the most technically involved axiom, spanning
 - **Closed form behind a typeclass**: Rather than Fourier-transforming the
   propagator directly (conditionally convergent), C(x,y) is the radial profile
   `Cprofile |x−y|` of a `GFFPropagator d m` instance, identified with the
-  Schwinger integral by the instance's one obligation `schwinger_eq`. The 4D
-  instance supplies (m/4π²r)K₁(mr) (`Instances/Dim4.lean`).
+  Schwinger integral by the instance's one obligation `schwinger_eq`. The
+  instances supply the closed forms — (1/2π)K₀(mr) at d=2, e^{−mr}/(4πr) at d=3,
+  (m/4π²r)K₁(mr) at d=4, (1+mr)e^{−mr}/(8π²r³) at d=5 — each the order ν=1−d/2
+  case of the master identity in `General/BesselK.lean`. `ofProperTime`
+  (`Covariance/Propagator.lean`) additionally discharges the class in every
+  dimension `2 ≤ d ≤ 5` with no closed form, giving the all-dimensions corollary.
