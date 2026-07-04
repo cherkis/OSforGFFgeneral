@@ -26,6 +26,7 @@ import OSforGFF.Spacetime.DiscreteSymmetry
 import OSforGFF.Schwinger.Defs
 import OSforGFF.General.FunctionalAnalysis
 import OSforGFF.General.BesselFunction
+import OSforGFF.General.BesselK
 
 /-!
 # Four-dimensional Bessel/momentum support for the `d = 4` propagator instance

@@ -3,7 +3,7 @@ Copyright (c) 2025 Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim. All r
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
-import OSforGFF.General.BesselK0
+import OSforGFF.General.BesselK
 import OSforGFF.Covariance.Propagator
 import OSforGFF.Measure.Construct
 
