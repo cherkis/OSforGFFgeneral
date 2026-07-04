@@ -5,6 +5,7 @@ Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 import OSforGFF.General.LaplaceIntegral
 import OSforGFF.Covariance.Propagator
+import OSforGFF.Measure.Construct
 
 /-!
 # The three-dimensional (Yukawa) instance — proper-time evaluation
@@ -93,5 +94,22 @@ theorem properTimeCovariance_dim3_eq (m r : ℝ) (hm : 0 < m) (hr : 0 < r) :
         (4 * Real.pi) ^ (-(3 / 2 : ℝ)) * (2 * Real.sqrt Real.pi) * (Real.exp (-(m * r)) / r) by ring,
       hc]
   ring
+
+/-- `2 ≤ 3`, needed for the time/space split. -/
+instance : Fact ((2 : ℕ) ≤ 3) := ⟨by norm_num⟩
+
+/-- `3 ≤ 5`, the bound entering the OS3 proper-time Fubini domination. -/
+instance : Fact ((3 : ℕ) ≤ 5) := ⟨by norm_num⟩
+
+/-- The three-dimensional free propagator: `Cprofile` is the Yukawa closed form
+    `e^{-mr}/(4πr)` and the Schwinger bridge is `properTimeCovariance_dim3_eq`. -/
+noncomputable instance instGFFPropagatorDim3 (m : ℝ) [Fact (0 < m)] :
+    GFFPropagator 3 m where
+  Cprofile r := if r = 0 then 0 else Real.exp (-(m * r)) / (4 * Real.pi * r)
+  schwinger_eq r hr := by
+    rw [if_neg (ne_of_gt hr), properTimeCovariance_dim3_eq m r Fact.out hr]
+
+/-- Shorthand for the free GFF probability measure of the three-dimensional instance. -/
+@[simp] abbrev μ_GFF3 (m : ℝ) [Fact (0 < m)] := gaussianFreeField_free (d := 3) m
 
 end OSforGFF

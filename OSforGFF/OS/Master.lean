@@ -5,6 +5,7 @@ Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 import OSforGFF.Measure.GaussianFreeField
 import OSforGFF.Instances.Dim4
+import OSforGFF.Instances.Dim3
 import OSforGFF.OS.OS3_ReflectionPositivity
 import OSforGFF.OS.OS0_Analyticity
 import OSforGFF.OS.OS1_Regularity
@@ -75,6 +76,13 @@ This is the four-dimensional instance of
 no assumptions beyond m > 0. -/
 theorem gaussianFreeField_satisfies_all_OS_axioms (m : ℝ) [Fact (0 < m)] :
     SatisfiesAllOS (μ_GFF m) :=
+  gaussianFreeField_satisfies_all_OS_axioms_generic m
+
+/-- Master theorem, three-dimensional instance: the free GFF with the Yukawa covariance
+`e^{-mr}/(4πr)` satisfies all Osterwalder-Schrader axioms. This is the `d = 3` instance of
+`gaussianFreeField_satisfies_all_OS_axioms_generic`. -/
+theorem gaussianFreeField_satisfies_all_OS_axioms_dim3 (m : ℝ) [Fact (0 < m)] :
+    SatisfiesAllOS (μ_GFF3 m) :=
   gaussianFreeField_satisfies_all_OS_axioms_generic m
 
 end
