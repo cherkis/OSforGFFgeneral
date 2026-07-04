@@ -68,13 +68,18 @@ hypotheses of the Minlos theorem, by which the measure exists on `S′(ℝ^d)`.
 `Instances/Dim4Bessel.lean` holds the four-dimensional momentum/Bessel analysis (the
 evaluation `∫₀^∞ e^{−sm²}(4πs)^{−2}e^{−r²/4s} ds = (m/4π²r)K₁(mr)` and its supporting
 special-function theory); `Instances/Dim4.lean` packages it as `GFFPropagator 4 m`, and at
-this instance the generic kernel is *definitionally* the Bessel kernel. The master theorem
+this instance the generic kernel is *definitionally* the Bessel kernel. `Instances/Dim3.lean`
+provides the three-dimensional instance: the Yukawa kernel `e^{−mr}/(4πr)`, obtained by
+reducing the proper-time integral to the `K_{1/2}` Laplace identity
+`LaplaceIntegral.laplace_integral_half_power` via the reciprocal substitution `t = 1/s`
+(`integral_comp_rpow_Ioi` at `p = −1`) — no new Bessel theory is needed. The master theorem
 
     gaussianFreeField_satisfies_all_OS_axioms_generic :
       ∀ {d} [Fact (2 ≤ d)] (m) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)],
         SatisfiesAllOS (gaussianFreeField_free d m)
 
-specializes to the original four-dimensional statement `SatisfiesAllOS (μ_GFF m)` with the
-same axiom footprint (`propext`, `Classical.choice`, `Quot.sound` — nothing else), and
-`Guardrails.lean` freezes both facts into the build. A `d = 3` (resp. `d = 2`) headline
-theorem requires only the Yukawa (resp. `K₀`) evaluation of the proper-time integral.
+specializes to the original four-dimensional statement `SatisfiesAllOS (μ_GFF m)` and to the
+three-dimensional `SatisfiesAllOS (μ_GFF3 m)`, each with the same axiom footprint
+(`propext`, `Classical.choice`, `Quot.sound` — nothing else); `Guardrails.lean` freezes those
+facts (generic, `d = 4`, `d = 3`) into the build. A `d = 2` headline theorem requires only the
+`K₀` evaluation of the proper-time integral.
