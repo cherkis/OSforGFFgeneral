@@ -11,7 +11,7 @@ import Mathlib.MeasureTheory.Integral.IntegralEqImproper
 
 Defines the modified Bessel function of the second kind of order one through its cosh integral
 representation. The radial profile of the free covariance in four dimensions is `(m/(4π²r)) K₁(mr)`
-(`Instances/Dim4Bessel.lean`). The proper-time (Schwinger) evaluation
+(`Instances/Dim4.lean`). The proper-time (Schwinger) evaluation
 `∫₀^∞ (1/t²) e^{-m²t - r²/(4t)} dt = (4m/r) K₁(mr)` is the order-one case of the master identity
 `schwingerIntegral_eq_besselK` (`General/BesselK`).
 

@@ -27,7 +27,7 @@ import OSforGFF.Schwinger.Defs
 import OSforGFF.General.FunctionalAnalysis
 import OSforGFF.General.BesselFunction
 import OSforGFF.General.BesselK
-import OSforGFF.Instances.Dim4Bessel
+import OSforGFF.Instances.Dim4
 import OSforGFF.Legacy.BesselK1Analytics
 
 /-!
@@ -68,7 +68,7 @@ rather than deleted, because the preserved regulated program consumes them.
   `General/BesselFunction.lean`.
 
 The live four-dimensional kernel `freeCovarianceBessel` / `freeCovariance4` — the only externally
-consumed declarations of the original file — has been extracted to `Instances/Dim4Bessel.lean`
+consumed declarations of the original file — has been extracted to `Instances/Dim4.lean`
 (on the build graph) and is imported here for the lemmas below that still refer to it.
 -/
 
@@ -436,7 +436,7 @@ theorem covarianceSchwingerRep_eq_besselFormula (m r : ℝ) (hm : 0 < m) (hr : 0
   ring
 
 -- `freeCovarianceBessel` and `freeCovariance4` (the live four-dimensional kernel) have been
--- extracted to `Instances/Dim4Bessel.lean` (on the build graph) and are imported above.
+-- extracted to `Instances/Dim4.lean` (on the build graph) and are imported above.
 
 /-- The Bessel covariance is symmetric. -/
 lemma freeCovarianceBessel_symm (m : ℝ) (x y : SpaceTime4) :
