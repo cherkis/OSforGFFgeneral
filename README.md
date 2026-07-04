@@ -170,8 +170,7 @@ Per-dimension closed forms of the covariance, packaged as `GFFPropagator` instan
 
 | File | Contents |
 |------|----------|
-| [Dim4Bessel](OSforGFF/Instances/Dim4Bessel.lean) | [The live 4D Bessel covariance kernel `freeCovariance4` = (m/4π²r)K₁(mr) (the rest of the 4D program is quarantined in `Legacy/`)](summary/OSforGFF/Instances/Dim4Bessel.md) |
-| [Dim4](OSforGFF/Instances/Dim4.lean) | [The `GFFPropagator 4 m` instance: Bessel kernel (m/4π²r)K₁(mr) via the order ν=−1 case of the master identity (schwingerIntegral_eq_besselK1)](summary/OSforGFF/Instances/Dim4.md) |
+| [Dim4](OSforGFF/Instances/Dim4.lean) | [The `GFFPropagator 4 m` instance: Bessel kernel (m/4π²r)K₁(mr) via the order ν=−1 case of the master identity (schwingerIntegral_eq_besselK1), plus the live 4D kernel `freeCovariance4`](summary/OSforGFF/Instances/Dim4.md) |
 | [Dim3](OSforGFF/Instances/Dim3.lean) | [The `GFFPropagator 3 m` instance: Yukawa kernel e^{−mr}/(4πr) via the order ν=−1/2 case of the master identity (besselK_half), and the UV divergence](summary/OSforGFF/Instances/Dim3.md) |
 | [Dim2](OSforGFF/Instances/Dim2.lean) | [The `GFFPropagator 2 m` instance: Bessel kernel (1/2π)K₀(mr) via the order-zero case of the master identity in `General/BesselK`](summary/OSforGFF/Instances/Dim2.md) |
 | [Dim5](OSforGFF/Instances/Dim5.lean) | [The `GFFPropagator 5 m` instance: K_{3/2} kernel (1+mr)e^{−mr}/(8π²r³) via the order ν=−3/2 case of the master identity (besselK_three_half by Gaussian moments)](summary/OSforGFF/Instances/Dim5.md) |
