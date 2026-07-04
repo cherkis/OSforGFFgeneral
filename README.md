@@ -11,9 +11,10 @@ The library is **dimension-generic**: the spacetime dimension is a parameter
 `d` (with `2 ≤ d ≤ 5`), and the only per-dimension input is the closed form of
 the radial covariance profile, isolated behind the two-field typeclass
 `GFFPropagator d m` (see [docs/dimension_generic.md](docs/dimension_generic.md)).
-Two instances are provided in `OSforGFF/Instances/`: the four-dimensional Bessel
-kernel (m/4π²r)K₁(mr) (recovering the original 4D theorem verbatim) and the
-three-dimensional Yukawa kernel e^{−mr}/(4πr).
+Three instances are provided in `OSforGFF/Instances/`: the four-dimensional Bessel
+kernel (m/4π²r)K₁(mr) (recovering the original 4D theorem verbatim), the
+three-dimensional Yukawa kernel e^{−mr}/(4πr), and the two-dimensional Bessel
+kernel (1/2π)K₀(mr).
 
 ## Master Theorem
 
@@ -27,15 +28,18 @@ theorem gaussianFreeField_satisfies_all_OS_axioms (m : ℝ) [Fact (0 < m)] :
 
 theorem gaussianFreeField_satisfies_all_OS_axioms_dim3 (m : ℝ) [Fact (0 < m)] :
     SatisfiesAllOS (μ_GFF3 m)
+
+theorem gaussianFreeField_satisfies_all_OS_axioms_dim2 (m : ℝ) [Fact (0 < m)] :
+    SatisfiesAllOS (μ_GFF2 m)
 ```
 
 where `SatisfiesAllOS` bundles OS0 (analyticity), OS1 (regularity), OS2
 (Euclidean invariance), OS3 (reflection positivity), OS4 (clustering) and OS4
-(ergodicity). The second and third theorems are the four- and three-dimensional
+(ergodicity). The last three theorems are the four-, three-, and two-dimensional
 instances of the first; the bound `d ≤ 5` enters only through the proper-time
 Fubini domination in the OS3 argument.
 
-**Status:** Version 3.0 (dimension-generic), July 2026. 0 sorries, 0 axioms, ~31,000 lines of Lean across 50 files. Instances for `d = 3` and `d = 4`; the axiom footprint and statement type of every headline theorem (generic, `d = 4`, `d = 3`) are build-frozen in `OSforGFF/Guardrails.lean`.
+**Status:** Version 3.1 (dimension-generic), July 2026. 0 sorries, 0 axioms, ~31,500 lines of Lean across 52 files. Instances for `d = 2`, `d = 3`, and `d = 4`; the axiom footprint and statement type of every headline theorem (generic, `d = 4`, `d = 3`, `d = 2`) are build-frozen in `OSforGFF/Guardrails.lean`.
 
 All results are fully proved — no assumed axioms. Nuclear space structure and the Minlos theorem
 are provided by the external libraries [bochner](https://github.com/mrdouglasny/bochner) and
@@ -44,7 +48,7 @@ The Minlos proof uses the external library [kolmogorov_extension4](https://githu
 
 ## Project Structure
 
-The 50 library files are organized into 7 layers, with imports flowing from
+The 52 library files are organized into 7 layers, with imports flowing from
 earlier to later sections. See [docs/architecture.md](docs/architecture.md) for dependency structure,
 design choices, and proof outlines, and [docs/dimension_generic.md](docs/dimension_generic.md)
 for the dimension-generic design. The dependency graph source is in
@@ -67,6 +71,7 @@ Pure extensions of Mathlib with no project-specific definitions.
 | [FourierTransforms](OSforGFF/General/FourierTransforms.lean) | [1D Fourier identities: Lorentzian ↔ exponential decay](summary/OSforGFF/General/FourierTransforms.md) |
 | [LaplaceIntegral](OSforGFF/General/LaplaceIntegral.lean) | [Laplace integral identity (Bessel K_{1/2}): ∫ s^{-1/2} e^{-a/s-bs} ds](summary/OSforGFF/General/LaplaceIntegral.md) |
 | [BesselFunction](OSforGFF/General/BesselFunction.lean) | [Modified Bessel function K₁ via integral representation](summary/OSforGFF/General/BesselFunction.md) |
+| [BesselK0](OSforGFF/General/BesselK0.lean) | [Modified Bessel function K₀ and the Schwinger evaluation ∫ (1/t) e^{−m²t−r²/4t} dt = 2K₀(mr)](summary/OSforGFF/General/BesselK0.md) |
 | [QuantitativeDecay](OSforGFF/General/QuantitativeDecay.lean) | [Schwartz bilinear forms with exponentially decaying kernels have polynomial decay](summary/OSforGFF/General/QuantitativeDecay.md) |
 | [SchwartzTranslationDecay](OSforGFF/General/SchwartzTranslationDecay.lean) | [Schwartz seminorm bounds under translation](summary/OSforGFF/General/SchwartzTranslationDecay.md) |
 | [L2TimeIntegral](OSforGFF/General/L2TimeIntegral.lean) | [L² bounds for time integrals: Cauchy-Schwarz, Fubini, Minkowski](summary/OSforGFF/General/L2TimeIntegral.md) |
@@ -154,7 +159,7 @@ Axiom definitions, individual proofs, and master theorem.
 | [OS4_Clustering](OSforGFF/OS/OS4_Clustering.lean) | [Gaussian factorization + convolution decay lemma (domain split at ‖y‖=‖x‖/2)](summary/OSforGFF/OS/OS4_Clustering.md) |
 | [OS4_Ergodicity](OSforGFF/OS/OS4_Ergodicity.lean) | [Polynomial clustering (α=6) → L² convergence](summary/OSforGFF/OS/OS4_Ergodicity.md) |
 | [NonTrivial](OSforGFF/OS/NonTrivial.lean) | [Nontriviality: C(f,f) > 0, positive variance, UV divergence C(x,y) → ∞](summary/OSforGFF/OS/NonTrivial.md) |
-| [Master](OSforGFF/OS/Master.lean) | [Assembles OS0–OS4 into the generic master theorem and its 4D and 3D instances](summary/OSforGFF/OS/Master.md) |
+| [Master](OSforGFF/OS/Master.lean) | [Assembles OS0–OS4 into the generic master theorem and its 4D, 3D, and 2D instances](summary/OSforGFF/OS/Master.md) |
 
 ---
 
@@ -167,6 +172,7 @@ Per-dimension closed forms of the covariance, packaged as `GFFPropagator` instan
 | [Dim4Bessel](OSforGFF/Instances/Dim4Bessel.lean) | [4D momentum-space analysis and the Bessel evaluation (m/4π²r)K₁(mr) of the Schwinger integral](summary/OSforGFF/Instances/Dim4Bessel.md) |
 | [Dim4](OSforGFF/Instances/Dim4.lean) | [The `GFFPropagator STDimension m` instance and the μ_GFF shorthand](summary/OSforGFF/Instances/Dim4.md) |
 | [Dim3](OSforGFF/Instances/Dim3.lean) | [The `GFFPropagator 3 m` instance: Yukawa kernel e^{−mr}/(4πr) via the reciprocal reduction of the proper-time integral to the K_{1/2} Laplace identity, the μ_GFF3 shorthand, and the UV divergence](summary/OSforGFF/Instances/Dim3.md) |
+| [Dim2](OSforGFF/Instances/Dim2.lean) | [The `GFFPropagator 2 m` instance: Bessel kernel (1/2π)K₀(mr) via the Schwinger evaluation in `General/BesselK0`, and the μ_GFF2 shorthand](summary/OSforGFF/Instances/Dim2.md) |
 
 ---
 
@@ -215,7 +221,7 @@ lake build
 
 Requires Lean 4 and Mathlib (pinned via `lake-manifest.json`). The build also compiles
 [`OSforGFF/Guardrails.lean`](OSforGFF/Guardrails.lean), whose `#guard_msgs` blocks freeze the
-axiom footprint and statement type of the generic, `d = 4`, and `d = 3` master theorems — so
+axiom footprint and statement type of the generic, `d = 4`, `d = 3`, and `d = 2` master theorems — so
 `lake build` fails if any change introduces a new axiom, leaks a `sorry`, or alters a headline
 statement. A companion `scripts/check-guardrails.sh` performs a source-level diff against the
 baseline (blocking new `axiom`/escape-hatch declarations).
@@ -226,7 +232,7 @@ baseline (blocking new `axiom`/escape-hatch declarations).
 
 ## Planned Generalizations
 
-1. The `d = 2` instance (the K₀ kernel (1/2π)K₀(mr)), completing the dimensions discussed in [docs/dimension_dependence.md](docs/dimension_dependence.md); the `d = 3` (Yukawa) and `d = 4` (Bessel) instances are done.
+1. ~~The `d = 2` instance (the K₀ kernel (1/2π)K₀(mr))~~ — Done. The `d = 2` (K₀), `d = 3` (Yukawa), and `d = 4` (Bessel) instances are all provided, completing the dimensions discussed in [docs/dimension_dependence.md](docs/dimension_dependence.md).
 2. ~~Explicit construction of the measure not using Minlos~~ — Done. The Minlos theorem and Kolmogorov extension are now fully proved in [bochner](https://github.com/mrdouglasny/bochner) and [kolmogorov_extension4](https://github.com/remydegenne/kolmogorov_extension4).
 
 ## Authors

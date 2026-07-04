@@ -9,9 +9,11 @@
 Assembles the six Osterwalder–Schrader conditions OS0–OS4 into the master theorems. The file
 is dimension-generic: the main result `gaussianFreeField_satisfies_all_OS_axioms_generic` holds
 for any spacetime dimension $2 \le d \le 5$ carrying a `GFFPropagator d m` instance (the
-per-$d$ closed-form radial covariance identified with the proper-time integral), and the
-familiar four-dimensional theorem `gaussianFreeField_satisfies_all_OS_axioms` is recovered
-verbatim as a one-line instantiation at $d = 4$.
+per-$d$ closed-form radial covariance identified with the proper-time integral). The familiar
+four-dimensional theorem `gaussianFreeField_satisfies_all_OS_axioms` is recovered verbatim as a
+one-line instantiation at $d = 4$, and the three- and two-dimensional headlines
+`gaussianFreeField_satisfies_all_OS_axioms_dim3` / `..._dim2` are the same one-line
+instantiation at $d = 3$ (Yukawa kernel) and $d = 2$ ($K_0$ kernel).
 
 Each OS condition is supplied by its dedicated module:
 
@@ -23,9 +25,10 @@ Each OS condition is supplied by its dedicated module:
 - **OS4** (Ergodicity): polynomial clustering ($\alpha = 6$) $\Rightarrow$ $L^2$ convergence — `OS4_PolynomialClustering_implies_OS4_Ergodicity`
 
 The upper bound $d \le 5$ enters only through the proper-time Fubini domination in the OS3
-mixed-representation argument. The file imports `Instances.Dim4` so the $d = 4$ recovery can
-name $\mu_{\mathrm{GFF}}$ and resolve the four-dimensional `GFFPropagator` instance by typeclass
-search.
+mixed-representation argument. The file imports `Instances.Dim4`, `Instances.Dim3`, and
+`Instances.Dim2` so each headline can name its measure shorthand ($\mu_{\mathrm{GFF}}$,
+$\mu_{\mathrm{GFF3}}$, $\mu_{\mathrm{GFF2}}$) and resolve the corresponding `GFFPropagator`
+instance by typeclass search.
 
 ## Status
 
@@ -33,13 +36,13 @@ search.
 
 None — file is sorry-free.
 
-**Length**: 82 lines, 0 definitions + 2 theorem(s)/lemma(s)
+**Length**: 98 lines, 0 definitions + 4 theorem(s)/lemma(s)
 
 ---
 
 ## Master OS theorem for the free GFF
 
-### [`gaussianFreeField_satisfies_all_OS_axioms_generic`](../../OSforGFF/OS/Master.lean#L52) — Theorem
+### [`gaussianFreeField_satisfies_all_OS_axioms_generic`](../../OSforGFF/OS/Master.lean#L54) — Theorem
 
 **Statement**: For every dimension $d$ with $2 \le d \le 5$ and a `GFFPropagator d m` instance
 (with $m > 0$), the free Gaussian field measure satisfies all six OS conditions:
@@ -68,7 +71,7 @@ os4_ergodicity := OS4_Ergodicity.OS4_PolynomialClustering_implies_OS4_Ergodicity
 
 ---
 
-### [`gaussianFreeField_satisfies_all_OS_axioms`](../../OSforGFF/OS/Master.lean#L76) — Theorem
+### [`gaussianFreeField_satisfies_all_OS_axioms`](../../OSforGFF/OS/Master.lean#L78) — Theorem
 
 **Statement**: The four-dimensional master theorem `SatisfiesAllOS (μ_GFF m)` for every $m > 0$;
 an unconditional theorem with no assumptions beyond `[Fact (0 < m)]`. Recovered verbatim as the
@@ -76,9 +79,35 @@ one-line instantiation `gaussianFreeField_satisfies_all_OS_axioms_generic m`, wi
 `Fact (2 ≤ 4)`, `Fact (4 ≤ 5)`, and the four-dimensional `GFFPropagator` instance (from
 `Instances.Dim4`) are all discharged by typeclass search.
 
-**Proof uses**: [`gaussianFreeField_satisfies_all_OS_axioms_generic`](../../OSforGFF/OS/Master.lean#L52),
+**Proof uses**: [`gaussianFreeField_satisfies_all_OS_axioms_generic`](../../OSforGFF/OS/Master.lean#L54),
 [`μ_GFF`](../../OSforGFF/Instances/Dim4.lean#L39)
 
 ---
 
-*This file has **0** definitions and **2** theorems/lemmas (0 with sorry).*
+### [`gaussianFreeField_satisfies_all_OS_axioms_dim3`](../../OSforGFF/OS/Master.lean#L85) — Theorem
+
+**Statement**: The three-dimensional master theorem `SatisfiesAllOS (μ_GFF3 m)` for every
+$m > 0$: the free GFF with the Yukawa covariance $e^{-mr}/(4\pi r)$ satisfies all OS axioms.
+The same one-line instantiation of the generic theorem, at $d = 3$: `Fact (2 ≤ 3)`,
+`Fact (3 ≤ 5)`, and `instGFFPropagatorDim3` (from `Instances.Dim3`) are discharged by
+typeclass search.
+
+**Proof uses**: [`gaussianFreeField_satisfies_all_OS_axioms_generic`](../../OSforGFF/OS/Master.lean#L54),
+[`μ_GFF3`](../../OSforGFF/Instances/Dim3.lean#L113)
+
+---
+
+### [`gaussianFreeField_satisfies_all_OS_axioms_dim2`](../../OSforGFF/OS/Master.lean#L92) — Theorem
+
+**Statement**: The two-dimensional master theorem `SatisfiesAllOS (μ_GFF2 m)` for every
+$m > 0$: the free GFF with the Bessel covariance $\tfrac{1}{2\pi}K_0(mr)$ satisfies all OS
+axioms. The same one-line instantiation of the generic theorem, at $d = 2$: `Fact (2 ≤ 2)`,
+`Fact (2 ≤ 5)`, and `instGFFPropagatorDim2` (from `Instances.Dim2`) are discharged by
+typeclass search.
+
+**Proof uses**: [`gaussianFreeField_satisfies_all_OS_axioms_generic`](../../OSforGFF/OS/Master.lean#L54),
+[`μ_GFF2`](../../OSforGFF/Instances/Dim2.lean#L65)
+
+---
+
+*This file has **0** definitions and **4** theorems/lemmas (0 with sorry).*

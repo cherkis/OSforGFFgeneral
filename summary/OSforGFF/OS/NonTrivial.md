@@ -23,12 +23,12 @@ momentum weight $1/\sqrt{\lVert k\rVert^2 + m^2}$ creates no new zeros, and a co
 vanishing a.e. (Lebesgue) vanishes everywhere (`volume` is `IsOpenPosMeasure`).
 
 The final section proves the UV divergence $C(x,y) \to +\infty$ at coincident points, now
-**dimension-generic** for $d \ge 3$: `freeCovariance_tendsto_atTop` composes the generic driver
+**dimension-generic** for $d \ge 2$: `freeCovariance_tendsto_atTop` composes the generic driver
 `properTimeCovariance_tendsto_atTop_at_zero` (the proper-time integral $\to +\infty$ as $r \to 0^+$,
 from its $t^{-d/2}$ short-time singularity) with $\lVert x_0 - x\rVert \to 0^+$, then identifies the
 radial profile with the proper-time integral via `GFFPropagator.schwinger_eq`. It specialises to
-$d = 4$ (Bessel kernel) and $d = 3$ (Yukawa kernel), superseding the former 4D-only,
-`besselK1`-asymptotics proof.
+$d = 4$ (Bessel kernel), $d = 3$ (Yukawa kernel), and $d = 2$ (the logarithmically divergent $K_0$
+kernel), superseding the former 4D-only, `besselK1`-asymptotics proof.
 
 ## Status
 
@@ -36,7 +36,7 @@ $d = 4$ (Bessel kernel) and $d = 3$ (Yukawa kernel), superseding the former 4D-o
 
 None — file is sorry-free.
 
-**Length**: 369 lines, 0 definitions + 10 theorem(s)/lemma(s)
+**Length**: 387 lines, 0 definitions + 10 theorem(s)/lemma(s)
 
 ---
 
@@ -128,7 +128,7 @@ None — file is sorry-free.
 
 ### [`properTimeCovariance_tendsto_atTop_at_zero`](../../OSforGFF/OS/NonTrivial.lean#L256) — Theorem
 
-**Statement**: For $d \ge 3$, the proper-time covariance diverges at the origin: $\mathrm{properTimeCovariance}\;d\;m\;r \to +\infty$ as $r \to 0^+$. Lower bound: the heat-kernel mass on the window $[r^2, 2r^2]$ is of order $r^{2-d}$ (the $(4\pi t)^{-d/2}$ short-time singularity), which blows up as $r \to 0^+$ when $d \ge 3$. This is the dimension-generic driver of the UV divergence, replacing the former 4D `besselK1` asymptotics.
+**Statement**: For $d \ge 2$, the proper-time covariance diverges at the origin: $\mathrm{properTimeCovariance}\;d\;m\;r \to +\infty$ as $r \to 0^+$. Lower bound: on the window $[r^2, (4\pi)^{-1}]$ the integrand dominates a constant multiple of $1/t$ (from $e^{-tm^2} \ge e^{-m^2/4\pi}$, $(4\pi t)^{-d/2} \ge (4\pi t)^{-1}$ for $4\pi t \le 1$ and $d \ge 2$, and $e^{-r^2/4t} \ge e^{-1/4}$ for $t \ge r^2$), so the integral grows at least like $\log(1/r^2)$ — the sharp rate at $d = 2$; for $d \ge 3$ the true rate $r^{2-d}$ is polynomial. This is the dimension-generic driver of the UV divergence, replacing the former 4D `besselK1` asymptotics.
 
 **Proof uses**: [`properTime_slice_integrableOn`](../../OSforGFF/Covariance/ParsevalGeneric.lean#L79), `Real.rpow_le_rpow_of_nonpos`, `tendsto_rpow_neg_nhdsGT_zero`, `setIntegral_ge_of_const_le_real`, `setIntegral_mono_set`
 
@@ -136,7 +136,7 @@ None — file is sorry-free.
 
 ### [`freeCovariance_tendsto_atTop`](../../OSforGFF/OS/NonTrivial.lean#L347) — Theorem
 
-**Statement**: **(Dimension-generic, $d \ge 3$.)** The free covariance diverges at coincident points: $C(x_0, x) = \mathrm{Cprofile}\,\lVert x_0 - x\rVert \to +\infty$ as $x \to x_0$ through $\{x_0\}^c$ — a genuine UV singularity of the free field. Proved by composing `properTimeCovariance_tendsto_atTop_at_zero` with $\lVert x_0 - x\rVert \to 0^+$ and identifying $\mathrm{Cprofile}$ with the proper-time integral via `GFFPropagator.schwinger_eq`. Specialises to $d = 4$ (Bessel kernel) and $d = 3$ (Yukawa kernel); the pointwise regularization $C(x,x) = 0$ is the smeared-theory convention.
+**Statement**: **(Dimension-generic, $d \ge 2$.)** The free covariance diverges at coincident points: $C(x_0, x) = \mathrm{Cprofile}\,\lVert x_0 - x\rVert \to +\infty$ as $x \to x_0$ through $\{x_0\}^c$ — a genuine UV singularity of the free field. Proved by composing `properTimeCovariance_tendsto_atTop_at_zero` with $\lVert x_0 - x\rVert \to 0^+$ and identifying $\mathrm{Cprofile}$ with the proper-time integral via `GFFPropagator.schwinger_eq`; the ambient `[Fact (2 ≤ d)]` supplies the dimension bound. Specialises to $d = 4$ (Bessel kernel), $d = 3$ (Yukawa kernel), and $d = 2$ ($K_0$ kernel); the pointwise regularization $C(x,x) = 0$ is the smeared-theory convention.
 
 **Proof uses**: [`properTimeCovariance_tendsto_atTop_at_zero`](../../OSforGFF/OS/NonTrivial.lean#L256),
 `GFFPropagator.schwinger_eq`, `tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within`

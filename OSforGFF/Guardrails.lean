@@ -52,3 +52,14 @@ import «OSforGFF».OS.Master
   SatisfiesAllOS (OSforGFF.μ_GFF3 m) -/
 #guard_msgs in
 #check @OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim3
+
+-- ── Axiom-footprint guard for the two-dimensional instance ───────────────────
+/-- info: 'OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim2' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim2
+
+-- ── Goal-type guard: pins the two-dimensional headline's statement ───────────
+/-- info: OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim2 : ∀ (m : ℝ) [inst : Fact (0 < m)],
+  SatisfiesAllOS (OSforGFF.μ_GFF2 m) -/
+#guard_msgs in
+#check @OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim2

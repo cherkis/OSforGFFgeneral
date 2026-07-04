@@ -59,9 +59,11 @@ hypotheses of the Minlos theorem, by which the measure exists on `S′(ℝ^d)`.
   hypothesis `[Fact (d ≤ 5)]` enters only there (`OS3_MixedRepInfra.integrable_dominate_G`)
   and propagates to the OS3 axiom and the master theorem. Higher-order boundary vanishing
   would remove the bound; `d ∈ {2,3,4}` does not need it.
-- **The UV statement.** `C(x,y) → ∞` as `x → y` (`OS/NonTrivial.lean`) is proved from the
-  Bessel closed form and is a statement about the 4D instance; non-degeneracy of the
-  measure (injectivity of `T`, positive variance of every pairing) is generic.
+- **The UV statement.** `C(x,y) → ∞` as `x → y` (`OS/NonTrivial.lean`) is generic for every
+  `d ≥ 2`: on the proper-time window `[r², (4π)⁻¹]` the integrand dominates a constant
+  multiple of `1/s`, so the integral grows at least like `log(1/r²)` — the sharp rate at
+  `d = 2`; for `d ≥ 3` the true rate `r^{2−d}` is polynomial. Non-degeneracy of the measure
+  (injectivity of `T`, positive variance of every pairing) is likewise generic.
 
 ## The instance layer
 
@@ -72,14 +74,19 @@ this instance the generic kernel is *definitionally* the Bessel kernel. `Instanc
 provides the three-dimensional instance: the Yukawa kernel `e^{−mr}/(4πr)`, obtained by
 reducing the proper-time integral to the `K_{1/2}` Laplace identity
 `LaplaceIntegral.laplace_integral_half_power` via the reciprocal substitution `t = 1/s`
-(`integral_comp_rpow_Ioi` at `p = −1`) — no new Bessel theory is needed. The master theorem
+(`integral_comp_rpow_Ioi` at `p = −1`) — no new Bessel theory is needed. `Instances/Dim2.lean`
+provides the two-dimensional instance: the Bessel kernel `(1/2π)K₀(mr)`, obtained from the
+Schwinger evaluation `∫₀^∞ (1/t)e^{−m²t−r²/4t} dt = 2K₀(mr)` in `General/BesselK0.lean`
+(linear scaling to the symmetric kernel `(1/s)e^{−a(s+1/s)}`, the reciprocal involution
+`s ↦ 1/s` folding `(0,∞)` onto `(1,∞)`, and the substitution `s = eᵗ` matching the cosh
+representation of `K₀`). The master theorem
 
     gaussianFreeField_satisfies_all_OS_axioms_generic :
       ∀ {d} [Fact (2 ≤ d)] (m) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)],
         SatisfiesAllOS (gaussianFreeField_free d m)
 
-specializes to the original four-dimensional statement `SatisfiesAllOS (μ_GFF m)` and to the
-three-dimensional `SatisfiesAllOS (μ_GFF3 m)`, each with the same axiom footprint
-(`propext`, `Classical.choice`, `Quot.sound` — nothing else); `Guardrails.lean` freezes those
-facts (generic, `d = 4`, `d = 3`) into the build. A `d = 2` headline theorem requires only the
-`K₀` evaluation of the proper-time integral.
+specializes to the original four-dimensional statement `SatisfiesAllOS (μ_GFF m)`, to the
+three-dimensional `SatisfiesAllOS (μ_GFF3 m)`, and to the two-dimensional
+`SatisfiesAllOS (μ_GFF2 m)`, each with the same axiom footprint (`propext`,
+`Classical.choice`, `Quot.sound` — nothing else); `Guardrails.lean` freezes those facts
+(generic, `d = 4`, `d = 3`, `d = 2`) into the build.
