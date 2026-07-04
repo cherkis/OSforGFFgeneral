@@ -56,6 +56,28 @@ def freePropagatorMom (d : ℕ) (m : ℝ) (k : EuclideanSpace ℝ (Fin d)) : ℝ
 
 /-! ### Derived facts about the generic heat kernel and proper-time covariance -/
 
+/-- The heat-kernel profile factors its constant and time dependence (for `t > 0`):
+    `H_d(t, r) = (4π)^{-d/2} · t^{-d/2} · e^{-r²/(4t)}`. -/
+lemma heatKernelProfile_eq (d : ℕ) (t : ℝ) (ht : 0 < t) (r : ℝ) :
+    heatKernelProfile d t r =
+      (4 * Real.pi) ^ (-(d : ℝ) / 2) * t ^ (-(d : ℝ) / 2) * Real.exp (-r ^ 2 / (4 * t)) := by
+  unfold heatKernelProfile
+  rw [Real.mul_rpow (by positivity) ht.le]
+
+/-- The proper-time covariance with the dimension constant `(4π)^{-d/2}` pulled out of the
+    integral: `C_S(r) = (4π)^{-d/2} · ∫₀^∞ t^{-d/2} e^{-m²t - r²/(4t)} dt`. Each instance evaluates
+    the remaining `t`-integral to its closed form. -/
+lemma properTimeCovariance_const_mul (d : ℕ) (m r : ℝ) :
+    properTimeCovariance d m r =
+      (4 * Real.pi) ^ (-(d : ℝ) / 2) *
+        ∫ t in Set.Ioi 0, t ^ (-(d : ℝ) / 2) * Real.exp (-m ^ 2 * t - r ^ 2 / (4 * t)) := by
+  rw [properTimeCovariance, ← MeasureTheory.integral_const_mul]
+  refine setIntegral_congr_fun measurableSet_Ioi (fun t ht => ?_)
+  have ht0 : (0 : ℝ) < t := ht
+  rw [heatKernelProfile_eq d t ht0 r,
+      show -m ^ 2 * t - r ^ 2 / (4 * t) = -t * m ^ 2 + -r ^ 2 / (4 * t) by ring, Real.exp_add]
+  ring
+
 /-- The heat-kernel normalization `∫ H_d(t, ‖z‖) dz = 1`, for every `d`: the `(4πt)^{-d/2}`
     prefactor cancels the Gaussian-integral normalization `(π/(1/4t))^{d/2} = (4πt)^{d/2}`. -/
 lemma heatKernelProfile_integral_eq_one (d : ℕ) (t : ℝ) (ht : 0 < t) :

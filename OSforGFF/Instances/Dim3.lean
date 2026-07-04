@@ -56,28 +56,13 @@ theorem schwingerIntegral_dim3 (m r : ℝ) (hm : 0 < m) (hr : 0 < r) :
     rw [show m ^ 2 * (r ^ 2 / 4) = (m * r / 2) ^ 2 by ring, Real.sqrt_sq (by positivity)]
   rw [hs1, hs2, show (-2 : ℝ) * (m * r / 2) = -(m * r) by ring]
 
-/-- The three-dimensional heat-kernel profile with the constant `(4π)^{-3/2}` pulled out. -/
-lemma heatKernelProfile_dim3 (t : ℝ) (ht : 0 < t) (r : ℝ) :
-    heatKernelProfile 3 t r =
-      (4 * Real.pi) ^ (-(3 / 2 : ℝ)) * t ^ (-(3 / 2 : ℝ)) * Real.exp (-r ^ 2 / (4 * t)) := by
-  unfold heatKernelProfile
-  rw [show (-((3 : ℕ) : ℝ) / 2) = -(3 / 2 : ℝ) by norm_num, Real.mul_rpow (by positivity) ht.le]
-
 /-- The three-dimensional proper-time covariance is the Yukawa profile:
     `properTimeCovariance 3 m r = e^{-mr}/(4πr)` for `m, r > 0`. -/
 theorem properTimeCovariance_dim3_eq (m r : ℝ) (hm : 0 < m) (hr : 0 < r) :
     properTimeCovariance 3 m r = Real.exp (-(m * r)) / (4 * Real.pi * r) := by
   -- Pull the constant `(4π)^{-3/2}` out; the remaining integral is `schwingerIntegral_dim3`.
-  have hconst : properTimeCovariance 3 m r =
-      (4 * Real.pi) ^ (-(3 / 2 : ℝ)) *
-        ∫ t in Ioi 0, t ^ (-(3 / 2 : ℝ)) * Real.exp (-m ^ 2 * t - r ^ 2 / (4 * t)) := by
-    rw [properTimeCovariance, ← MeasureTheory.integral_const_mul]
-    refine setIntegral_congr_fun measurableSet_Ioi (fun t ht => ?_)
-    have ht0 : (0 : ℝ) < t := ht
-    rw [heatKernelProfile_dim3 t ht0 r,
-        show -m ^ 2 * t - r ^ 2 / (4 * t) = -t * m ^ 2 + -r ^ 2 / (4 * t) by ring, Real.exp_add]
-    ring
-  rw [hconst, schwingerIntegral_dim3 m r hm hr]
+  rw [properTimeCovariance_const_mul 3 m r,
+      show (-((3 : ℕ) : ℝ) / 2) = -(3 / 2 : ℝ) by norm_num, schwingerIntegral_dim3 m r hm hr]
   -- `(4π)^{-3/2}·(2√π/r)·e^{-mr} = e^{-mr}/(4πr)`, since `(4π)^{-3/2}·2√π = 1/(4π)`.
   have hc : (4 * Real.pi) ^ (-(3 / 2 : ℝ)) * (2 * Real.sqrt Real.pi) = 1 / (4 * Real.pi) := by
     have hsp : (0 : ℝ) < Real.sqrt Real.pi := Real.sqrt_pos.mpr Real.pi_pos

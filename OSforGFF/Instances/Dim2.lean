@@ -23,26 +23,18 @@ open MeasureTheory Real Set
 
 namespace OSforGFF
 
-/-- The two-dimensional heat-kernel profile with the constant `(4π)⁻¹` pulled out. -/
-lemma heatKernelProfile_dim2 (t r : ℝ) :
-    heatKernelProfile 2 t r = (4 * Real.pi)⁻¹ * t⁻¹ * Real.exp (-r ^ 2 / (4 * t)) := by
-  unfold heatKernelProfile
-  rw [show (-((2 : ℕ) : ℝ) / 2) = (-1 : ℝ) by norm_num, Real.rpow_neg_one, mul_inv]
-
 /-- The two-dimensional proper-time covariance is the Bessel-`K₀` profile:
     `properTimeCovariance 2 m r = K₀(mr)/(2π)` for `m, r > 0`. -/
 theorem properTimeCovariance_dim2_eq (m r : ℝ) (hm : 0 < m) (hr : 0 < r) :
     properTimeCovariance 2 m r = 1 / (2 * Real.pi) * besselK0 (m * r) := by
-  -- Pull the constant `(4π)⁻¹` out; the remaining integral is `schwingerIntegral_eq_besselK0`.
-  have hconst : properTimeCovariance 2 m r =
-      (4 * Real.pi)⁻¹ *
-        ∫ t in Ioi 0, (1 / t) * Real.exp (-m ^ 2 * t - r ^ 2 / (4 * t)) := by
-    rw [properTimeCovariance, ← MeasureTheory.integral_const_mul]
-    refine setIntegral_congr_fun measurableSet_Ioi (fun t ht => ?_)
-    rw [heatKernelProfile_dim2 t r,
-        show -m ^ 2 * t - r ^ 2 / (4 * t) = -t * m ^ 2 + -r ^ 2 / (4 * t) by ring, Real.exp_add]
-    ring
-  rw [hconst, schwingerIntegral_eq_besselK0 m r hm hr]
+  -- Pull the constant `(4π)^{-1}` out; the remaining integral is `schwingerIntegral_eq_besselK0`.
+  rw [properTimeCovariance_const_mul 2 m r]
+  have hre : (∫ t in Ioi 0, t ^ (-((2 : ℕ) : ℝ) / 2) * Real.exp (-m ^ 2 * t - r ^ 2 / (4 * t)))
+      = ∫ t in Ioi 0, (1 / t) * Real.exp (-m ^ 2 * t - r ^ 2 / (4 * t)) := by
+    refine setIntegral_congr_fun measurableSet_Ioi (fun t _ => ?_)
+    rw [show (-((2 : ℕ) : ℝ) / 2) = (-1 : ℝ) by norm_num, Real.rpow_neg_one, one_div]
+  rw [hre, schwingerIntegral_eq_besselK0 m r hm hr,
+      show (-((2 : ℕ) : ℝ) / 2) = (-1 : ℝ) by norm_num, Real.rpow_neg_one]
   have hπ : Real.pi ≠ 0 := Real.pi_ne_zero
   field_simp
   ring

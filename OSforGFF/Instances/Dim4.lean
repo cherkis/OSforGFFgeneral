@@ -20,7 +20,29 @@ The radial profile of the free covariance in four dimensions is the Bessel close
 
 noncomputable section
 
-open OSforGFF
+open MeasureTheory Real Set OSforGFF
+
+/-- The four-dimensional proper-time covariance is the Bessel-`K₁` profile:
+    `properTimeCovariance 4 m r = (m/(4π²r)) K₁(mr)` for `m, r > 0`. Pull the constant `(4π)^{-2}`
+    out; the remaining integral is `schwingerIntegral_eq_besselK1`. -/
+theorem properTimeCovariance_dim4_eq (m r : ℝ) (hm : 0 < m) (hr : 0 < r) :
+    properTimeCovariance STDimension m r = (m / (4 * Real.pi ^ 2 * r)) * besselK1 (m * r) := by
+  rw [properTimeCovariance_const_mul STDimension m r]
+  have hre : (∫ t in Ioi 0,
+        t ^ (-((STDimension : ℕ) : ℝ) / 2) * Real.exp (-m ^ 2 * t - r ^ 2 / (4 * t)))
+      = ∫ t in Ioi 0, (1 / t ^ 2) * Real.exp (-m ^ 2 * t - r ^ 2 / (4 * t)) := by
+    refine setIntegral_congr_fun measurableSet_Ioi (fun t ht => ?_)
+    have ht0 : (0 : ℝ) < t := ht
+    have hpow : t ^ (-((STDimension : ℕ) : ℝ) / 2) = 1 / t ^ 2 := by
+      rw [show (-((STDimension : ℕ) : ℝ) / 2) = -(2 : ℝ) by simp only [STDimension]; norm_num,
+          Real.rpow_neg ht0.le, Real.rpow_two, one_div]
+    rw [hpow]
+  rw [hre, schwingerIntegral_eq_besselK1 m r hm hr,
+      show (-((STDimension : ℕ) : ℝ) / 2) = -(2 : ℝ) by simp only [STDimension]; norm_num,
+      Real.rpow_neg (by positivity), Real.rpow_two]
+  have hπ : Real.pi ≠ 0 := Real.pi_ne_zero
+  have hr' : r ≠ 0 := hr.ne'
+  field_simp
 
 /-- The four-dimensional free propagator: `Cprofile` is the Bessel closed form and the
     Schwinger bridge is the proper-time evaluation of the heat-kernel integral. -/
@@ -28,8 +50,7 @@ noncomputable instance instGFFPropagatorDim4 (m : ℝ) [Fact (0 < m)] :
     GFFPropagator STDimension m where
   Cprofile r := if r = 0 then 0 else (m / (4 * Real.pi ^ 2 * r)) * besselK1 (m * r)
   schwinger_eq r hr := by
-    rw [if_neg (ne_of_gt hr), ← covarianceSchwingerRep_eq_besselFormula m r Fact.out hr]
-    rfl
+    rw [if_neg (ne_of_gt hr), properTimeCovariance_dim4_eq m r Fact.out hr]
 
 /-- At `d = 4` the generic kernel is definitionally the Bessel kernel. -/
 lemma freeCovariance_dim4_eq (m : ℝ) [Fact (0 < m)] (x y : SpaceTime4) :
