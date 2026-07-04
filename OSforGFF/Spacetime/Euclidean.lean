@@ -24,12 +24,12 @@ import Mathlib.MeasureTheory.Function.LpSpace.ContinuousCompMeasurePreserving
 import OSforGFF.Spacetime.Basic
 
 /-!
-# Euclidean Group (E d)(4) and Its Actions
+# Euclidean Group (E d) and Its Actions
 
-Defines the Euclidean group (E d)(4) = ℝ⁴ ⋊ O(4) with action g • x = R(x) + t
+Defines the Euclidean group `(E d) = ℝ^d ⋊ O(d)` with action g • x = R(x) + t
 on spacetime, and its induced actions on test functions (g • f)(x) = f(g⁻¹ • x).
 
-Key properties: measure preservation (d⁴((E d)⁻¹x) = d⁴x), temperate growth of
+Key properties: measure preservation (Lebesgue measure is invariant under `(E d)`), temperate growth of
 pullbacks (needed for Schwartz space), and continuity of all actions.
 Foundation for the OS2 axiom.
 -/
@@ -54,7 +54,7 @@ abbrev O4 (d : ℕ) : Type :=
   LinearIsometry (RingHom.id ℝ) (SpaceTime d) (SpaceTime d)
 
 /-!  Euclidean group -/
-/-- Euclidean motion = rotation / reflection + translation. (E d)= R^4 x O(4)-/
+/-- Euclidean motion = rotation / reflection + translation. `(E d) = ℝ^d ⋊ O(d)`. -/
 structure E (d : ℕ) where
   R : (O4 d)
   t : (SpaceTime d)
@@ -183,7 +183,7 @@ instance : Group (E d) where
 
 /-theorem ---------------------------------------------
 
-     For all Euclidean motions g,h and every point x ∈ ℝ⁴ we have
+     For all Euclidean motions g,h and every point x ∈ ℝ^d we have
          act (g * h) x  =  act g (act h x).
      In words: the `act` map is a group action of (E d) on spacetime.
 
@@ -191,14 +191,14 @@ instance : Group (E d) where
          act g⁻¹ (act g x) = x.
 -/
 
-/-for all Euclidean motions g and h and any point x ∈ ℝ⁴, pulling x forward by the product g*h equals pulling by h first and then by g.
+/-for all Euclidean motions g and h and any point x ∈ ℝ^d, pulling x forward by the product g*h equals pulling by h first and then by g.
 This is precisely the group-action law(𝑔ℎ)⁣⋅𝑥=𝑔.(ℎ. 𝑥)(gh)⋅x=g⋅(h⋅x).-/
 
 @[simp] lemma act_mul_general (g h : (E d)) (x : (SpaceTime d)) :
     act (g * h) x = act g (act h x) := by
   -- destructure g and h so Lean can see their components
 /-cases on g/h: expands each motion into its components
-gR : (O4 d) the rotation, gt : ℝ⁴ the translation.
+gR : (O4 d) the rotation, gt : ℝ^d the translation.
 hR, ht likewise. That lets Lean see the literal structure of g*h.-/
   cases g with
   | mk gR gt =>
@@ -218,7 +218,7 @@ t into the desired form.
 
 /-Statement: applying g to x and then applying the inverse motion g⁻¹ returns you to x.
 This is the inverse law of a group action.-/
-/-Result: we’ve established that act : (E d) → (ℝ⁴ → ℝ⁴) is a homomorphism into the function-composition monoid—exactly what OS-2 needs for its pull-back action on fields.-/
+/-Result: we’ve established that act : (E d) → (ℝ^d → ℝ^d) is a homomorphism into the function-composition monoid—exactly what OS-2 needs for its pull-back action on fields.-/
 
 @[simp] lemma act_inv_general (g : (E d)) (x : (SpaceTime d)) :
     act g⁻¹ (act g x) = x := by

@@ -4,7 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 import OSforGFF.Measure.Construct
-import OSforGFF.Instances.Dim4Bessel
 import OSforGFF.Covariance.RealForm
 import OSforGFF.Spacetime.ComplexTestFunction
 import Mathlib.Analysis.Distribution.SchwartzSpace.Fourier
@@ -36,7 +35,7 @@ Injectivity of T follows from:
 
 ## Main results
 
-- `toComplex_injective` : embedding `S(ℝ⁴,ℝ) ↪ S(ℝ⁴,ℂ)` is injective
+- `toComplex_injective` : embedding `S(ℝ^d,ℝ) ↪ S(ℝ^d,ℂ)` is injective
 - `fourierTransform_schwartz_injective` : `𝓕` on Schwartz space is injective
 - `embeddingMap_injective` : the square-root propagator embedding is injective
 - `freeCovarianceFormR_strictPos` : `C(f,f) > 0` for `f ≠ 0`
@@ -62,7 +61,7 @@ namespace OSforGFF
 
 /-! ## Injectivity of the real-to-complex embedding -/
 
-/-- The embedding `toComplex : S(ℝ⁴,ℝ) → S(ℝ⁴,ℂ)` is injective.
+/-- The embedding `toComplex : S(ℝ^d,ℝ) → S(ℝ^d,ℂ)` is injective.
     Follows from injectivity of `ℝ → ℂ` applied pointwise. -/
 theorem toComplex_injective : Function.Injective (toComplex : TestFunction d → TestFunctionℂ d) := by
   intro f g h
@@ -97,7 +96,7 @@ theorem fourierTransform_schwartz_injective :
     Lebesgue measure is zero everywhere.
 
     Proof: if `f(x₀) ≠ 0`, then `U = f⁻¹(ℂ \ {0})` is open and nonempty.
-    Since volume on `ℝ⁴` is an `IsOpenPosMeasure`, `μ(U) > 0`,
+    Since volume on `ℝ^d` is an `IsOpenPosMeasure`, `μ(U) > 0`,
     contradicting `f = 0` a.e. -/
 private lemma eq_zero_of_continuous_ae_zero
     {f : SpaceTime d → ℂ} (hcont : Continuous f) (hae : f =ᵐ[volume] 0) :
@@ -154,7 +153,7 @@ theorem sqrtPropagatorMap_eq_zero_iff (m : ℝ) [Fact (0 < m)] [GFFPropagator d 
       ContinuousLinearMap.map_zero _
     simp only [h2, SchwartzMap.zero_apply, zero_mul]
 
-/-- The embedding `T : S(ℝ⁴,ℝ) → L²(ℝ⁴,ℂ)` is injective.
+/-- The embedding `T : S(ℝ^d,ℝ) → L²(ℝ^d,ℂ)` is injective.
 
     If `T f = T g` then `‖T(f−g)‖ = 0`, so `∫ |sqrtPropagatorMap m (f−g)|² = 0`.
     The integrand is continuous and nonneg, so it vanishes a.e., hence everywhere
@@ -224,11 +223,11 @@ theorem gaussianFreeField_variance_pos (m : ℝ) [Fact (0 < m)] [GFFPropagator d
     verification in `Master.lean` is nontrivial.
 
     Any nonzero Schwartz function witnesses this.  We use a standard bump
-    function on ℝ⁴, which exists by `ContDiff.exists_eq_one_of_isOpen`. -/
+    function on ℝ^d, which exists by `ContDiff.exists_eq_one_of_isOpen`. -/
 theorem gaussianFreeField_not_dirac (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
     ∃ f : TestFunction d, f ≠ 0 ∧
       0 < ∫ ω, (distributionPairingCLM f ω) ^ 2 ∂(gaussianFreeField_free (d := d) m).toMeasure := by
-  -- Schwartz space on ℝ⁴ is nontrivial: exhibit a nonzero element.
+  -- Schwartz space on ℝ^d is nontrivial: exhibit a nonzero element.
   -- This uses the existence of smooth compactly-supported bump functions.
   have ⟨f, hf⟩ : ∃ f : TestFunction d, f ≠ 0 := by
     let φ : ContDiffBump (0 : SpaceTime d) := ⟨1, 2, by norm_num, by norm_num⟩
@@ -242,13 +241,15 @@ theorem gaussianFreeField_not_dirac (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
 
 /-! ## UV divergence: pointwise covariance diverges at coincident points
 
-The pointwise regularization `C(x,x) = 0` in `freeCovarianceBessel` is a convention
-for the smeared (distribution) theory.  The actual limit diverges, confirming that
-the free field has genuine UV singularity.
+The pointwise regularization `C(x,x) = 0` at coincident points is a convention for the smeared
+(distribution) theory.  The actual limit diverges, confirming that the free field has genuine UV
+singularity: the radial profile is the proper-time integral `properTimeCovariance d m r`, whose
+`t^{−d/2}` short-time singularity forces blow-up as `r → 0⁺` for every `d ≥ 2`.
 
-The smeared covariance `C(f,f) = ∫∫ f(x) C(x,y) f(y) dx dy` remains finite for all
-Schwartz functions because the `1/r²` singularity of `K₁(mr)/r` is integrable
-in 4 spatial dimensions (surface area ~ r³ compensates the kernel ~ 1/r²). -/
+The smeared covariance `C(f,f) = ∫∫ f(x) C(x,y) f(y) dx dy` remains finite for all Schwartz
+functions because the position-space kernel is `L¹` (`GFFPropagator.integrable`): the short-distance
+singularity `∼ ‖x−y‖^{−(d−2)}` is integrable in `d` dimensions (the `d`-dimensional volume element
+`∼ r^{d−1}` compensates the kernel), so no separate radial estimate is needed. -/
 
 omit [Fact (2 ≤ d)] in
 /-- For `d ≥ 2` the proper-time covariance diverges at the origin:

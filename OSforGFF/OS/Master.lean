@@ -19,8 +19,13 @@ import OSforGFF.OS.OS4_Ergodicity
 # Master Theorem
 
 Assembles OS0–OS4 into the dimension-generic
-`gaussianFreeField_satisfies_all_OS_axioms_generic` and its four-dimensional instance
-`gaussianFreeField_satisfies_all_OS_axioms`:
+`gaussianFreeField_satisfies_all_OS_axioms_generic`, the all-dimensions corollary
+`gaussianFreeField_satisfies_all_OS_axioms_of_dim` (every `2 ≤ d ≤ 5`, via the canonical
+`GFFPropagator.ofProperTime`), and the concrete instances
+`gaussianFreeField_satisfies_all_OS_axioms` (`d = 4`),
+`gaussianFreeField_satisfies_all_OS_axioms_dim3` (Yukawa),
+`gaussianFreeField_satisfies_all_OS_axioms_dim2` (K₀), and
+`gaussianFreeField_satisfies_all_OS_axioms_dim5` (K_{3/2}). The generic theorem is proved by:
 
 - OS0 (Analyticity): Hartogs + Fernique — `OS.OS0_Analyticity`
 - OS1 (Regularity): Plancherel + momentum bound — `OS.OS1_Regularity`

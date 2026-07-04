@@ -22,8 +22,9 @@ the `schwartz_*` nuclear axioms live only in BochnerMinlos' `Test/` tree (off th
 and `differentiable_analyticAt_finDim` no longer exists. The guard freezes reality, so it will now
 also fail if any of those dependency axioms ever creep back onto the import path.
 
-Add an analogous frozen block per dimension (`OS_holds_2`, `OS_holds_3`, `OS_holds_4`) as those
-headline theorems appear (Stage 1b onward).
+Frozen blocks are present for all six headline theorems: the dimension-generic master theorem, the
+all-dimensions corollary (`_of_dim`, every `2 ≤ d ≤ 5`), and the concrete instances `d = 4`,
+`d = 3`, `d = 2`, and `d = 5`.
 -/
 import «OSforGFF».OS.Master
 
