@@ -26,12 +26,12 @@ longer exists.)
 
 ### Core types (`Spacetime/Basic.lean`)
 
-The library is **dimension-generic**: types are parameterized by `d : ℕ` (with `STDimension := 4`
-kept only for the verbatim four-dimensional instance).
+The library is **dimension-generic**: types are parameterized by `d : ℕ`; the concrete instances
+fix `d = 2, 3, 4, 5`.
 
 | Name | Definition |
 |------|------------|
-| `SpaceTime d` | `EuclideanSpace ℝ (Fin d)` — Euclidean ℝ^d (`SpaceTime4 := SpaceTime STDimension`) |
+| `SpaceTime d` | `EuclideanSpace ℝ (Fin d)` — Euclidean ℝ^d |
 | `TestFunction d` | `SchwartzMap (SpaceTime d) ℝ` — real Schwartz functions S(ℝ^d, ℝ) |
 | `TestFunctionℂ d` | `SchwartzMap (SpaceTime d) ℂ` — complex Schwartz functions S(ℝ^d, ℂ) |
 | `FieldConfiguration d` | `WeakDual ℝ (TestFunction d)` — tempered distributions S'(ℝ^d) |
@@ -206,7 +206,7 @@ operators) is preserved off the build graph in `OSforGFF/Legacy/`.
 |------|------|------------|
 | 85 | `isCenteredGJ` | 𝔼[⟨ω, f⟩] = 0 for all f |
 | 90 | `isGaussianGJ` | Z[J] = exp(−½ S₂(J,J)) |
-| 129 | `gaussianFreeField_free` | **The GFF measure** μ_GFF(m) on S'(ℝ⁴), constructed via Minlos |
+| 129 | `gaussianFreeField_free` | **The GFF measure** μ_GFF d m on S'(ℝ^d), constructed via Minlos |
 | 322 | `freeCovarianceForm` | The free covariance packaged as a `CovarianceForm` |
 
 ---
@@ -235,10 +235,10 @@ theorem gaussianFreeField_satisfies_all_OS_axioms_generic
 theorem gaussianFreeField_satisfies_all_OS_axioms_of_dim (d : ℕ) [Fact (2 ≤ d)]
     (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5)] : … (via GFFPropagator.ofProperTime)
 
-theorem gaussianFreeField_satisfies_all_OS_axioms      (m) [Fact (0 < m)] : SatisfiesAllOS (μ_GFF m)   -- d = 4
-theorem gaussianFreeField_satisfies_all_OS_axioms_dim3 (m) [Fact (0 < m)] : SatisfiesAllOS (μ_GFF3 m)  -- d = 3
-theorem gaussianFreeField_satisfies_all_OS_axioms_dim2 (m) [Fact (0 < m)] : SatisfiesAllOS (μ_GFF2 m)  -- d = 2
-theorem gaussianFreeField_satisfies_all_OS_axioms_dim5 (m) [Fact (0 < m)] : SatisfiesAllOS (μ_GFF5 m)  -- d = 5
+theorem gaussianFreeField_satisfies_all_OS_axioms      (m) [Fact (0 < m)] : SatisfiesAllOS (μ_GFF 4 m)  -- d = 4
+theorem gaussianFreeField_satisfies_all_OS_axioms_dim3 (m) [Fact (0 < m)] : SatisfiesAllOS (μ_GFF 3 m)  -- d = 3
+theorem gaussianFreeField_satisfies_all_OS_axioms_dim2 (m) [Fact (0 < m)] : SatisfiesAllOS (μ_GFF 2 m)  -- d = 2
+theorem gaussianFreeField_satisfies_all_OS_axioms_dim5 (m) [Fact (0 < m)] : SatisfiesAllOS (μ_GFF 5 m)  -- d = 5
 ```
 
 ---

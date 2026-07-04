@@ -11,9 +11,9 @@ theorem gaussianFreeField_satisfies_all_OS_axioms_generic
     {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)] :
     SatisfiesAllOS (gaussianFreeField_free (d := d) m)
 
--- four-dimensional instance (recovered verbatim):
+-- four-dimensional instance:
 theorem gaussianFreeField_satisfies_all_OS_axioms (m : ℝ) [Fact (0 < m)] :
-    SatisfiesAllOS (μ_GFF m)
+    SatisfiesAllOS (μ_GFF 4 m)
 ```
 
 A correct proof guarantees the *theorem statement* is true — but only relative to the

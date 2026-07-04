@@ -17,8 +17,8 @@ $\omega \mapsto \langle \omega, \varphi \rangle$ are Gaussian (via characteristi
 and Levy uniqueness), belong to all $L^p$ spaces (Fernique-type), have zero mean, and have
 second moment equal to the covariance. No new axioms are declared here; the file transitively
 uses `schwartz_isHilbertNuclear`, `schwartz_separableSpace`, and `minlos_theorem` (proven).
-The 4D shorthand `μ_GFF m := gaussianFreeField_free (d := STDimension) m` no longer lives
-here; it moved to [`OSforGFF/Instances/Dim4.lean`](../../OSforGFF/Instances/Dim4.lean).
+The dimension-indexed shorthand `μ_GFF d m := gaussianFreeField_free (d := d) m` (the pretty
+alias used by the headline theorems) is defined here alongside `gaussianFreeField_free`.
 
 ## Status
 
@@ -142,9 +142,8 @@ noncomputable def gaussianFreeField_free (m : ℝ) [Fact (0 < m)] [GFFPropagator
 ```
 
 **Informal**: The Gaussian Free Field probability measure with mass $m > 0$ in spacetime
-dimension $d$, defined as `constructGaussianMeasureMinlos_free m`. (The 4D abbreviation
-`μ_GFF m := gaussianFreeField_free (d := STDimension) m` now lives in
-[`OSforGFF/Instances/Dim4.lean`](../../OSforGFF/Instances/Dim4.lean).)
+dimension $d$, defined as `constructGaussianMeasureMinlos_free m`. The dimension-indexed
+`@[simp]` alias `μ_GFF d m := gaussianFreeField_free (d := d) m` is defined immediately below.
 
 ---
 

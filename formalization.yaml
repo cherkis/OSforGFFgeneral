@@ -1,5 +1,5 @@
 # formalization.yaml — https://github.com/mathlib-initiative/formalization.yaml (v0.3)
-# Describes the `dimensions432` branch state (dimension-generic library).
+# Describes the `uniform-d` branch state (dimension-generic library, uniform μ_GFF d).
 # 0 sorries, 0 axioms; ~31,500 lines across 54 on-graph files (+2 off-graph Legacy files).
 version: "v0.3"
 
@@ -207,7 +207,7 @@ alignment:
       lean: "OSforGFF.gaussianFreeField_satisfies_all_OS_axioms"
       module: "OSforGFF.OS.Master"
       status: "proved"
-      note: "d = 4 instance: SatisfiesAllOS (mu_GFF m). Recovered verbatim from the generic theorem."
+      note: "d = 4 instance: SatisfiesAllOS (mu_GFF 4 m), from the generic theorem."
     - source: "10.1007/BF01645738"
       lean: "OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_of_dim"
       module: "OSforGFF.OS.Master"
@@ -217,7 +217,7 @@ alignment:
       lean: "gaussianFreeField_free"
       module: "OSforGFF.Measure.Construct"
       status: "proved"
-      note: "GFF measure on S'(R^d) via Minlos; mu_GFF/mu_GFF2/mu_GFF3/mu_GFF5 are the per-dimension simp abbrevs."
+      note: "GFF measure on S'(R^d) via Minlos; mu_GFF d m is the dimension-indexed simp abbrev (Measure/Construct)."
     - source: "10.1007/BF01645738"
       lean: "QFT.gaussianFreeField_satisfies_OS0"
       module: "OSforGFF.OS.OS0_Analyticity"

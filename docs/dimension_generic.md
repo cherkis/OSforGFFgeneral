@@ -92,8 +92,8 @@ proper-time integral itself, needing no closed form. The master theorem
       ∀ {d} [Fact (2 ≤ d)] (m) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)],
         SatisfiesAllOS (gaussianFreeField_free d m)
 
-specializes to the concrete headlines `SatisfiesAllOS (μ_GFF m)` (d = 4), `μ_GFF3`, `μ_GFF2`,
-`μ_GFF5`, and to the all-dimensions corollary `gaussianFreeField_satisfies_all_OS_axioms_of_dim`
+specializes to the concrete headlines `SatisfiesAllOS (μ_GFF 4 m)` (d = 4), `μ_GFF 3 m`,
+`μ_GFF 2 m`, `μ_GFF 5 m`, and to the all-dimensions corollary `gaussianFreeField_satisfies_all_OS_axioms_of_dim`
 for every `2 ≤ d ≤ 5` — each with the same axiom footprint (`propext`, `Classical.choice`,
 `Quot.sound` — nothing else). `Guardrails.lean` freezes all six of these facts into the build.
 

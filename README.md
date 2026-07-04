@@ -11,10 +11,10 @@ The library is **dimension-generic**: the spacetime dimension is a parameter
 `d` (with `2 ≤ d ≤ 5`), and the only per-dimension input is the closed form of
 the radial covariance profile, isolated behind the two-field typeclass
 `GFFPropagator d m` (see [docs/dimension_generic.md](docs/dimension_generic.md)).
-Three instances are provided in `OSforGFF/Instances/`: the four-dimensional Bessel
-kernel (m/4π²r)K₁(mr) (recovering the original 4D theorem verbatim), the
-three-dimensional Yukawa kernel e^{−mr}/(4πr), and the two-dimensional Bessel
-kernel (1/2π)K₀(mr).
+Four instances are provided in `OSforGFF/Instances/`: the four-dimensional Bessel
+kernel (m/4π²r)K₁(mr), the three-dimensional Yukawa kernel e^{−mr}/(4πr), the
+two-dimensional Bessel kernel (1/2π)K₀(mr), and the five-dimensional K_{3/2}
+kernel (1+mr)e^{−mr}/(8π²r³).
 
 ## Master Theorem
 
@@ -24,13 +24,13 @@ theorem gaussianFreeField_satisfies_all_OS_axioms_generic
     SatisfiesAllOS (gaussianFreeField_free (d := d) m)
 
 theorem gaussianFreeField_satisfies_all_OS_axioms (m : ℝ) [Fact (0 < m)] :
-    SatisfiesAllOS (μ_GFF m)
+    SatisfiesAllOS (μ_GFF 4 m)
 
 theorem gaussianFreeField_satisfies_all_OS_axioms_dim3 (m : ℝ) [Fact (0 < m)] :
-    SatisfiesAllOS (μ_GFF3 m)
+    SatisfiesAllOS (μ_GFF 3 m)
 
 theorem gaussianFreeField_satisfies_all_OS_axioms_dim2 (m : ℝ) [Fact (0 < m)] :
-    SatisfiesAllOS (μ_GFF2 m)
+    SatisfiesAllOS (μ_GFF 2 m)
 ```
 
 where `SatisfiesAllOS` bundles OS0 (analyticity), OS1 (regularity), OS2
@@ -171,10 +171,10 @@ Per-dimension closed forms of the covariance, packaged as `GFFPropagator` instan
 | File | Contents |
 |------|----------|
 | [Dim4Bessel](OSforGFF/Instances/Dim4Bessel.lean) | [The live 4D Bessel covariance kernel `freeCovariance4` = (m/4π²r)K₁(mr) (the rest of the 4D program is quarantined in `Legacy/`)](summary/OSforGFF/Instances/Dim4Bessel.md) |
-| [Dim4](OSforGFF/Instances/Dim4.lean) | [The `GFFPropagator STDimension m` instance and the μ_GFF shorthand](summary/OSforGFF/Instances/Dim4.md) |
-| [Dim3](OSforGFF/Instances/Dim3.lean) | [The `GFFPropagator 3 m` instance: Yukawa kernel e^{−mr}/(4πr) via the order ν=−1/2 case of the master identity (besselK_half), the μ_GFF3 shorthand, and the UV divergence](summary/OSforGFF/Instances/Dim3.md) |
-| [Dim2](OSforGFF/Instances/Dim2.lean) | [The `GFFPropagator 2 m` instance: Bessel kernel (1/2π)K₀(mr) via the order-zero case of the master identity in `General/BesselK`, and the μ_GFF2 shorthand](summary/OSforGFF/Instances/Dim2.md) |
-| [Dim5](OSforGFF/Instances/Dim5.lean) | [The `GFFPropagator 5 m` instance: K_{3/2} kernel (1+mr)e^{−mr}/(8π²r³) via the order ν=−3/2 case of the master identity (besselK_three_half by Gaussian moments), and the μ_GFF5 shorthand](summary/OSforGFF/Instances/Dim5.md) |
+| [Dim4](OSforGFF/Instances/Dim4.lean) | [The `GFFPropagator 4 m` instance: Bessel kernel (m/4π²r)K₁(mr) via the order ν=−1 case of the master identity (schwingerIntegral_eq_besselK1)](summary/OSforGFF/Instances/Dim4.md) |
+| [Dim3](OSforGFF/Instances/Dim3.lean) | [The `GFFPropagator 3 m` instance: Yukawa kernel e^{−mr}/(4πr) via the order ν=−1/2 case of the master identity (besselK_half), and the UV divergence](summary/OSforGFF/Instances/Dim3.md) |
+| [Dim2](OSforGFF/Instances/Dim2.lean) | [The `GFFPropagator 2 m` instance: Bessel kernel (1/2π)K₀(mr) via the order-zero case of the master identity in `General/BesselK`](summary/OSforGFF/Instances/Dim2.md) |
+| [Dim5](OSforGFF/Instances/Dim5.lean) | [The `GFFPropagator 5 m` instance: K_{3/2} kernel (1+mr)e^{−mr}/(8π²r³) via the order ν=−3/2 case of the master identity (besselK_three_half by Gaussian moments)](summary/OSforGFF/Instances/Dim5.md) |
 
 ### Legacy (off the build graph)
 
