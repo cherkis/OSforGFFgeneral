@@ -75,7 +75,4 @@ noncomputable abbrev freeCovariance4 (m : ℝ) (x y : SpaceTime 4) : ℝ :=
 lemma freeCovariance_dim4_eq (m : ℝ) [Fact (0 < m)] (x y : SpaceTime 4) :
     freeCovariance 4 m x y = freeCovariance4 m x y := rfl
 
-/-- Shorthand for the free GFF probability measure of the four-dimensional instance. -/
-@[simp] abbrev μ_GFF (m : ℝ) [Fact (0 < m)] := gaussianFreeField_free (d := 4) m
-
 end

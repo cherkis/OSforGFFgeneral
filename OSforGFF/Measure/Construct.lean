@@ -143,6 +143,11 @@ noncomputable def constructGaussianMeasureMinlos_free (m : ℝ) [Fact (0 < m)] [
 noncomputable def gaussianFreeField_free (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] : ProbabilityMeasure (FieldConfiguration d) :=
   constructGaussianMeasureMinlos_free m
 
+/-- The free Gaussian Free Field probability measure in spacetime dimension `d`. This is the
+    dimension-indexed alias of `gaussianFreeField_free`: `μ_GFF d m = gaussianFreeField_free m`. -/
+@[simp] abbrev μ_GFF (d : ℕ) (m : ℝ) [Fact (2 ≤ d)] [Fact (0 < m)] [GFFPropagator d m] :
+    ProbabilityMeasure (FieldConfiguration d) := gaussianFreeField_free (d := d) m
+
 /-- Real characteristic functional of the free GFF: for real test functions f, the generating
     functional equals the Gaussian form with the real covariance. -/
 theorem gff_real_characteristic (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :

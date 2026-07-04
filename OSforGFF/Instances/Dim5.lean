@@ -162,7 +162,4 @@ noncomputable instance instGFFPropagatorDim5 (m : ℝ) [Fact (0 < m)] :
   schwinger_eq r hr := by
     rw [if_neg (ne_of_gt hr), properTimeCovariance_dim5_eq m r Fact.out hr]
 
-/-- Shorthand for the free GFF probability measure of the five-dimensional instance. -/
-@[simp] abbrev μ_GFF5 (m : ℝ) [Fact (0 < m)] := gaussianFreeField_free (d := 5) m
-
 end OSforGFF

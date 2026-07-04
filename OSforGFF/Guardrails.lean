@@ -39,7 +39,7 @@ import «OSforGFF».OS.Master
 #print axioms OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_generic
 
 -- ── Goal-type guard: pins the master theorem's statement (ACTIVATED) ──────────
-/-- info: OSforGFF.gaussianFreeField_satisfies_all_OS_axioms : ∀ (m : ℝ) [inst : Fact (0 < m)], SatisfiesAllOS (μ_GFF m) -/
+/-- info: OSforGFF.gaussianFreeField_satisfies_all_OS_axioms : ∀ (m : ℝ) [inst : Fact (0 < m)], SatisfiesAllOS (μ_GFF 4 m) -/
 #guard_msgs in
 #check @OSforGFF.gaussianFreeField_satisfies_all_OS_axioms
 
@@ -49,8 +49,7 @@ import «OSforGFF».OS.Master
 #print axioms OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim3
 
 -- ── Goal-type guard: pins the three-dimensional headline's statement ─────────
-/-- info: OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim3 : ∀ (m : ℝ) [inst : Fact (0 < m)],
-  SatisfiesAllOS (OSforGFF.μ_GFF3 m) -/
+/-- info: OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim3 : ∀ (m : ℝ) [inst : Fact (0 < m)], SatisfiesAllOS (μ_GFF 3 m) -/
 #guard_msgs in
 #check @OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim3
 
@@ -60,8 +59,7 @@ import «OSforGFF».OS.Master
 #print axioms OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim2
 
 -- ── Goal-type guard: pins the two-dimensional headline's statement ───────────
-/-- info: OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim2 : ∀ (m : ℝ) [inst : Fact (0 < m)],
-  SatisfiesAllOS (OSforGFF.μ_GFF2 m) -/
+/-- info: OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim2 : ∀ (m : ℝ) [inst : Fact (0 < m)], SatisfiesAllOS (μ_GFF 2 m) -/
 #guard_msgs in
 #check @OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim2
 
@@ -71,8 +69,7 @@ import «OSforGFF».OS.Master
 #print axioms OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim5
 
 -- ── Goal-type guard: pins the five-dimensional headline's statement ──────────
-/-- info: OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim5 : ∀ (m : ℝ) [inst : Fact (0 < m)],
-  SatisfiesAllOS (OSforGFF.μ_GFF5 m) -/
+/-- info: OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim5 : ∀ (m : ℝ) [inst : Fact (0 < m)], SatisfiesAllOS (μ_GFF 5 m) -/
 #guard_msgs in
 #check @OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim5
 

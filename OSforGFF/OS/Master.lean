@@ -95,21 +95,21 @@ This is the four-dimensional instance of
 `gaussianFreeField_satisfies_all_OS_axioms_generic`: an unconditional theorem with
 no assumptions beyond m > 0. -/
 theorem gaussianFreeField_satisfies_all_OS_axioms (m : ℝ) [Fact (0 < m)] :
-    SatisfiesAllOS (μ_GFF m) :=
+    SatisfiesAllOS (μ_GFF 4 m) :=
   gaussianFreeField_satisfies_all_OS_axioms_generic m
 
 /-- Master theorem, three-dimensional instance: the free GFF with the Yukawa covariance
 `e^{-mr}/(4πr)` satisfies all Osterwalder-Schrader axioms. This is the `d = 3` instance of
 `gaussianFreeField_satisfies_all_OS_axioms_generic`. -/
 theorem gaussianFreeField_satisfies_all_OS_axioms_dim3 (m : ℝ) [Fact (0 < m)] :
-    SatisfiesAllOS (μ_GFF3 m) :=
+    SatisfiesAllOS (μ_GFF 3 m) :=
   gaussianFreeField_satisfies_all_OS_axioms_generic m
 
 /-- Master theorem, two-dimensional instance: the free GFF with the Bessel covariance
 `K₀(mr)/(2π)` satisfies all Osterwalder-Schrader axioms. This is the `d = 2` instance of
 `gaussianFreeField_satisfies_all_OS_axioms_generic`. -/
 theorem gaussianFreeField_satisfies_all_OS_axioms_dim2 (m : ℝ) [Fact (0 < m)] :
-    SatisfiesAllOS (μ_GFF2 m) :=
+    SatisfiesAllOS (μ_GFF 2 m) :=
   gaussianFreeField_satisfies_all_OS_axioms_generic m
 
 /-- Master theorem, five-dimensional instance: the free GFF with the `K_{3/2}` covariance
@@ -117,7 +117,7 @@ theorem gaussianFreeField_satisfies_all_OS_axioms_dim2 (m : ℝ) [Fact (0 < m)] 
 of `gaussianFreeField_satisfies_all_OS_axioms_generic` (`d = 5` is the boundary of the proven
 `d ≤ 5` OS3 range). -/
 theorem gaussianFreeField_satisfies_all_OS_axioms_dim5 (m : ℝ) [Fact (0 < m)] :
-    SatisfiesAllOS (μ_GFF5 m) :=
+    SatisfiesAllOS (μ_GFF 5 m) :=
   gaussianFreeField_satisfies_all_OS_axioms_generic m
 
 end
