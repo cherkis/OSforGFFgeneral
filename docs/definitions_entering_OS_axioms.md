@@ -1,8 +1,17 @@
 # Definitions Entering the OS Axiom Statements
 
-The master theorem is:
+The library is **dimension-generic**: every definition below is parameterized by the spacetime
+dimension `d : ℕ` (a `variable {d}` in scope), so `SpaceTime`, `TestFunction`, `E`, `O4`,
+`FieldConfiguration` in the snippets mean `SpaceTime d`, `TestFunction d`, `E d`, `O4 d`,
+`FieldConfiguration d`. The master theorem is:
 
 ```lean
+-- dimension-generic form (2 ≤ d ≤ 5, given a GFFPropagator d m instance):
+theorem gaussianFreeField_satisfies_all_OS_axioms_generic
+    {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)] :
+    SatisfiesAllOS (gaussianFreeField_free (d := d) m)
+
+-- four-dimensional instance (recovered verbatim):
 theorem gaussianFreeField_satisfies_all_OS_axioms (m : ℝ) [Fact (0 < m)] :
     SatisfiesAllOS (μ_GFF m)
 ```
@@ -10,7 +19,9 @@ theorem gaussianFreeField_satisfies_all_OS_axioms (m : ℝ) [Fact (0 < m)] :
 A correct proof guarantees the *theorem statement* is true — but only relative to the
 definitions it references. If a definition encodes the wrong mathematical concept, the
 theorem proves the wrong thing regardless of the proof. This document lists every
-definition entering the statements of OS0–OS4 and assesses correctness.
+definition entering the statements of OS0–OS4 and assesses correctness. (Because every OS-axiom
+`Prop` is parameterized only by the measure, and the dimension lives entirely in the types, the
+assessments below hold uniformly in `d`.)
 
 ---
 
@@ -153,16 +164,16 @@ ensuring `(gh)·f = g·(h·f)`. This is standard in the OS literature. **Correct
 
 **Definition** ([Spacetime/Euclidean.lean:56](../OSforGFF/Spacetime/Euclidean.lean#L56)):
 ```lean
-structure E where
-  R : O4        -- O4 = LinearIsometry ℝ SpaceTime SpaceTime
-  t : SpaceTime
+structure E (d : ℕ) where
+  R : O4 d        -- O4 d = LinearIsometry ℝ (SpaceTime d) (SpaceTime d)
+  t : SpaceTime d
 
-instance : Mul E where
+instance : Mul (E d) where
   mul g h := ⟨g.R.comp h.R, g.R h.t + g.t⟩
 ```
 
 **Assessment**: Multiplication is (R₁, t₁)·(R₂, t₂) = (R₁R₂, R₁t₂ + t₁), the
-standard semidirect product ℝ⁴ ⋊ O(4). The group axioms (associativity, identity,
+standard semidirect product ℝ^d ⋊ O(d). The group axioms (associativity, identity,
 inverse) are all proved in Lean. **Correct.**
 
 ---
@@ -287,7 +298,7 @@ def OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfiguration)
     GJGeneratingFunctionalℂ dμ_config (QFT.euclidean_action g f)
 ```
 
-**Assessment**: Z[f] = Z[g·f] for all g ∈ E(4) and all complex test functions f. This is
+**Assessment**: Z[f] = Z[g·f] for all g ∈ E(d) and all complex test functions f. This is
 the standard formulation of Euclidean invariance for the generating functional. **Correct.**
 
 ---

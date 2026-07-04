@@ -1,3 +1,10 @@
+// NOTE (2026-07-04): this hand-maintained graph predates the dimension-generic refactor and lags
+// the current import set. Known drift, to fully regenerate later: the Covariance layer is now
+// `Propagator` / `RealForm` / `ParsevalGeneric` (the `Momentum` / `Position` / `Parseval` nodes
+// below are gone; the 4D Bessel/momentum program is in off-graph `Legacy/`); `General` gained
+// `BesselK` / `BesselK0`; there is now an `Instances` cluster (`Dim2` / `Dim3` / `Dim4` /
+// `Dim4Bessel` / `Dim5`) feeding the six `Master` headlines; `OS/NonTrivial` is off-graph. The
+// library is AXIOM-FREE — the `(axiom)` nodes have been de-designated below (see `Guardrails.lean`).
 digraph OSforGFF {
   rankdir=BT;
   ranksep=0.8;
@@ -71,8 +78,8 @@ digraph OSforGFF {
     style=filled;
     fillcolor="#f0dcd0";
     color=gray60;
-    "NuclearSpace" [shape=octagon, fillcolor="#ffcccc", label="NuclearSpace\n(axiom)"];
-    "Minlos" [shape=octagon, fillcolor="#ffcccc", label="Minlos\n(axiom)"];
+    "NuclearSpace";
+    "Minlos";
     "MinlosAnalytic";
     "Construct";
     "IsGaussian";
@@ -86,7 +93,7 @@ digraph OSforGFF {
     fillcolor="#f0dce6";
     color=gray60;
     "Axioms" [fillcolor=lightgreen];
-    "OS0_Analyticity" [shape=octagon, fillcolor="#ffcccc", label="OS0_Analyticity\n(axiom)"];
+    "OS0_Analyticity";
     "OS1_Regularity";
     "OS2_Invariance";
     "OS3_MixedRepInfra";
