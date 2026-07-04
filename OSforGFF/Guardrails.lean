@@ -64,6 +64,17 @@ import «OSforGFF».OS.Master
 #guard_msgs in
 #check @OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim2
 
+-- ── Axiom-footprint guard for the five-dimensional instance ──────────────────
+/-- info: 'OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim5' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim5
+
+-- ── Goal-type guard: pins the five-dimensional headline's statement ──────────
+/-- info: OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim5 : ∀ (m : ℝ) [inst : Fact (0 < m)],
+  SatisfiesAllOS (OSforGFF.μ_GFF5 m) -/
+#guard_msgs in
+#check @OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim5
+
 -- ── Axiom-footprint guard for the all-dimensions corollary ───────────────────
 /-- info: 'OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_of_dim' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in

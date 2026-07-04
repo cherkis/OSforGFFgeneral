@@ -7,6 +7,7 @@ import OSforGFF.Measure.GaussianFreeField
 import OSforGFF.Instances.Dim4
 import OSforGFF.Instances.Dim3
 import OSforGFF.Instances.Dim2
+import OSforGFF.Instances.Dim5
 import OSforGFF.OS.OS3_ReflectionPositivity
 import OSforGFF.OS.OS0_Analyticity
 import OSforGFF.OS.OS1_Regularity
@@ -104,6 +105,14 @@ theorem gaussianFreeField_satisfies_all_OS_axioms_dim3 (m : ℝ) [Fact (0 < m)] 
 `gaussianFreeField_satisfies_all_OS_axioms_generic`. -/
 theorem gaussianFreeField_satisfies_all_OS_axioms_dim2 (m : ℝ) [Fact (0 < m)] :
     SatisfiesAllOS (μ_GFF2 m) :=
+  gaussianFreeField_satisfies_all_OS_axioms_generic m
+
+/-- Master theorem, five-dimensional instance: the free GFF with the `K_{3/2}` covariance
+`(1 + mr) e^{-mr}/(8π²r³)` satisfies all Osterwalder-Schrader axioms. This is the `d = 5` instance
+of `gaussianFreeField_satisfies_all_OS_axioms_generic` (`d = 5` is the boundary of the proven
+`d ≤ 5` OS3 range). -/
+theorem gaussianFreeField_satisfies_all_OS_axioms_dim5 (m : ℝ) [Fact (0 < m)] :
+    SatisfiesAllOS (μ_GFF5 m) :=
   gaussianFreeField_satisfies_all_OS_axioms_generic m
 
 end

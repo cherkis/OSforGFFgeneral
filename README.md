@@ -39,7 +39,7 @@ where `SatisfiesAllOS` bundles OS0 (analyticity), OS1 (regularity), OS2
 instances of the first; the bound `d ≤ 5` enters only through the proper-time
 Fubini domination in the OS3 argument.
 
-**Status:** Version 3.1 (dimension-generic), July 2026. 0 sorries, 0 axioms, ~31,500 lines of Lean across 52 files. Instances for `d = 2`, `d = 3`, and `d = 4`; the axiom footprint and statement type of every headline theorem (generic, `d = 4`, `d = 3`, `d = 2`) are build-frozen in `OSforGFF/Guardrails.lean`.
+**Status:** Version 3.1 (dimension-generic), July 2026. 0 sorries, 0 axioms, ~31,500 lines of Lean across 54 files. Instances for `d = 2, 3, 4, 5`; the axiom footprint and statement type of every headline theorem (generic, all-dimensions `2 ≤ d ≤ 5`, `d = 4`, `d = 3`, `d = 2`, `d = 5`) are build-frozen in `OSforGFF/Guardrails.lean`.
 
 All results are fully proved — no assumed axioms. Nuclear space structure and the Minlos theorem
 are provided by the external libraries [bochner](https://github.com/mrdouglasny/bochner) and
@@ -48,7 +48,7 @@ The Minlos proof uses the external library [kolmogorov_extension4](https://githu
 
 ## Project Structure
 
-The 52 library files are organized into 7 layers, with imports flowing from
+The 54 library files are organized into 7 layers, with imports flowing from
 earlier to later sections. See [docs/architecture.md](docs/architecture.md) for dependency structure,
 design choices, and proof outlines, and [docs/dimension_generic.md](docs/dimension_generic.md)
 for the dimension-generic design. The dependency graph source is in
@@ -172,7 +172,8 @@ Per-dimension closed forms of the covariance, packaged as `GFFPropagator` instan
 | [Dim4Bessel](OSforGFF/Instances/Dim4Bessel.lean) | [4D momentum-space analysis and the Bessel evaluation (m/4π²r)K₁(mr) of the Schwinger integral](summary/OSforGFF/Instances/Dim4Bessel.md) |
 | [Dim4](OSforGFF/Instances/Dim4.lean) | [The `GFFPropagator STDimension m` instance and the μ_GFF shorthand](summary/OSforGFF/Instances/Dim4.md) |
 | [Dim3](OSforGFF/Instances/Dim3.lean) | [The `GFFPropagator 3 m` instance: Yukawa kernel e^{−mr}/(4πr) via the reciprocal reduction of the proper-time integral to the K_{1/2} Laplace identity, the μ_GFF3 shorthand, and the UV divergence](summary/OSforGFF/Instances/Dim3.md) |
-| [Dim2](OSforGFF/Instances/Dim2.lean) | [The `GFFPropagator 2 m` instance: Bessel kernel (1/2π)K₀(mr) via the Schwinger evaluation in `General/BesselK0`, and the μ_GFF2 shorthand](summary/OSforGFF/Instances/Dim2.md) |
+| [Dim2](OSforGFF/Instances/Dim2.lean) | [The `GFFPropagator 2 m` instance: Bessel kernel (1/2π)K₀(mr) via the order-zero case of the master identity in `General/BesselK`, and the μ_GFF2 shorthand](summary/OSforGFF/Instances/Dim2.md) |
+| [Dim5](OSforGFF/Instances/Dim5.lean) | [The `GFFPropagator 5 m` instance: K_{3/2} kernel (1+mr)e^{−mr}/(8π²r³) via the order ν=−3/2 case of the master identity (besselK_three_half by Gaussian moments), and the μ_GFF5 shorthand](summary/OSforGFF/Instances/Dim5.md) |
 
 ---
 
