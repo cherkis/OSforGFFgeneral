@@ -42,6 +42,7 @@ import «OSforGFF».Covariance.ParsevalGeneric
 import «OSforGFF».Instances.Dim4
 import «OSforGFF».Instances.Dim4Bessel
 import «OSforGFF».Instances.Dim3
+import «OSforGFF».Instances.Dim2
 import «OSforGFF».Covariance.RealForm
 
 -- Measure (Minlos + GFF construction)

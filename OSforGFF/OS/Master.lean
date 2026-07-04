@@ -6,6 +6,7 @@ Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 import OSforGFF.Measure.GaussianFreeField
 import OSforGFF.Instances.Dim4
 import OSforGFF.Instances.Dim3
+import OSforGFF.Instances.Dim2
 import OSforGFF.OS.OS3_ReflectionPositivity
 import OSforGFF.OS.OS0_Analyticity
 import OSforGFF.OS.OS1_Regularity
@@ -83,6 +84,13 @@ theorem gaussianFreeField_satisfies_all_OS_axioms (m : ℝ) [Fact (0 < m)] :
 `gaussianFreeField_satisfies_all_OS_axioms_generic`. -/
 theorem gaussianFreeField_satisfies_all_OS_axioms_dim3 (m : ℝ) [Fact (0 < m)] :
     SatisfiesAllOS (μ_GFF3 m) :=
+  gaussianFreeField_satisfies_all_OS_axioms_generic m
+
+/-- Master theorem, two-dimensional instance: the free GFF with the Bessel covariance
+`K₀(mr)/(2π)` satisfies all Osterwalder-Schrader axioms. This is the `d = 2` instance of
+`gaussianFreeField_satisfies_all_OS_axioms_generic`. -/
+theorem gaussianFreeField_satisfies_all_OS_axioms_dim2 (m : ℝ) [Fact (0 < m)] :
+    SatisfiesAllOS (μ_GFF2 m) :=
   gaussianFreeField_satisfies_all_OS_axioms_generic m
 
 end
