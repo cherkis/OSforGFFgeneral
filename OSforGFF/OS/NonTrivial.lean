@@ -20,8 +20,9 @@ the GFF measure is **strictly non-degenerate**:
 2. The smeared covariance `C(f,f) > 0` for every nonzero test function `f`.
 3. Every field pairing `⟨ω,f⟩` has strictly positive variance under the free GFF.
 4. The pointwise kernel `C(x,y) → +∞` as `x → y` (UV divergence), for every dimension
-   `d ≥ 3`: the radial profile is the proper-time integral `properTimeCovariance d m r`,
-   whose `t^{-d/2}` short-time singularity forces `r^{2−d}` blow-up as `r → 0⁺`.
+   `d ≥ 2`: the radial profile is the proper-time integral `properTimeCovariance d m r`,
+   whose `t^{-d/2}` short-time singularity forces at least logarithmic blow-up as `r → 0⁺`
+   (the sharp rate is `log(1/r)` at `d = 2` and `r^{2−d}` for `d ≥ 3`).
 
 ## Proof strategy
 
@@ -41,8 +42,8 @@ Injectivity of T follows from:
 - `freeCovarianceFormR_strictPos` : `C(f,f) > 0` for `f ≠ 0`
 - `gaussianFreeField_variance_pos` : `Var[⟨ω,f⟩] > 0` for `f ≠ 0`
 - `gaussianFreeField_not_dirac` : `μ_GFF ≠ δ₀`
-- `properTimeCovariance_tendsto_atTop_at_zero` : `properTimeCovariance d m r → +∞` as `r → 0⁺` (`d ≥ 3`)
-- `freeCovariance_tendsto_atTop` : `C(x,y) → +∞` as `x → y` (generic in `d ≥ 3`)
+- `properTimeCovariance_tendsto_atTop_at_zero` : `properTimeCovariance d m r → +∞` as `r → 0⁺` (`d ≥ 2`)
+- `freeCovariance_tendsto_atTop` : `C(x,y) → +∞` as `x → y` (generic in `d ≥ 2`)
 
 ## References
 
@@ -250,55 +251,80 @@ Schwartz functions because the `1/r²` singularity of `K₁(mr)/r` is integrable
 in 4 spatial dimensions (surface area ~ r³ compensates the kernel ~ 1/r²). -/
 
 omit [Fact (2 ≤ d)] in
-/-- For `d ≥ 3` the proper-time covariance diverges at the origin:
-    `properTimeCovariance d m r → +∞` as `r → 0⁺`. Lower bound: the heat-kernel mass on the
-    window `[r², 2r²]` is of order `r^{2−d}`, which blows up as `r → 0⁺` when `d ≥ 3`. -/
-theorem properTimeCovariance_tendsto_atTop_at_zero (m : ℝ) (hm : 0 < m) (hd : 3 ≤ d) :
+/-- For `d ≥ 2` the proper-time covariance diverges at the origin:
+    `properTimeCovariance d m r → +∞` as `r → 0⁺`. Lower bound: on the window `[r², (4π)⁻¹]`
+    the integrand dominates a constant multiple of `1/t`, so the integral grows at least like
+    `log(1/r²)` — the sharp rate at `d = 2`; for `d ≥ 3` the true rate `r^{2−d}` is polynomial. -/
+theorem properTimeCovariance_tendsto_atTop_at_zero (m : ℝ) (hm : 0 < m) (hd : 2 ≤ d) :
     Filter.Tendsto (fun r => properTimeCovariance d m r)
       (nhdsWithin (0 : ℝ) (Set.Ioi 0)) Filter.atTop := by
-  set L : ℝ → ℝ := fun r =>
-    Real.exp (-1) * ((8 * Real.pi * r ^ 2) ^ (-(d : ℝ) / 2)
-      * Real.exp (-(1 / 4 : ℝ))) * r ^ 2 with hL
+  have hinv : (0 : ℝ) < (4 * Real.pi)⁻¹ := by positivity
+  set c₀ : ℝ := Real.exp (-m ^ 2 * (4 * Real.pi)⁻¹) * ((4 * Real.pi)⁻¹ * Real.exp (-(1 / 4 : ℝ)))
+    with hc₀
+  have hc₀_pos : (0 : ℝ) < c₀ := by rw [hc₀]; positivity
+  set L : ℝ → ℝ := fun r => c₀ * (Real.log ((4 * Real.pi)⁻¹) - Real.log (r ^ 2)) with hL
   have hL_le : ∀ᶠ r in nhdsWithin (0 : ℝ) (Set.Ioi 0), L r ≤ properTimeCovariance d m r := by
-    have hcond : ∀ᶠ r in nhdsWithin (0 : ℝ) (Set.Ioi 0), 2 * r ^ 2 * m ^ 2 ≤ 1 := by
-      have hcont : Filter.Tendsto (fun r : ℝ => 2 * r ^ 2 * m ^ 2) (nhds 0) (nhds 0) := by
-        have h := (by fun_prop : Continuous (fun r : ℝ => 2 * r ^ 2 * m ^ 2)).tendsto 0
+    have hcond : ∀ᶠ r in nhdsWithin (0 : ℝ) (Set.Ioi 0), r ^ 2 ≤ (4 * Real.pi)⁻¹ := by
+      have hcont : Filter.Tendsto (fun r : ℝ => r ^ 2) (nhds 0) (nhds 0) := by
+        have h := (by fun_prop : Continuous (fun r : ℝ => r ^ 2)).tendsto 0
         simpa using h
       exact (hcont.eventually (Filter.eventually_of_mem
-        (Iic_mem_nhds (by norm_num : (0 : ℝ) < 1)) fun x hx => hx)).filter_mono nhdsWithin_le_nhds
+        (Iic_mem_nhds hinv) fun x hx => hx)).filter_mono nhdsWithin_le_nhds
     filter_upwards [self_mem_nhdsWithin, hcond] with r hr hcondr
     have hr0 : (0 : ℝ) < r := hr
     have hr2 : (0 : ℝ) < r ^ 2 := pow_pos hr0 2
     have hInt : MeasureTheory.IntegrableOn
         (fun t => Real.exp (-t * m ^ 2) * heatKernelProfile d t r) (Set.Ioi 0) :=
       properTime_slice_integrableOn d m hm hr0
-    have hbound : ∀ t ∈ Set.Icc (r ^ 2) (2 * r ^ 2),
-        Real.exp (-1) * ((8 * Real.pi * r ^ 2) ^ (-(d : ℝ) / 2) * Real.exp (-(1 / 4 : ℝ)))
-          ≤ Real.exp (-t * m ^ 2) * heatKernelProfile d t r := by
+    -- On the window the integrand dominates `c₀ / t`.
+    have hbound : ∀ t ∈ Set.Icc (r ^ 2) ((4 * Real.pi)⁻¹),
+        c₀ * t⁻¹ ≤ Real.exp (-t * m ^ 2) * heatKernelProfile d t r := by
       intro t ht
       have ht1 : r ^ 2 ≤ t := ht.1
-      have ht2 : t ≤ 2 * r ^ 2 := ht.2
+      have ht2 : t ≤ (4 * Real.pi)⁻¹ := ht.2
       have ht0 : (0 : ℝ) < t := lt_of_lt_of_le hr2 ht1
       simp only [heatKernelProfile]
-      have h1 : Real.exp (-1) ≤ Real.exp (-t * m ^ 2) :=
-        Real.exp_le_exp.mpr (by nlinarith [ht2, hcondr, sq_nonneg m])
-      have h2 : (8 * Real.pi * r ^ 2) ^ (-(d : ℝ) / 2) ≤ (4 * Real.pi * t) ^ (-(d : ℝ) / 2) :=
-        Real.rpow_le_rpow_of_nonpos (by positivity) (by nlinarith [ht2, Real.pi_pos])
-          (by have := Nat.cast_nonneg (α := ℝ) d; linarith)
+      have h1 : Real.exp (-m ^ 2 * (4 * Real.pi)⁻¹) ≤ Real.exp (-t * m ^ 2) :=
+        Real.exp_le_exp.mpr (by nlinarith [mul_le_mul_of_nonneg_left ht2 (sq_nonneg m)])
+      have h2 : (4 * Real.pi)⁻¹ * t⁻¹ ≤ (4 * Real.pi * t) ^ (-(d : ℝ) / 2) := by
+        have hbase : (0 : ℝ) < 4 * Real.pi * t := by positivity
+        have hb1 : 4 * Real.pi * t ≤ 1 := by
+          calc 4 * Real.pi * t ≤ 4 * Real.pi * (4 * Real.pi)⁻¹ :=
+                mul_le_mul_of_nonneg_left ht2 (by positivity)
+            _ = 1 := mul_inv_cancel₀ (by positivity)
+        have hexp_le : -(d : ℝ) / 2 ≤ -1 := by
+          have hdR : (2 : ℝ) ≤ (d : ℝ) := by exact_mod_cast hd
+          linarith
+        calc (4 * Real.pi)⁻¹ * t⁻¹ = (4 * Real.pi * t)⁻¹ := (mul_inv _ _).symm
+          _ = (4 * Real.pi * t) ^ (-1 : ℝ) := (Real.rpow_neg_one _).symm
+          _ ≤ (4 * Real.pi * t) ^ (-(d : ℝ) / 2) :=
+              Real.rpow_le_rpow_of_exponent_ge hbase hb1 hexp_le
       have h3 : Real.exp (-(1 / 4 : ℝ)) ≤ Real.exp (-r ^ 2 / (4 * t)) := by
         apply Real.exp_le_exp.mpr
         rw [neg_div, neg_le_neg_iff, div_le_iff₀ (by positivity : (0 : ℝ) < 4 * t)]
         nlinarith [ht1]
-      exact mul_le_mul h1 (mul_le_mul h2 h3 (by positivity) (by positivity))
-        (by positivity) (by positivity)
+      calc c₀ * t⁻¹
+          = Real.exp (-m ^ 2 * (4 * Real.pi)⁻¹)
+              * ((4 * Real.pi)⁻¹ * t⁻¹ * Real.exp (-(1 / 4 : ℝ))) := by rw [hc₀]; ring
+        _ ≤ Real.exp (-t * m ^ 2)
+              * ((4 * Real.pi * t) ^ (-(d : ℝ) / 2) * Real.exp (-r ^ 2 / (4 * t))) :=
+            mul_le_mul h1 (mul_le_mul h2 h3 (by positivity) (by positivity))
+              (by positivity) (by positivity)
+    have hwin_int : MeasureTheory.IntegrableOn (fun t : ℝ => c₀ * t⁻¹)
+        (Set.Icc (r ^ 2) ((4 * Real.pi)⁻¹)) := by
+      apply MeasureTheory.Integrable.const_mul
+      exact (continuousOn_inv₀.mono fun t ht =>
+        ne_of_gt (lt_of_lt_of_le hr2 ht.1)).integrableOn_compact isCompact_Icc
     calc L r
-        = Real.exp (-1) * ((8 * Real.pi * r ^ 2) ^ (-(d : ℝ) / 2) * Real.exp (-(1 / 4 : ℝ)))
-            * (MeasureTheory.volume.real (Set.Icc (r ^ 2) (2 * r ^ 2))) := by
-          rw [Real.volume_real_Icc_of_le (by nlinarith), hL]; ring
-      _ ≤ ∫ t in Set.Icc (r ^ 2) (2 * r ^ 2), Real.exp (-t * m ^ 2) * heatKernelProfile d t r :=
-          setIntegral_ge_of_const_le_real measurableSet_Icc
-            (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top) hbound
-            (hInt.mono_set fun t ht => lt_of_lt_of_le hr2 ht.1)
+        = ∫ t in Set.Icc (r ^ 2) ((4 * Real.pi)⁻¹), c₀ * t⁻¹ := by
+          rw [MeasureTheory.integral_Icc_eq_integral_Ioc,
+              ← intervalIntegral.integral_of_le hcondr,
+              intervalIntegral.integral_const_mul, integral_inv_of_pos hr2 hinv,
+              Real.log_div hinv.ne' hr2.ne', hL]
+      _ ≤ ∫ t in Set.Icc (r ^ 2) ((4 * Real.pi)⁻¹),
+            Real.exp (-t * m ^ 2) * heatKernelProfile d t r :=
+          setIntegral_mono_on hwin_int
+            (hInt.mono_set fun t ht => lt_of_lt_of_le hr2 ht.1) measurableSet_Icc hbound
       _ ≤ ∫ t in Set.Ioi 0, Real.exp (-t * m ^ 2) * heatKernelProfile d t r := by
           apply setIntegral_mono_set hInt
           · filter_upwards [MeasureTheory.ae_restrict_mem measurableSet_Ioi] with t ht
@@ -307,8 +333,6 @@ theorem properTimeCovariance_tendsto_atTop_at_zero (m : ℝ) (hm : 0 < m) (hd : 
               lt_of_lt_of_le hr2 ht.1
       _ = properTimeCovariance d m r := rfl
   have hL_tendsto : Filter.Tendsto L (nhdsWithin (0 : ℝ) (Set.Ioi 0)) Filter.atTop := by
-    have hdR : (3 : ℝ) ≤ (d : ℝ) := by exact_mod_cast hd
-    have hexp : 1 - (d : ℝ) / 2 < 0 := by linarith
     have hsq : Filter.Tendsto (fun r : ℝ => r ^ 2)
         (nhdsWithin (0 : ℝ) (Set.Ioi 0)) (nhdsWithin (0 : ℝ) (Set.Ioi 0)) := by
       apply tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within
@@ -316,35 +340,28 @@ theorem properTimeCovariance_tendsto_atTop_at_zero (m : ℝ) (hm : 0 < m) (hd : 
         simpa using h.mono_left nhdsWithin_le_nhds
       · filter_upwards [self_mem_nhdsWithin] with r hr
         exact pow_pos (Set.mem_Ioi.mp hr) 2
-    have hcore : Filter.Tendsto
-        (fun r : ℝ => Real.exp (-1) * Real.exp (-(1 / 4 : ℝ)) * (8 * Real.pi) ^ (-(d : ℝ) / 2)
-          * (r ^ 2) ^ (1 - (d : ℝ) / 2))
-        (nhdsWithin (0 : ℝ) (Set.Ioi 0)) Filter.atTop := by
-      apply Filter.Tendsto.const_mul_atTop (by positivity)
-      exact (tendsto_rpow_neg_nhdsGT_zero hexp).comp hsq
-    apply hcore.congr'
-    filter_upwards [self_mem_nhdsWithin] with r hr
-    have hr0 : (0 : ℝ) < r := hr
-    have hr2 : (0 : ℝ) < r ^ 2 := pow_pos hr0 2
-    have hA : (8 * Real.pi * r ^ 2) ^ (-(d : ℝ) / 2)
-        = (8 * Real.pi) ^ (-(d : ℝ) / 2) * (r ^ 2) ^ (-(d : ℝ) / 2) := by
-      rw [show (8 * Real.pi * r ^ 2) = (8 * Real.pi) * r ^ 2 by ring,
-          Real.mul_rpow (by positivity) (by positivity)]
-    have hB : (r ^ 2 : ℝ) ^ (1 - (d : ℝ) / 2) = (r ^ 2) ^ (-(d : ℝ) / 2) * r ^ 2 := by
-      rw [show (1 - (d : ℝ) / 2) = -(d : ℝ) / 2 + 1 by ring, Real.rpow_add hr2, Real.rpow_one]
-    simp only [hL, hA, hB]
-    ring
+    have hlog : Filter.Tendsto (fun r : ℝ => Real.log (r ^ 2))
+        (nhdsWithin (0 : ℝ) (Set.Ioi 0)) Filter.atBot :=
+      Real.tendsto_log_nhdsGT_zero.comp hsq
+    have hneg : Filter.Tendsto (fun r : ℝ => -Real.log (r ^ 2))
+        (nhdsWithin (0 : ℝ) (Set.Ioi 0)) Filter.atTop :=
+      Filter.tendsto_neg_atBot_atTop.comp hlog
+    have hadd := Filter.tendsto_atTop_add_const_left (nhdsWithin (0 : ℝ) (Set.Ioi 0))
+      (Real.log ((4 * Real.pi)⁻¹)) hneg
+    simp only [hL, sub_eq_add_neg]
+    exact Filter.Tendsto.const_mul_atTop hc₀_pos hadd
   exact Filter.tendsto_atTop_mono' _ hL_le hL_tendsto
 
-/-- The free covariance `C(x₀, x) → +∞` as `x → x₀` (UV divergence), for any dimension `d ≥ 3`
+/-- The free covariance `C(x₀, x) → +∞` as `x → x₀` (UV divergence), for any dimension `d ≥ 2`
     equipped with a `GFFPropagator d m` instance.
 
     The radial profile `Cprofile r = properTimeCovariance d m r` diverges at `r → 0⁺`
     (`properTimeCovariance_tendsto_atTop_at_zero`); composing with `‖x₀ − x‖ → 0⁺` gives the UV
     blow-up. The covariance kernel is thus unbounded, so the GFF measure is not a point mass.
     Specialising to `d = 4` recovers the Bessel-kernel statement (`freeCovariance 4 m ≡
-    freeCovarianceBessel m`), and to `d = 3` the Yukawa kernel. -/
-theorem freeCovariance_tendsto_atTop (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (hd : 3 ≤ d)
+    freeCovarianceBessel m`), to `d = 3` the Yukawa kernel, and to `d = 2` the logarithmically
+    divergent `K₀` kernel. -/
+theorem freeCovariance_tendsto_atTop (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
     (x₀ : SpaceTime d) :
     Filter.Tendsto (fun x => freeCovariance d m x₀ x)
       (nhdsWithin x₀ {x₀}ᶜ) Filter.atTop := by
@@ -359,7 +376,8 @@ theorem freeCovariance_tendsto_atTop (m : ℝ) [Fact (0 < m)] [GFFPropagator d m
       exact this.mono_left nhdsWithin_le_nhds
     · exact eventually_nhdsWithin_of_forall fun x hx =>
         norm_pos_iff.mpr (sub_ne_zero.mpr fun h => hx (Set.mem_singleton_iff.mpr h.symm))
-  refine ((properTimeCovariance_tendsto_atTop_at_zero m hm hd).comp h_norm).congr' ?_
+  refine ((properTimeCovariance_tendsto_atTop_at_zero m hm
+    (Fact.out : 2 ≤ d)).comp h_norm).congr' ?_
   filter_upwards [self_mem_nhdsWithin] with x hx
   have hpos : 0 < ‖x₀ - x‖ :=
     norm_pos_iff.mpr (sub_ne_zero.mpr fun h => hx (Set.mem_singleton_iff.mpr h.symm))
