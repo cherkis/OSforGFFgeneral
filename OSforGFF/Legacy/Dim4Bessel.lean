@@ -28,6 +28,7 @@ import OSforGFF.General.FunctionalAnalysis
 import OSforGFF.General.BesselFunction
 import OSforGFF.General.BesselK
 import OSforGFF.Instances.Dim4Bessel
+import OSforGFF.Legacy.BesselK1Analytics
 
 /-!
 # LEGACY — Four-dimensional Bessel/momentum analytic program (off the build graph)
