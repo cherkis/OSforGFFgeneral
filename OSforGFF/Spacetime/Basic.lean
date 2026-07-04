@@ -48,23 +48,12 @@ Core type definitions for the formalization:
 - `SpaceTime d` = EuclideanSpace ℝ (Fin d), Euclidean d-space
 - `TestFunction d` / `TestFunctionℂ d` = real/complex Schwartz functions on ℝ^d
 - `FieldConfiguration d` = tempered distributions S'(ℝ^d) (WeakDual of Schwartz space)
-- `SpaceTime4`, `TestFunction4`, … = shorthand for the four-dimensional instance
 - `distributionPairing` / `distributionPairingℂ_real` = ⟨ω, f⟩ pairings
 - `GJGeneratingFunctional` = Z[J] = ∫ exp(i⟨ω, J⟩) dμ(ω)
 -/
 
 /-- Euclidean spacetime of dimension `d`: `ℝ^d` with the Euclidean inner-product structure. -/
 abbrev SpaceTime (d : ℕ) := EuclideanSpace ℝ (Fin d)
-
-/-- The spacetime dimension of the concrete four-dimensional instance. -/
-abbrev STDimension := 4
-
-/-- Four-dimensional Euclidean spacetime, `SpaceTime STDimension`. -/
-abbrev SpaceTime4 := SpaceTime STDimension
-
-instance : Fact (2 ≤ STDimension) := ⟨by norm_num⟩
-
-instance : Fact (STDimension ≤ 5) := ⟨by norm_num⟩
 
 /-- Dimensions admitting a time/space split are nonzero, so `(0 : Fin d)` is available. -/
 instance {d : ℕ} [Fact (2 ≤ d)] : NeZero d := ⟨by have h : 2 ≤ d := Fact.out; omega⟩
@@ -91,12 +80,6 @@ variable {d : ℕ}
 abbrev TestFunction (d : ℕ) : Type := SchwartzMap (SpaceTime d) ℝ
 abbrev TestFunction𝕜 (d : ℕ) : Type := SchwartzMap (SpaceTime d) 𝕜
 abbrev TestFunctionℂ (d : ℕ) := TestFunction𝕜 (𝕜 := ℂ) d
-
-abbrev TestFunction4 : Type := TestFunction STDimension
-abbrev TestFunctionℂ4 := TestFunctionℂ STDimension
-
-example : AddCommGroup TestFunctionℂ4 := by infer_instance
-example : Module ℂ TestFunctionℂ4 := by infer_instance
 
 /- Space-time and test function setup -/
 
@@ -125,9 +108,6 @@ the existing L2 framework for comparison and gradual transition.
 
     Using WeakDual gives the correct weak-* topology on the dual space. -/
 abbrev FieldConfiguration (d : ℕ) := WeakDual ℝ (SchwartzMap (SpaceTime d) ℝ)
-
-/-- Field configurations over four-dimensional spacetime, `FieldConfiguration STDimension`. -/
-abbrev FieldConfiguration4 := FieldConfiguration STDimension
 
 -- MeasurableSpace on (FieldConfiguration d) = WeakDual ℝ (TestFunction d) is the cylinder σ-algebra
 -- provided by the bochner library: ⨆ f, (borel ℝ).comap (eval f)
@@ -281,14 +261,8 @@ def GJMean (dμ_config : ProbabilityMeasure (FieldConfiguration d))
 /-- Spatial coordinates: ℝ^{d-1} (space without time) as EuclideanSpace for L2 norm -/
 abbrev SpatialCoords (d : ℕ) := EuclideanSpace ℝ (Fin (d - 1))
 
-/-- Spatial coordinates of the four-dimensional instance, `SpatialCoords STDimension`. -/
-abbrev SpatialCoords4 := SpatialCoords STDimension
-
 /-- L² space on spatial slices (real-valued) -/
 abbrev SpatialL2 (d : ℕ) := Lp ℝ 2 (volume : Measure (SpatialCoords d))
-
-/-- Spatial L² space of the four-dimensional instance, `SpatialL2 STDimension`. -/
-abbrev SpatialL24 := SpatialL2 STDimension
 
 /-- Extract spatial part of spacetime coordinate -/
 def spatialPart (x : SpaceTime d) : SpatialCoords d :=

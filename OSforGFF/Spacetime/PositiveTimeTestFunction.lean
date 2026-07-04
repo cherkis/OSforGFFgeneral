@@ -70,9 +70,6 @@ def PositiveTimeTestFunctions.submodule : Submodule ℝ (TestFunction d) where
 abbrev PositiveTimeTestFunction (d : ℕ) [Fact (2 ≤ d)] : Type :=
   PositiveTimeTestFunctions.submodule (d := d)
 
-/-- Positive-time real test functions over four-dimensional spacetime. -/
-abbrev PositiveTimeTestFunction4 : Type := PositiveTimeTestFunction STDimension
-
 instance : AddCommMonoid (PositiveTimeTestFunction d) := by infer_instance
 instance : AddCommGroup (PositiveTimeTestFunction d) := by infer_instance
 
@@ -104,9 +101,6 @@ def PositiveTimeTestFunctionsℂ.submodule : Submodule ℂ (TestFunctionℂ d) w
 /-- Type of complex-valued test functions supported in the positive time region -/
 abbrev PositiveTimeTestFunctionℂ (d : ℕ) [Fact (2 ≤ d)] : Type :=
   PositiveTimeTestFunctionsℂ.submodule (d := d)
-
-/-- Positive-time complex test functions over four-dimensional spacetime. -/
-abbrev PositiveTimeTestFunctionℂ4 : Type := PositiveTimeTestFunctionℂ STDimension
 
 instance : AddCommMonoid (PositiveTimeTestFunctionℂ d) := by infer_instance
 instance : AddCommGroup (PositiveTimeTestFunctionℂ d) := by infer_instance

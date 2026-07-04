@@ -404,5 +404,3 @@ lemma euclidean_actions_unified (g : (E d)) :
     rfl  -- by definition of euclidean_action_L2
 
 
-/-- The Euclidean group of four-dimensional spacetime, `E STDimension`. -/
-abbrev E4 : Type := E STDimension

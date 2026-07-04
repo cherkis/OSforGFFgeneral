@@ -76,6 +76,12 @@ open MeasureTheory Complex Real Filter
 open TopologicalSpace
 open scoped Real InnerProductSpace BigOperators
 
+/-- Private four-dimensional shorthands local to this off-graph legacy file:
+    `SpaceTime 4`, `TestFunctionℂ 4`, and the dimension `4`. -/
+private abbrev STDimension : ℕ := 4
+private abbrev SpaceTime4 := SpaceTime 4
+private abbrev TestFunctionℂ4 := TestFunctionℂ 4
+
 /-! No axioms declared in this file. -/
 
 noncomputable section

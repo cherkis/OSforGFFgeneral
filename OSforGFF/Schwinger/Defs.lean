@@ -278,10 +278,6 @@ open BigOperators MeasureTheory Complex
 noncomputable section
 namespace AQFT_exponential_series
 
-variable {FieldConfiguration4 TestFunction4 : Type} -- (only to appease editors)
--- (We actually use the ones from your file; no new structures introduced.)
-
-
 /-- Finite Taylor partial sum of the exponential `exp(i x)` (complex valued). -/
 private def expIPartial (N : ℕ) (x : ℝ) : ℂ :=
   (Finset.range (N+1)).sum (fun n =>
@@ -381,7 +377,7 @@ private lemma prod_const_pow (x : ℝ) (n : ℕ) :
 
 /-- Identify `S_n(J,…,J)` as the integral of the n-th power of `⟨ω,J⟩`. -/
 private lemma schwinger_eq_integral_pow
-  (dμ : ProbabilityMeasure _root_.FieldConfiguration4) (J : _root_.TestFunction4) (n : ℕ) :
+  (dμ : ProbabilityMeasure (FieldConfiguration 4)) (J : TestFunction 4) (n : ℕ) :
   (SchwingerFunction dμ n (fun _ => J) : ℝ)
   = ∫ ω, (distributionPairing ω J) ^ n ∂ dμ.toMeasure := by
   -- Unfold `SchwingerFunction` and simplify the Finite product on `Fin n`
@@ -390,7 +386,7 @@ private lemma schwinger_eq_integral_pow
   unfold SchwingerFunction
   -- integrand: ∏ i, ⟨ω,J⟩ = (⟨ω,J⟩)^n
   -- Pointwise product-to-power identity
-  have hω : ∀ ω : _root_.FieldConfiguration4, (∏ _i : Fin n, distributionPairing ω J) = (distributionPairing ω J) ^ n := by
+  have hω : ∀ ω : FieldConfiguration 4, (∏ _i : Fin n, distributionPairing ω J) = (distributionPairing ω J) ^ n := by
     intro ω
     simp only [prod_const_pow]
   -- Rewrite under the integral using the pointwise identity
