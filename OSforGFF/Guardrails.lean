@@ -63,3 +63,14 @@ import «OSforGFF».OS.Master
   SatisfiesAllOS (OSforGFF.μ_GFF2 m) -/
 #guard_msgs in
 #check @OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim2
+
+-- ── Axiom-footprint guard for the all-dimensions corollary ───────────────────
+/-- info: 'OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_of_dim' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_of_dim
+
+-- ── Goal-type guard: pins the all-dimensions corollary's statement ───────────
+/-- info: OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_of_dim : ∀ (d : ℕ) [inst : Fact (2 ≤ d)] (m : ℝ)
+  [inst_1 : Fact (0 < m)] [Fact (d ≤ 5)], SatisfiesAllOS (gaussianFreeField_free m) -/
+#guard_msgs in
+#check @OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_of_dim

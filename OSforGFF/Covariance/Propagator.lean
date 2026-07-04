@@ -409,6 +409,17 @@ class GFFPropagator (d : ℕ) (m : ℝ) [Fact (0 < m)] [Fact (2 ≤ d)] where
       (evaluate the proper-time integral to the closed form). -/
   schwinger_eq : ∀ r > 0, Cprofile r = properTimeCovariance d m r
 
+/-- The canonical propagator in any dimension `2 ≤ d`, taking `Cprofile` to be the generic
+    proper-time covariance itself (so `schwinger_eq` is `rfl`). It discharges `GFFPropagator d m`
+    for every `d` with no closed form required, hence witnesses that the master theorem holds in
+    every dimension `2 ≤ d ≤ 5`. This is a `def`, deliberately not a global `instance`: the class
+    carries data, and a competing global instance would make the constructed measure differ from
+    the concrete per-`d` instances'. -/
+@[reducible] def GFFPropagator.ofProperTime (d : ℕ) (m : ℝ) [Fact (0 < m)] [Fact (2 ≤ d)] :
+    GFFPropagator d m where
+  Cprofile := properTimeCovariance d m
+  schwinger_eq _ _ := rfl
+
 namespace GFFPropagator
 
 variable {d : ℕ} {m : ℝ} [Fact (0 < m)] [Fact (2 ≤ d)] [GFFPropagator d m]

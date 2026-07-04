@@ -70,6 +70,19 @@ theorem gaussianFreeField_satisfies_all_OS_axioms_generic
   os4_ergodicity := OS4_Ergodicity.OS4_PolynomialClustering_implies_OS4_Ergodicity m
     (QFT.gaussianFreeField_satisfies_OS4_PolynomialClustering m 6 (by norm_num))
 
+/-- Master theorem, all-dimensions form: for every `2 ≤ d ≤ 5` the free GFF built from the
+canonical proper-time propagator (`GFFPropagator.ofProperTime`) satisfies all
+Osterwalder–Schrader axioms. This drops the `[GFFPropagator d m]` hypothesis of
+`gaussianFreeField_satisfies_all_OS_axioms_generic` by supplying the canonical instance, so no
+per-`d` closed form is needed; the concrete instances (`d = 2, 3, 4`) additionally exhibit the
+covariance in closed form. -/
+theorem gaussianFreeField_satisfies_all_OS_axioms_of_dim (d : ℕ) [Fact (2 ≤ d)]
+    (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5)] :
+    letI := GFFPropagator.ofProperTime d m
+    SatisfiesAllOS (gaussianFreeField_free (d := d) m) := by
+  letI := GFFPropagator.ofProperTime d m
+  exact gaussianFreeField_satisfies_all_OS_axioms_generic m
+
 /-- Master theorem: the free GFF satisfies all Osterwalder-Schrader axioms.
 
 This is the four-dimensional instance of
