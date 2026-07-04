@@ -58,7 +58,8 @@ hypotheses of the Minlos theorem, by which the measure exists on `S′(ℝ^d)`.
   Its `k`-integral is `∼ s^{(4−d)/2} e^{−sm²}`, integrable near `s = 0` iff `d ≤ 5`. The
   hypothesis `[Fact (d ≤ 5)]` enters only there (`OS3_MixedRepInfra.integrable_dominate_G`)
   and propagates to the OS3 axiom and the master theorem. Higher-order boundary vanishing
-  would remove the bound; `d ∈ {2,3,4}` does not need it.
+  would remove the bound (the concrete instances `d ∈ {2,3,4,5}` do not need it); see
+  [`general_dimension.md`](general_dimension.md) for a concrete program to reach all `d ≥ 2`.
 - **The UV statement.** `C(x,y) → ∞` as `x → y` (`OS/NonTrivial.lean`) is generic for every
   `d ≥ 2`: on the proper-time window `[r², (4π)⁻¹]` the integrand dominates a constant
   multiple of `1/s`, so the integral grows at least like `log(1/r²)` — the sharp rate at

@@ -249,6 +249,7 @@ baseline (blocking new `axiom`/escape-hatch declarations).
 
 1. ~~The `d = 2` instance (the K₀ kernel (1/2π)K₀(mr))~~ — Done. The `d = 2` (K₀), `d = 3` (Yukawa), and `d = 4` (Bessel) instances are all provided, completing the dimensions discussed in [docs/dimension_dependence.md](docs/dimension_dependence.md).
 2. ~~Explicit construction of the measure not using Minlos~~ — Done. The Minlos theorem and Kolmogorov extension are now fully proved in [bochner](https://github.com/mrdouglasny/bochner) and [kolmogorov_extension4](https://github.com/remydegenne/kolmogorov_extension4).
+3. **General dimension `d ≥ 2`** — the OS theorems currently hold for `2 ≤ d ≤ 5`. The single obstruction to all `d ≥ 2` (a sharp integrability in the OS3 Fubini domination) and a concrete program to remove it via higher-order (Hadamard/Malgrange) boundary vanishing are written up in [docs/general_dimension.md](docs/general_dimension.md).
 
 ## Authors
 
