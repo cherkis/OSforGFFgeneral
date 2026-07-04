@@ -112,47 +112,4 @@ noncomputable instance instGFFPropagatorDim3 (m : ℝ) [Fact (0 < m)] :
 /-- Shorthand for the free GFF probability measure of the three-dimensional instance. -/
 @[simp] abbrev μ_GFF3 (m : ℝ) [Fact (0 < m)] := gaussianFreeField_free (d := 3) m
 
-/-- Ultraviolet divergence of the three-dimensional free covariance: the Yukawa kernel
-    `C(x₀, x) = e^{-m‖x₀-x‖}/(4π‖x₀-x‖)` tends to `+∞` as `x → x₀`, since `e^{-mr}/(4πr) → +∞`
-    as `r → 0⁺`. The GFF measure is therefore not a point mass. -/
-theorem freeCovariance_dim3_tendsto_atTop (m : ℝ) [Fact (0 < m)]
-    (x₀ : EuclideanSpace ℝ (Fin 3)) :
-    Filter.Tendsto (fun x => freeCovariance 3 m x₀ x)
-      (nhdsWithin x₀ {x₀}ᶜ) Filter.atTop := by
-  have hm := Fact.out (self := ‹Fact (0 < m)›)
-  -- `‖x₀ - x‖ → 0⁺` as `x → x₀` through `{x₀}ᶜ` (dimension-generic).
-  have h_norm : Filter.Tendsto (fun x => ‖x₀ - x‖)
-      (nhdsWithin x₀ {x₀}ᶜ) (nhdsWithin 0 (Set.Ioi 0)) := by
-    apply tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within
-    · have hc : ContinuousAt (fun x : EuclideanSpace ℝ (Fin 3) => ‖x₀ - x‖) x₀ :=
-        (continuous_norm.comp (continuous_const.sub continuous_id)).continuousAt
-      have := hc.tendsto; simp only [sub_self, norm_zero] at this
-      exact this.mono_left nhdsWithin_le_nhds
-    · exact eventually_nhdsWithin_of_forall fun x hx =>
-        norm_pos_iff.mpr (sub_ne_zero.mpr fun h => hx (Set.mem_singleton_iff.mpr h.symm))
-  -- The Yukawa profile `e^{-mr}/(4πr) → +∞` as `r → 0⁺`, by the lower bound `≥ (e^{-m}/(4π))·r⁻¹`.
-  have h_profile : Filter.Tendsto (fun r : ℝ => Real.exp (-(m * r)) / (4 * Real.pi * r))
-      (nhdsWithin 0 (Set.Ioi 0)) Filter.atTop := by
-    have hlb : Filter.Tendsto (fun r : ℝ => Real.exp (-m) / (4 * Real.pi) * r⁻¹)
-        (nhdsWithin 0 (Set.Ioi 0)) Filter.atTop :=
-      Filter.Tendsto.const_mul_atTop
-        (by positivity : (0 : ℝ) < Real.exp (-m) / (4 * Real.pi)) tendsto_inv_nhdsGT_zero
-    refine Filter.tendsto_atTop_mono' _ ?_ hlb
-    filter_upwards [self_mem_nhdsWithin,
-        nhdsWithin_le_nhds (Iio_mem_nhds (show (0 : ℝ) < 1 by norm_num))] with r hr hr1
-    have hr0 : (0 : ℝ) < r := hr
-    have hr1' : r < 1 := hr1
-    have hle : Real.exp (-m) ≤ Real.exp (-(m * r)) := Real.exp_le_exp.mpr (by nlinarith)
-    rw [inv_eq_one_div, div_mul_div_comm, mul_one]
-    gcongr
-  -- Identify `freeCovariance 3 m x₀ ·` with the profile of `‖x₀ - ·‖` on `{x₀}ᶜ`, then compose.
-  refine (h_profile.comp h_norm).congr' ?_
-  filter_upwards [self_mem_nhdsWithin] with x hx
-  have hne : ‖x₀ - x‖ ≠ 0 :=
-    norm_ne_zero_iff.mpr (sub_ne_zero.mpr fun h => hx (Set.mem_singleton_iff.mpr h.symm))
-  simp only [Function.comp_apply, freeCovariance]
-  rw [show (GFFPropagator.Cprofile 3 m ‖x₀ - x‖ : ℝ) =
-        if ‖x₀ - x‖ = 0 then (0 : ℝ)
-        else Real.exp (-(m * ‖x₀ - x‖)) / (4 * Real.pi * ‖x₀ - x‖) from rfl, if_neg hne]
-
 end OSforGFF

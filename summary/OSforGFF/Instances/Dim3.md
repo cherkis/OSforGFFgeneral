@@ -17,9 +17,10 @@ substitution** $t = 1/s$ (mathlib's `integral_comp_rpow_Ioi` at $p = -1$) to red
 $$\int_0^\infty t^{-3/2}\,e^{-m^2 t - r^2/(4t)}\,dt$$
 to the Bessel-$K_{1/2}$ Laplace identity `LaplaceIntegral.laplace_integral_half_power` (with
 parameters $a = m^2$, $b = r^2/4$), giving the closed value $(2\sqrt{\pi}/r)\,e^{-mr}$. The file
-supplies the `Fact (2 ≤ 3)` and `Fact (3 ≤ 5)` instances, the `GFFPropagator 3 m` instance, the
-shorthand `μ_GFF3` for the three-dimensional free GFF measure, and the ultraviolet-divergence
-statement `C(x_0, x) \to +\infty` as $x \to x_0$ (non-triviality of the measure).
+supplies the `Fact (2 ≤ 3)` and `Fact (3 ≤ 5)` instances, the `GFFPropagator 3 m` instance, and the
+shorthand `μ_GFF3` for the three-dimensional free GFF measure. (The ultraviolet divergence
+`C(x_0, x) → +∞` as $x \to x_0$ is now the dimension-generic `freeCovariance_tendsto_atTop` in
+`OS/NonTrivial.lean`, which specialises to $d = 3$.)
 
 ## Status
 
@@ -27,7 +28,7 @@ statement `C(x_0, x) \to +\infty` as $x \to x_0$ (non-triviality of the measure)
 
 **Major gaps**: None — file is sorry-free.
 
-**Length**: 158 lines, 4 definition(s) + 4 theorem(s)/lemma(s)
+**Length**: 115 lines, 4 definition(s) + 3 theorem(s)/lemma(s)
 
 ---
 
@@ -120,20 +121,4 @@ instance, i.e. [`gaussianFreeField_free`](../../OSforGFF/Measure/Construct.lean#
 
 ---
 
-## Ultraviolet divergence
-
-### [`freeCovariance_dim3_tendsto_atTop`](../../OSforGFF/Instances/Dim3.lean#L118) — Theorem
-
-**Statement**: The three-dimensional free covariance diverges at coincident points: for $m > 0$ and
-$x_0 \in \mathbb{R}^3$,
-$$\mathrm{freeCovariance}\;3\;m\;x_0\;x \longrightarrow +\infty \quad\text{as } x \to x_0
-\text{ (through } \{x_0\}^c\text{)},$$
-since the Yukawa kernel $e^{-mr}/(4\pi r) \to +\infty$ as $r \to 0^+$. The GFF measure is therefore
-not a point mass. This is the $d = 3$ analog of `NonTrivial.lean`'s `freeCovariance_tendsto_atTop`.
-
-**Proof uses**: `tendsto_inv_nhdsGT_zero`, `Filter.Tendsto.const_mul_atTop`,
-`Filter.tendsto_atTop_mono'`
-
----
-
-*This file has **4** definitions and **4** theorems/lemmas (0 with sorry).*
+*This file has **4** definitions and **3** theorems/lemmas (0 with sorry).*

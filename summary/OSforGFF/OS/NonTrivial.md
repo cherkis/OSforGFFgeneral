@@ -22,12 +22,13 @@ The injectivity chain is: the Fourier transform is injective on Schwartz space (
 momentum weight $1/\sqrt{\lVert k\rVert^2 + m^2}$ creates no new zeros, and a continuous function
 vanishing a.e. (Lebesgue) vanishes everywhere (`volume` is `IsOpenPosMeasure`).
 
-The final section is genuinely **four-dimensional**: `freeCovariance_tendsto_atTop` proves the
-UV divergence $C(x,y) \to +\infty$ at coincident points for the 4D Bessel closed form
-`freeCovarianceBessel` ($C = \tfrac{m}{4\pi^2 r}K_1(mr)$), driven by the $K_1$ short-distance
-asymptotics. It imports `Instances.Dim4Bessel` and is stated over `SpaceTime4`; its analytic
-input `besselK1_tendsto_atTop_at_zero` ($K_1(z) \to +\infty$ as $z \to 0^+$) is a real-analysis
-lemma living in this same UV section.
+The final section proves the UV divergence $C(x,y) \to +\infty$ at coincident points, now
+**dimension-generic** for $d \ge 3$: `freeCovariance_tendsto_atTop` composes the generic driver
+`properTimeCovariance_tendsto_atTop_at_zero` (the proper-time integral $\to +\infty$ as $r \to 0^+$,
+from its $t^{-d/2}$ short-time singularity) with $\lVert x_0 - x\rVert \to 0^+$, then identifies the
+radial profile with the proper-time integral via `GFFPropagator.schwinger_eq`. It specialises to
+$d = 4$ (Bessel kernel) and $d = 3$ (Yukawa kernel), superseding the former 4D-only,
+`besselK1`-asymptotics proof.
 
 ## Status
 
@@ -35,7 +36,7 @@ lemma living in this same UV section.
 
 None — file is sorry-free.
 
-**Length**: 374 lines, 0 definitions + 10 theorem(s)/lemma(s)
+**Length**: 369 lines, 0 definitions + 10 theorem(s)/lemma(s)
 
 ---
 
@@ -125,22 +126,20 @@ None — file is sorry-free.
 
 ## UV divergence: pointwise covariance diverges at coincident points
 
-### [`besselK1_tendsto_atTop_at_zero`](../../OSforGFF/OS/NonTrivial.lean#L262) — Theorem
+### [`properTimeCovariance_tendsto_atTop_at_zero`](../../OSforGFF/OS/NonTrivial.lean#L256) — Theorem
 
-**Statement**: $K_1(z) \to +\infty$ as $z \to 0^+$ — a real-analysis input for the 4D UV theorem. For any $T > 0$, $K_1(z) = \int_0^\infty e^{-z\cosh t}\cosh t\,dt \ge T\,e^{-z\cosh T}$ (since $\cosh t \ge 1$ on $[0,T]$), and the RHS $\to T$ as $z \to 0^+$, so $K_1(z)$ eventually exceeds any bound.
+**Statement**: For $d \ge 3$, the proper-time covariance diverges at the origin: $\mathrm{properTimeCovariance}\;d\;m\;r \to +\infty$ as $r \to 0^+$. Lower bound: the heat-kernel mass on the window $[r^2, 2r^2]$ is of order $r^{2-d}$ (the $(4\pi t)^{-d/2}$ short-time singularity), which blows up as $r \to 0^+$ when $d \ge 3$. This is the dimension-generic driver of the UV divergence, replacing the former 4D `besselK1` asymptotics.
 
-**Proof uses**: `setIntegral_ge_of_const_le_real`, `setIntegral_mono_set`,
-[`besselK1_pos`](../../OSforGFF/General/BesselFunction.lean#L51), `Real.one_le_cosh`
+**Proof uses**: [`properTime_slice_integrableOn`](../../OSforGFF/Covariance/ParsevalGeneric.lean#L79), `Real.rpow_le_rpow_of_nonpos`, `tendsto_rpow_neg_nhdsGT_zero`, `setIntegral_ge_of_const_le_real`, `setIntegral_mono_set`
 
 ---
 
-### [`freeCovariance_tendsto_atTop`](../../OSforGFF/OS/NonTrivial.lean#L323) — Theorem
+### [`freeCovariance_tendsto_atTop`](../../OSforGFF/OS/NonTrivial.lean#L347) — Theorem
 
-**Statement**: **(Four-dimensional.)** The 4D Bessel covariance diverges at coincident points: $C(x_0, x) = \tfrac{m}{4\pi^2 r}K_1(mr) \to +\infty$ as $x \to x_0$ through $\{x_0\}^c$ (with $r = \lVert x_0 - x\rVert \to 0^+$) — genuine UV singularity of the free field. Stated over `SpaceTime4` for `freeCovarianceBessel`; the pointwise regularization $C(x,x) = 0$ is the smeared-theory convention.
+**Statement**: **(Dimension-generic, $d \ge 3$.)** The free covariance diverges at coincident points: $C(x_0, x) = \mathrm{Cprofile}\,\lVert x_0 - x\rVert \to +\infty$ as $x \to x_0$ through $\{x_0\}^c$ — a genuine UV singularity of the free field. Proved by composing `properTimeCovariance_tendsto_atTop_at_zero` with $\lVert x_0 - x\rVert \to 0^+$ and identifying $\mathrm{Cprofile}$ with the proper-time integral via `GFFPropagator.schwinger_eq`. Specialises to $d = 4$ (Bessel kernel) and $d = 3$ (Yukawa kernel); the pointwise regularization $C(x,x) = 0$ is the smeared-theory convention.
 
-**Proof uses**: [`freeCovarianceBessel`](../../OSforGFF/Instances/Dim4Bessel.lean#L421),
-[`besselK1_tendsto_atTop_at_zero`](../../OSforGFF/OS/NonTrivial.lean#L262),
-`tendsto_inv_nhdsGT_zero`, `Filter.Tendsto.atTop_mul_atTop₀`
+**Proof uses**: [`properTimeCovariance_tendsto_atTop_at_zero`](../../OSforGFF/OS/NonTrivial.lean#L256),
+`GFFPropagator.schwinger_eq`, `tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within`
 
 ---
 
