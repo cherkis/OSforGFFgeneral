@@ -235,7 +235,7 @@ theorem gaussianFreeField_satisfies_all_OS_axioms_generic
 theorem gaussianFreeField_satisfies_all_OS_axioms_of_dim (d : ℕ) [Fact (2 ≤ d)]
     (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5)] : … (via GFFPropagator.ofProperTime)
 
-theorem gaussianFreeField_satisfies_all_OS_axioms      (m) [Fact (0 < m)] : SatisfiesAllOS (μ_GFF 4 m)  -- d = 4
+theorem gaussianFreeField_satisfies_all_OS_axioms_dim4      (m) [Fact (0 < m)] : SatisfiesAllOS (μ_GFF 4 m)  -- d = 4
 theorem gaussianFreeField_satisfies_all_OS_axioms_dim3 (m) [Fact (0 < m)] : SatisfiesAllOS (μ_GFF 3 m)  -- d = 3
 theorem gaussianFreeField_satisfies_all_OS_axioms_dim2 (m) [Fact (0 < m)] : SatisfiesAllOS (μ_GFF 2 m)  -- d = 2
 theorem gaussianFreeField_satisfies_all_OS_axioms_dim5 (m) [Fact (0 < m)] : SatisfiesAllOS (μ_GFF 5 m)  -- d = 5

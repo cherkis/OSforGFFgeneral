@@ -23,7 +23,7 @@ theorem gaussianFreeField_satisfies_all_OS_axioms_generic
     {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)] :
     SatisfiesAllOS (gaussianFreeField_free (d := d) m)
 
-theorem gaussianFreeField_satisfies_all_OS_axioms (m : ℝ) [Fact (0 < m)] :
+theorem gaussianFreeField_satisfies_all_OS_axioms_dim4 (m : ℝ) [Fact (0 < m)] :
     SatisfiesAllOS (μ_GFF 4 m)
 
 theorem gaussianFreeField_satisfies_all_OS_axioms_dim3 (m : ℝ) [Fact (0 < m)] :
@@ -31,12 +31,17 @@ theorem gaussianFreeField_satisfies_all_OS_axioms_dim3 (m : ℝ) [Fact (0 < m)] 
 
 theorem gaussianFreeField_satisfies_all_OS_axioms_dim2 (m : ℝ) [Fact (0 < m)] :
     SatisfiesAllOS (μ_GFF 2 m)
+
+theorem gaussianFreeField_satisfies_all_OS_axioms_dim5 (m : ℝ) [Fact (0 < m)] :
+    SatisfiesAllOS (μ_GFF 5 m)
 ```
 
 where `SatisfiesAllOS` bundles OS0 (analyticity), OS1 (regularity), OS2
 (Euclidean invariance), OS3 (reflection positivity), OS4 (clustering) and OS4
-(ergodicity). The last three theorems are the four-, three-, and two-dimensional
-instances of the first; the bound `d ≤ 5` enters only through the proper-time
+(ergodicity). The four `_dim4`/`_dim3`/`_dim2`/`_dim5` theorems are the closed-form
+instances (Bessel K₁, Yukawa, K₀, K_{3/2}) of the first; the corollary
+`gaussianFreeField_satisfies_all_OS_axioms_of_dim` covers every `2 ≤ d ≤ 5` via the
+canonical proper-time propagator. The bound `d ≤ 5` enters only through the proper-time
 Fubini domination in the OS3 argument.
 
 **Status:** Version 3.1 (dimension-generic), July 2026. 0 sorries, 0 axioms, ~31,500 lines of Lean across 54 files. Instances for `d = 2, 3, 4, 5`; the axiom footprint and statement type of every headline theorem (generic, all-dimensions `2 ≤ d ≤ 5`, `d = 4`, `d = 3`, `d = 2`, `d = 5`) are build-frozen in `OSforGFF/Guardrails.lean`.
@@ -51,7 +56,9 @@ The Minlos proof uses the external library [kolmogorov_extension4](https://githu
 The 54 on-graph library files (plus 2 off-graph `Legacy/` files, below) are organized into 7 layers, with imports flowing from
 earlier to later sections. See [docs/architecture.md](docs/architecture.md) for dependency structure,
 design choices, and proof outlines, and [docs/dimension_generic.md](docs/dimension_generic.md)
-for the dimension-generic design. The dependency graph source is in
+for the dimension-generic design. For a pedagogical, axiom-by-axiom walkthrough of the
+OS proofs — ordered by complexity, with pointers into the code — see
+[docs/pedagogical/Overview.md](docs/pedagogical/Overview.md). The dependency graph source is in
 [dependency/import_graph.dot](dependency/import_graph.dot) (render with `dot -Tsvg`).
 
 ---

@@ -22,7 +22,7 @@ Assembles OS0–OS4 into the dimension-generic
 `gaussianFreeField_satisfies_all_OS_axioms_generic`, the all-dimensions corollary
 `gaussianFreeField_satisfies_all_OS_axioms_of_dim` (every `2 ≤ d ≤ 5`, via the canonical
 `GFFPropagator.ofProperTime`), and the concrete instances
-`gaussianFreeField_satisfies_all_OS_axioms` (`d = 4`),
+`gaussianFreeField_satisfies_all_OS_axioms_dim4` (Bessel K₁),
 `gaussianFreeField_satisfies_all_OS_axioms_dim3` (Yukawa),
 `gaussianFreeField_satisfies_all_OS_axioms_dim2` (K₀), and
 `gaussianFreeField_satisfies_all_OS_axioms_dim5` (K_{3/2}). The generic theorem is proved by:
@@ -60,19 +60,13 @@ noncomputable section
 theorem gaussianFreeField_satisfies_all_OS_axioms_generic
     {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)] :
     SatisfiesAllOS (gaussianFreeField_free (d := d) m) where
-  -- OS0 from the holomorphic integral theorem (differentiation under the integral)
   os0 := QFT.gaussianFreeField_satisfies_OS0 m
-  -- OS1 from the free field theorem using Fourier/momentum space methods
   os1 := gaussianFreeField_satisfies_OS1_revised m
-  -- OS2 from Euclidean invariance of free covariance
   os2 := gaussian_satisfies_OS2 (gaussianFreeField_free (d := d) m)
     (by exact isGaussianGJ_gaussianFreeField_free m)
     (QFT.CovarianceEuclideanInvariantℂ_μ_GFF m)
-  -- OS3 from the Schur-Hadamard argument (complex star formulation)
   os3 := QFT.gaussianFreeField_OS3 m
-  -- OS4 Clustering (Gaussian factorization and covariance decay)
   os4_clustering := QFT.gaussianFreeField_satisfies_OS4 m
-  -- OS4 Ergodicity: polynomial clustering (α=6) implies ergodicity
   os4_ergodicity := OS4_Ergodicity.OS4_PolynomialClustering_implies_OS4_Ergodicity m
     (QFT.gaussianFreeField_satisfies_OS4_PolynomialClustering m 6 (by norm_num))
 
@@ -89,12 +83,12 @@ theorem gaussianFreeField_satisfies_all_OS_axioms_of_dim (d : ℕ) [Fact (2 ≤ 
   letI := GFFPropagator.ofProperTime d m
   exact gaussianFreeField_satisfies_all_OS_axioms_generic m
 
-/-- Master theorem: the free GFF satisfies all Osterwalder-Schrader axioms.
+/-- Master theorem, four-dimensional instance: the free GFF with the Bessel
+covariance `(m/4π²r) K₁(mr)` satisfies all Osterwalder-Schrader axioms.
 
-This is the four-dimensional instance of
-`gaussianFreeField_satisfies_all_OS_axioms_generic`: an unconditional theorem with
-no assumptions beyond m > 0. -/
-theorem gaussianFreeField_satisfies_all_OS_axioms (m : ℝ) [Fact (0 < m)] :
+This is the `d = 4` instance of
+`gaussianFreeField_satisfies_all_OS_axioms_generic`. -/
+theorem gaussianFreeField_satisfies_all_OS_axioms_dim4 (m : ℝ) [Fact (0 < m)] :
     SatisfiesAllOS (μ_GFF 4 m) :=
   gaussianFreeField_satisfies_all_OS_axioms_generic m
 

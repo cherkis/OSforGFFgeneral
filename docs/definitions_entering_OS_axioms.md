@@ -12,7 +12,7 @@ theorem gaussianFreeField_satisfies_all_OS_axioms_generic
     SatisfiesAllOS (gaussianFreeField_free (d := d) m)
 
 -- four-dimensional instance:
-theorem gaussianFreeField_satisfies_all_OS_axioms (m : ℝ) [Fact (0 < m)] :
+theorem gaussianFreeField_satisfies_all_OS_axioms_dim4 (m : ℝ) [Fact (0 < m)] :
     SatisfiesAllOS (μ_GFF 4 m)
 ```
 

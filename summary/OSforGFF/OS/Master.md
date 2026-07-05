@@ -65,7 +65,7 @@ at $\alpha = 6$.
 
 ---
 
-### [`gaussianFreeField_satisfies_all_OS_axioms_of_dim`](../../OSforGFF/OS/Master.lean#L85) — Theorem
+### [`gaussianFreeField_satisfies_all_OS_axioms_of_dim`](../../OSforGFF/OS/Master.lean#L79) — Theorem
 
 **Lean signature**
 ```lean
@@ -90,11 +90,11 @@ covariance in closed form).
 
 ---
 
-### [`gaussianFreeField_satisfies_all_OS_axioms`](../../OSforGFF/OS/Master.lean#L97) — Theorem
+### [`gaussianFreeField_satisfies_all_OS_axioms_dim4`](../../OSforGFF/OS/Master.lean#L91) — Theorem
 
 **Lean signature**
 ```lean
-theorem gaussianFreeField_satisfies_all_OS_axioms (m : ℝ) [Fact (0 < m)] :
+theorem gaussianFreeField_satisfies_all_OS_axioms_dim4 (m : ℝ) [Fact (0 < m)] :
     SatisfiesAllOS (μ_GFF 4 m)
 ```
 
@@ -111,7 +111,7 @@ are synthesized by typeclass search.
 
 ---
 
-### [`gaussianFreeField_satisfies_all_OS_axioms_dim3`](../../OSforGFF/OS/Master.lean#L104) — Theorem
+### [`gaussianFreeField_satisfies_all_OS_axioms_dim3`](../../OSforGFF/OS/Master.lean#L98) — Theorem
 
 **Lean signature**
 ```lean
@@ -130,7 +130,7 @@ $$\mathrm{SatisfiesAllOS}(\mu_{\mathrm{GFF}}\ 3\ m).$$
 
 ---
 
-### [`gaussianFreeField_satisfies_all_OS_axioms_dim2`](../../OSforGFF/OS/Master.lean#L111) — Theorem
+### [`gaussianFreeField_satisfies_all_OS_axioms_dim2`](../../OSforGFF/OS/Master.lean#L105) — Theorem
 
 **Lean signature**
 ```lean
@@ -149,7 +149,7 @@ $$\mathrm{SatisfiesAllOS}(\mu_{\mathrm{GFF}}\ 2\ m).$$
 
 ---
 
-### [`gaussianFreeField_satisfies_all_OS_axioms_dim5`](../../OSforGFF/OS/Master.lean#L119) — Theorem
+### [`gaussianFreeField_satisfies_all_OS_axioms_dim5`](../../OSforGFF/OS/Master.lean#L113) — Theorem
 
 **Lean signature**
 ```lean

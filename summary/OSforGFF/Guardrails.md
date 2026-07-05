@@ -41,11 +41,11 @@ statement-type guards), 0 declarations, 0 sorries.
 
 ### [Axiom-footprint guard — `d = 4` master theorem](../OSforGFF/Guardrails.lean#L32)
 
-Freezes the reachable-axiom list of `OSforGFF.gaussianFreeField_satisfies_all_OS_axioms` (the
+Freezes the reachable-axiom list of `OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim4` (the
 concrete `d = 4` headline) to Lean's three core axioms:
 
 ```lean
-/-- info: 'OSforGFF.gaussianFreeField_satisfies_all_OS_axioms' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+/-- info: 'OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim4' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 ```
 
 Any additional axiom or a leaked `sorryAx` breaks the `#guard_msgs`.
@@ -63,10 +63,10 @@ guard but no separate `#check` type guard.
 
 ### [Goal-type guard — `d = 4` master theorem](../OSforGFF/Guardrails.lean#L42)
 
-Pins the elaborated statement type of `OSforGFF.gaussianFreeField_satisfies_all_OS_axioms`:
+Pins the elaborated statement type of `OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim4`:
 
 ```lean
-/-- info: OSforGFF.gaussianFreeField_satisfies_all_OS_axioms : ∀ (m : ℝ) [inst : Fact (0 < m)], SatisfiesAllOS (μ_GFF 4 m) -/
+/-- info: OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim4 : ∀ (m : ℝ) [inst : Fact (0 < m)], SatisfiesAllOS (μ_GFF 4 m) -/
 ```
 
 The frozen conclusion is `SatisfiesAllOS (μ_GFF 4 m)` — the unified `μ_GFF d` measure at `d = 4`.

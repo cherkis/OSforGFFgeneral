@@ -29,9 +29,9 @@ all-dimensions corollary (`_of_dim`, every `2 ≤ d ≤ 5`), and the concrete in
 import «OSforGFF».OS.Master
 
 -- ── Axiom-footprint guard (ACTIVATED) ────────────────────────────────────────
-/-- info: 'OSforGFF.gaussianFreeField_satisfies_all_OS_axioms' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+/-- info: 'OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim4' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
-#print axioms OSforGFF.gaussianFreeField_satisfies_all_OS_axioms
+#print axioms OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim4
 
 -- ── Axiom-footprint guard for the dimension-generic master theorem ───────────
 /-- info: 'OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_generic' depends on axioms: [propext, Classical.choice, Quot.sound] -/
@@ -39,9 +39,9 @@ import «OSforGFF».OS.Master
 #print axioms OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_generic
 
 -- ── Goal-type guard: pins the master theorem's statement (ACTIVATED) ──────────
-/-- info: OSforGFF.gaussianFreeField_satisfies_all_OS_axioms : ∀ (m : ℝ) [inst : Fact (0 < m)], SatisfiesAllOS (μ_GFF 4 m) -/
+/-- info: OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim4 : ∀ (m : ℝ) [inst : Fact (0 < m)], SatisfiesAllOS (μ_GFF 4 m) -/
 #guard_msgs in
-#check @OSforGFF.gaussianFreeField_satisfies_all_OS_axioms
+#check @OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim4
 
 -- ── Axiom-footprint guard for the three-dimensional instance ─────────────────
 /-- info: 'OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_dim3' depends on axioms: [propext, Classical.choice, Quot.sound] -/
