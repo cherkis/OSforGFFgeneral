@@ -451,7 +451,7 @@ lemma schwartz_vanishing_ftc_decay (f : TestFunctionℂ d)
             apply div_le_div_of_nonneg_right _ (le_of_lt h1y_pow)
             simp only [C]; nlinarith [mul_nonneg (le_of_lt h2d_pos) hC_unif_nn]
     · -- Small ‖y‖ case: use uniform bound C_unif
-      push_neg at hy_large
+      push Not at hy_large
       -- For ‖y‖ < 1: (1+‖y‖)^d < 2^d, so C_unif ≤ 2^d*C_unif/(1+‖y‖)^d
       have h_bracket_small : (1 + ‖y‖) ^ d ≤ 2 ^ d := by
         apply pow_le_pow_left₀ (by linarith [norm_nonneg y]); linarith

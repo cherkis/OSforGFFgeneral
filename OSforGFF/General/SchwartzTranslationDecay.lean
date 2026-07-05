@@ -117,7 +117,7 @@ lemma kernelTail_tendsto_zero (K : E → ℝ) (R₀ : ℝ)
       simp only [abs_nonpos_iff] at this
       simp [this, hε]
   · -- C > 0 case
-    push_neg at hC
+    push Not at hC
     let R := max R₀ ((C / ε) ^ (1 / α) + 1)
     rw [Filter.eventually_iff_exists_mem]
     refine ⟨(closedBall 0 R)ᶜ, ?_, ?_⟩
@@ -133,7 +133,7 @@ lemma kernelTail_tendsto_zero (K : E → ℝ) (R₀ : ℝ)
         rw [indicator_of_notMem (by simp [hz_R₀] : z ∉ (closedBall (0 : E) R₀)ᶜ), mul_zero, norm_zero]
         exact hε
       · -- Outside R₀ ball: use decay bound
-        push_neg at hz_R₀
+        push Not at hz_R₀
         simp only [kernelTail]
         have hmem : z ∈ (closedBall (0 : E) R₀)ᶜ := by
           simp only [mem_compl_iff, mem_closedBall, dist_zero_right, not_le]
@@ -1119,7 +1119,7 @@ theorem schwartz_bilinear_translation_decay_proof
                 simp only [mem_sphere_zero_iff_norm]
                 exact hxy_not_sphere
             · -- Case 2: ‖x - y₀‖ < R₀ (inside ball, indicator = 0 in neighborhood)
-              push_neg at hz_outside
+              push Not at hz_outside
               have hz_inside : ‖x - y₀‖ < R₀ := lt_of_le_of_ne hz_outside hxy_not_sphere
               -- K_tail is locally 0: the indicator is 0 on interior of ball
               -- In a neighborhood of x - y₀, indicator = 0, so K * indicator = 0

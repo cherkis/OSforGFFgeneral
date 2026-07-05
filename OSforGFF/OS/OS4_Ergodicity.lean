@@ -792,7 +792,7 @@ lemma clustering_implies_covariance_decay (m : ℝ) [Fact (0 < m)] [GFFPropagato
           exact Real.rpow_le_rpow_of_exponent_le h_base (by norm_num : (-6 : ℝ) ≤ -3)
 
   · -- Case s < u: |s - u| = u - s
-    push_neg at h_sign
+    push Not at h_sign
     have h_abs : |s - u| = u - s := by rw [abs_sub_comm]; exact abs_of_nonneg (by linarith)
     rw [h_abs]
 

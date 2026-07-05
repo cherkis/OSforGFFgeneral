@@ -441,7 +441,7 @@ lemma integrableOn_compact_diff_ball {d : ℕ}
               · exact hx_norm_lower
             exact le_max_of_le_left h1
           · -- α < 0: -α > 0, so rpow is monotone, ‖x‖^(-α) ≤ R^(-α)
-            push_neg at hα_nonneg
+            push Not at hα_nonneg
             have h1 : ‖x‖ ^ (-α) ≤ R ^ (-α) := by
               apply Real.rpow_le_rpow (le_of_lt hx_norm_pos) hx_norm_upper
               linarith

@@ -394,7 +394,7 @@ lemma glasser_image_eq_univ (c : ℝ) (hc : 0 < c) :
     rw [h_at_sqrt] at h_ivt
     exact h_ivt (mem_Iic.mpr hw)
   · -- Case w > 0: use IVT from 0⁺ to √c (where f goes from +∞ to 0)
-    push_neg at hw
+    push Not at hw
     haveI : (nhdsWithin (0 : ℝ) (Ioi 0)).NeBot := nhdsWithin_Ioi_neBot (le_refl 0)
     have hnhds_le : nhdsWithin (0 : ℝ) (Ioi 0) ≤ 𝓟 (Ioi 0) :=
       inf_le_right.trans (le_refl _)

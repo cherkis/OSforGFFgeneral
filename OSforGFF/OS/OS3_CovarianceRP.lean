@@ -265,7 +265,7 @@ theorem factorization_to_squared_norm_direct (f : (TestFunctionℂ d)) (k_sp : (
     · simp only [hf_support x hx, map_zero, zero_mul, mul_zero]
     · by_cases hy : y 0 < 0
       · simp only [hf_support y hy, mul_zero, zero_mul]
-      · push_neg at hx hy
+      · push Not at hx hy
         have h_abs : |-(x 0) - y 0| = x 0 + y 0 := abs_neg_sum_nonneg (x 0) (y 0) hx hy
         rw [h_abs]
         -- Normalize casts: ↑(a + b) → ↑a + ↑b

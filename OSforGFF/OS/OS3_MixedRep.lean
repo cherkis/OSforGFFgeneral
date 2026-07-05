@@ -1018,7 +1018,7 @@ theorem schwinger_bilinear_integrable (m : ℝ) [Fact (0 < m)] (f : (TestFunctio
   simp only [Set.mem_setOf_eq, not_le] at hp
   simp only [Set.mem_setOf_eq]
   by_contra h_pos
-  push_neg at h_pos
+  push Not at h_pos
   have hpIoi : p.1 ∈ Set.Ioi 0 := h_pos
   exact not_lt.mpr (h_bound p hpIoi) hp
 
