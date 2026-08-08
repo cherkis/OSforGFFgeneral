@@ -74,7 +74,7 @@ theorem schwartz_vanishing_linear_bound (f : TestFunctionℂ)
     -- x₀_bdy 0 = (x - (x 0) • e₀) 0 = x 0 - (x 0) * (e₀ 0) = x 0 - x 0 = 0
     show (WithLp.ofLp x₀_bdy) 0 = 0
     simp only [x₀_bdy, e₀, WithLp.ofLp_sub, WithLp.ofLp_smul, Pi.sub_apply, Pi.smul_apply,
-               smul_eq_mul, EuclideanSpace.single_apply, ite_true, mul_one, sub_self]
+               smul_eq_mul, PiLp.single_apply, ite_true, mul_one, sub_self]
 
   -- f vanishes at the boundary
   have hf_bdy : f x₀_bdy = 0 := hf_supp x₀_bdy (le_of_eq h_bdy_time)
@@ -87,7 +87,7 @@ theorem schwartz_vanishing_linear_bound (f : TestFunctionℂ)
     rw [h1, norm_smul, Real.norm_eq_abs]
     have h_e₀_norm : ‖e₀‖ = 1 := by
       simp only [e₀]
-      rw [EuclideanSpace.norm_single, norm_one]
+      rw [PiLp.norm_single, norm_one]
     rw [h_e₀_norm, mul_one]
 
   -- Since x 0 > 0, we have |x 0| = x 0
@@ -509,11 +509,11 @@ lemma schwartz_vanishing_ftc_decay (f : TestFunctionℂ)
     cases' j using Fin.cases with j
     · -- Time component: (spacetimeOfTimeSpace s 0) 0 = s, (s • e₀) 0 = s * 1 = s
       simp [spacetimeOfTimeSpace, e₀, EuclideanSpace.equiv, Fin.cons_zero,
-            EuclideanSpace.single_apply, smul_eq_mul, mul_one]
+            smul_eq_mul, mul_one]
     · -- Spatial components: (spacetimeOfTimeSpace s 0) (j+1) = 0, (s • e₀) (j+1) = s * 0 = 0
       have hne : Fin.succ j ≠ 0 := Fin.succ_ne_zero j
       simp [spacetimeOfTimeSpace, e₀, EuclideanSpace.equiv, Fin.cons_succ,
-            EuclideanSpace.single_apply, hne, smul_eq_mul, mul_zero]
+            hne, smul_eq_mul, mul_zero]
 
   -- The path s ↦ spacetimeOfTimeSpace s x_sp equals spacetimeOfTimeSpace 0 x_sp + s • e₀
   have h_path_eq : ∀ s : ℝ, spacetimeOfTimeSpace s x_sp = spacetimeOfTimeSpace 0 x_sp + s • e₀ := by
@@ -541,7 +541,7 @@ lemma schwartz_vanishing_ftc_decay (f : TestFunctionℂ)
   -- ‖e₀‖ = 1
   have h_e₀_norm : ‖e₀‖ = 1 := by
     simp only [e₀]
-    rw [EuclideanSpace.norm_single, norm_one]
+    rw [PiLp.norm_single, norm_one]
 
   have h_deriv_bound : ∀ s ∈ Set.Ico 0 t,
       ‖derivWithin F (Set.Icc 0 t) s‖ ≤ C / (1 + ‖x_sp‖)^4 := by
