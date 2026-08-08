@@ -18,7 +18,7 @@ import Mathlib.Analysis.SpecialFunctions.Complex.Analytic
 import Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
 import Mathlib.Analysis.InnerProductSpace.PiL2
 
-import Mathlib.Topology.Algebra.Module.LinearMapPiProd
+import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.PiProd
 import Mathlib.Topology.MetricSpace.Isometry
 
 import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
@@ -64,8 +64,8 @@ def timeReflectionMatrix : Matrix (Fin STDimension) (Fin STDimension) ℝ :=
 lemma timeReflectionMatrix_is_orthogonal :
    timeReflectionMatrix ∈ Matrix.orthogonalGroup (Fin STDimension) ℝ := by
       simp [Matrix.mem_orthogonalGroup_iff, timeReflectionMatrix, Matrix.diagonal_transpose, Matrix.diagonal_mul_diagonal]
-      ext i j
-      simp [Matrix.one_apply]
+      ext i
+      simp
       split_ifs <;> norm_num
 
 def timeReflectionIsometry  : Matrix.orthogonalGroup (Fin STDimension) ℝ :=
@@ -147,7 +147,7 @@ def timeReflectionLE : SpaceTime ≃ₗᵢ[ℝ] SpaceTime :=
 lemma timeReflection_measurePreserving :
     MeasurePreserving timeReflection volume volume := by
   -- Any linear isometry equivalence preserves the volume measure.
-  simpa [timeReflection] using (timeReflectionLE).measurePreserving
+  exact (timeReflectionLE).measurePreserving
 
 example (x : SpaceTime) :
     timeReflectionCLM x =

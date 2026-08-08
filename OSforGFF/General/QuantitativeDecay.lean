@@ -196,7 +196,7 @@ def norm_exp_decay_implies_polynomial_decay {F : Type*} [NormedAddCommGroup F]
           calc C_exp * C_poly ≤ max (C_exp * C_poly) (M * (1 + R₀)^α) := le_max_left _ _
             _ ≤ C := by simp only [C]; linarith
   · -- Inside R₀: use global bound
-    push_neg at hz
+    push Not at hz
     have h_one_plus_R₀_pos : 0 < 1 + R₀ := by linarith
     have h_rpow_mono : (1 + ‖z‖)^(-α) ≥ (1 + R₀)^(-α) := by
       have h1 : 1 + ‖z‖ ≤ 1 + R₀ := by linarith
@@ -473,7 +473,7 @@ def convolution_compactSupport_decay (f : SchwartzMap E ℂ) (K : E → ℝ) (R�
     intro z hz
     unfold kernelSingular at hz
     by_contra h_not
-    push_neg at h_not
+    push Not at h_not
     have : z ∉ closedBall (0 : E) R₀ := by
       simp [mem_closedBall, dist_zero_right, not_le.mpr h_not]
     simp [indicator_of_notMem this] at hz

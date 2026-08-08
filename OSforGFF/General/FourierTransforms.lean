@@ -107,6 +107,8 @@ lemma fubini_triple_reorder {F : α → α → α → ℂ}
     rw [← (measurePreserving_tripleReorder (α := α)).integrable_comp_emb
         (tripleReorder (α := α)).measurableEmbedding]
     convert hF using 1
+    funext p
+    exact (hfL_eq p).symm
   have hLHS : ∫ x, ∫ y, ∫ k, F x y k ∂volume ∂volume ∂volume =
       ∫ p, fL p ∂((volume : Measure α).prod (volume.prod volume)) := by
     have inner_fubini : ∀ᵐ x ∂(volume : Measure α),
@@ -209,8 +211,7 @@ lemma antideriv_exp_complex_linear (α : ℝ) (hα : α ≠ 0) (k x : ℝ) :
   have h_exp_deriv : HasDerivAt (fun t : ℝ => Complex.exp (c * t)) (Complex.exp (c * x) * c) x := by
     have h1 : HasDerivAt (fun t : ℝ => c * (t : ℂ)) c x := by
       have hid : HasDerivAt (fun t : ℝ => (t : ℂ)) 1 x := Complex.ofRealCLM.hasDerivAt
-      convert hid.const_mul c using 1
-      ring
+      simpa using hid.const_mul c
     exact HasDerivAt.cexp h1
   -- Dividing by c: d/dx [e^{cx}/c] = (e^{cx} * c)/c = e^{cx}
   have h_div : HasDerivAt (fun t : ℝ => Complex.exp (c * t) / c) (Complex.exp (c * x) * c / c) x := by
@@ -329,7 +330,7 @@ theorem fourier_exp_decay_positive_halfline (μ : ℝ) (hμ : 0 < μ) (k : ℝ) 
     intro x _
     have h1 : HasDerivAt (fun t : ℝ => c * (t : ℂ)) c x := by
       have hid : HasDerivAt (fun t : ℝ => (t : ℂ)) 1 x := Complex.ofRealCLM.hasDerivAt
-      convert hid.const_mul c using 1; ring
+      simpa using hid.const_mul c
     have h_exp : HasDerivAt (fun t : ℝ => Complex.exp (c * t)) (Complex.exp (c * x) * c) x :=
       HasDerivAt.cexp h1
     have h_div : HasDerivAt (fun t : ℝ => Complex.exp (c * t) / c)
@@ -387,7 +388,7 @@ theorem fourier_exp_decay_negative_halfline (μ : ℝ) (hμ : 0 < μ) (k : ℝ) 
     intro x _
     have h1 : HasDerivAt (fun t : ℝ => c * (t : ℂ)) c x := by
       have hid : HasDerivAt (fun t : ℝ => (t : ℂ)) 1 x := Complex.ofRealCLM.hasDerivAt
-      convert hid.const_mul c using 1; ring
+      simpa using hid.const_mul c
     have h_exp : HasDerivAt (fun t : ℝ => Complex.exp (c * t)) (Complex.exp (c * x) * c) x :=
       HasDerivAt.cexp h1
     have h_div : HasDerivAt (fun t : ℝ => Complex.exp (c * t) / c)
@@ -726,7 +727,7 @@ theorem fourier_lorentzian_1d (μ : ℝ) (hμ : 0 < μ) (x : ℝ) :
   -- Rearrange: (μ/π) * ∫ ... = e^{-μ|x|}
   have hμπ_ne : (μ : ℂ) / π ≠ 0 := by
     simp only [ne_eq, div_eq_zero_iff, Complex.ofReal_eq_zero]
-    push_neg
+    push Not
     exact ⟨hμ', hπ⟩
   -- Simplify coefficient: (1/2π) * (2μ * I) = (μ/π) * I
   have h_rearrange : (1 : ℂ) / (2 * π) * (2 * μ * ∫ k : ℝ, Complex.exp (Complex.I * k * x) / (k^2 + μ^2)) =

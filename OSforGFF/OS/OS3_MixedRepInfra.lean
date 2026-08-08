@@ -565,7 +565,7 @@ lemma schwinger_bound_integrand_integral_xy (s : ℝ) (hs : 0 < s)
   calc
     ∫ p : SpaceTime × SpaceTime, G p
         = ∫ x : SpaceTime, ∫ y : SpaceTime, G (x, y) := by
-            simpa using h_prod
+            exact h_prod
     _ = ∫ x : SpaceTime, ‖f x‖ * Cf * Real.exp (-s * m^2) := by
           refine integral_congr_ae ?_
           filter_upwards with x
@@ -1503,8 +1503,8 @@ lemma heat_kernel_moment_integral (s : ℝ) (hs : 0 < s) :
                 have h_prod_restr : MeasureTheory.Integrable
                     (fun z : ℝ × ℝ => |z.1| * Real.exp (-(1/(4*s)) * z.1^2) *
                                       (|z.2| * Real.exp (-(1/(4*s)) * z.2^2)))
-                    (MeasureTheory.volume.restrict (Set.Ioi 0 ×ˢ Set.Ioi 0)) := by
-                  convert h_prod.restrict (s := Set.Ioi 0 ×ˢ Set.Ioi 0) using 2
+                    (MeasureTheory.volume.restrict (Set.Ioi 0 ×ˢ Set.Ioi 0)) :=
+                  h_prod.restrict (s := Set.Ioi 0 ×ˢ Set.Ioi 0)
                 apply MeasureTheory.Integrable.mono h_prod_restr
                 · -- Measurability
                   apply Measurable.aestronglyMeasurable
@@ -1709,8 +1709,8 @@ lemma heat_kernel_moment_integrableOn_quadrant (s : ℝ) (hs : 0 < s) :
   have h_prod_restr : MeasureTheory.Integrable
       (fun z : ℝ × ℝ => |z.1| * Real.exp (-(1/(4*s)) * z.1^2) *
                         (|z.2| * Real.exp (-(1/(4*s)) * z.2^2)))
-      (volume.restrict (Set.Ioi 0 ×ˢ Set.Ioi 0)) := by
-    convert h_prod.restrict (s := Set.Ioi 0 ×ˢ Set.Ioi 0) using 2
+      (volume.restrict (Set.Ioi 0 ×ˢ Set.Ioi 0)) :=
+    h_prod.restrict (s := Set.Ioi 0 ×ˢ Set.Ioi 0)
   -- Dominate by √(π/s) * h_prod_restr
   apply MeasureTheory.Integrable.mono (h_prod_restr.const_mul (Real.sqrt (π/s)))
   · apply Measurable.aestronglyMeasurable
@@ -1804,7 +1804,7 @@ lemma heatKernelMomentExt_parametric_eq_setIntegral (s : ℝ) (t₁ : ℝ) (ht�
     unfold heatKernelMomentExt
     by_cases ht₂ : t₂ > 0
     · simp only [ht₁, ht₂, and_self, ↓reduceIte, Set.indicator_apply, Set.mem_Ioi]
-    · push_neg at ht₂
+    · push Not at ht₂
       simp only [not_lt.mpr ht₂, and_false, ↓reduceIte, Set.indicator_apply, Set.mem_Ioi]
   simp_rw [h_eq]
   rw [MeasureTheory.integral_indicator measurableSet_Ioi]
@@ -2016,7 +2016,7 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
     · have h1 : G t ≤ C_sp * t := h_spatial t ht
       simp only [max_eq_left (le_of_lt ht)]
       exact h1
-    · push_neg at ht
+    · push Not at ht
       have h1 : G t = 0 := hG_zero t ht
       simp only [h1, max_eq_right ht, mul_zero, le_refl]
 
@@ -2326,8 +2326,7 @@ lemma schwartz_iterated_integral_integrable (f : TestFunctionℂ)
       have h4 : Continuous (fun p : SpaceTime × SpaceTime => Real.exp (-(p.1 0 + p.2 0)^2 * (1 / (4 * s)))) :=
         (Real.continuous_exp.comp h3)
       simpa [div_eq_mul_inv, mul_comm, mul_left_comm, mul_assoc] using h4.aestronglyMeasurable
-    simpa [G, mul_assoc, mul_left_comm, mul_comm] using
-      ((((h_f1.mul h_f2).mul h_c1).mul h_exp).mul h_c2)
+    exact ((((h_f1.mul h_f2).mul h_c1).mul h_exp).mul h_c2)
 
   have hG_int : Integrable G (volume.prod volume) := by
     -- Bound by |c₁ c₂| * ‖f p.1‖ * ‖f p.2‖ using exp ≤ 1.
@@ -2940,7 +2939,7 @@ lemma s_xy_swap_bound_integrable (f : TestFunctionℂ) (m : ℝ) [Fact (0 < m)] 
     rw [h_sqrt]
     ring_nf
   · -- For s ≤ 0, both sides are 0 (√ of negative = 0, rpow of nonpositive = 0)
-    push_neg at hs
+    push Not at hs
     have h_sqrt : Real.sqrt (π / s) = 0 :=
       Real.sqrt_eq_zero'.mpr (div_nonpos_of_nonneg_of_nonpos Real.pi_nonneg hs)
     have h_rpow : s ^ (-(1:ℝ)/2) = 0 := by
@@ -3042,7 +3041,7 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) (k_sp : 
           exact PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) (⟨i.val + 1, h⟩ : Fin STDimension)
         have h_sum : Continuous (fun p : ℝ × SpaceTime × SpaceTime =>
             ∑ i, k_sp i * (spatialPart p.2.1 - spatialPart p.2.2) i) := by
-          apply continuous_finset_sum
+          apply continuous_finsetSum
           intro i _
           have hv_i : Continuous (fun (p : ℝ × SpaceTime × SpaceTime) =>
               (spatialPart p.2.1 - spatialPart p.2.2) i) :=
@@ -3189,7 +3188,7 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) (k_sp : 
                   apply Continuous.mul continuous_const
                   apply continuous_ofReal.comp
                   unfold spatialDot
-                  apply continuous_finset_sum
+                  apply continuous_finsetSum
                   intro i _
                   have hv_i : Continuous (fun (xy : SpaceTime × SpaceTime) =>
                       (spatialPart xy.1 - spatialPart xy.2) i) :=
@@ -3388,7 +3387,7 @@ lemma fubini_ksp_xy_full_integrand_integrable (s : ℝ) (hs : 0 < s) (f : TestFu
       apply continuous_ofReal.comp
       -- spatialDot k_sp v = Σ i, k_sp i * v i is continuous in both arguments
       unfold spatialDot
-      apply continuous_finset_sum
+      apply continuous_finsetSum
       intro i _
       have hk_i : Continuous (fun (p : SpatialCoords × SpaceTime × SpaceTime) => p.1 i) :=
         (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp continuous_fst
@@ -3542,7 +3541,7 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ) :
           apply Continuous.mul continuous_const
           apply continuous_ofReal.comp
           unfold spatialDot
-          apply continuous_finset_sum
+          apply continuous_finsetSum
           intro i _
           have hk_i : Continuous (fun (p : SpaceTime × SpatialCoords) => p.2 i) :=
             (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp continuous_snd
@@ -3659,7 +3658,7 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ) :
           apply Continuous.mul continuous_const
           apply continuous_ofReal.comp
           unfold spatialDot
-          apply continuous_finset_sum
+          apply continuous_finsetSum
           intro i _
           have hk_i : Continuous (fun p : (SpaceTime × SpatialCoords) × SpaceTime => p.1.2 i) :=
             (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp

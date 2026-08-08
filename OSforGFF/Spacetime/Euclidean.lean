@@ -242,7 +242,7 @@ lemma measurePreserving_act (g : E) :
   have trans : MeasurePreserving (fun x : SpaceTime => x + g.t) μ μ := by
     refine ⟨(continuous_id.add continuous_const).measurable, ?_⟩
     simpa using map_add_right_eq_self μ g.t
-  simpa [act, Function.comp] using trans.comp rot
+  simpa [act, Function.comp_def] using trans.comp rot
 
 -- Helper functions for temperate growth (adapted from OS2.lean)
 open Function
@@ -251,14 +251,15 @@ private lemma contDiff_act_inv (g : E) :
     ContDiff ℝ ⊤ (act g⁻¹) := by
   have h₁ : ContDiff ℝ ⊤ (fun x : SpaceTime => g⁻¹.R x) := g⁻¹.R.contDiff
   have h₂ : ContDiff ℝ ⊤ (fun _ : SpaceTime => g⁻¹.t) := contDiff_const
-  simpa [act, add_comm] using h₁.add h₂
+  show ContDiff ℝ ⊤ (fun x => g⁻¹.R x + g⁻¹.t)
+  exact h₁.add h₂
 
 private lemma fderiv_linear_add_const (L : SpaceTime →L[ℝ] SpaceTime) (c : SpaceTime) (x : SpaceTime) :
     fderiv ℝ (fun y => L y + c) x = fderiv ℝ L x := by
   apply fderiv_add_const
 
 set_option linter.unusedVariables false in
-private def fderiv_act_inv_eq_linear (g : E) :
+private theorem fderiv_act_inv_eq_linear (g : E) :
   (fun x => fderiv ℝ (act g⁻¹) x) = fun x => g⁻¹.R.toContinuousLinearMap := by
   ext x v i
   let L := g⁻¹.R.toContinuousLinearMap
@@ -268,12 +269,12 @@ private def fderiv_act_inv_eq_linear (g : E) :
       _ = ((fderiv ℝ L x) v) i := by rw [fderiv_linear_add_const]
       _ = (L v) i := by rw [ContinuousLinearMap.fderiv]
 
-private def fderiv_has_temperate_growth (g : E) :
+private theorem fderiv_has_temperate_growth (g : E) :
     Function.HasTemperateGrowth (fun x => fderiv ℝ (act g⁻¹) x) := by
   rw [fderiv_act_inv_eq_linear g]
   exact Function.HasTemperateGrowth.const _
 
-private def act_inv_poly_bound (g : E) :
+private theorem act_inv_poly_bound (g : E) :
     ∃ k : ℕ, ∃ C : ℝ, ∀ x : SpaceTime, ‖act g⁻¹ x‖ ≤ C * (1 + ‖x‖) ^ k := by
   use 1, (1 + ‖g⁻¹.t‖)
   intro x

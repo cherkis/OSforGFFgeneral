@@ -10,7 +10,7 @@ import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 import Mathlib.MeasureTheory.Integral.MeanInequalities
-import Mathlib.Topology.Algebra.Module.WeakDual
+import Mathlib.Topology.Algebra.Module.Spaces.WeakDual
 import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 import Mathlib.Analysis.Calculus.ContDiff.Basic
 import Mathlib.Topology.Algebra.InfiniteSum.NatInt
@@ -151,8 +151,9 @@ lemma euclidean_action_timeTranslationE (t : ℝ) (f : TestFunctionℂ) :
   congr 1
   simp only [QFT.inv_R, QFT.inv_t, QFT.LinearIsometry.inv]
   have h1 : ∀ v, (LinearIsometry.toLinearIsometryEquiv (1 : QFT.O4) rfl).symm v = v := fun v => by
-    have hv : (LinearIsometry.toLinearIsometryEquiv (1 : QFT.O4) rfl) v = v := by simp [LinearIsometry.toLinearIsometryEquiv]
-    rw [← hv]; exact LinearIsometryEquiv.symm_apply_apply _ v
+    have hv := LinearIsometryEquiv.symm_apply_apply
+      (LinearIsometry.toLinearIsometryEquiv (1 : QFT.O4) rfl) v
+    rwa [LinearIsometry.toLinearIsometryEquiv_apply, QFT.LinearIsometry.one_apply] at hv
   simp only [LinearIsometryEquiv.coe_toLinearIsometry, h1, neg_neg]
 
 /-! ## GFF Covariance Invariance -/
@@ -265,7 +266,7 @@ lemma exp_sub_one_bound_general (x : ℂ) : ‖Complex.exp x - 1‖ ≤ ‖x‖ 
         _ ≤ Real.exp ‖x‖ * ‖x‖ := by
             apply mul_le_mul_of_nonneg_left this (le_of_lt hexp_pos)
         _ = ‖x‖ * Real.exp ‖x‖ := mul_comm _ _
-    · push_neg at hr1
+    · push Not at hr1
       calc Real.exp ‖x‖ - 1
           ≤ Real.exp ‖x‖ := by linarith [hexp_pos]
         _ ≤ ‖x‖ * Real.exp ‖x‖ := by

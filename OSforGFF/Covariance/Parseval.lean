@@ -200,10 +200,7 @@ lemma gaussian_regulator_integrable (α : ℝ) (hα : 0 < α) :
 /-- The Gaussian regulator is continuous. -/
 lemma gaussian_regulator_continuous (α : ℝ) :
     Continuous (fun k : SpaceTime => Real.exp (-α * ‖k‖^2)) := by
-  refine Real.continuous_exp.comp ?_
-  have h1 : Continuous (fun k : SpaceTime => α * ‖k‖^2) := continuous_const.mul (continuous_norm.pow 2)
-  convert h1.neg using 1
-  ext k; ring
+  exact Real.continuous_exp.comp (continuous_const.mul (continuous_norm.pow 2))
 
 /-- The norm of the regulated propagator as a complex number. -/
 lemma regulated_propagator_norm (α : ℝ) (m : ℝ) [Fact (0 < m)] (k : SpaceTime) :

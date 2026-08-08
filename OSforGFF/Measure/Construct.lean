@@ -22,7 +22,7 @@ import Mathlib.Analysis.Analytic.Basic
 import Mathlib.Analysis.Analytic.Constructions
 import Mathlib.Analysis.SpecialFunctions.Complex.Analytic
 import Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
-import Mathlib.Topology.Algebra.Module.WeakDual
+import Mathlib.Topology.Algebra.Module.Spaces.WeakDual
 import Mathlib.LinearAlgebra.BilinearMap
 import Mathlib.LinearAlgebra.BilinearForm.Basic
 import Mathlib.Analysis.Calculus.Deriv.Basic
@@ -436,6 +436,6 @@ lemma gaussian_pairing_square_integrable_real
   -- L² membership directly implies integrability of the square
   have h_integrable_CLM := h_memLp.integrable_sq
   -- Translate the statement from the continuous linear map to the scalar pairing
-  simpa [distributionPairingCLM_apply] using h_integrable_CLM
+  exact h_integrable_CLM
 
 end

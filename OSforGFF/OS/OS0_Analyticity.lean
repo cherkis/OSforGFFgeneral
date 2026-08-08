@@ -700,10 +700,7 @@ theorem gff_complex_CF_covariance (f : TestFunctionℂ) :
     apply AnalyticOnNhd.add
     · exact analyticOnNhd_const
     · -- 2 * t * Q_ri is linear in t
-      have : AnalyticOnNhd ℂ (fun t : ℂ =>
-          (2 * (freeCovarianceFormR m f_re f_im : ℂ)) * t) Set.univ :=
-        AnalyticOnNhd.mul analyticOnNhd_const analyticOnNhd_id
-      convert this using 2; ring
+      exact (analyticOnNhd_const.mul analyticOnNhd_id).mul analyticOnNhd_const
     · -- t^2 * Q_ii is polynomial in t
       apply AnalyticOnNhd.mul _ analyticOnNhd_const
       exact (analyticOnNhd_id (𝕜 := ℂ)).pow 2

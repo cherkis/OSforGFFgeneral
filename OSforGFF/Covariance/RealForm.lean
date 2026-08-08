@@ -75,7 +75,7 @@ noncomputable def momentumWeightMeasure (m : ℝ) : Measure SpaceTime :=
 /-- For `c : ℝ` and Schwartz functions over ℂ, ℝ-smul equals ℂ-smul by the canonical coercion. -/
 private lemma schwartz_real_smul_eq_complex (c : ℝ) (f : SchwartzMap SpaceTime ℂ) :
     c • f = (c : ℂ) • f := by
-  ext x; simp [SchwartzMap.smul_apply]
+  ext x; simp
 
 /-- For `c : ℝ` and `Lp ℂ 2`, ℝ-smul equals ℂ-smul by the canonical coercion. -/
 private lemma lp_real_smul_eq_complex (c : ℝ) (g : Lp ℂ 2 (volume : Measure SpaceTime)) :
@@ -215,7 +215,7 @@ lemma sqrtPropagatorMap_linear_add (m : ℝ) [Fact (0 < m)] (f g : TestFunction)
       SchwartzMap.fourierTransformCLM ℂ (toComplex f) +
         SchwartzMap.fourierTransformCLM ℂ (toComplex g) :=
     map_add _ _ _
-  simp only [hadd, hmap, SchwartzMap.add_apply, Pi.add_apply, add_mul]
+  simp only [hadd, hmap, _root_.add_apply, Pi.add_apply, add_mul]
 
 /-- The map is ℝ-linear (scalar multiplication). -/
 lemma sqrtPropagatorMap_linear_smul (m : ℝ) [Fact (0 < m)] (c : ℝ) (f : TestFunction) :
@@ -226,7 +226,7 @@ lemma sqrtPropagatorMap_linear_smul (m : ℝ) [Fact (0 < m)] (c : ℝ) (f : Test
   have hmap : SchwartzMap.fourierTransformCLM ℂ ((c : ℂ) • toComplex f) =
       (c : ℂ) • SchwartzMap.fourierTransformCLM ℂ (toComplex f) :=
     ContinuousLinearMap.map_smul _ _ _
-  simp only [hsmul, hmap, SchwartzMap.smul_apply, smul_eq_mul, Pi.smul_apply, Complex.real_smul]
+  simp only [hsmul, hmap, _root_.smul_apply, smul_eq_mul, Pi.smul_apply, Complex.real_smul]
   ring
 
 /-! ## Connection to Covariance -/
@@ -372,9 +372,8 @@ lemma embeddingMapCLM_apply (m : ℝ) [Fact (0 < m)] (f : TestFunction) :
   have h_mul' : embeddingMapCLM m f =ᵐ[volume]
       fun k => (momentumWeightSqrt_mathlib m k : ℂ) * A k := by
     simpa [h_eval]
-  have h_A : (fun k => A k) =ᵐ[volume] fun k => g k := by
-    simpa [A, g, hA, hg]
-      using (g.memLp 2 (volume : Measure SpaceTime)).coeFn_toLp
+  have h_A : (fun k => A k) =ᵐ[volume] fun k => g k :=
+    (g.memLp 2 (volume : Measure SpaceTime)).coeFn_toLp
   have h_weight : (fun k => (momentumWeightSqrt_mathlib m k : ℂ) * A k)
       =ᵐ[volume] fun k => (momentumWeightSqrt_mathlib m k : ℂ) * g k := by
     refine h_A.mono ?_
@@ -750,10 +749,9 @@ lemma freeCovarianceFormR_reflection_cross
     change
         (QFT.compTimeReflectionReal
             (QFT.compTimeReflectionReal f) : TestFunction) x = f x
-    have h_time_aux := QFT.timeReflectionLE.right_inv x
     have h_time :
-        QFT.timeReflectionLinear (QFT.timeReflectionLinear x) = x := by
-      convert h_time_aux using 1
+        QFT.timeReflectionLinear (QFT.timeReflectionLinear x) = x :=
+      QFT.timeReflection_involutive x
     simp [QFT.compTimeReflectionReal, QFT.timeReflectionCLM,
       QFT.timeReflectionLinear, QFT.timeReflection]
   have h_invol_g :
@@ -762,10 +760,9 @@ lemma freeCovarianceFormR_reflection_cross
     change
         (QFT.compTimeReflectionReal
             (QFT.compTimeReflectionReal g) : TestFunction) x = g x
-    have h_time_aux := QFT.timeReflectionLE.right_inv x
     have h_time :
-        QFT.timeReflectionLinear (QFT.timeReflectionLinear x) = x := by
-      convert h_time_aux using 1
+        QFT.timeReflectionLinear (QFT.timeReflectionLinear x) = x :=
+      QFT.timeReflection_involutive x
     simp [QFT.compTimeReflectionReal, QFT.timeReflectionCLM,
       QFT.timeReflectionLinear, QFT.timeReflection]
   have h_step :
