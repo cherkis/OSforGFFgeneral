@@ -621,7 +621,7 @@ theorem schwartz_timeTranslation_lipschitz_seminorm
           simp only [max_eq_left (pow_le_one₀ (norm_nonneg w) hw), mul_one]
           exact h1
         · -- ‖w‖ > 1 case: (1 + ‖w‖)^k ≤ (2‖w‖)^k = 2^k * ‖w‖^k = 2^k * max(1, ‖w‖^k)
-          push_neg at hw
+          push Not at hw
           have h1 : 1 + ‖w‖ ≤ 2 * ‖w‖ := by linarith
           have h2 : (1 + ‖w‖) ^ k ≤ (2 * ‖w‖) ^ k := by
             apply pow_le_pow_left₀ (by linarith [norm_nonneg w])

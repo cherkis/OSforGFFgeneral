@@ -320,7 +320,7 @@ lemma besselK1_asymptotic (z : ℝ) (hz : 1 ≤ z) :
     · intro hx
       by_cases h : x ≤ 1
       · left; exact ⟨hx, h⟩
-      · right; push_neg at h; linarith
+      · right; push Not at h; linarith
     · intro h; cases h with | inl h => exact h.1 | inr h => linarith
   have hf_int_Icc : IntegrableOn f (Icc 0 1) := hf_cont.continuousOn.integrableOn_compact isCompact_Icc
   have hf_int_Ici1 : IntegrableOn f (Ici 1) := by
@@ -470,7 +470,7 @@ lemma besselK1_asymptotic (z : ℝ) (hz : 1 ≤ z) :
     · intro hx
       by_cases h : x < 1
       · left; exact ⟨hx, h⟩
-      · right; push_neg at h; exact h
+      · right; push Not at h; exact h
     · intro h; cases h with | inl h => exact h.1 | inr h => linarith
   have hf_int_Ico : IntegrableOn f (Ico 0 1) := hf_int_Icc.mono_set Ico_subset_Icc_self
   have h_disjoint : Disjoint (Ico (0:ℝ) 1) (Ici 1) := by

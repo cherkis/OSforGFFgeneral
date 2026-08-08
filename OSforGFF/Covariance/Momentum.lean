@@ -1757,7 +1757,7 @@ lemma freeCovarianceKernel_decay_bound (m : ℝ) (hm : 0 < m) :
               rw [h_rpow, rpow_two]
               field_simp [ne_of_gt hr_pos]
     · -- Case: mr > 1, use besselK1_asymptotic
-      push_neg at hmr_small
+      push Not at hmr_small
       have hmr_ge : 1 ≤ m * ‖z‖ := le_of_lt hmr_small
       have h_bessel_bound := besselK1_asymptotic (m * ‖z‖) hmr_ge
       -- For mr > 1, we have exp(-mr) < exp(-1), and we need to show
@@ -1882,7 +1882,7 @@ lemma freeCovariance_exponential_bound (m : ℝ) (hm : 0 < m) (u v : SpaceTime)
   have hmr_ge1 : 1 ≤ m * r := h_sep
   have hr_pos : 0 < r := by
     by_contra h_neg
-    push_neg at h_neg
+    push Not at h_neg
     have : m * r ≤ 0 := mul_nonpos_of_nonneg_of_nonpos (le_of_lt hm) h_neg
     linarith
   have hr_ne : r ≠ 0 := ne_of_gt hr_pos

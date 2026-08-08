@@ -1804,7 +1804,7 @@ lemma heatKernelMomentExt_parametric_eq_setIntegral (s : ℝ) (t₁ : ℝ) (ht�
     unfold heatKernelMomentExt
     by_cases ht₂ : t₂ > 0
     · simp only [ht₁, ht₂, and_self, ↓reduceIte, Set.indicator_apply, Set.mem_Ioi]
-    · push_neg at ht₂
+    · push Not at ht₂
       simp only [not_lt.mpr ht₂, and_false, ↓reduceIte, Set.indicator_apply, Set.mem_Ioi]
   simp_rw [h_eq]
   rw [MeasureTheory.integral_indicator measurableSet_Ioi]
@@ -2016,7 +2016,7 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
     · have h1 : G t ≤ C_sp * t := h_spatial t ht
       simp only [max_eq_left (le_of_lt ht)]
       exact h1
-    · push_neg at ht
+    · push Not at ht
       have h1 : G t = 0 := hG_zero t ht
       simp only [h1, max_eq_right ht, mul_zero, le_refl]
 
@@ -2940,7 +2940,7 @@ lemma s_xy_swap_bound_integrable (f : TestFunctionℂ) (m : ℝ) [Fact (0 < m)] 
     rw [h_sqrt]
     ring_nf
   · -- For s ≤ 0, both sides are 0 (√ of negative = 0, rpow of nonpositive = 0)
-    push_neg at hs
+    push Not at hs
     have h_sqrt : Real.sqrt (π / s) = 0 :=
       Real.sqrt_eq_zero'.mpr (div_nonpos_of_nonneg_of_nonpos Real.pi_nonneg hs)
     have h_rpow : s ^ (-(1:ℝ)/2) = 0 := by

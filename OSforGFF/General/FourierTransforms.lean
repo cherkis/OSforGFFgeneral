@@ -726,7 +726,7 @@ theorem fourier_lorentzian_1d (μ : ℝ) (hμ : 0 < μ) (x : ℝ) :
   -- Rearrange: (μ/π) * ∫ ... = e^{-μ|x|}
   have hμπ_ne : (μ : ℂ) / π ≠ 0 := by
     simp only [ne_eq, div_eq_zero_iff, Complex.ofReal_eq_zero]
-    push_neg
+    push Not
     exact ⟨hμ', hπ⟩
   -- Simplify coefficient: (1/2π) * (2μ * I) = (μ/π) * I
   have h_rearrange : (1 : ℂ) / (2 * π) * (2 * μ * ∫ k : ℝ, Complex.exp (Complex.I * k * x) / (k^2 + μ^2)) =
