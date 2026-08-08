@@ -19,7 +19,7 @@ import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.Normed.Group.Uniform
 import Mathlib.Analysis.Analytic.Basic
 import Mathlib.Analysis.Calculus.FDeriv.Basic
-import Mathlib.Topology.Algebra.Module.WeakDual
+import Mathlib.Topology.Algebra.Module.Spaces.WeakDual
 
 import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
 import Mathlib.MeasureTheory.Measure.Haar.OfBasis

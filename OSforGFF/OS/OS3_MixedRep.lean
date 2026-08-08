@@ -1340,7 +1340,7 @@ theorem bilinear_schwinger_eq_heatKernel (m : ℝ) [Fact (0 < m)] (f : TestFunct
     filter_upwards with x
     -- The set {y : Θx = y} = {Θx} is a singleton with measure zero
     have h_singleton : (volume : Measure SpaceTime) {timeReflection x} = 0 :=
-      MeasureTheory.NoAtoms.measure_singleton (timeReflection x)
+      MeasureTheory.measure_singleton (timeReflection x)
     -- Show: ∀ᵐ y, y ≠ Θx
     have h_compl : ∀ᵐ y ∂(volume : Measure SpaceTime), y ≠ timeReflection x := by
       rw [ae_iff]

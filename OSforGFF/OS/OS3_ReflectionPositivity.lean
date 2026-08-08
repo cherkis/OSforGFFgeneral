@@ -74,7 +74,7 @@ private lemma entrywiseExp_posSemidef_of_posSemidef
   have hExp : (OSforGFF.entrywiseExp (ι := Fin n) R).PosSemidef := by
     simpa [OSforGFF.entrywiseExp_eq_hadamardSeries (ι := Fin n) R] using hS
   -- Unfold the definition of entrywiseExp
-  simpa [OSforGFF.entrywiseExp] using hExp
+  exact hExp
 
 -- We recall the standard Gram-matrix positivity result from Mathlib. -/
 attribute [local simp] inner_sub_right inner_sub_left
@@ -89,13 +89,13 @@ lemma freeCovarianceFormR_reflection_matrix_posSemidef
       freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) (f j).val) := by
   -- The matrix R_{ij} = C(θf_i, f_j) is symmetric by freeCovarianceFormR_reflection_cross
   -- We'll prove positive semidefiniteness directly by showing the quadratic form is nonnegative
-  let M : Matrix (Fin n) (Fin n) ℝ := fun i j =>
+  let M : Matrix (Fin n) (Fin n) ℝ := Matrix.of fun i j =>
     freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) (f j).val
 
   -- First prove the matrix is Hermitian (symmetric since entries are real)
   have h_herm : M.IsHermitian := by
     ext i j
-    simp only [M, conjTranspose_apply]
+    simp only [M, conjTranspose_apply, Matrix.of_apply]
     -- For real entries, star is the identity, so we need to show symmetry
     simp only [star_id_of_comm]
     -- Use the symmetry from freeCovarianceFormR_reflection_cross
@@ -115,7 +115,7 @@ lemma freeCovarianceFormR_reflection_matrix_posSemidef
   -- Convert the matrix-vector form to double sum
   have h_expand : star c ⬝ᵥ M *ᵥ c =
       ∑ i, ∑ j, c i * freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) (f j).val * c j := by
-    simp only [dotProduct, Matrix.mulVec, M]
+    simp only [dotProduct, Matrix.mulVec, M, Matrix.of_apply]
     congr 1
     ext k
     simp only [h_star]
@@ -777,7 +777,9 @@ private lemma entrywiseExp_IsRePSD
   have hS_entry : ∀ N i j, S N i j =
       ∑ k ∈ Finset.range (N + 1), (↑(Nat.factorial k : ℕ) : ℂ)⁻¹ * (M i j) ^ k := by
     intro N i j
-    simp [S, Matrix.sum_apply, HP]
+    simp only [S, Matrix.sum_apply, HP]
+    refine Finset.sum_congr rfl (fun k _ => ?_)
+    rfl
   -- Prove IsRePSD of the entrywise exp by taking the limit
   intro v
   -- The Re part of the quadratic form of S N is nonneg
@@ -814,8 +816,8 @@ private lemma entrywiseExp_IsRePSD
       (fun N => ∑ i, ∑ j, starRingEnd ℂ (v i) * v j * S N i j)
       Filter.atTop
       (nhds (∑ i, ∑ j, starRingEnd ℂ (v i) * v j * Complex.exp (M i j))) := by
-    apply tendsto_finset_sum _ fun i _ => ?_
-    apply tendsto_finset_sum _ fun j _ => ?_
+    apply tendsto_finsetSum _ fun i _ => ?_
+    apply tendsto_finsetSum _ fun j _ => ?_
     exact Filter.Tendsto.mul (Filter.Tendsto.mul tendsto_const_nhds tendsto_const_nhds)
       (hconv_entry i j)
   -- Re is continuous, so Re(quad form) converges too
@@ -865,7 +867,7 @@ private lemma star_sum_antilinear {n : ℕ} (v : Fin n → ℂ) (g : Fin n → T
     star (∑ j, starRingEnd ℂ (v j) • g j) = ∑ j, v j • star (g j) := by
   ext x
   rw [star_apply]
-  simp only [SchwartzMap.sum_apply, SchwartzMap.smul_apply, smul_eq_mul]
+  simp only [_root_.sum_apply, _root_.smul_apply, smul_eq_mul]
   rw [map_sum]
   congr 1; ext j
   rw [map_mul, RCLike.conj_conj, star_apply]
@@ -928,7 +930,7 @@ private lemma reflection_matrix_IsRePSD
       change starRingEnd ℂ (v j) * (f j).val x = 0
       rw [PositiveTimeTestFunctionℂ.zero_on_nonpositive (f j) hx, mul_zero]
     change h x = 0
-    rw [h_def, SchwartzMap.sum_apply]
+    rw [h_def, _root_.sum_apply]
     exact Finset.sum_eq_zero fun j _ => this j
   -- star h = ∑ v_j star(f_j) by antilinearity of star
   have h_star : star h = ∑ j, v j • star ((f j).val) :=

@@ -14,7 +14,7 @@ import Mathlib.Data.Nat.Factorial.DoubleFactorial
 import Mathlib.Analysis.Analytic.Basic
 import Mathlib.Analysis.Analytic.Constructions
 
-import Mathlib.Topology.Algebra.Module.LinearMapPiProd
+import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.PiProd
 
 import Mathlib.MeasureTheory.Function.Holder
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
@@ -148,19 +148,16 @@ lemma SchwartzMap.hasTemperateGrowth_general
 variable {α : Type*} [MeasurableSpace α] {μ : Measure α}
 
 -- Add measurable space instances for Lp spaces
-instance [MeasurableSpace α] (μ : Measure α) : MeasurableSpace (Lp ℝ 2 μ) := borel _
-instance [MeasurableSpace α] (μ : Measure α) : BorelSpace (Lp ℝ 2 μ) := ⟨rfl⟩
-instance [MeasurableSpace α] (μ : Measure α) : MeasurableSpace (Lp ℂ 2 μ) := borel _
-instance [MeasurableSpace α] (μ : Measure α) : BorelSpace (Lp ℂ 2 μ) := ⟨rfl⟩
+instance (μ : Measure α) : MeasurableSpace (Lp ℝ 2 μ) := borel _
+instance (μ : Measure α) : BorelSpace (Lp ℝ 2 μ) := ⟨rfl⟩
+instance (μ : Measure α) : MeasurableSpace (Lp ℂ 2 μ) := borel _
+instance (μ : Measure α) : BorelSpace (Lp ℂ 2 μ) := ⟨rfl⟩
 
 -- Check if Complex.ofRealCLM is an isometry
-lemma Complex.ofRealCLM_isometry : Isometry (Complex.ofRealCLM : ℝ →L[ℝ] ℂ) := by
+lemma Complex.ofRealCLM_isometry : Isometry (Complex.ofRealCLM : ℝ →L[ℝ] ℂ) :=
   -- Complex.ofRealCLM is defined as ofRealLI.toContinuousLinearMap,
   -- where ofRealLI is a linear isometry
-  have h : (Complex.ofRealCLM : ℝ →L[ℝ] ℂ) = Complex.ofRealLI.toContinuousLinearMap := rfl
-  rw [h]
-  -- The coercion to function is the same for both
-  convert Complex.ofRealLI.isometry
+  Complex.ofRealLI.isometry
 
 -- Use this to prove our specific case
 lemma Complex.ofRealCLM_continuous_compLp {α : Type*} [MeasurableSpace α] {μ : Measure α} :
@@ -423,7 +420,7 @@ lemma integrableOn_compact_diff_ball {d : ℕ}
       intro x hx
       have hx_in_K : x ∈ K := hx.1
       have hx_norm_lower : δ ≤ ‖x‖ := by
-        simp only [Set.mem_diff, Metric.mem_ball, dist_zero_right, not_lt] at hx
+        simp only [Set.mem_sdiff, Metric.mem_ball, dist_zero_right, not_lt] at hx
         exact hx.2
       have hx_norm_upper : ‖x‖ ≤ R := hR x hx_in_K
       have hx_norm_pos : 0 < ‖x‖ := hδ.trans_le hx_norm_lower
@@ -579,6 +576,7 @@ theorem schwartz_bilinear_integrable_of_translationInvariant_L1
       -- Use measurePreserving_sub_prod: (x, y) ↦ (x - y, y) preserves measure
       have := measurePreserving_sub_prod (G := EuclideanSpace ℝ (Fin d)) volume volume
       convert this using 1
+      rfl
     have hchange : Integrable (fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
         ‖K₀ (p.1 - p.2)‖ * ‖g p.2‖) (volume.prod volume) := by
       -- We have hprod : Integrable (fun p => ‖K₀ p.1‖ * ‖g p.2‖)
@@ -894,7 +892,7 @@ so by associativity we reduce to a single convolution limit.
 section DoubleMollifierConvergence
 
 variable (E : Type*) [NormedAddCommGroup E] [InnerProductSpace ℝ E] [FiniteDimensional ℝ E]
-  [MeasurableSpace E] [BorelSpace E] [NoAtoms (volume : Measure E)]
+  [MeasurableSpace E] [BorelSpace E] [NullSingletonClass (volume : Measure E)]
 
 open MeasureTheory Filter Convolution Set Function Topology
 open scoped Pointwise BigOperators
@@ -1079,7 +1077,6 @@ theorem double_mollifier_convergence
       rw [← MeasureTheory.integral_add_right_eq_self (fun x => ψ (x - a) * g x) a]
       simp only [add_sub_cancel_right]
       rw [← MeasureTheory.integral_neg_eq_self]
-      dsimp
       congr 1; ext x
       dsimp [ψ]
       rw [(φ i).normed_neg, add_comm (-x) a, sub_eq_add_neg]

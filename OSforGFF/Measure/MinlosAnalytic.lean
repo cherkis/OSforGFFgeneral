@@ -6,7 +6,7 @@ Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 
 import Mathlib.Data.Complex.Basic
 import Mathlib.Analysis.LocallyConvex.Basic
-import Mathlib.Topology.Algebra.Module.WeakDual
+import Mathlib.Topology.Algebra.Module.Spaces.WeakDual
 import Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
 import Mathlib.Analysis.Calculus.FDeriv.Basic
 import Mathlib.Topology.Algebra.Algebra
@@ -69,7 +69,7 @@ lemma negMap_measurable : Measurable negMap := by
   rw [MeasurableSpace.comap_comp]
   conv_lhs => rw [show (fun l : FieldConfiguration => (l : TestFunction →L[ℝ] ℝ) g) ∘ negMap =
       Neg.neg ∘ (fun l : FieldConfiguration => (l : TestFunction →L[ℝ] ℝ) g) from by
-    ext ω; show (-ω) g = -(ω g); exact ContinuousLinearMap.neg_apply ω g]
+    ext ω; show (-ω) g = -(ω g); exact map_neg (distributionPairingCLM g) ω]
   rw [← MeasurableSpace.comap_comp]
   have h_neg_meas : (borel ℝ).comap (Neg.neg : ℝ → ℝ) ≤ borel ℝ :=
     measurable_iff_comap_le.mp measurable_neg
@@ -119,7 +119,7 @@ lemma integral_neg_invariance
     have h_neg_eq : ∀ ω : FieldConfiguration, distributionPairing (-ω) g = -distributionPairing ω g := by
       intro ω
       show (-ω) g = -(ω g)
-      exact ContinuousLinearMap.neg_apply ω g
+      exact map_neg (distributionPairingCLM g) ω
     have h_lhs_eq : (fun ω => Complex.exp (Complex.I * (distributionPairing (-ω) g : ℂ))) =
                     (fun ω => Complex.exp (-(Complex.I * (distributionPairing ω g : ℂ)))) := by
       funext ω
@@ -195,7 +195,7 @@ lemma moment_zero_from_realCF
   -- Flip integrand: ((-ω) a : ℂ) = - (ω a : ℂ)
   have hflip : (fun ω : FieldConfiguration => ((-ω) a : ℂ)) = (fun ω => - (ω a : ℂ)) := by
     funext ω
-    have : (-ω) a = -(ω a) := ContinuousLinearMap.neg_apply ω a
+    have : (-ω) a = -(ω a) := map_neg (distributionPairingCLM a) ω
     simp [this]
   -- Hence ∫ X = ∫ -X = -∫ X
   have : ∫ ω, (ω a : ℂ) ∂μ.toMeasure = - ∫ ω, (ω a : ℂ) ∂μ.toMeasure := by

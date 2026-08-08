@@ -242,7 +242,7 @@ lemma measurePreserving_act (g : E) :
   have trans : MeasurePreserving (fun x : SpaceTime => x + g.t) μ μ := by
     refine ⟨(continuous_id.add continuous_const).measurable, ?_⟩
     simpa using map_add_right_eq_self μ g.t
-  simpa [act, Function.comp] using trans.comp rot
+  simpa [act, Function.comp_def] using trans.comp rot
 
 -- Helper functions for temperate growth (adapted from OS2.lean)
 open Function
@@ -251,7 +251,8 @@ private lemma contDiff_act_inv (g : E) :
     ContDiff ℝ ⊤ (act g⁻¹) := by
   have h₁ : ContDiff ℝ ⊤ (fun x : SpaceTime => g⁻¹.R x) := g⁻¹.R.contDiff
   have h₂ : ContDiff ℝ ⊤ (fun _ : SpaceTime => g⁻¹.t) := contDiff_const
-  simpa [act, add_comm] using h₁.add h₂
+  show ContDiff ℝ ⊤ (fun x => g⁻¹.R x + g⁻¹.t)
+  exact h₁.add h₂
 
 private lemma fderiv_linear_add_const (L : SpaceTime →L[ℝ] SpaceTime) (c : SpaceTime) (x : SpaceTime) :
     fderiv ℝ (fun y => L y + c) x = fderiv ℝ L x := by

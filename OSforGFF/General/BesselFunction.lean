@@ -411,10 +411,17 @@ lemma besselK1_asymptotic (z : ℝ) (hz : 1 ≤ z) :
     have hF_deriv : ∀ t, HasDerivAt F (g t) t := by
       intro t
       have h1 : HasDerivAt (fun s => -z * exp s / 2) (-z / 2 * exp t) t := by
-        have := (hasDerivAt_exp t).const_mul (-z / 2); convert this using 1; funext; ring
+        have h : HasDerivAt (fun y => -z / 2 * exp y) (-z / 2 * exp t) t :=
+          (hasDerivAt_exp t).const_mul (-z / 2)
+        have heq : (fun s => -z * exp s / 2) = (fun s => -z / 2 * exp s) := by funext s; ring
+        rw [heq]; exact h
       have h2 : HasDerivAt (fun s => exp (-z * exp s / 2)) (exp (-z * exp t / 2) * (-z / 2 * exp t)) t :=
         (hasDerivAt_exp _).comp t h1
-      simp only [g]; convert h2.const_mul (-2/z) using 1; field_simp
+      have h3 := h2.const_mul (-2/z)
+      have hval : (-2/z) * (exp (-z * exp t / 2) * (-z / 2 * exp t)) = g t := by
+        have hzne : z ≠ 0 := by linarith
+        simp only [g]; field_simp
+      simp only [F]; rwa [hval] at h3
     have hF_cont : ContinuousWithinAt F (Ici 1) 1 := by
       apply ContinuousAt.continuousWithinAt
       exact continuousAt_const.mul (continuous_exp.continuousAt.comp
@@ -607,14 +614,17 @@ lemma besselK1_mul_self_le (z : ℝ) (hz : 0 < z) (hz_le : z ≤ 1) :
     have hF_deriv : ∀ t, HasDerivAt F (g t) t := by
       intro t
       have h1 : HasDerivAt (fun s => -z * exp s / 2) (-z / 2 * exp t) t := by
-        have := (hasDerivAt_exp t).const_mul (-z / 2)
-        convert this using 1; funext; ring
+        have h : HasDerivAt (fun y => -z / 2 * exp y) (-z / 2 * exp t) t :=
+          (hasDerivAt_exp t).const_mul (-z / 2)
+        have heq : (fun s => -z * exp s / 2) = (fun s => -z / 2 * exp s) := by funext s; ring
+        rw [heq]; exact h
       have h2 : HasDerivAt (fun s => exp (-z * exp s / 2)) (exp (-z * exp t / 2) * (-z / 2 * exp t)) t :=
         (hasDerivAt_exp _).comp t h1
       have h3 := h2.const_mul (-2/z)
-      simp only [g] at *
-      convert h3 using 1
-      field_simp
+      have hval : (-2/z) * (exp (-z * exp t / 2) * (-z / 2 * exp t)) = g t := by
+        have hzne : z ≠ 0 := by linarith
+        simp only [g]; field_simp
+      simp only [F]; rwa [hval] at h3
     -- F is continuous at 1
     have hF_cont : ContinuousWithinAt F (Ici 1) 1 := by
       apply ContinuousAt.continuousWithinAt
