@@ -101,7 +101,7 @@ hermiticity follows from Q(-f,-f) = Q(f,f) (which must be supplied). -/
 
 /-- Promote GFF4D's nonneg-only PD to bochner's hermitian+nonneg PD,
     given an explicit symmetry proof φ(-x) = conj(φ(x)). -/
-def gff4d_to_bochner_pd {α : Type*} [AddGroup α] {φ : α → ℂ}
+theorem gff4d_to_bochner_pd {α : Type*} [AddGroup α] {φ : α → ℂ}
     (h_nonneg : GFF4D.IsPositiveDefinite φ)
     (h_symm : ∀ x, φ (-x) = starRingEnd ℂ (φ x)) :
     IsPositiveDefinite φ where
