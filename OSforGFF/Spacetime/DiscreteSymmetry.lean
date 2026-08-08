@@ -64,8 +64,8 @@ def timeReflectionMatrix : Matrix (Fin STDimension) (Fin STDimension) ℝ :=
 lemma timeReflectionMatrix_is_orthogonal :
    timeReflectionMatrix ∈ Matrix.orthogonalGroup (Fin STDimension) ℝ := by
       simp [Matrix.mem_orthogonalGroup_iff, timeReflectionMatrix, Matrix.diagonal_transpose, Matrix.diagonal_mul_diagonal]
-      ext i j
-      simp [Matrix.one_apply]
+      ext i
+      simp
       split_ifs <;> norm_num
 
 def timeReflectionIsometry  : Matrix.orthogonalGroup (Fin STDimension) ℝ :=
