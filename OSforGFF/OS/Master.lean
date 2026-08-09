@@ -1,12 +1,13 @@
 /-
 Copyright (c) 2025 Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim. All rights reserved.
+Copyright (c) 2026 Sergey A. Cherkis. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sergey A. Cherkis, Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 import OSforGFF.Measure.GaussianFreeField
-import OSforGFF.Instances.Dim4
-import OSforGFF.Instances.Dim3
 import OSforGFF.Instances.Dim2
+import OSforGFF.Instances.Dim3
+import OSforGFF.Instances.Dim4
 import OSforGFF.Instances.Dim5
 import OSforGFF.OS.OS3_ReflectionPositivity
 import OSforGFF.OS.OS0_Analyticity
@@ -22,9 +23,9 @@ Assembles OS0–OS4 into the dimension-generic
 `gaussianFreeField_satisfies_all_OS_axioms_generic`, the all-dimensions corollary
 `gaussianFreeField_satisfies_all_OS_axioms_of_dim` (every `d ≥ 2`, via the canonical
 `GFFPropagator.ofProperTime`), and the concrete instances
-`gaussianFreeField_satisfies_all_OS_axioms_dim4` (Bessel K₁),
+`gaussianFreeField_satisfies_all_OS_axioms_dim2` (K₀),
 `gaussianFreeField_satisfies_all_OS_axioms_dim3` (Yukawa),
-`gaussianFreeField_satisfies_all_OS_axioms_dim2` (K₀), and
+`gaussianFreeField_satisfies_all_OS_axioms_dim4` (Bessel K₁), and
 `gaussianFreeField_satisfies_all_OS_axioms_dim5` (K_{3/2}). The generic theorem is proved by:
 
 - OS0 (Analyticity): Hartogs + Fernique — `OS.OS0_Analyticity`
@@ -83,13 +84,11 @@ theorem gaussianFreeField_satisfies_all_OS_axioms_of_dim (d : ℕ) [Fact (2 ≤ 
   letI := GFFPropagator.ofProperTime d m
   exact gaussianFreeField_satisfies_all_OS_axioms_generic m
 
-/-- Master theorem, four-dimensional instance: the free GFF with the Bessel
-covariance `(m/4π²r) K₁(mr)` satisfies all Osterwalder-Schrader axioms.
-
-This is the `d = 4` instance of
+/-- Master theorem, two-dimensional instance: the free GFF with the Bessel covariance
+`K₀(mr)/(2π)` satisfies all Osterwalder-Schrader axioms. This is the `d = 2` instance of
 `gaussianFreeField_satisfies_all_OS_axioms_generic`. -/
-theorem gaussianFreeField_satisfies_all_OS_axioms_dim4 (m : ℝ) [Fact (0 < m)] :
-    SatisfiesAllOS (μ_GFF 4 m) :=
+theorem gaussianFreeField_satisfies_all_OS_axioms_dim2 (m : ℝ) [Fact (0 < m)] :
+    SatisfiesAllOS (μ_GFF 2 m) :=
   gaussianFreeField_satisfies_all_OS_axioms_generic m
 
 /-- Master theorem, three-dimensional instance: the free GFF with the Yukawa covariance
@@ -99,11 +98,13 @@ theorem gaussianFreeField_satisfies_all_OS_axioms_dim3 (m : ℝ) [Fact (0 < m)] 
     SatisfiesAllOS (μ_GFF 3 m) :=
   gaussianFreeField_satisfies_all_OS_axioms_generic m
 
-/-- Master theorem, two-dimensional instance: the free GFF with the Bessel covariance
-`K₀(mr)/(2π)` satisfies all Osterwalder-Schrader axioms. This is the `d = 2` instance of
+/-- Master theorem, four-dimensional instance: the free GFF with the Bessel
+covariance `(m/4π²r) K₁(mr)` satisfies all Osterwalder-Schrader axioms.
+
+This is the `d = 4` instance of
 `gaussianFreeField_satisfies_all_OS_axioms_generic`. -/
-theorem gaussianFreeField_satisfies_all_OS_axioms_dim2 (m : ℝ) [Fact (0 < m)] :
-    SatisfiesAllOS (μ_GFF 2 m) :=
+theorem gaussianFreeField_satisfies_all_OS_axioms_dim4 (m : ℝ) [Fact (0 < m)] :
+    SatisfiesAllOS (μ_GFF 4 m) :=
   gaussianFreeField_satisfies_all_OS_axioms_generic m
 
 /-- Master theorem, five-dimensional instance: the free GFF with the `K_{3/2}` covariance
