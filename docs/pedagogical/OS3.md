@@ -56,7 +56,7 @@ the $i$ in the characteristic function $e^{i\varphi}$, since
 $M_{jk} = \mathbb{E}\big[\,\overline{e^{i\varphi(f_j)}}\; e^{i\varphi(f_k)}\,\big]
 = \mathbb{E}\big[\,e^{i\varphi(\theta f_j)}\, e^{i\varphi(f_k)}\,\big]$.
 In the formalization this is the predicate the master theorem consumes
-([OS/Axioms.lean:111](../../OSforGFF/OS/Axioms.lean#L111)):
+([OS/Axioms.lean:112](../../OSforGFF/OS/Axioms.lean#L112)):
 
 ```lean
 def OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
@@ -87,10 +87,10 @@ def OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure (FieldConfiguratio
    product theorem). That is real positivity theory, not bookkeeping.
 
 Headline `QFT.gaussianFreeField_OS3`
-([OS/OS3_ReflectionPositivity.lean:1008](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L1008)),
+([OS/OS3_ReflectionPositivity.lean:989](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L989)),
 plugged into the `os3` field of the master theorem
 `gaussianFreeField_satisfies_all_OS_axioms_generic`
-([OS/Master.lean:60](../../OSforGFF/OS/Master.lean#L60)).
+([OS/Master.lean:61](../../OSforGFF/OS/Master.lean#L61)).
 
 > **One line:** OS3 says the reflected generating-functional matrix is PSD — the seed of a
 > positive quantum norm; expose a factorizing exponential by a mixed representation, then
@@ -102,16 +102,16 @@ plugged into the `os3` field of the master theorem
 
 The other pedagogical notes hammer a distinction worth repeating: a formalization's *length*
 measures how much measure-theoretic and analytic bookkeeping it must carry, not how deep the
-underlying idea is. OS0, for instance, is $\approx 855$ lines built on a *trivial* idea
+underlying idea is. OS0, for instance, is $\approx 700$ lines built on a *trivial* idea
 ("$\exp$ of a quadratic is entire") wrapped in analytic plumbing — long but shallow.
 
-**OS3 is the opposite: it is hard mathematics *and* long.** Its $\approx 7{,}112$ lines
+**OS3 is the opposite: it is hard mathematics *and* long.** Its $\approx 6{,}750$ lines
 across four files (more than OS0, OS1, OS2, OS4 combined) carry two real ideas — the mixed
 (proper-time) representation that manufactures the factorizing exponential, and the
 entrywise-exponential positivity theory (Schur–Hadamard) that lifts scalar positivity to
 the matrix (RP). Neither is bookkeeping; each is the kind of maneuver a working
 constructive field theorist would recognize as *the* content. But those ideas sit on top of
-a genuinely large technical layer: a Fubini/integrability foundation ($\approx 3{,}755$
+a genuinely large technical layer: a Fubini/integrability foundation ($\approx 3{,}620$
 lines, the file `OS3_MixedRepInfra`) whose only job is to make every integral interchange in
 the mixed representation *legal*. So OS3 is deep **and** heavy — the ideas are worth the
 length, and the length is not padding. It is also, not coincidentally, *the* Osterwalder–
@@ -127,19 +127,19 @@ handing one theorem up. You can read the ideas top to bottom without ever openin
 the anchors are here for when you do.
 
 ```
-  OS3_MixedRepInfra       (3755 lines)   analytic foundation: integrals converge
+  OS3_MixedRepInfra       (3620 lines)   analytic foundation: integrals converge
           │                              (heat kernel, Schwinger rep, Fubini swaps)
           │   integrable_dominate_G · fubini_s_ksp_swap
           ▼
-  OS3_MixedRep            (1873 lines)   the MIXED REPRESENTATION of ⟨θf, C f⟩
+  OS3_MixedRep            (1664 lines)   the MIXED REPRESENTATION of ⟨θf, C f⟩
           │                              (spatial Fourier transform, time kept)
           │   bessel_bilinear_eq_mixed_representation
           ▼
-  OS3_CovarianceRP         (467 lines)   reflection positivity of the COVARIANCE
+  OS3_CovarianceRP         (468 lines)   reflection positivity of the COVARIANCE
           │                              (⟨θf, C f⟩ ≥ 0)
           │   freeCovariance_reflection_positive_bilinear / _real
           ▼
-  OS3_ReflectionPositivity(1017 lines)   lift covariance-RP to the MEASURE
+  OS3_ReflectionPositivity(998 lines)   lift covariance-RP to the MEASURE
           │                              (Schur–Hadamard ⇒ matrix (RP) is PSD)
           │   gaussianFreeField_OS3_real → gaussianFreeField_OS3
           ▼
@@ -186,24 +186,24 @@ $$\langle \theta f, C f\rangle = \int_0^\infty e^{-s m^2}
 
 is built from absolutely convergent integrals. The file's job is to certify exactly that:
 
-- [`heatKernel_eq_gaussianFT`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L184) — $H_d(s, \cdot)$
+- [`heatKernel_eq_gaussianFT`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L186) — $H_d(s, \cdot)$
   is the (inverse) Gaussian Fourier transform;
 - a stack of Tonelli/Fubini lemmas
-  ([`schwinger_bound_integrable_fubini`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L600),
-  [`schwinger_bound_integrable`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L714)) showing every
+  ([`schwinger_bound_integrable_fubini`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L603),
+  [`schwinger_bound_integrable`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L717)) showing every
   integrand the next file reorders is absolutely convergent;
-- the **domination lemma** [`integrable_dominate_G`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L856)
+- the **domination lemma** [`integrable_dominate_G`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L858)
   and the proper-time / spatial-momentum swap
-  [`fubini_s_ksp_swap`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L2973) — the two crucial
+  [`fubini_s_ksp_swap`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L2650) — the two crucial
   exchanges (dimension note).
 
 The dominating function is
-[`dominate_G`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L845),
+[`dominate_G`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L847),
 $(s, \bar k) \mapsto C\, s^{d+1/2}\, e^{-s(\lVert \bar k\rVert^2 + m^2)}$. The power $s^{d+1/2}$
 is the **order-$d$ vanishing** of positive-time test functions at the time boundary,
 $\lVert f(x)\rVert \lesssim x_0^d$, after the odd time-Gaussian moment
 $\int_0^\infty u^{2d+1} e^{-u^2/4s}\, du = (d!/2)(4s)^{d+1}$
-([`integral_odd_pow_gaussian`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L1663)). That
+([`integral_odd_pow_gaussian`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L1354)). That
 $s$-power is what keeps the domination integrable in **every** dimension (dimension note).
 
 > **One line:** the propagator is a proper-time integral of Gaussians — and *that* is what
@@ -236,7 +236,7 @@ $\int e^{-i k_0 t}\, e^{-s k_0^2}\, dk_0 = \sqrt{\pi/s}\; e^{-t^2/4s}$, and the 
 Laplace integral** then collapses to
 $\int_0^\infty \sqrt{\pi/s}\; e^{-t^2/4s}\, e^{-s\omega^2}\, ds = \tfrac{\pi}{\omega}\, e^{-\omega\lvert t\rvert}$.
 The clean end result
-([`bessel_bilinear_eq_mixed_representation`](../../OSforGFF/OS/OS3_MixedRep.lean#L1649)) is
+([`bessel_bilinear_eq_mixed_representation`](../../OSforGFF/OS/OS3_MixedRep.lean#L1643)) is
 
 $$\langle \theta f, C f\rangle = \frac{1}{2(2\pi)^{d-1}} \int_{\bar k} \iint
 \overline{f(x)}\, f(y)\; \frac{1}{\omega}\, e^{-\omega\lvert x_0 + y_0\rvert}\;
@@ -271,14 +271,14 @@ positivity at the level of the *one-particle* (covariance) structure.
 
 **The idea (mathematics).** On positive-time support $x_0, y_0 \ge 0$, so
 $\lvert x_0 + y_0\rvert = x_0 + y_0$
-([`RPProof.abs_neg_sum_nonneg`](../../OSforGFF/OS/OS3_CovarianceRP.lean#L145)) and the miracle
+([`RPProof.abs_neg_sum_nonneg`](../../OSforGFF/OS/OS3_CovarianceRP.lean#L146)) and the miracle
 is a single line:
 
 $$e^{-\omega(x_0 + y_0)} = e^{-\omega x_0}\, e^{-\omega y_0}. \tag{FACT}$$
 
 Feed (FACT) into (MR): the double $(x, y)$ integral **separates** into an $x$-factor and a
 $y$-factor
-([`RPProof.factorization_to_squared_norm_direct`](../../OSforGFF/OS/OS3_CovarianceRP.lean#L240)),
+([`RPProof.factorization_to_squared_norm_direct`](../../OSforGFF/OS/OS3_CovarianceRP.lean#L241)),
 each equal (up to the sign of $\bar k$) to the **weighted Laplace–Fourier transform**
 
 $$F_\omega(\bar k) = \int f(x)\, e^{-\omega x_0}\, e^{-i\,\bar k\cdot\bar x}\, dx.$$
@@ -289,13 +289,13 @@ double integral collapses to a squared modulus and
 $$\langle \theta f, C f\rangle = \frac{1}{2(2\pi)^{d-1}} \int_{\bar k}\;
 \frac{1}{\omega}\, \big\lvert F_\omega(-\bar k)\big\rvert^2\, d\bar k \;\ge\; 0 \tag{RP-cov}$$
 
-([`RPProof.rp_equals_squared_norm_integral`](../../OSforGFF/OS/OS3_CovarianceRP.lean#L334)):
+([`RPProof.rp_equals_squared_norm_integral`](../../OSforGFF/OS/OS3_CovarianceRP.lean#L335)):
 both the prefactor and the integrand $\tfrac{1}{\omega}\lvert F_\omega\rvert^2$ are
 non-negative. This is exported through the complex/real bridge lemmas:
 
-- [`freeCovariance_reflection_positive_bilinear`](../../OSforGFF/OS/OS3_CovarianceRP.lean#L411)
+- [`freeCovariance_reflection_positive_bilinear`](../../OSforGFF/OS/OS3_CovarianceRP.lean#L412)
   — $0 \le \mathrm{Re}\,\langle \theta f, C f\rangle$ for complex positive-time $f$;
-- [`freeCovariance_reflection_positive_real`](../../OSforGFF/OS/OS3_CovarianceRP.lean#L462)
+- [`freeCovariance_reflection_positive_real`](../../OSforGFF/OS/OS3_CovarianceRP.lean#L463)
   — $0 \le \iint (\theta f)(x)\, C(x, y)\, f(y)$ for real positive-time $f$.
 
 What we have so far is a statement about a *single* quadratic form. OS3 (RP) is about an
@@ -322,15 +322,15 @@ $$M_{jk} = A_j\, \overline{A_k}\; \exp\!\big(R_{jk}\big),
 \qquad A_j = \exp\!\big(-\tfrac12\langle f_j, C f_j\rangle\big), \tag{ENTRY}$$
 
 where $R_{jk} = \langle \theta f_j, C f_k\rangle$ is the **reflected covariance matrix**
-([`gaussianFreeField_real_entry_factor`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L342),
-[`gff_complexZ_entry_factor`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L842)). From
+([`gaussianFreeField_real_entry_factor`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L341),
+[`gff_complexZ_entry_factor`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L828)). From
 Section 3, $R$ is PSD (take $F = \sum_j c_j f_j$, still positive-time, and apply (RP-cov)):
 this is
-[`freeCovarianceFormR_reflection_matrix_posSemidef`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L92)
+[`freeCovarianceFormR_reflection_matrix_posSemidef`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L93)
 in the real case, and
-[`reflection_matrix_IsRePSD`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L933) (with
+[`reflection_matrix_IsRePSD`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L914) (with
 Hermiticity from
-[`reflection_matrix_IsHermitian`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L638)) in
+[`reflection_matrix_IsHermitian`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L633)) in
 the complex case.
 
 Conjugation by the diagonal $D = \mathrm{diag}(A_j)$ preserves PSD, so (ENTRY) reduces OS3
@@ -352,7 +352,7 @@ $$(A \circ B)_{jk} = \langle u_j, u_k\rangle\, \langle v_j, v_k\rangle
 = \langle\, u_j \otimes v_j,\; u_k \otimes v_k \,\rangle$$
 
 is again a Gram matrix, hence PSD. The formalization realizes this directly
-([`posSemidef_hadamard_complex`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L721)): the
+([`posSemidef_hadamard_complex`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L707)): the
 Hadamard product is the diagonal `submatrix` of the `kronecker` product, and PSD is preserved
 by both.
 
@@ -370,10 +370,10 @@ every term is PSD times $1/n! > 0$, and a convergent sum of PSD matrices is PSD.
 > **Corollary.** If $R$ is PSD, its entrywise exponential $(e^{R_{jk}})_{jk}$ is PSD.
 
 This is
-[`entrywiseExp_posSemidef_of_posSemidef`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L73)
+[`entrywiseExp_posSemidef_of_posSemidef`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L74)
 (real, via the imported
 `OSforGFF.posSemidef_entrywiseExp_hadamardSeries_of_posSemidef`) and
-[`entrywiseExp_IsRePSD`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L738) (complex, taking
+[`entrywiseExp_IsRePSD`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L724) (complex, taking
 limits of the partial sums of (HEXP) inside the closed PSD cone).
 
 ### 4.3 Closing OS3
@@ -388,8 +388,8 @@ is PSD — which is exactly OS3 (RP). The assembly is
 ```
 
 and `OS/Master.lean` plugs
-[`QFT.gaussianFreeField_OS3`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L1008) (with the
-real version [`gaussianFreeField_OS3_real`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L501))
+[`QFT.gaussianFreeField_OS3`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L989) (with the
+real version [`gaussianFreeField_OS3_real`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L500))
 into the `os3` field of the generic master theorem, whence the concrete headlines
 `SatisfiesAllOS (μ_GFF 2 m)`, …, `SatisfiesAllOS (μ_GFF 5 m)`.
 
@@ -503,9 +503,9 @@ the covariance's decay and integrability — is **uniform in $d \ge 2$** (see
 and permanent: reflection positivity reflects a *time* coordinate, which needs a time axis
 and the $\mathbb{R} \times \mathbb{R}^{d-1}$ split. The delicate point is OS3's proper-time /
 spatial-momentum Fubini exchange
-([`fubini_s_ksp_swap`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L2973)), which requires an
+([`fubini_s_ksp_swap`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L2650)), which requires an
 $s$-integrable dominator near $s = 0$
-([`integrable_dominate_G`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L856)).
+([`integrable_dominate_G`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L858)).
 
 **Why order-$d$ vanishing.** A positive-time Schwartz function is flat to *all* orders at
 $\{x_0 = 0\}$: its time derivative is again a Schwartz function vanishing on the half-space,
@@ -562,19 +562,19 @@ Optional — for when you open the Lean. Every visible `:NNN` label matches its 
 
 | Result | File | Name |
 |---|---|---|
-| Heat-kernel / Schwinger rep of the propagator | [OS/OS3_MixedRepInfra.lean:184](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L184) | `heatKernel_eq_gaussianFT` |
-| Fubini domination (order-$d$ dominator) | [OS/OS3_MixedRepInfra.lean:856](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L856) | `integrable_dominate_G` |
-| Proper-time / spatial-momentum swap | [OS/OS3_MixedRepInfra.lean:2785](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L2785) | `fubini_s_ksp_swap` |
-| Mixed representation (MR) | [OS/OS3_MixedRep.lean:1649](../../OSforGFF/OS/OS3_MixedRep.lean#L1649) | `bessel_bilinear_eq_mixed_representation` |
-| Covariance reflection positivity (complex) | [OS/OS3_CovarianceRP.lean:411](../../OSforGFF/OS/OS3_CovarianceRP.lean#L411) | `freeCovariance_reflection_positive_bilinear` |
-| Covariance reflection positivity (real) | [OS/OS3_CovarianceRP.lean:462](../../OSforGFF/OS/OS3_CovarianceRP.lean#L462) | `freeCovariance_reflection_positive_real` |
-| Reflected covariance matrix is PSD | [OS/OS3_ReflectionPositivity.lean:92](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L92) | `freeCovarianceFormR_reflection_matrix_posSemidef` |
-| Schur product (complex Hadamard) | [OS/OS3_ReflectionPositivity.lean:721](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L721) | `posSemidef_hadamard_complex` |
-| Entrywise $\exp$ of PSD is PSD (complex) | [OS/OS3_ReflectionPositivity.lean:738](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L738) | `entrywiseExp_IsRePSD` |
-| OS3 for the GFF (real) | [OS/OS3_ReflectionPositivity.lean:501](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L501) | `gaussianFreeField_OS3_real` |
-| OS3 for the GFF (complex / star) | [OS/OS3_ReflectionPositivity.lean:1008](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L1008) | `QFT.gaussianFreeField_OS3` |
-| OS3 predicate | [OS/Axioms.lean:111](../../OSforGFF/OS/Axioms.lean#L111) | `OS3_ReflectionPositivity` |
-| Master theorem (generic) | [OS/Master.lean:60](../../OSforGFF/OS/Master.lean#L60) | `gaussianFreeField_satisfies_all_OS_axioms_generic` |
+| Heat-kernel / Schwinger rep of the propagator | [OS/OS3_MixedRepInfra.lean:186](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L186) | `heatKernel_eq_gaussianFT` |
+| Fubini domination (order-$d$ dominator) | [OS/OS3_MixedRepInfra.lean:858](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L858) | `integrable_dominate_G` |
+| Proper-time / spatial-momentum swap | [OS/OS3_MixedRepInfra.lean:2650](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L2650) | `fubini_s_ksp_swap` |
+| Mixed representation (MR) | [OS/OS3_MixedRep.lean:1643](../../OSforGFF/OS/OS3_MixedRep.lean#L1643) | `bessel_bilinear_eq_mixed_representation` |
+| Covariance reflection positivity (complex) | [OS/OS3_CovarianceRP.lean:412](../../OSforGFF/OS/OS3_CovarianceRP.lean#L412) | `freeCovariance_reflection_positive_bilinear` |
+| Covariance reflection positivity (real) | [OS/OS3_CovarianceRP.lean:463](../../OSforGFF/OS/OS3_CovarianceRP.lean#L463) | `freeCovariance_reflection_positive_real` |
+| Reflected covariance matrix is PSD | [OS/OS3_ReflectionPositivity.lean:93](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L93) | `freeCovarianceFormR_reflection_matrix_posSemidef` |
+| Schur product (complex Hadamard) | [OS/OS3_ReflectionPositivity.lean:707](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L707) | `posSemidef_hadamard_complex` |
+| Entrywise $\exp$ of PSD is PSD (complex) | [OS/OS3_ReflectionPositivity.lean:724](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L724) | `entrywiseExp_IsRePSD` |
+| OS3 for the GFF (real) | [OS/OS3_ReflectionPositivity.lean:500](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L500) | `gaussianFreeField_OS3_real` |
+| OS3 for the GFF (complex / star) | [OS/OS3_ReflectionPositivity.lean:989](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L989) | `QFT.gaussianFreeField_OS3` |
+| OS3 predicate | [OS/Axioms.lean:112](../../OSforGFF/OS/Axioms.lean#L112) | `OS3_ReflectionPositivity` |
+| Master theorem (generic) | [OS/Master.lean:61](../../OSforGFF/OS/Master.lean#L61) | `gaussianFreeField_satisfies_all_OS_axioms_generic` |
 
 Auto-generated theorem inventories:
 [`OS3_MixedRepInfra.md`](../../summary/OSforGFF/OS/OS3_MixedRepInfra.md),

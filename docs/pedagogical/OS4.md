@@ -6,7 +6,7 @@ names in `monospace` are just clickable anchors into the formalization, and you
 can ignore them. (I say this once: throughout, every `Foo.lean:NNN` link points at
 the exact declaration that carries the claim — open them only if you want to see
 the proof, never to follow the argument.) OS4 is the second-heaviest axiom by
-proof size — about $2312$ lines across three files — but, as we'll see, that length
+proof size — about $2300$ lines across three files — but, as we'll see, that length
 is mostly a rigorous estimate wrapped around a single beautiful idea.*
 
 ---
@@ -51,8 +51,8 @@ decorrelate*. It has two faces.
   $$\lim_{T\to\infty}\ \Big\lVert\ \tfrac1T\!\int_0^T A(T_s\omega)\,ds\ -\
   \mathbb{E}_\mu[A]\ \Big\rVert_{L^2(\mu)}^2 \;=\;0. \tag{ERG}$$
   This is the Glimm–Jaffe formulation; the Lean predicate is `OS4_Ergodicity`
-  ([`OS/Axioms.lean:157`](../../OSforGFF/OS/Axioms.lean#L157)), and clustering is
-  `OS4_Clustering` ([`OS/Axioms.lean:144`](../../OSforGFF/OS/Axioms.lean#L144)).
+  ([`OS/Axioms.lean:158`](../../OSforGFF/OS/Axioms.lean#L158)), and clustering is
+  `OS4_Clustering` ([`OS/Axioms.lean:145`](../../OSforGFF/OS/Axioms.lean#L145)).
 
 For a **stationary** measure these are two sides of one coin: decorrelation in time
 is exactly what forces a long time average to lose memory of its starting
@@ -116,7 +116,7 @@ This is the same Gaussian identity as the characteristic functional
 $Z[J] = \mathbb{E}[e^{i\varphi(J)}] = \exp(-\tfrac12\langle J, C J\rangle)$ of the
 [Overview](Overview.md), with $i$ replaced by $1$ (hence the sign flip on the
 $\tfrac12$). In Lean it is
-`gff_mgf_formula` ([`OS/OS4_MGF.lean:177`](../../OSforGFF/OS/OS4_MGF.lean#L177)).
+`gff_mgf_formula` ([`OS/OS4_MGF.lean:178`](../../OSforGFF/OS/OS4_MGF.lean#L178)).
 
 The **real workhorse** is the *joint* version — the whole reason OS4 is tractable:
 $$\mathbb{E}_\mu\!\left[e^{\varphi(f)+\varphi(g)}\right] \;=\;
@@ -129,21 +129,21 @@ independent. The *entire* remaining dependence between the two observables is
 squeezed into the single scalar factor $e^{\,S_2(f,g)}$. This is special to
 Gaussians, and it is the pivot of the whole axiom: **to control correlations,
 control the one number $S_2(f,g)$.** In Lean,
-`gff_joint_mgf_factorization` ([`OS/OS4_MGF.lean:221`](../../OSforGFF/OS/OS4_MGF.lean#L221)).
+`gff_joint_mgf_factorization` ([`OS/OS4_MGF.lean:222`](../../OSforGFF/OS/OS4_MGF.lean#L222)).
 
 Two small auxiliary lemmas earn their place:
 
 - **Time-translation duality**
-  ([`OS/OS4_MGF.lean:98`](../../OSforGFF/OS/OS4_MGF.lean#L98)):
+  ([`OS/OS4_MGF.lean:99`](../../OSforGFF/OS/OS4_MGF.lean#L99)):
   $\langle T_s\omega, g\rangle = \langle\omega, T_{-s}g\rangle$. This moves a time
   shift off the *rough* field configuration $\omega$ and onto the *smooth* test
   function $g$, where the covariance kernel can act on it. Combined with translation
   invariance of $C$, it makes the MGF **time-invariant**
-  ([`OS/OS4_MGF.lean:208`](../../OSforGFF/OS/OS4_MGF.lean#L208)),
+  ([`OS/OS4_MGF.lean:209`](../../OSforGFF/OS/OS4_MGF.lean#L209)),
   $\mathbb{E}_\mu[e^{\varphi(T_s f)}] = \mathbb{E}_\mu[e^{\varphi(f)}]$ — this is the
   stationarity that ergodicity will lean on.
 - **The linearization bound**
-  ([`OS/OS4_MGF.lean:253`](../../OSforGFF/OS/OS4_MGF.lean#L253)):
+  ([`OS/OS4_MGF.lean:254`](../../OSforGFF/OS/OS4_MGF.lean#L254)):
   $\lVert e^x - 1\rVert \le \lVert x\rVert\, e^{\lVert x\rVert}$ for complex $x$.
   This turns "the factor $e^{\,S_2}$ is close to $1$" into a bound proportional to
   $\lvert S_2\rvert$ — the bridge from (JOINT) to a decay estimate.
@@ -161,7 +161,7 @@ large *spatial* separation $a$,
 $$\big\lVert\ Z[f + T_a g] - Z[f]\,Z[g]\ \big\rVert < \varepsilon
 \qquad \text{for } \lVert a\rVert > R(\varepsilon), \tag{C}$$
 (`gaussianFreeField_satisfies_OS4`,
-[`OS/OS4_Clustering.lean:439`](../../OSforGFF/OS/OS4_Clustering.lean#L439)), and a
+[`OS/OS4_Clustering.lean:440`](../../OSforGFF/OS/OS4_Clustering.lean#L440)), and a
 **quantitative** version at a polynomial rate in *time* separation $s$: for every
 $f,g$ there is a constant $c = c(f,g)$ with
 $$\left\lvert\ \mathbb{E}_\mu\!\left[e^{\varphi(f)+\langle T_s\omega,\,g\rangle}\right]
@@ -169,7 +169,7 @@ $$\left\lvert\ \mathbb{E}_\mu\!\left[e^{\varphi(f)+\langle T_s\omega,\,g\rangle}
   \mathbb{E}_\mu\!\left[e^{\varphi(g)}\right]\ \right\rvert
 \;\le\; c\,(1+s)^{-\alpha}, \qquad s\ge0, \tag{PC}$$
 for **any** exponent $\alpha > 0$ (`gaussianFreeField_satisfies_OS4_PolynomialClustering`,
-[`OS/OS4_Clustering.lean:592`](../../OSforGFF/OS/OS4_Clustering.lean#L592)). The
+[`OS/OS4_Clustering.lean:576`](../../OSforGFF/OS/OS4_Clustering.lean#L576)). The
 polynomial form is the one ergodicity consumes; the qualitative form is what the
 master theorem installs into `os4_clustering`.
 
@@ -186,7 +186,7 @@ using time duality to move the shift onto $g$ (write $g_s := T_{-s}g$):
    decay as the shift $s$ grows?*
 3. **Kernel decay.** Writing $S_2(f, g_s)$ as the convolution integral
    $\iint f(x)\,K(x-y)\,g(y - s\hat e_0)\,dy\,dx$ against the covariance kernel
-   $K$ ([`OS/OS4_Clustering.lean:570`](../../OSforGFF/OS/OS4_Clustering.lean#L570)),
+   $K$ ([`OS/OS4_Clustering.lean:554`](../../OSforGFF/OS/OS4_Clustering.lean#L554)),
    the answer is dictated entirely by the decay of $K$.
 
 **Why every polynomial rate is free.** The massive kernel decays *exponentially* —
@@ -194,7 +194,7 @@ this is the mass gap made quantitative:
 $$\lvert K(z)\rvert \;\le\; A\, e^{-(m/2)\,\lVert z\rVert}, \qquad \lVert z\rVert \ge 1
 \tag{GAP}$$
 (`freeCovarianceKernel_exp_decay`,
-[`Covariance/ParsevalGeneric.lean:1057`](../../OSforGFF/Covariance/ParsevalGeneric.lean#L1057)).
+[`Covariance/ParsevalGeneric.lean:1058`](../../OSforGFF/Covariance/ParsevalGeneric.lean#L1058)).
 Since exponential decay beats every polynomial, $S_2(f, g_s)$ decays faster than
 $(1+s)^{-\alpha}$ for *any* $\alpha > 0$ — which is why (PC) can be stated for an
 arbitrary $\alpha$. This freedom to name the rate is precisely what ergodicity
@@ -222,37 +222,37 @@ see the template; do not expect a surprise.
 **The strategy.** Fix a single exponential generator
 $A_s(\omega) = e^{\langle T_s\omega, f\rangle}$ with mean
 $E_A = \mathbb{E}_\mu[A_0]$. Ergodicity-for-generators
-([`OS/OS4_Ergodicity.lean:82`](../../OSforGFF/OS/OS4_Ergodicity.lean#L82)) is the
+([`OS/OS4_Ergodicity.lean:83`](../../OSforGFF/OS/OS4_Ergodicity.lean#L83)) is the
 statement that the **variance of the time average vanishes**,
 $$\mathrm{Var}_T \;:=\; \mathbb{E}_\mu\!\left[\Big\lVert\tfrac1T\!\int_0^T A_s\,ds
 - E_A\Big\rVert^2\right]\ \xrightarrow[T\to\infty]{}\ 0,$$
 and the full axiom (ERG) over all finite combinations $\sum_j z_j A^{(j)}$ follows
 from this single-generator case (§4.4). The driver is polynomial clustering at the
 generous rate $\alpha = 6$ (`OS4''_Clustering`,
-[`OS/OS4_Ergodicity.lean:95`](../../OSforGFF/OS/OS4_Ergodicity.lean#L95)), packaged
+[`OS/OS4_Ergodicity.lean:96`](../../OSforGFF/OS/OS4_Ergodicity.lean#L96)), packaged
 as the master implication
 `OS4_PolynomialClustering_implies_OS4_Ergodicity`
-([`OS/OS4_Ergodicity.lean:1298`](../../OSforGFF/OS/OS4_Ergodicity.lean#L1298)) that
+([`OS/OS4_Ergodicity.lean:1304`](../../OSforGFF/OS/OS4_Ergodicity.lean#L1304)) that
 the assembly feeds into `os4_ergodicity`. Four steps:
 
 **Step 1 — variance is a double integral of covariances.** Expand the squared norm
 and use Fubini
-([`OS/OS4_Ergodicity.lean:579`](../../OSforGFF/OS/OS4_Ergodicity.lean#L579)):
+([`OS/OS4_Ergodicity.lean:583`](../../OSforGFF/OS/OS4_Ergodicity.lean#L583)):
 $$\mathrm{Var}_T \;\le\; \frac{1}{T^2}\int_0^T\!\!\int_0^T
 \big\lVert\,\mathrm{Cov}(s,u)\,\big\rVert\,ds\,du, \qquad
 \mathrm{Cov}(s,u) = \mathbb{E}_\mu\!\left[A_s\,\overline{A_u}\right]
 - E_A\,\overline{E_A}. \tag{VAR}$$
 This is clean because the field is **stationary**: $\lVert A_s\rVert_{L^2}$ is
-independent of $s$ ([`OS/OS4_Ergodicity.lean:221`](../../OSforGFF/OS/OS4_Ergodicity.lean#L221),
+independent of $s$ ([`OS/OS4_Ergodicity.lean:222`](../../OSforGFF/OS/OS4_Ergodicity.lean#L222),
 the OS2 time-invariance input), and $\mathrm{Cov}(s,u)$ depends only on $s-u$
-([`OS/OS4_Ergodicity.lean:376`](../../OSforGFF/OS/OS4_Ergodicity.lean#L376)) and is
+([`OS/OS4_Ergodicity.lean:379`](../../OSforGFF/OS/OS4_Ergodicity.lean#L379)) and is
 jointly continuous
-([`OS/OS4_Ergodicity.lean:499`](../../OSforGFF/OS/OS4_Ergodicity.lean#L499)).
+([`OS/OS4_Ergodicity.lean:503`](../../OSforGFF/OS/OS4_Ergodicity.lean#L503)).
 
 **Step 2 — clustering gives covariance decay.** The covariance $\mathrm{Cov}(s,u)$
 *is* the clustering gap (PC) at separation $\lvert s-u\rvert$ (up to conjugation).
 So polynomial clustering at $\alpha = 6$ yields
-([`OS/OS4_Ergodicity.lean:723`](../../OSforGFF/OS/OS4_Ergodicity.lean#L723))
+([`OS/OS4_Ergodicity.lean:727`](../../OSforGFF/OS/OS4_Ergodicity.lean#L727))
 $$\big\lVert\,\mathrm{Cov}(s,u)\,\big\rVert \;\le\; c\,(1+\lvert s-u\rvert)^{-3}.
 \tag{COV}$$
 (The exponent drops from $6$ to $3$ by a one-line monotonicity step; any exponent
@@ -260,7 +260,7 @@ $>1$ would do — see the subtlety below.)
 
 **Step 3 — the double integral grows only linearly.** With an integrable decay
 exponent, the integral over the square is $O(T)$, not $O(T^2)$
-([`OS/OS4_Ergodicity.lean:363`](../../OSforGFF/OS/OS4_Ergodicity.lean#L363)):
+([`OS/OS4_Ergodicity.lean:366`](../../OSforGFF/OS/OS4_Ergodicity.lean#L366)):
 $$\int_0^T\!\!\int_0^T (1+\lvert s-u\rvert)^{-3}\,ds\,du \;\le\; 2\,T\,C. \tag{DI}$$
 The mechanism is elementary: fix $s$; the inner integral is bounded by the
 convergent tail $\int_{\mathbb{R}}(1+\lvert r\rvert)^{-3}\,dr < \infty$ — finite
@@ -268,7 +268,7 @@ convergent tail $\int_{\mathbb{R}}(1+\lvert r\rvert)^{-3}\,dr < \infty$ — fini
 $s \in [0,T]$ contributes the single factor $T$.
 
 **Step 4 — assemble.** Chain (VAR) → (COV) → (DI)
-([`OS/OS4_Ergodicity.lean:891`](../../OSforGFF/OS/OS4_Ergodicity.lean#L891)):
+([`OS/OS4_Ergodicity.lean:895`](../../OSforGFF/OS/OS4_Ergodicity.lean#L895)):
 $$\mathrm{Var}_T \;\le\; \frac{1}{T^2}\cdot c\cdot 2TC \;=\; \frac{2cC}{T}\
 \xrightarrow[T\to\infty]{}\ 0.$$
 The familiar ergodic $1/T$ fluctuation, here a clean consequence of **summable
@@ -288,9 +288,9 @@ reduction.")
 A general observable is a finite combination $A = \sum_j z_j A^{(j)}$. Its
 time-average error is the sum of the per-term errors, and Cauchy–Schwarz in the
 finite index $j$ bounds the $L^2$ norm of the sum by the per-term norms, each
-$\to 0$ by Step 4 ([`OS/OS4_Ergodicity.lean:1074`](../../OSforGFF/OS/OS4_Ergodicity.lean#L1074),
+$\to 0$ by Step 4 ([`OS/OS4_Ergodicity.lean:1080`](../../OSforGFF/OS/OS4_Ergodicity.lean#L1080),
 using the elementary
-[`OS/OS4_Ergodicity.lean:1058`](../../OSforGFF/OS/OS4_Ergodicity.lean#L1058)). Hence
+[`OS/OS4_Ergodicity.lean:1064`](../../OSforGFF/OS/OS4_Ergodicity.lean#L1064)). Hence
 (ERG) holds for every finite combination — the full `OS4_Ergodicity`.
 
 > **One line:** variance $=$ double integral of covariances; clustering makes the
@@ -391,39 +391,39 @@ $d$.
 
 | Result | Name (line) |
 |---|---|
-| OS4 clustering axiom (statement) | [`OS4_Clustering`](../../OSforGFF/OS/Axioms.lean#L144) — `OS/Axioms.lean:144` |
-| OS4 ergodicity axiom (statement) | [`OS4_Ergodicity`](../../OSforGFF/OS/Axioms.lean#L157) — `OS/Axioms.lean:157` |
-| Polynomial clustering (statement) | [`OS4_PolynomialClustering`](../../OSforGFF/OS/Axioms.lean#L179) — `OS/Axioms.lean:179` |
-| Time-translation duality | [`timeTranslationDistribution_pairingℂ`](../../OSforGFF/OS/OS4_MGF.lean#L98) — `OS/OS4_MGF.lean:98` |
-| Gaussian MGF formula (MGF) | [`gff_mgf_formula`](../../OSforGFF/OS/OS4_MGF.lean#L177) — `OS/OS4_MGF.lean:177` |
-| MGF time-translation invariance | [`gff_generating_time_invariant`](../../OSforGFF/OS/OS4_MGF.lean#L208) — `OS/OS4_MGF.lean:208` |
-| Joint MGF factorization (JOINT) | [`gff_joint_mgf_factorization`](../../OSforGFF/OS/OS4_MGF.lean#L221) — `OS/OS4_MGF.lean:221` |
-| Linearization $\lVert e^x-1\rVert$ bound | [`exp_sub_one_bound_general`](../../OSforGFF/OS/OS4_MGF.lean#L253) — `OS/OS4_MGF.lean:253` |
-| GFF satisfies clustering (C) | [`gaussianFreeField_satisfies_OS4`](../../OSforGFF/OS/OS4_Clustering.lean#L439) — `OS/OS4_Clustering.lean:439` |
-| GFF satisfies polynomial clustering (PC) | [`gaussianFreeField_satisfies_OS4_PolynomialClustering`](../../OSforGFF/OS/OS4_Clustering.lean#L592) — `OS/OS4_Clustering.lean:592` |
-| $S_2(f,T_{-s}g)$ as convolution integral | [`schwinger2_time_translated_eq_bilinear`](../../OSforGFF/OS/OS4_Clustering.lean#L570) — `OS/OS4_Clustering.lean:570` |
-| Small-decay ⇒ clustering (real) | [`GFF_OS4_from_small_decay_real`](../../OSforGFF/OS/OS4_Clustering.lean#L182) — `OS/OS4_Clustering.lean:182` |
-| Cross-covariance vanishes at ∞ (real) | [`schwartz_cross_covariance_decay_real`](../../OSforGFF/OS/OS4_Clustering.lean#L310) — `OS/OS4_Clustering.lean:310` |
-| α=6 clustering instance | [`OS4''_Clustering`](../../OSforGFF/OS/OS4_Ergodicity.lean#L95) — `OS/OS4_Ergodicity.lean:95` |
-| Generator-ergodicity Prop | [`OS4'_Ergodicity_generating`](../../OSforGFF/OS/OS4_Ergodicity.lean#L82) — `OS/OS4_Ergodicity.lean:82` |
-| Stationarity of $\lVert A_s\rVert_{L^2}$ | [`gff_exp_L2_norm_constant`](../../OSforGFF/OS/OS4_Ergodicity.lean#L221) — `OS/OS4_Ergodicity.lean:221` |
-| Covariance depends only on $s-u$ | [`gff_product_expectation_stationarity`](../../OSforGFF/OS/OS4_Ergodicity.lean#L376) — `OS/OS4_Ergodicity.lean:376` |
-| Covariance continuity | [`gff_covariance_continuous`](../../OSforGFF/OS/OS4_Ergodicity.lean#L499) — `OS/OS4_Ergodicity.lean:499` |
-| Variance ≤ double integral (VAR) | [`L2_time_average_variance_bound`](../../OSforGFF/OS/OS4_Ergodicity.lean#L579) — `OS/OS4_Ergodicity.lean:579` |
-| Clustering ⇒ covariance decay (COV) | [`clustering_implies_covariance_decay`](../../OSforGFF/OS/OS4_Ergodicity.lean#L723) — `OS/OS4_Ergodicity.lean:723` |
-| Double integral $O(T)$ (DI) | [`double_integral_decay_bound`](../../OSforGFF/OS/OS4_Ergodicity.lean#L363) — `OS/OS4_Ergodicity.lean:363` |
-| Variance $\to 0$ | [`variance_decay_from_clustering`](../../OSforGFF/OS/OS4_Ergodicity.lean#L891) — `OS/OS4_Ergodicity.lean:891` |
-| Cauchy–Schwarz in $j$ | [`norm_sq_weighted_sum_le`](../../OSforGFF/OS/OS4_Ergodicity.lean#L1058) — `OS/OS4_Ergodicity.lean:1058` |
-| Generators ⇒ all observables | [`OS4'_implies_OS4`](../../OSforGFF/OS/OS4_Ergodicity.lean#L1074) — `OS/OS4_Ergodicity.lean:1074` |
-| Clustering ⇒ ergodicity (master) | [`OS4_PolynomialClustering_implies_OS4_Ergodicity`](../../OSforGFF/OS/OS4_Ergodicity.lean#L1298) — `OS/OS4_Ergodicity.lean:1298` |
-| Mass-gap kernel decay (GAP) | [`freeCovarianceKernel_exp_decay`](../../OSforGFF/Covariance/ParsevalGeneric.lean#L1057) — `Covariance/ParsevalGeneric.lean:1057` |
+| OS4 clustering axiom (statement) | [`OS4_Clustering`](../../OSforGFF/OS/Axioms.lean#L145) — `OS/Axioms.lean:145` |
+| OS4 ergodicity axiom (statement) | [`OS4_Ergodicity`](../../OSforGFF/OS/Axioms.lean#L158) — `OS/Axioms.lean:158` |
+| Polynomial clustering (statement) | [`OS4_PolynomialClustering`](../../OSforGFF/OS/Axioms.lean#L180) — `OS/Axioms.lean:180` |
+| Time-translation duality | [`timeTranslationDistribution_pairingℂ`](../../OSforGFF/OS/OS4_MGF.lean#L99) — `OS/OS4_MGF.lean:99` |
+| Gaussian MGF formula (MGF) | [`gff_mgf_formula`](../../OSforGFF/OS/OS4_MGF.lean#L178) — `OS/OS4_MGF.lean:178` |
+| MGF time-translation invariance | [`gff_generating_time_invariant`](../../OSforGFF/OS/OS4_MGF.lean#L209) — `OS/OS4_MGF.lean:209` |
+| Joint MGF factorization (JOINT) | [`gff_joint_mgf_factorization`](../../OSforGFF/OS/OS4_MGF.lean#L222) — `OS/OS4_MGF.lean:222` |
+| Linearization $\lVert e^x-1\rVert$ bound | [`exp_sub_one_bound_general`](../../OSforGFF/OS/OS4_MGF.lean#L254) — `OS/OS4_MGF.lean:254` |
+| GFF satisfies clustering (C) | [`gaussianFreeField_satisfies_OS4`](../../OSforGFF/OS/OS4_Clustering.lean#L440) — `OS/OS4_Clustering.lean:440` |
+| GFF satisfies polynomial clustering (PC) | [`gaussianFreeField_satisfies_OS4_PolynomialClustering`](../../OSforGFF/OS/OS4_Clustering.lean#L576) — `OS/OS4_Clustering.lean:576` |
+| $S_2(f,T_{-s}g)$ as convolution integral | [`schwinger2_time_translated_eq_bilinear`](../../OSforGFF/OS/OS4_Clustering.lean#L554) — `OS/OS4_Clustering.lean:554` |
+| Small-decay ⇒ clustering (real) | [`GFF_OS4_from_small_decay_real`](../../OSforGFF/OS/OS4_Clustering.lean#L183) — `OS/OS4_Clustering.lean:183` |
+| Cross-covariance vanishes at ∞ (real) | [`schwartz_cross_covariance_decay_real`](../../OSforGFF/OS/OS4_Clustering.lean#L311) — `OS/OS4_Clustering.lean:311` |
+| α=6 clustering instance | [`OS4''_Clustering`](../../OSforGFF/OS/OS4_Ergodicity.lean#L96) — `OS/OS4_Ergodicity.lean:96` |
+| Generator-ergodicity Prop | [`OS4'_Ergodicity_generating`](../../OSforGFF/OS/OS4_Ergodicity.lean#L83) — `OS/OS4_Ergodicity.lean:83` |
+| Stationarity of $\lVert A_s\rVert_{L^2}$ | [`gff_exp_L2_norm_constant`](../../OSforGFF/OS/OS4_Ergodicity.lean#L222) — `OS/OS4_Ergodicity.lean:222` |
+| Covariance depends only on $s-u$ | [`gff_product_expectation_stationarity`](../../OSforGFF/OS/OS4_Ergodicity.lean#L379) — `OS/OS4_Ergodicity.lean:379` |
+| Covariance continuity | [`gff_covariance_continuous`](../../OSforGFF/OS/OS4_Ergodicity.lean#L503) — `OS/OS4_Ergodicity.lean:503` |
+| Variance ≤ double integral (VAR) | [`L2_time_average_variance_bound`](../../OSforGFF/OS/OS4_Ergodicity.lean#L583) — `OS/OS4_Ergodicity.lean:583` |
+| Clustering ⇒ covariance decay (COV) | [`clustering_implies_covariance_decay`](../../OSforGFF/OS/OS4_Ergodicity.lean#L727) — `OS/OS4_Ergodicity.lean:727` |
+| Double integral $O(T)$ (DI) | [`double_integral_decay_bound`](../../OSforGFF/OS/OS4_Ergodicity.lean#L366) — `OS/OS4_Ergodicity.lean:366` |
+| Variance $\to 0$ | [`variance_decay_from_clustering`](../../OSforGFF/OS/OS4_Ergodicity.lean#L895) — `OS/OS4_Ergodicity.lean:895` |
+| Cauchy–Schwarz in $j$ | [`norm_sq_weighted_sum_le`](../../OSforGFF/OS/OS4_Ergodicity.lean#L1064) — `OS/OS4_Ergodicity.lean:1064` |
+| Generators ⇒ all observables | [`OS4'_implies_OS4`](../../OSforGFF/OS/OS4_Ergodicity.lean#L1080) — `OS/OS4_Ergodicity.lean:1080` |
+| Clustering ⇒ ergodicity (master) | [`OS4_PolynomialClustering_implies_OS4_Ergodicity`](../../OSforGFF/OS/OS4_Ergodicity.lean#L1304) — `OS/OS4_Ergodicity.lean:1304` |
+| Mass-gap kernel decay (GAP) | [`freeCovarianceKernel_exp_decay`](../../OSforGFF/Covariance/ParsevalGeneric.lean#L1058) — `Covariance/ParsevalGeneric.lean:1058` |
 
-The master assembly ([`OS/Master.lean:60`](../../OSforGFF/OS/Master.lean#L60),
+The master assembly ([`OS/Master.lean:61`](../../OSforGFF/OS/Master.lean#L61),
 `gaussianFreeField_satisfies_all_OS_axioms_generic`) sets
 `os4_clustering := QFT.gaussianFreeField_satisfies_OS4 m`
-([`:69`](../../OSforGFF/OS/Master.lean#L69)) and `os4_ergodicity :=
+([`:70`](../../OSforGFF/OS/Master.lean#L70)) and `os4_ergodicity :=
 OS4_Ergodicity.OS4_PolynomialClustering_implies_OS4_Ergodicity m (…​ m 6 …)`
-([`:70`](../../OSforGFF/OS/Master.lean#L70)) as the two OS4 fields of
+([`:71`](../../OSforGFF/OS/Master.lean#L71)) as the two OS4 fields of
 `SatisfiesAllOS (μ_GFF d m)`. Declaration-by-declaration summaries live at
 [`OS4_MGF.md`](../../summary/OSforGFF/OS/OS4_MGF.md),
 [`OS4_Clustering.md`](../../summary/OSforGFF/OS/OS4_Clustering.md), and

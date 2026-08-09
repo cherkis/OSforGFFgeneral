@@ -55,7 +55,7 @@ section, read this one.
 ## What "satisfies all OS axioms" means
 
 In Lean the target is `SatisfiesAllOS (μ_GFF d m)`: a record of the five axioms, with OS4
-split into its clustering and ergodicity halves ([`OS/Axioms.lean:194`](../../OSforGFF/OS/Axioms.lean#L194)):
+split into its clustering and ergodicity halves ([`OS/Axioms.lean:195`](../../OSforGFF/OS/Axioms.lean#L195)):
 
 ```lean
 structure SatisfiesAllOS (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop where
@@ -70,11 +70,11 @@ structure SatisfiesAllOS (dμ_config : ProbabilityMeasure (FieldConfiguration d)
 `OS/Master.lean` assembles these six fields, each from one dedicated theorem, and exports
 **six headline theorems**: the dimension-generic master
 `gaussianFreeField_satisfies_all_OS_axioms_generic` for any $d \ge 2$
-([`Master.lean:60`](../../OSforGFF/OS/Master.lean#L60)); the all-dimensions corollary
-`..._of_dim` ([`:79`](../../OSforGFF/OS/Master.lean#L79)); and the four concrete instances
-$d=4$ ([`:91`](../../OSforGFF/OS/Master.lean#L91)),
-$d=3$ Yukawa ([`:98`](../../OSforGFF/OS/Master.lean#L98)),
-$d=2$ $K_0$ ([`:105`](../../OSforGFF/OS/Master.lean#L105)),
+([`Master.lean:61`](../../OSforGFF/OS/Master.lean#L61)); the all-dimensions corollary
+`..._of_dim` ([`:80`](../../OSforGFF/OS/Master.lean#L80)); and the four concrete instances
+$d=4$ ([`:106`](../../OSforGFF/OS/Master.lean#L106)),
+$d=3$ Yukawa ([`:97`](../../OSforGFF/OS/Master.lean#L97)),
+$d=2$ $K_0$ ([`:90`](../../OSforGFF/OS/Master.lean#L90)),
 $d=5$ $K_{3/2}$ ([`:113`](../../OSforGFF/OS/Master.lean#L113)). All six close with only
 Lean's three core axioms — no extra assumptions.
 
@@ -83,12 +83,12 @@ which result proves each field, and where.
 
 | Field | Proved by | Where |
 |---|---|---|
-| `os0` | `gaussianFreeField_satisfies_OS0` | [`OS0_Analyticity.lean:838`](../../OSforGFF/OS/OS0_Analyticity.lean#L838) |
-| `os1` | `gaussianFreeField_satisfies_OS1_revised` | [`OS1_Regularity.lean:414`](../../OSforGFF/OS/OS1_Regularity.lean#L414) |
-| `os2` | `gaussian_satisfies_OS2` ∘ `CovarianceEuclideanInvariantℂ_μ_GFF` | [`GaussianFreeField.lean:215`](../../OSforGFF/Measure/GaussianFreeField.lean#L215) · [`OS2_Invariance.lean:151`](../../OSforGFF/OS/OS2_Invariance.lean#L151) |
-| `os3` | `gaussianFreeField_OS3` | [`OS3_ReflectionPositivity.lean:1008`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L1008) |
-| `os4_clustering` | `gaussianFreeField_satisfies_OS4` | [`OS4_Clustering.lean:439`](../../OSforGFF/OS/OS4_Clustering.lean#L439) |
-| `os4_ergodicity` | `OS4_PolynomialClustering_implies_OS4_Ergodicity` (at rate $\alpha=6$, from [`OS4_Clustering.lean:592`](../../OSforGFF/OS/OS4_Clustering.lean#L592)) | [`OS4_Ergodicity.lean:1298`](../../OSforGFF/OS/OS4_Ergodicity.lean#L1298) |
+| `os0` | `gaussianFreeField_satisfies_OS0` | [`OS0_Analyticity.lean:679`](../../OSforGFF/OS/OS0_Analyticity.lean#L679) |
+| `os1` | `gaussianFreeField_satisfies_OS1_revised` | [`OS1_Regularity.lean:407`](../../OSforGFF/OS/OS1_Regularity.lean#L407) |
+| `os2` | `gaussian_satisfies_OS2` ∘ `CovarianceEuclideanInvariantℂ_μ_GFF` | [`GaussianFreeField.lean:69`](../../OSforGFF/Measure/GaussianFreeField.lean#L69) · [`OS2_Invariance.lean:152`](../../OSforGFF/OS/OS2_Invariance.lean#L152) |
+| `os3` | `gaussianFreeField_OS3` | [`OS3_ReflectionPositivity.lean:989`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L989) |
+| `os4_clustering` | `gaussianFreeField_satisfies_OS4` | [`OS4_Clustering.lean:440`](../../OSforGFF/OS/OS4_Clustering.lean#L440) |
+| `os4_ergodicity` | `OS4_PolynomialClustering_implies_OS4_Ergodicity` (at rate $\alpha=6$, from [`OS4_Clustering.lean:576`](../../OSforGFF/OS/OS4_Clustering.lean#L576)) | [`OS4_Ergodicity.lean:1304`](../../OSforGFF/OS/OS4_Ergodicity.lean#L1304) |
 
 The rest of this note walks the axioms **heaviest first by proof size** — OS3, OS4, OS0,
 OS1, OS2 — but be warned: *proof size is not mathematical depth*. The section
@@ -99,7 +99,7 @@ sorts them the other way, by how much genuine mathematics each one needs.
 
 ## OS3 — Reflection positivity
 
-**The most elaborate axiom by a wide margin: $\approx 7112$ lines across four files** — more
+**The most elaborate axiom by a wide margin: $\approx 6750$ lines across four files** — more
 than the other four combined.
 
 **What it says (physics).** Reflection positivity is the Euclidean shadow of unitarity: it
@@ -132,7 +132,7 @@ random variable indexed by $\theta f_j$).
    not bookkeeping.
 
 Headline `gaussianFreeField_OS3`
-([`OS3_ReflectionPositivity.lean:1008`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L1008)).
+([`OS3_ReflectionPositivity.lean:989`](../../OSforGFF/OS/OS3_ReflectionPositivity.lean#L989)).
 
 > **One line:** expose a factorizing exponential by a mixed representation, then lift
 > scalar positivity to matrix positivity by Schur–Hadamard. Deep *and* long — full
@@ -142,7 +142,7 @@ Headline `gaussianFreeField_OS3`
 
 ## OS4 — Clustering & ergodicity
 
-**Second-heaviest: $\approx 2312$ lines across three files.**
+**Second-heaviest: $\approx 2300$ lines across three files.**
 
 **What it says (physics).** Distant regions decorrelate. **Clustering:** as two
 observables are pulled apart, the expectation of their product factorizes into the product
@@ -167,9 +167,9 @@ if lengthy — quantitative argument carries ergodicity:
   the estimate rigorously.
 
 Headlines `gaussianFreeField_satisfies_OS4`
-([`OS4_Clustering.lean:439`](../../OSforGFF/OS/OS4_Clustering.lean#L439)) and
+([`OS4_Clustering.lean:440`](../../OSforGFF/OS/OS4_Clustering.lean#L440)) and
 `OS4_PolynomialClustering_implies_OS4_Ergodicity`
-([`OS4_Ergodicity.lean:1298`](../../OSforGFF/OS/OS4_Ergodicity.lean#L1298)).
+([`OS4_Ergodicity.lean:1304`](../../OSforGFF/OS/OS4_Ergodicity.lean#L1304)).
 
 > **One line:** one beautiful idea (all correlation lives in $e^{C(f,g)}$; the mass gap
 > kills it) plus a long, routine quantitative ergodic theorem. Full walkthrough in
@@ -179,7 +179,7 @@ Headlines `gaussianFreeField_satisfies_OS4`
 
 ## OS0 — Analyticity
 
-**A single file, $\approx 855$ lines — but a one-line idea wrapped in heavy plumbing.**
+**A single file, $\approx 700$ lines — but a one-line idea wrapped in heavy plumbing.**
 
 **What it says (physics).** The generating functional $z \mapsto Z[\sum_i z_i J_i]$ is
 entire on $\mathbb{C}^n$. This is what guarantees that *all* Schwinger (correlation)
@@ -188,7 +188,7 @@ ready for analytic continuation to Minkowski time.
 
 **The idea (mathematics).** *Trivial.* By $(\star)$, $Z[\sum_i z_i J_i] =
 \exp(-\tfrac12\,Q(z))$ with $Q$ a quadratic polynomial in $z$ — and the exponential of a
-polynomial is entire. Full stop. Everything else in the 855 lines is **analytic
+polynomial is entire. Full stop. Everything else in the 700 lines is **analytic
 plumbing**: promoting the real characteristic functional to complex arguments (identity
 theorem), and — the bulk — justifying **differentiation under the integral sign** (the
 Leibniz rule), which needs a $\mu$-integrable dominating function. That dominator is
@@ -197,7 +197,7 @@ exponential-square tails) plus Young's inequality. The mathematics is one algebr
 observation; the length is measure theory done honestly.
 
 Headline `gaussianFreeField_satisfies_OS0`
-([`OS0_Analyticity.lean:838`](../../OSforGFF/OS/OS0_Analyticity.lean#L838)).
+([`OS0_Analyticity.lean:679`](../../OSforGFF/OS/OS0_Analyticity.lean#L679)).
 
 > **One line:** "exp of a quadratic is entire" — the rest is the rigor of differentiating
 > a functional integral. Full walkthrough in [OS0.md](OS0.md).
@@ -206,7 +206,7 @@ Headline `gaussianFreeField_satisfies_OS0`
 
 ## OS1 — Regularity
 
-**One of the two light axioms, $\approx 464$ lines, one clean estimate.** OS1 is a
+**One of the two light axioms, $\approx 460$ lines, one clean estimate.** OS1 is a
 temperedness bound, $\lvert Z[f]\rvert \le \exp\!\big(c\,(\lVert f\rVert_{L^1} + \lVert
 f\rVert_{L^p}^p)\big)$ for some $p \in [1,2]$ (so the reconstructed correlation functions
 are distributions of finite order). From $(\star)$, $\lvert Z[f]\rvert = \exp(-\tfrac12
@@ -215,7 +215,7 @@ momentum space, and cap the multiplier by the mass gap, $\widehat{C}(k) = 1/(\lv
 k\rvert^2 + m^2) \le 1/m^2$. Out drops the clean witness $p = 2$, $c = 1/(2m^2)$.
 
 Headline `gaussianFreeField_satisfies_OS1_revised`
-([`OS1_Regularity.lean:414`](../../OSforGFF/OS/OS1_Regularity.lean#L414)).
+([`OS1_Regularity.lean:407`](../../OSforGFF/OS/OS1_Regularity.lean#L407)).
 
 > **One line:** $C$ is the multiplier $1/(\lvert k\rvert^2 + m^2)$, bounded by $1/m^2$ —
 > that *is* the bound. Full walkthrough (with OS2) in [OS1OS2.md](OS1OS2.md).
@@ -231,9 +231,9 @@ the propagator $C(x, y)$ depends only on $\lVert x - y\rVert$ (its symbol $1/(\l
 k\rvert^2 + m^2)$ is radial), and isometries preserve distance, so $C(gx, gy) = C(x, y)$.
 
 Supplied by `gaussian_satisfies_OS2`
-([`GaussianFreeField.lean:215`](../../OSforGFF/Measure/GaussianFreeField.lean#L215)) fed by
+([`GaussianFreeField.lean:69`](../../OSforGFF/Measure/GaussianFreeField.lean#L69)) fed by
 `CovarianceEuclideanInvariantℂ_μ_GFF`
-([`OS2_Invariance.lean:151`](../../OSforGFF/OS/OS2_Invariance.lean#L151)).
+([`OS2_Invariance.lean:152`](../../OSforGFF/OS/OS2_Invariance.lean#L152)).
 
 > **One line:** the propagator is a function of $\lVert x - y\rVert$; isometries preserve
 > $\lVert x - y\rVert$. Full walkthrough (with OS1) in [OS1OS2.md](OS1OS2.md).
@@ -249,12 +249,12 @@ is the most useful thing to know before you dive in.
 
 | Axiom | Lines | Genuine mathematical idea? | Where the difficulty really lives |
 |---|---|---|---|
-| **OS3** | $\approx 7112$ | **Yes — the deep one.** Mixed (proper-time) representation; entrywise-exponential positivity (Schur–Hadamard); it *is* the Osterwalder–Schrader reconstruction positivity. | Split between real ideas (`MixedRep`, `CovarianceRP`, `ReflectionPositivity`) and a large, technical Fubini/integrability layer (`MixedRepInfra`, $\approx 3755$ lines). |
-| **OS4 (clustering)** | part of $2312$ | **Yes — one elegant idea.** All correlation collapses into $e^{C(f,g)}$; the mass gap forces exponential decay. | Short and conceptual once you have the Gaussian MGF factorization. |
-| **OS4 (ergodicity)** | part of $2312$ | **Moderate — a standard template.** A quantitative $L^2$ ergodic theorem; no new idea, but the rigorous variance/decay estimate is long. | The length is the estimate, not the concept. |
-| **OS1** | $\approx 464$ | **Light — one estimate.** Plancherel + a multiplier bound. | Elementary given the mass gap. |
+| **OS3** | $\approx 6750$ | **Yes — the deep one.** Mixed (proper-time) representation; entrywise-exponential positivity (Schur–Hadamard); it *is* the Osterwalder–Schrader reconstruction positivity. | Split between real ideas (`MixedRep`, `CovarianceRP`, `ReflectionPositivity`) and a large, technical Fubini/integrability layer (`MixedRepInfra`, $\approx 3620$ lines). |
+| **OS4 (clustering)** | part of $2300$ | **Yes — one elegant idea.** All correlation collapses into $e^{C(f,g)}$; the mass gap forces exponential decay. | Short and conceptual once you have the Gaussian MGF factorization. |
+| **OS4 (ergodicity)** | part of $2300$ | **Moderate — a standard template.** A quantitative $L^2$ ergodic theorem; no new idea, but the rigorous variance/decay estimate is long. | The length is the estimate, not the concept. |
+| **OS1** | $\approx 460$ | **Light — one estimate.** Plancherel + a multiplier bound. | Elementary given the mass gap. |
 | **OS2** | $\approx 160$ | **Light — one symmetry.** Radial covariance + isometry invariance. | Essentially a one-liner plus a Gaussian reduction lemma. |
-| **OS0** | $\approx 855$ | **None — the idea is trivial.** "$\exp$ of a quadratic is entire." | *All* of the length is analytic plumbing: differentiation under the integral, Fernique domination. The poster child for length $\ne$ depth. |
+| **OS0** | $\approx 700$ | **None — the idea is trivial.** "$\exp$ of a quadratic is entire." | *All* of the length is analytic plumbing: differentiation under the integral, Fernique domination. The poster child for length $\ne$ depth. |
 
 **Reading recommendation.** For mathematical substance, read **OS3** (both the analytic
 maneuver and the positivity theory) and the **clustering** half of **OS4**. **OS1** and

@@ -10,7 +10,7 @@ OS0 is the axiom you would expect to be the hardest — "the whole correlation h
 exists and is analytic" — and it is the one whose *idea* is the most trivial. That gap
 is the entire point of this note. The mathematical content is a single line — **the
 exponential of a quadratic polynomial is entire** — and essentially all of the
-$\approx 855$-line proof is measure-theoretic *plumbing* that makes that line rigorous
+$\approx 700$-line proof is measure-theoretic *plumbing* that makes that line rigorous
 as a statement about an integral. OS0 is the poster child for **length $\ne$ depth**.
 
 > **One line:** $Z\big[\sum_i z_i J_i\big] = \exp\!\big(-\tfrac12 Q(z)\big)$ with $Q$ a
@@ -35,7 +35,7 @@ skim.
 - **The measure** $\mu \equiv \mu_{\mathrm{GFF}}$ — the mean-zero **Gaussian** probability
   measure on $\mathscr{S}'(\mathbb{R}^d)$ with covariance $C$; expectations $\mathbb{E}$
   are against $\mu$. In Lean it is `gaussianFreeField_free m`, aliased `μ_GFF d m`
-  ([OS/Measure/Construct.lean:143](../../OSforGFF/Measure/Construct.lean#L143)).
+  ([OS/Measure/Construct.lean:134](../../OSforGFF/Measure/Construct.lean#L134)).
 - **Covariance / propagator** $C = (-\Delta + m^2)^{-1}$ — the two-point function,
   $\mathbb{E}\big[\varphi(f)\,\varphi(g)\big] = \langle f, C g\rangle$, with momentum-space
   symbol $\widehat{C}(k) = 1/(\lvert k\rvert^2 + m^2)$. The mass $m > 0$ is the whole
@@ -48,7 +48,7 @@ skim.
   through $(\star)$."
 
 In Lean the functional (GF) is `GJGeneratingFunctionalℂ`
-([OS/Spacetime/Basic.lean:250](../../OSforGFF/Spacetime/Basic.lean#L250)); the smeared
+([OS/Spacetime/Basic.lean:247](../../OSforGFF/Spacetime/Basic.lean#L247)); the smeared
 field $\langle\omega, f\rangle$ for complex $f$ is `distributionPairingℂ_real`.
 
 ---
@@ -64,11 +64,11 @@ $$z \;\longmapsto\; Z\!\Big[\textstyle\sum_i z_i J_i\Big]$$
 be **entire** — complex-analytic on *all* of $\mathbb{C}^n$, no radius limit.
 
 In Lean this is the predicate `OS0_Analyticity`
-([OS/Axioms.lean:75](../../OSforGFF/OS/Axioms.lean#L75)); the free-field instance is the
+([OS/Axioms.lean:76](../../OSforGFF/OS/Axioms.lean#L76)); the free-field instance is the
 headline theorem `gaussianFreeField_satisfies_OS0`
-([OS/OS0_Analyticity.lean:838](../../OSforGFF/OS/OS0_Analyticity.lean#L838)), harvested as
+([OS/OS0_Analyticity.lean:679](../../OSforGFF/OS/OS0_Analyticity.lean#L679)), harvested as
 the `os0` field of the bundled `SatisfiesAllOS (μ_GFF d m)`
-([OS/Axioms.lean:194](../../OSforGFF/OS/Axioms.lean#L194)). The analyticity is in the
+([OS/Axioms.lean:195](../../OSforGFF/OS/Axioms.lean#L195)). The analyticity is in the
 **complex parameters $z$**, with the test functions held fixed — *not* in the field
 configuration $\omega$.
 
@@ -123,7 +123,7 @@ whose exponent is a **quadratic polynomial in $z$**. A polynomial is entire, and
 of an entire function is entire. That is the complete mathematical content of OS0 — three
 words: *exp, quadratic, entire.*
 
-**All the length is bookkeeping.** So why is the file $\approx 855$ lines? Because two
+**All the length is bookkeeping.** So why is the file $\approx 700$ lines? Because two
 honest measure-theoretic steps stand between $(\star)$ and the display above:
 
 - **Real $\to$ complex.** The measure is *built* with a known characteristic functional
@@ -155,19 +155,19 @@ Everything that follows runs under the section variables `{d : ℕ} [Fact (2 ≤
 ## 4. Halves A and B — the mathematics (short)
 
 **Half A: the closed form for complex sources.** The target
-([OS/OS0_Analyticity.lean:666](../../OSforGFF/OS/OS0_Analyticity.lean#L666)) is
+([OS/OS0_Analyticity.lean:506](../../OSforGFF/OS/OS0_Analyticity.lean#L506)) is
 
 $$Z[f] \;=\; \exp\!\Big(-\tfrac12\, C_{\mathbb C}(f,f)\Big), \qquad C_{\mathbb C}(f,g) = \langle f, C g\rangle, \quad C = (-\Delta + m^2)^{-1}, \tag{A}$$
 
 where $C_{\mathbb C}$ is the **bilinear** (not sesquilinear) complexified covariance form
 `freeCovarianceℂ_bilinear`
-([OS/Covariance/ParsevalGeneric.lean:162](../../OSforGFF/Covariance/ParsevalGeneric.lean#L162)).
+([OS/Covariance/ParsevalGeneric.lean:163](../../OSforGFF/Covariance/ParsevalGeneric.lean#L163)).
 Bilinearity — not the Hermitian inner product — is what lets the exponent become a genuine
 polynomial in $z$ in Half B.
 
 The wrinkle: the measure is constructed with a known characteristic functional only for
 **real** $f$ (`gff_real_characteristic`,
-[OS/Measure/Construct.lean:153](../../OSforGFF/Measure/Construct.lean#L153)), namely
+[OS/Measure/Construct.lean:144](../../OSforGFF/Measure/Construct.lean#L144)), namely
 $Z[f] = \exp(-\tfrac12 C(f,f))$. OS0 needs complex $f$. Promote real $\to$ complex by an
 identity-theorem argument on a one-parameter slice. Decompose $f = f_{\mathrm{re}} + i\,
 f_{\mathrm{im}}$ and, for $t \in \mathbb{C}$, compare
@@ -184,20 +184,20 @@ argument — a foreshadowing of the axiom itself.
 
 **Half B: the quadratic, and the punchline.** Expand (A) using $\mathbb{C}$-bilinearity
 (`freeCovarianceℂ_bilinear_sum_expansion`,
-[OS/OS0_Analyticity.lean:797](../../OSforGFF/OS/OS0_Analyticity.lean#L797)):
+[OS/OS0_Analyticity.lean:638](../../OSforGFF/OS/OS0_Analyticity.lean#L638)):
 
 $$C_{\mathbb C}\!\Big(\textstyle\sum_i z_i J_i,\ \sum_j z_j J_j\Big) = \sum_{i,j} z_i z_j\, C_{\mathbb C}(J_i, J_j),$$
 
 so the closed form for a finite source (`gff_generating_eq_exp_quadratic`,
-[OS/OS0_Analyticity.lean:808](../../OSforGFF/OS/OS0_Analyticity.lean#L808)) is
+[OS/OS0_Analyticity.lean:649](../../OSforGFF/OS/OS0_Analyticity.lean#L649)) is
 
 $$Z\!\Big[\textstyle\sum_i z_i J_i\Big] = \exp\!\Big(-\tfrac12 \sum_{i,j} z_i z_j\, C_{\mathbb C}(J_i, J_j)\Big). \tag{B}$$
 
 The exponent is a finite quadratic polynomial in $z$; `analyticOn_finite_quadratic`
-([OS/OS0_Analyticity.lean:821](../../OSforGFF/OS/OS0_Analyticity.lean#L821)) certifies it
+([OS/OS0_Analyticity.lean:662](../../OSforGFF/OS/OS0_Analyticity.lean#L662)) certifies it
 is analytic (each $z_i$ is a coordinate projection; finite sums and products of analytic
 maps are analytic), and the headline `gaussianFreeField_satisfies_OS0`
-([OS/OS0_Analyticity.lean:838](../../OSforGFF/OS/OS0_Analyticity.lean#L838)) composes with
+([OS/OS0_Analyticity.lean:679](../../OSforGFF/OS/OS0_Analyticity.lean#L679)) composes with
 $\exp$ in three lines. *This* is the trivial core idea.
 
 > **One line:** the real functional plus the identity theorem give (A); bilinear
@@ -205,12 +205,12 @@ $\exp$ in three lines. *This* is the trivial core idea.
 
 ---
 
-## 5. The crux — where the $\approx 855$ lines go
+## 5. The crux — where the $\approx 700$ lines go
 
 The hard part is not "exp of a quadratic is entire." It is proving that $Z$ — *an
 integral* — is even differentiable in its parameter, so that Half A's step (2) is
 legitimate. This is `gff_cf_slice_entire`
-([OS/OS0_Analyticity.lean:498](../../OSforGFF/OS/OS0_Analyticity.lean#L498)), and it rests
+([OS/OS0_Analyticity.lean:338](../../OSforGFF/OS/OS0_Analyticity.lean#L338)), and it rests
 on Mathlib's **Leibniz rule** (`hasFDerivAt_integral_of_dominated_of_fderiv_le`):
 
 $$\frac{d}{dt}\int F(t,\omega)\, d\mu(\omega) \;=\; \int \frac{\partial F}{\partial t}(t,\omega)\, d\mu(\omega),$$
@@ -226,7 +226,7 @@ entire difficulty. (Goursat's theorem then upgrades "complex-differentiable" to
 $$\big\lVert e^{\,i\langle \omega, f\rangle}\big\rVert = e^{-\varphi(f_{\mathrm{im}})} \tag{C}$$
 
 (`norm_exp_I_distributionPairingℂ_real`,
-[OS/OS0_Analyticity.lean:200](../../OSforGFF/OS/OS0_Analyticity.lean#L200)), so over a
+[OS/OS0_Analyticity.lean:112](../../OSforGFF/OS/OS0_Analyticity.lean#L112)), so over a
 ball in $t$ the derivative norm grows like
 
 $$\lvert \varphi(f_{\mathrm{im}})\rvert \; e^{\,\lvert t_{\mathrm{im}}\rvert\, \lvert \varphi(f_{\mathrm{im}})\rvert},$$
@@ -237,7 +237,7 @@ $\varphi(f_{\mathrm{im}})$. No uniform constant can dominate this.
 **The rescue** stitches two classical facts:
 
 - **Fernique's theorem** (`gaussianFreeField_pairing_expSq_integrable`,
-  [OS/Measure/Construct.lean:404](../../OSforGFF/Measure/Construct.lean#L404)): for the
+  [OS/Measure/Construct.lean:395](../../OSforGFF/Measure/Construct.lean#L395)): for the
   Gaussian GFF measure there is $\alpha > 0$ with $\mathbb{E}[e^{\alpha \varphi(f)^2}] <
   \infty$ — Gaussian tails beat a *quadratic* exponential. This is the one nontrivial
   input, and it is precisely the physical fact (c) of §2.
@@ -245,23 +245,20 @@ $\varphi(f_{\mathrm{im}})$. No uniform constant can dominate this.
   the unwanted *linear*-exponential by the Fernique-integrable *quadratic*-exponential.
 
 Together $e^{\,c\lvert x\rvert} \le (\mathrm{const})\cdot e^{\alpha x^2} \in L^1(\mu)$,
-and $\lvert x\rvert \le e^{\lvert x\rvert}$ soaks up the polynomial prefactor. A cascade of
-lemmas exists solely to assemble this one dominator —
+and $\lvert x\rvert \le e^{\lvert x\rvert}$ soaks up the polynomial prefactor. A short chain
+of lemmas exists solely to assemble this one dominator —
 `gff_exp_neg_pairing_integrable`
-([:218](../../OSforGFF/OS/OS0_Analyticity.lean#L218)),
+([:130](../../OSforGFF/OS/OS0_Analyticity.lean#L130)),
 `gff_exp_abs_pairing_memLp`
-([:259](../../OSforGFF/OS/OS0_Analyticity.lean#L259)),
-`gff_exp_abs_sum_memLp` (combining several factors by Hölder,
-[:400](../../OSforGFF/OS/OS0_Analyticity.lean#L400)),
+([:171](../../OSforGFF/OS/OS0_Analyticity.lean#L171)), and
 `gff_integrand_norm_integrable`
-([:453](../../OSforGFF/OS/OS0_Analyticity.lean#L453)), and
-`gff_integrand_integrable`
-([:467](../../OSforGFF/OS/OS0_Analyticity.lean#L467)). Unglamorous — and the reason
+([:310](../../OSforGFF/OS/OS0_Analyticity.lean#L310)) — consumed inside
+`gff_cf_slice_entire`'s differentiation under the integral. Unglamorous — and the reason
 analyticity holds. *The Gaussian tails of the free field are exactly what make its
 generating functional entire.*
 
 > **One line:** Fernique + Young manufacture one integrable dominator; Leibniz-under-the-
-> integral does the rest — that is the whole 800-line detour.
+> integral does the rest — that is the whole 700-line detour.
 
 ---
 
@@ -296,7 +293,7 @@ $0$ and that $Z$ is ready for analytic continuation to physical spacetime. For t
 $Z[f] = \exp(-\tfrac12 C_{\mathbb C}(f,f))$ (from the real characteristic functional by an
 identity-theorem argument), so $Z[\sum_i z_i J_i]$ is the exponential of a finite
 quadratic polynomial in $z$ — manifestly entire. The deep idea is therefore one line; the
-$\approx 855$ lines are the rigor behind *differentiating $Z$ under the integral sign* (via
+$\approx 700$ lines are the rigor behind *differentiating $Z$ under the integral sign* (via
 Mathlib's Leibniz rule), which needs a dominating function supplied by **Fernique's
 theorem** plus Young's inequality — the Gaussian tails of the free field being precisely
 what make $Z$ entire. The proof touches no dimension-specific structure: it runs over
@@ -311,25 +308,23 @@ proof covers every $d \ge 2$.
 
 | Result | File | Name (line) |
 |---|---|---|
-| OS0 axiom (statement) | `OS/Axioms.lean` | `OS0_Analyticity` (75) |
-| Bundled OS axioms | `OS/Axioms.lean` | `SatisfiesAllOS` (194) |
-| Generating functional (GF) | `Spacetime/Basic.lean` | `GJGeneratingFunctionalℂ` (250) |
-| GFF measure / dim-indexed alias | `Measure/Construct.lean` | `gaussianFreeField_free` (143) / `μ_GFF` (148) |
-| Real characteristic functional (black box) | `Measure/Construct.lean` | `gff_real_characteristic` (153) |
-| Fernique: $e^{\alpha x^2}$ integrable | `Measure/Construct.lean` | `gaussianFreeField_pairing_expSq_integrable` (404) |
-| $\lVert e^{i\langle\omega,f\rangle}\rVert = e^{-\varphi(f_{\mathrm{im}})}$ (C) | `OS/OS0_Analyticity.lean` | `norm_exp_I_distributionPairingℂ_real` (200) |
-| $e^{-\varphi(f)}$ integrable (Fernique) | `OS/OS0_Analyticity.lean` | `gff_exp_neg_pairing_integrable` (218) |
-| $e^{\lvert\varphi(f)\rvert} \in L^p$ (Young + Fernique) | `OS/OS0_Analyticity.lean` | `gff_exp_abs_pairing_memLp` (259) |
-| product of factors $\in L^2$ (Hölder) | `OS/OS0_Analyticity.lean` | `gff_exp_abs_sum_memLp` (400) |
-| integrand norm integrable | `OS/OS0_Analyticity.lean` | `gff_integrand_norm_integrable` (453) |
-| integrand integrable | `OS/OS0_Analyticity.lean` | `gff_integrand_integrable` (467) |
-| slice is entire (Leibniz / diff. under $\int$) | `OS/OS0_Analyticity.lean` | `gff_cf_slice_entire` (498) |
-| $Z[f] = \exp(-\tfrac12 C_{\mathbb C}(f,f))$ (A) | `OS/OS0_Analyticity.lean` | `gff_complex_CF_covariance` (666) |
-| bilinear expansion | `OS/OS0_Analyticity.lean` | `freeCovarianceℂ_bilinear_sum_expansion` (797) |
-| closed form for $\sum z_i J_i$ (B) | `OS/OS0_Analyticity.lean` | `gff_generating_eq_exp_quadratic` (808) |
-| quadratic-form analyticity | `OS/OS0_Analyticity.lean` | `analyticOn_finite_quadratic` (821) |
-| complexified covariance form | `Covariance/ParsevalGeneric.lean` | `freeCovarianceℂ_bilinear` (162) |
-| **OS0 for the GFF (main)** | `OS/OS0_Analyticity.lean` | `gaussianFreeField_satisfies_OS0` (838) |
+| OS0 axiom (statement) | `OS/Axioms.lean` | `OS0_Analyticity` (76) |
+| Bundled OS axioms | `OS/Axioms.lean` | `SatisfiesAllOS` (195) |
+| Generating functional (GF) | `Spacetime/Basic.lean` | `GJGeneratingFunctionalℂ` (247) |
+| GFF measure / dim-indexed alias | `Measure/Construct.lean` | `gaussianFreeField_free` (134) / `μ_GFF` (139) |
+| Real characteristic functional (black box) | `Measure/Construct.lean` | `gff_real_characteristic` (144) |
+| Fernique: $e^{\alpha x^2}$ integrable | `Measure/Construct.lean` | `gaussianFreeField_pairing_expSq_integrable` (395) |
+| $\lVert e^{i\langle\omega,f\rangle}\rVert = e^{-\varphi(f_{\mathrm{im}})}$ (C) | `OS/OS0_Analyticity.lean` | `norm_exp_I_distributionPairingℂ_real` (112) |
+| $e^{-\varphi(f)}$ integrable (Fernique) | `OS/OS0_Analyticity.lean` | `gff_exp_neg_pairing_integrable` (130) |
+| $e^{\lvert\varphi(f)\rvert} \in L^p$ (Young + Fernique) | `OS/OS0_Analyticity.lean` | `gff_exp_abs_pairing_memLp` (171) |
+| integrand norm integrable | `OS/OS0_Analyticity.lean` | `gff_integrand_norm_integrable` (310) |
+| slice is entire (Leibniz / diff. under $\int$) | `OS/OS0_Analyticity.lean` | `gff_cf_slice_entire` (338) |
+| $Z[f] = \exp(-\tfrac12 C_{\mathbb C}(f,f))$ (A) | `OS/OS0_Analyticity.lean` | `gff_complex_CF_covariance` (506) |
+| bilinear expansion | `OS/OS0_Analyticity.lean` | `freeCovarianceℂ_bilinear_sum_expansion` (638) |
+| closed form for $\sum z_i J_i$ (B) | `OS/OS0_Analyticity.lean` | `gff_generating_eq_exp_quadratic` (649) |
+| quadratic-form analyticity | `OS/OS0_Analyticity.lean` | `analyticOn_finite_quadratic` (662) |
+| complexified covariance form | `Covariance/ParsevalGeneric.lean` | `freeCovarianceℂ_bilinear` (163) |
+| **OS0 for the GFF (main)** | `OS/OS0_Analyticity.lean` | `gaussianFreeField_satisfies_OS0` (679) |
 | Leibniz rule (imported) | Mathlib `Analysis.Calculus.ParametricIntegral` | `hasFDerivAt_integral_of_dominated_of_fderiv_le` |
 | identity theorem (imported) | Mathlib `Analysis.Analytic.Basic` | `AnalyticOnNhd.eq_of_frequently_eq` |
 
