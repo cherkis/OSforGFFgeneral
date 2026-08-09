@@ -25,7 +25,7 @@ with ω = √(‖k̄‖² + m²) the relativistic energy of the spatial momentum
 This is the integration order exchange from eq. (4.19) that the naive approach could
 not justify due to the non-absolute-integrability of 1/√(k²+m²) in the spatial
 momentum space. The entry point is `GFFPropagator.schwinger_eq`, so the derivation
-holds for every dimension d (with `Fact (d ≤ 5)` inherited from the Fubini layer).
+holds for every dimension d ≥ 2.
 
 5. **Fubini Theorems** (from `OS3_MixedRepInfra`): Justify all changes in integration order
    using the integrability bounds.
@@ -1366,7 +1366,7 @@ theorem bilinear_schwinger_eq_heatKernel (m : ℝ) [Fact (0 < m)] [GFFPropagator
     - `laplace_integral_half_power` (THEOREM, line 135)
     - Fubini applications (require integrability - uses Schwartz decay)
 -/
-theorem heatKernel_bilinear_to_mixed_rep (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5)] (f : (TestFunctionℂ d))
+theorem heatKernel_bilinear_to_mixed_rep (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d))
     (hf_supp : ∀ x, x 0 ≤ 0 → f x = 0) :
     ∫ s in Set.Ioi 0, (Real.exp (-s * m^2) : ℂ) *
       ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
@@ -1646,7 +1646,7 @@ theorem heatKernel_bilinear_to_mixed_rep (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5
 
     **Note**: Working directly at bilinear level ensures absolute convergence
     (Schwartz test functions provide decay even when t = 0). -/
-theorem bessel_bilinear_eq_mixed_representation (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)] (f : (TestFunctionℂ d))
+theorem bessel_bilinear_eq_mixed_representation (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunctionℂ d))
     (hf_supp : ∀ x, x 0 ≤ 0 → f x = 0) :
   ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
     (starRingEnd ℂ (f x)) *
@@ -1708,7 +1708,7 @@ lemma mixed_rep_to_k0_inside_integrand (k_spatial : (SpatialCoords d)) (m : ℝ)
     2. Use `mixed_rep_to_k0_inside_integrand`: (1/ω) exp(-ω|t|) = (1/π) ∫_{k₀}...
     3. Factor the spatial phase into the k₀ integral
     4. Combine normalizations: 1/(2(2π)^{d-1}) × (1/π) = 1/(2π)^d -/
-theorem bilinear_to_k0_inside (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)] (f : (TestFunctionℂ d))
+theorem bilinear_to_k0_inside (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunctionℂ d))
     (hf_supp : ∀ x, x 0 ≤ 0 → f x = 0) :
   ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
     (starRingEnd ℂ (f x)) *

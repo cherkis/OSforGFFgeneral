@@ -20,7 +20,7 @@ import OSforGFF.OS.OS4_Ergodicity
 
 Assembles OS0–OS4 into the dimension-generic
 `gaussianFreeField_satisfies_all_OS_axioms_generic`, the all-dimensions corollary
-`gaussianFreeField_satisfies_all_OS_axioms_of_dim` (every `2 ≤ d ≤ 5`, via the canonical
+`gaussianFreeField_satisfies_all_OS_axioms_of_dim` (every `d ≥ 2`, via the canonical
 `GFFPropagator.ofProperTime`), and the concrete instances
 `gaussianFreeField_satisfies_all_OS_axioms_dim4` (Bessel K₁),
 `gaussianFreeField_satisfies_all_OS_axioms_dim3` (Yukawa),
@@ -34,10 +34,10 @@ Assembles OS0–OS4 into the dimension-generic
 - OS4 (Clustering): Gaussian factorization + convolution decay — `OS.OS4_Clustering`
 - OS4 (Ergodicity): polynomial clustering α=6 → L² convergence — `OS.OS4_Ergodicity`
 
-The generic theorem holds for any spacetime dimension `2 ≤ d ≤ 5` equipped with a
+The generic theorem holds for any spacetime dimension `d ≥ 2` equipped with a
 `GFFPropagator d m` instance (the closed-form radial covariance identified with the
-proper-time integral); the upper bound `d ≤ 5` enters only through the proper-time
-Fubini domination in the OS3 mixed-representation argument.
+proper-time integral); the OS3 proper-time Fubini domination runs at boundary-vanishing
+order `d`, so no upper bound on the dimension is needed.
 -/
 
 open scoped BigOperators
@@ -49,7 +49,7 @@ noncomputable section
 /-! ## Master OS theorem for the free GFF -/
 
 /-- Master theorem, dimension-generic form: the free GFF in dimension `d` (with
-    `2 ≤ d ≤ 5` and a `GFFPropagator d m` instance) satisfies all
+    `d ≥ 2` and a `GFFPropagator d m` instance) satisfies all
     Osterwalder–Schrader axioms.
 - OS0 is supplied by `QFT.gaussianFreeField_satisfies_OS0` via the holomorphic integral theorem
 - OS1 is supplied by `gaussianFreeField_satisfies_OS1_revised` via Fourier/momentum space methods
@@ -58,7 +58,7 @@ noncomputable section
 - OS4 Clustering is supplied by `QFT.gaussianFreeField_satisfies_OS4` via Gaussian factorization
 - OS4 Ergodicity is supplied by polynomial clustering (α=6) → ergodicity -/
 theorem gaussianFreeField_satisfies_all_OS_axioms_generic
-    {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)] :
+    {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
     SatisfiesAllOS (gaussianFreeField_free (d := d) m) where
   os0 := QFT.gaussianFreeField_satisfies_OS0 m
   os1 := gaussianFreeField_satisfies_OS1_revised m
@@ -70,14 +70,14 @@ theorem gaussianFreeField_satisfies_all_OS_axioms_generic
   os4_ergodicity := OS4_Ergodicity.OS4_PolynomialClustering_implies_OS4_Ergodicity m
     (QFT.gaussianFreeField_satisfies_OS4_PolynomialClustering m 6 (by norm_num))
 
-/-- Master theorem, all-dimensions form: for every `2 ≤ d ≤ 5` the free GFF built from the
+/-- Master theorem, all-dimensions form: for every `d ≥ 2` the free GFF built from the
 canonical proper-time propagator (`GFFPropagator.ofProperTime`) satisfies all
 Osterwalder–Schrader axioms. This drops the `[GFFPropagator d m]` hypothesis of
 `gaussianFreeField_satisfies_all_OS_axioms_generic` by supplying the canonical instance, so no
-per-`d` closed form is needed; the concrete instances (`d = 2, 3, 4`) additionally exhibit the
-covariance in closed form. -/
+per-`d` closed form is needed; the concrete instances (`d = 2, 3, 4, 5`) additionally exhibit
+the covariance in closed form. -/
 theorem gaussianFreeField_satisfies_all_OS_axioms_of_dim (d : ℕ) [Fact (2 ≤ d)]
-    (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5)] :
+    (m : ℝ) [Fact (0 < m)] :
     letI := GFFPropagator.ofProperTime d m
     SatisfiesAllOS (gaussianFreeField_free (d := d) m) := by
   letI := GFFPropagator.ofProperTime d m
@@ -108,8 +108,7 @@ theorem gaussianFreeField_satisfies_all_OS_axioms_dim2 (m : ℝ) [Fact (0 < m)] 
 
 /-- Master theorem, five-dimensional instance: the free GFF with the `K_{3/2}` covariance
 `(1 + mr) e^{-mr}/(8π²r³)` satisfies all Osterwalder-Schrader axioms. This is the `d = 5` instance
-of `gaussianFreeField_satisfies_all_OS_axioms_generic` (`d = 5` is the boundary of the proven
-`d ≤ 5` OS3 range). -/
+of `gaussianFreeField_satisfies_all_OS_axioms_generic`. -/
 theorem gaussianFreeField_satisfies_all_OS_axioms_dim5 (m : ℝ) [Fact (0 < m)] :
     SatisfiesAllOS (μ_GFF 5 m) :=
   gaussianFreeField_satisfies_all_OS_axioms_generic m

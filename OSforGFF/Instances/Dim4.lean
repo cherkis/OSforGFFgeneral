@@ -48,9 +48,6 @@ theorem properTimeCovariance_dim4_eq (m r : ℝ) (hm : 0 < m) (hr : 0 < r) :
 /-- `2 ≤ 4`, needed for the time/space split. -/
 instance instFactTwoLeFour : Fact ((2 : ℕ) ≤ 4) := ⟨by norm_num⟩
 
-/-- `4 ≤ 5`, the bound entering the OS3 proper-time Fubini domination. -/
-instance instFactFourLeFive : Fact ((4 : ℕ) ≤ 5) := ⟨by norm_num⟩
-
 /-- The four-dimensional free propagator: `Cprofile` is the Bessel closed form and the
     Schwinger bridge is the proper-time evaluation of the heat-kernel integral. -/
 noncomputable instance instGFFPropagatorDim4 (m : ℝ) [Fact (0 < m)] :

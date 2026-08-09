@@ -72,9 +72,6 @@ theorem properTimeCovariance_dim3_eq (m r : ℝ) (hm : 0 < m) (hr : 0 < r) :
 /-- `2 ≤ 3`, needed for the time/space split. -/
 instance instFactTwoLeThree : Fact ((2 : ℕ) ≤ 3) := ⟨by norm_num⟩
 
-/-- `3 ≤ 5`, the bound entering the OS3 proper-time Fubini domination. -/
-instance instFactThreeLeFive : Fact ((3 : ℕ) ≤ 5) := ⟨by norm_num⟩
-
 /-- The three-dimensional free propagator: `Cprofile` is the Yukawa closed form
     `e^{-mr}/(4πr)` and the Schwinger bridge is `properTimeCovariance_dim3_eq`. -/
 noncomputable instance instGFFPropagatorDim3 (m : ℝ) [Fact (0 < m)] :

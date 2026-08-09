@@ -953,9 +953,9 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
           -- s^(d+1/2) * exp(-sm²) * exp(-s|k|²)
           --
           -- Inner k-integral: ∫_k exp(-s|k|²) dk = (π/s)^((d-1)/2)  [Gaussian integral]
-          -- So the s-integrand is π^((d-1)/2) * s^((4-d)/2) * exp(-sm²)
+          -- So the s-integrand is π^((d-1)/2) * s^((d+2)/2) * exp(-sm²)
           --
-          -- Outer s-integral: converges since (4-d)/2 > -1 for d ≤ 5
+          -- Outer s-integral: converges since (d+2)/2 > -1 for every d
 
           have hd1 : 1 ≤ d := by have := (Fact.out : 2 ≤ d); omega
           have hd_cast : ((d - 1 : ℕ) : ℝ) = (d : ℝ) - 1 := by

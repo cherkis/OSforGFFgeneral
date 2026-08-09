@@ -118,7 +118,7 @@ theorem rpInnerProduct_eq_bessel_reflected [GFFPropagator d m] (f : (TestFunctio
 /-- The mixed representation from the Schwinger pathway.
     This is more direct than the k₀-inside form for proving reflection positivity,
     because `(1/ω) exp(-ω|t|)` already factorizes for positive-time test functions. -/
-theorem mixed_representation [GFFPropagator d m] [Fact (d ≤ 5)] (f : (TestFunctionℂ d))
+theorem mixed_representation [GFFPropagator d m] (f : (TestFunctionℂ d))
     (hf_supp : ∀ x, x 0 ≤ 0 → f x = 0) :
     rpInnerProduct m f =
     (1 / (2 * (2 * Real.pi) ^ (d - 1)) : ℝ) *
@@ -331,7 +331,7 @@ theorem factorization_to_squared_norm_direct (f : (TestFunctionℂ d)) (k_sp : (
 
     This follows directly from the mixed representation + factorization,
     without going through the k₀-inside form. -/
-theorem rp_equals_squared_norm_integral [GFFPropagator d m] [Fact (d ≤ 5)] (f : (TestFunctionℂ d))
+theorem rp_equals_squared_norm_integral [GFFPropagator d m] (f : (TestFunctionℂ d))
     (hf_supp : ∀ x : (SpaceTime d), x 0 ≤ 0 → f x = 0) :
     rpInnerProduct m f =
     (1 / (2 * (2 * Real.pi) ^ (d - 1)) : ℝ) *
@@ -356,7 +356,7 @@ theorem rp_equals_squared_norm_integral [GFFPropagator d m] [Fact (d ≤ 5)] (f 
     Proof: By `rp_equals_squared_norm_integral`,
       ⟨Θf, f⟩_C = (1/(2(2π)^{d-1})) * ∫_{k_sp} (1/ω) |F_ω(-k_sp)|² dk_sp
     Both the prefactor and integrand are non-negative. -/
-theorem freeCovariance_reflection_positive_direct [GFFPropagator d m] [Fact (d ≤ 5)] (f : (TestFunctionℂ d))
+theorem freeCovariance_reflection_positive_direct [GFFPropagator d m] (f : (TestFunctionℂ d))
     (hf_supp : ∀ x : (SpaceTime d), x 0 ≤ 0 → f x = 0) :
     0 ≤ (rpInnerProduct m f).re := by
   rw [rp_equals_squared_norm_integral m f hf_supp]
@@ -408,7 +408,7 @@ lemma rpInnerProduct_eq_rpProof (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f 
 
     **Proof:** Bridge to RPProof, then apply the direct proof
     via momentum representation and non-negativity of the integrand. -/
-theorem freeCovariance_reflection_positive_bilinear (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)] (f : (TestFunctionℂ d))
+theorem freeCovariance_reflection_positive_bilinear (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunctionℂ d))
     (hf_supp : ∀ x : (SpaceTime d), x 0 ≤ 0 → f x = 0) :
   0 ≤ (rpInnerProduct m f).re := by
   rw [rpInnerProduct_eq_rpProof]
@@ -438,7 +438,7 @@ lemma rpInnerProduct_toComplex_eq (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (
   rw [star_toComplex_eq_compTimeReflection]
 
 /-- For real test functions, the reflection positivity inner product is non-negative. -/
-theorem freeCovariance_reflection_positive_bilinear_real (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)] (f : (TestFunction d))
+theorem freeCovariance_reflection_positive_bilinear_real (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunction d))
     (hf_supp : ∀ x : (SpaceTime d), x 0 ≤ 0 → f x = 0) :
   0 ≤ ∫ x, ∫ y, (QFT.compTimeReflectionReal f) x * freeCovariance d m x y * f y := by
   -- Use the complex theorem for toComplex f
@@ -459,7 +459,7 @@ theorem freeCovariance_reflection_positive_bilinear_real (m : ℝ) [Fact (0 < m)
   exact h_complex
 
 /-- Alias for `freeCovariance_reflection_positive_bilinear_real` to match expected name. -/
-theorem freeCovariance_reflection_positive_real (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)] (f : (TestFunction d))
+theorem freeCovariance_reflection_positive_real (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunction d))
     (hf_supp : ∀ x : (SpaceTime d), x 0 ≤ 0 → f x = 0) :
   0 ≤ ∫ x, ∫ y, (QFT.compTimeReflectionReal f) x * freeCovariance d m x y * f y :=
   freeCovariance_reflection_positive_bilinear_real m f hf_supp

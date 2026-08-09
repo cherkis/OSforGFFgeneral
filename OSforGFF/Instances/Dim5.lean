@@ -18,8 +18,7 @@ as the order `ν = -3/2` case of the master Bessel identity `schwingerIntegral_e
 the half-integer value `besselK_three_half` (`K_{3/2}(z) = √(π/(2z)) e^{-z} (1 + 1/z)`), obtained by
 the substitution `u = sinh(t/2)` and the Gaussian zeroth and second moments.
 
-`d = 5` is the boundary of the OS3 proper-time Fubini envelope (`s^{(4-d)/2} = s^{-1/2}`, still
-integrable, so inside the proven `d ≤ 5` bound), so the master theorem applies.
+The master theorem applies in every dimension `d ≥ 2`, in particular at `d = 5`.
 -/
 
 noncomputable section
@@ -150,9 +149,8 @@ theorem properTimeCovariance_dim5_eq (m r : ℝ) (hm : 0 < m) (hr : 0 < r) :
   field_simp
   ring
 
-/-- `5 ≤ 5`, the boundary bound entering the OS3 proper-time Fubini domination.
-    (`Fact ((2:ℕ) ≤ 5)` is provided by `Instances.Dim2`'s `instFactTwoLeFive`.) -/
-instance instFactFiveLeFive : Fact ((5 : ℕ) ≤ 5) := ⟨le_refl 5⟩
+/-- `2 ≤ 5`, needed for the time/space split. -/
+instance instFactTwoLeFive : Fact ((2 : ℕ) ≤ 5) := ⟨by norm_num⟩
 
 /-- The five-dimensional free propagator: `Cprofile` is the `K_{3/2}` closed form
     `(1 + mr) e^{-mr}/(8π²r³)` and the Schwinger bridge is `properTimeCovariance_dim5_eq`. -/

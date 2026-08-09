@@ -23,7 +23,7 @@ and `differentiable_analyticAt_finDim` no longer exists. The guard freezes reali
 also fail if any of those dependency axioms ever creep back onto the import path.
 
 Frozen blocks are present for all six headline theorems: the dimension-generic master theorem, the
-all-dimensions corollary (`_of_dim`, every `2 ≤ d ≤ 5`), and the concrete instances `d = 4`,
+all-dimensions corollary (`_of_dim`, every `d ≥ 2`), and the concrete instances `d = 4`,
 `d = 3`, `d = 2`, and `d = 5`.
 -/
 import «OSforGFF».OS.Master
@@ -80,6 +80,6 @@ import «OSforGFF».OS.Master
 
 -- ── Goal-type guard: pins the all-dimensions corollary's statement ───────────
 /-- info: OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_of_dim : ∀ (d : ℕ) [inst : Fact (2 ≤ d)] (m : ℝ)
-  [inst_1 : Fact (0 < m)] [Fact (d ≤ 5)], SatisfiesAllOS (gaussianFreeField_free m) -/
+  [inst_1 : Fact (0 < m)], SatisfiesAllOS (gaussianFreeField_free m) -/
 #guard_msgs in
 #check @OSforGFF.gaussianFreeField_satisfies_all_OS_axioms_of_dim

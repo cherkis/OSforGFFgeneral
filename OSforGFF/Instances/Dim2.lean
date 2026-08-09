@@ -42,9 +42,6 @@ theorem properTimeCovariance_dim2_eq (m r : ℝ) (hm : 0 < m) (hr : 0 < r) :
 /-- `2 ≤ 2`, needed for the time/space split. -/
 instance instFactTwoLeTwo : Fact ((2 : ℕ) ≤ 2) := ⟨le_refl 2⟩
 
-/-- `2 ≤ 5`, the bound entering the OS3 proper-time Fubini domination. -/
-instance instFactTwoLeFive : Fact ((2 : ℕ) ≤ 5) := ⟨by norm_num⟩
-
 /-- The two-dimensional free propagator: `Cprofile` is the Bessel closed form
     `K₀(mr)/(2π)` and the Schwinger bridge is `properTimeCovariance_dim2_eq`. -/
 noncomputable instance instGFFPropagatorDim2 (m : ℝ) [Fact (0 < m)] :
