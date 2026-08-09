@@ -1658,6 +1658,230 @@ lemma heat_kernel_moment_integral_bound (s : ℝ) (hs : 0 < s) :
   have hs32 : 0 ≤ s^(3/2 : ℝ) := Real.rpow_nonneg (le_of_lt hs) _
   nlinarith
 
+/-! #### Order-N moment bounds
+
+Order-`N` analogues of the Gaussian moment integrals above: for test functions vanishing to
+order `N` at the time boundary, the boundary moment carries `x₀^N · y₀^N` in place of
+`x₀ · y₀`, and the proper-time scaling improves from `s^{3/2}` to `s^{N+1/2}`.  Only an upper
+bound is needed, so the polynomial inner moment is estimated by the crude
+`∫₀ᵘ x^N (u-x)^N dx ≤ u^{2N+1}` (its exact value is the Beta moment `u^{2N+1}·B(N+1, N+1)`).
+-/
+
+/-- The odd-power Gaussian moment: `∫₀^∞ u^{2N+1} exp(-u²/(4s)) du = (N!/2)·(4s)^{N+1}`.
+    Follows from `∫₀^∞ u^q exp(-b·u²) du = b^{-(q+1)/2}·(1/2)·Γ((q+1)/2)` at `q = 2N+1`,
+    `b = 1/(4s)`, with `Γ(N+1) = N!`. -/
+lemma integral_odd_pow_gaussian (N : ℕ) (s : ℝ) (hs : 0 < s) :
+    ∫ u in Set.Ioi 0, u^(2*N+1) * Real.exp (-u^2 / (4 * s)) =
+    (N.factorial : ℝ) / 2 * (4*s)^(N+1) := by
+  have hb : 0 < 1 / (4 * s) := by positivity
+  have h_integrand_eq : ∀ u : ℝ, u^(2*N+1) * Real.exp (-u^2 / (4 * s)) =
+      u ^ ((2*N+1 : ℕ) : ℝ) * Real.exp (-(1/(4*s)) * u^(2:ℝ)) := by
+    intro u
+    rw [show u^(2*N+1) = u ^ ((2*N+1 : ℕ) : ℝ) from (Real.rpow_natCast u (2*N+1)).symm]
+    rw [show u^2 = u ^ (2:ℝ) from (Real.rpow_natCast u 2).symm]
+    congr 2
+    field_simp
+  simp_rw [h_integrand_eq]
+  have hq : (-1 : ℝ) < ((2*N+1 : ℕ) : ℝ) := by
+    have : (0 : ℝ) ≤ ((2*N+1 : ℕ) : ℝ) := Nat.cast_nonneg _
+    linarith
+  have h := integral_rpow_mul_exp_neg_mul_rpow (p := 2) (q := ((2*N+1 : ℕ) : ℝ))
+    (b := 1/(4*s)) (by norm_num : (0:ℝ) < 2) hq hb
+  calc ∫ u in Set.Ioi 0, u ^ ((2*N+1:ℕ):ℝ) * Real.exp (-(1 / (4 * s)) * u ^ (2:ℝ))
+      = (1/(4*s)) ^ (-(((2*N+1:ℕ):ℝ) + 1) / 2) * (1 / 2) *
+        Real.Gamma ((((2*N+1:ℕ):ℝ) + 1) / 2) := h
+    _ = (1/(4*s)) ^ (-((N:ℝ) + 1)) * (1 / 2) * Real.Gamma ((N:ℝ) + 1) := by
+        congr 2
+        · push_cast; ring_nf
+        · push_cast; ring_nf
+    _ = (1/(4*s)) ^ (-((N:ℝ) + 1)) * (1 / 2) * (N.factorial : ℝ) := by
+        rw [Real.Gamma_nat_eq_factorial]
+    _ = (4*s) ^ ((N:ℝ) + 1) * (1 / 2) * (N.factorial : ℝ) := by
+        congr 2
+        rw [one_div, Real.rpow_neg (inv_nonneg.mpr (by positivity)), ← Real.inv_rpow (by positivity)]
+        rw [inv_inv]
+    _ = (4*s) ^ (N + 1) * (1 / 2) * (N.factorial : ℝ) := by
+        rw [show ((N:ℝ) + 1) = ((N + 1 : ℕ) : ℝ) by push_cast; ring, Real.rpow_natCast]
+    _ = (N.factorial : ℝ) / 2 * (4*s)^(N+1) := by ring
+
+/-- Crude Beta-moment bound: `∫₀ᵘ x^N (u-x)^N dx ≤ u^{2N+1}`.  The integrand is at most
+    `u^{2N}` on `(0, u)`; the exact value is the Beta moment `u^{2N+1}·B(N+1, N+1)`. -/
+lemma integral_pow_mul_sub_pow_le (N : ℕ) (u : ℝ) (hu : 0 < u) :
+    ∫ x in Set.Ioo (0:ℝ) u, x^N * (u - x)^N ≤ u^(2*N+1) := by
+  have h_cont : Continuous (fun x : ℝ => x^N * (u - x)^N) := by fun_prop
+  have h_int : MeasureTheory.IntegrableOn (fun x : ℝ => x^N * (u - x)^N) (Set.Ioo 0 u) :=
+    (h_cont.continuousOn.integrableOn_compact isCompact_Icc).mono_set Set.Ioo_subset_Icc_self
+  have h_le : ∀ x ∈ Set.Ioo (0:ℝ) u, x^N * (u - x)^N ≤ u^(2*N) := by
+    intro x hx
+    obtain ⟨hx0, hxu⟩ := hx
+    have h1 : x^N ≤ u^N := pow_le_pow_left₀ hx0.le hxu.le N
+    have h2 : (u - x)^N ≤ u^N := pow_le_pow_left₀ (by linarith) (by linarith) N
+    calc x^N * (u - x)^N ≤ u^N * u^N :=
+          mul_le_mul h1 h2 (pow_nonneg (by linarith) N) (pow_nonneg (by linarith) N)
+      _ = u^(2*N) := by rw [← pow_add]; ring_nf
+  calc ∫ x in Set.Ioo (0:ℝ) u, x^N * (u - x)^N
+      ≤ ∫ _x in Set.Ioo (0:ℝ) u, u^(2*N) := by
+        apply MeasureTheory.setIntegral_mono_on h_int
+          (MeasureTheory.integrableOn_const (by rw [Real.volume_Ioo]; exact ENNReal.ofReal_ne_top))
+          measurableSet_Ioo h_le
+    _ = u * u^(2*N) := by
+        rw [MeasureTheory.setIntegral_const, smul_eq_mul,
+          Real.volume_real_Ioo_of_le hu.le, sub_zero]
+    _ = u^(2*N+1) := by rw [pow_succ]; ring
+
+/-- **Order-`N` double Gaussian moment bound**:
+    `∫∫_{x₀,y₀>0} x₀^N y₀^N √(π/s) exp(-(x₀+y₀)²/(4s)) dx₀ dy₀ ≤ C_N · s^{N+1/2}`.
+    The change of variables `u = x₀ + y₀` reduces the double integral to the inner moment
+    `∫₀ᵘ x^N (u-x)^N dx ≤ u^{2N+1}` against the Gaussian `exp(-u²/(4s))`, whose odd moment
+    supplies the `s^{N+1}` scaling; the 1-D normalization `√(π/s)` contributes `s^{-1/2}`. -/
+lemma heat_kernel_moment_integral_pow_bound (N : ℕ) :
+    ∃ C : ℝ, 0 < C ∧ ∀ s : ℝ, 0 < s →
+      ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
+        x₀^N * y₀^N * Real.sqrt (π / s) * Real.exp (-(x₀ + y₀)^2 / (4 * s)) ≤
+      C * s^((N : ℝ) + 1/2) := by
+  have hC_pos : 0 < Real.sqrt π * (N.factorial : ℝ) * 4^(N+1) / 2 := by
+    have h1 : 0 < Real.sqrt π := Real.sqrt_pos.mpr pi_pos
+    have h2 : 0 < (N.factorial : ℝ) := by exact_mod_cast N.factorial_pos
+    positivity
+  refine ⟨Real.sqrt π * (N.factorial : ℝ) * 4^(N+1) / 2, hC_pos, fun s hs => ?_⟩
+  have hb : 0 < 1 / (4 * s) := by positivity
+  -- Step 1: pull the constant √(π/s) out of the double integral
+  have h_pull : ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
+      x₀^N * y₀^N * Real.sqrt (π / s) * Real.exp (-(x₀ + y₀)^2 / (4 * s)) =
+      Real.sqrt (π / s) * ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
+        x₀^N * y₀^N * Real.exp (-(x₀ + y₀)^2 / (4 * s)) := by
+    conv_lhs =>
+      arg 2; ext x₀; arg 2; ext y₀
+      rw [show x₀^N * y₀^N * Real.sqrt (π / s) * Real.exp (-(x₀ + y₀)^2 / (4 * s)) =
+          Real.sqrt (π / s) * (x₀^N * y₀^N * Real.exp (-(x₀ + y₀)^2 / (4 * s))) by ring]
+    simp_rw [MeasureTheory.integral_const_mul]
+  -- Step 2: change of variables u = x₀ + y₀ (triangular Fubini)
+  have h_fubini : ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
+      x₀^N * y₀^N * Real.exp (-(x₀ + y₀)^2 / (4 * s)) =
+      ∫ u in Set.Ioi 0, ∫ x₀ in Set.Ioo 0 u,
+        x₀^N * (u - x₀)^N * Real.exp (-u^2 / (4 * s)) := by
+    have h_integrand : ∀ x₀ y₀ : ℝ, x₀^N * y₀^N * Real.exp (-(x₀ + y₀)^2 / (4 * s)) =
+        x₀^N * ((x₀ + y₀) - x₀)^N * Real.exp (-(x₀ + y₀)^2 / (4 * s)) := by
+      intro x₀ y₀; ring_nf
+    simp_rw [h_integrand]
+    have hf_nn : ∀ x y : ℝ, 0 ≤ x → 0 ≤ y →
+        0 ≤ (fun x u => x^N * (u - x)^N * Real.exp (-u^2 / (4 * s))) x (x + y) := by
+      intro x y hx hy
+      simp only
+      rw [show x + y - x = y by ring]
+      positivity
+    convert triangular_fubini_quadrant
+      (f := fun x u => x^N * (u - x)^N * Real.exp (-u^2 / (4 * s)))
+      (_hf_nn := hf_nn)
+      (hf_int := by
+        rw [MeasureTheory.integrable_indicator_iff (measurableSet_Ioi.prod measurableSet_Ioi)]
+        rw [MeasureTheory.IntegrableOn]
+        have h_int_factor : MeasureTheory.Integrable
+            (fun x : ℝ => |x|^N * Real.exp (-(1/(4*s)) * x^2)) volume := by
+          have h0 := integrable_rpow_mul_exp_neg_mul_sq hb
+            (s := (N : ℝ)) (by
+              have : (0 : ℝ) ≤ (N : ℝ) := Nat.cast_nonneg _
+              linarith)
+          simp_rw [Real.rpow_natCast] at h0
+          convert h0.norm using 1
+          ext x
+          rw [Real.norm_eq_abs, abs_mul, abs_pow, abs_of_pos (Real.exp_pos _)]
+        have h_prod := MeasureTheory.Integrable.mul_prod h_int_factor h_int_factor
+        have h_prod_restr : MeasureTheory.Integrable
+            (fun z : ℝ × ℝ => |z.1|^N * Real.exp (-(1/(4*s)) * z.1^2) *
+                              (|z.2|^N * Real.exp (-(1/(4*s)) * z.2^2)))
+            (MeasureTheory.volume.restrict (Set.Ioi 0 ×ˢ Set.Ioi 0)) := by
+          convert h_prod.restrict (s := Set.Ioi 0 ×ˢ Set.Ioi 0) using 2
+        apply MeasureTheory.Integrable.mono h_prod_restr
+        · apply Measurable.aestronglyMeasurable
+          apply Measurable.mul
+          apply Measurable.mul
+          · exact measurable_fst.pow_const N
+          · exact ((measurable_fst.add measurable_snd).sub measurable_fst).pow_const N
+          · apply Measurable.exp
+            apply Measurable.div_const
+            apply Measurable.neg
+            apply Measurable.pow_const
+            exact measurable_add
+        · filter_upwards [MeasureTheory.ae_restrict_mem
+            (measurableSet_Ioi.prod measurableSet_Ioi)] with ⟨x, y⟩ hxy
+          simp only [Set.mem_prod, Set.mem_Ioi] at hxy
+          obtain ⟨hx, hy⟩ := hxy
+          simp only [norm_mul, Real.norm_eq_abs]
+          rw [show x + y - x = y by ring, abs_of_pos hx, abs_of_pos hy,
+              abs_of_pos (pow_pos hx N), abs_of_pos (pow_pos hy N),
+              abs_of_pos (Real.exp_pos _), abs_of_pos (Real.exp_pos _),
+              abs_of_pos (Real.exp_pos _)]
+          have h_exp_bound : Real.exp (-(x + y) ^ 2 / (4 * s)) ≤
+              Real.exp (-x^2 / (4 * s)) * Real.exp (-y^2 / (4 * s)) := by
+            rw [← Real.exp_add]
+            apply Real.exp_le_exp.mpr
+            have h1 : -(x + y)^2 / (4 * s) ≤ -(x^2 + y^2) / (4 * s) := by
+              apply div_le_div_of_nonneg_right _ (le_of_lt (by linarith : (0:ℝ) < 4 * s))
+              apply neg_le_neg
+              nlinarith [mul_pos hx hy]
+            have h2 : -(x^2 + y^2) / (4 * s) = -x^2 / (4 * s) + -y^2 / (4 * s) := by ring
+            linarith
+          calc x^N * y^N * Real.exp (-(x + y) ^ 2 / (4 * s))
+              ≤ x^N * y^N * (Real.exp (-x^2 / (4 * s)) * Real.exp (-y^2 / (4 * s))) := by
+                apply mul_le_mul_of_nonneg_left h_exp_bound
+                exact mul_nonneg (pow_nonneg hx.le N) (pow_nonneg hy.le N)
+            _ = x^N * Real.exp (-(1/(4*s)) * x^2) * (y^N * Real.exp (-(1/(4*s)) * y^2)) := by
+                rw [show -x^2 / (4*s) = -(1/(4*s)) * x^2 by ring,
+                    show -y^2 / (4*s) = -(1/(4*s)) * y^2 by ring]
+                ring)
+      using 2
+  -- Step 3: bound the triangular integral by the odd-power Gaussian moment
+  have h_inner_le : ∀ u ∈ Set.Ioi (0:ℝ),
+      ∫ x₀ in Set.Ioo 0 u, x₀^N * (u - x₀)^N * Real.exp (-u^2 / (4 * s)) ≤
+      u^(2*N+1) * Real.exp (-u^2 / (4 * s)) := by
+    intro u hu
+    simp only [Set.mem_Ioi] at hu
+    have h_factor : ∫ x₀ in Set.Ioo 0 u, x₀^N * (u - x₀)^N * Real.exp (-u^2 / (4 * s)) =
+        Real.exp (-u^2 / (4 * s)) * ∫ x₀ in Set.Ioo 0 u, x₀^N * (u - x₀)^N := by
+      simp_rw [show ∀ x₀ : ℝ, x₀^N * (u - x₀)^N * Real.exp (-u^2 / (4 * s)) =
+          Real.exp (-u^2 / (4 * s)) * (x₀^N * (u - x₀)^N) from fun x₀ => by ring]
+      rw [MeasureTheory.integral_const_mul]
+    rw [h_factor, mul_comm (u^(2*N+1)) (Real.exp (-u^2 / (4 * s)))]
+    exact mul_le_mul_of_nonneg_left (integral_pow_mul_sub_pow_le N u hu) (Real.exp_nonneg _)
+  have h_majorant_int : MeasureTheory.IntegrableOn
+      (fun u : ℝ => u^(2*N+1) * Real.exp (-u^2 / (4 * s))) (Set.Ioi 0) := by
+    have h0 := integrableOn_rpow_mul_exp_neg_mul_sq hb (s := ((2*N+1 : ℕ) : ℝ)) (by
+      have : (0 : ℝ) ≤ ((2*N+1 : ℕ) : ℝ) := Nat.cast_nonneg _
+      linarith)
+    simp_rw [Real.rpow_natCast] at h0
+    exact h0.congr_fun (fun x _ => by rw [show -(1/(4*s)) * x^2 = -x^2/(4*s) by ring])
+      measurableSet_Ioi
+  have h_double_le : ∫ u in Set.Ioi 0, ∫ x₀ in Set.Ioo 0 u,
+      x₀^N * (u - x₀)^N * Real.exp (-u^2 / (4 * s)) ≤
+      (N.factorial : ℝ) / 2 * (4*s)^(N+1) := by
+    rw [← integral_odd_pow_gaussian N s hs]
+    apply MeasureTheory.integral_mono_of_nonneg
+    · filter_upwards with u
+      apply MeasureTheory.setIntegral_nonneg measurableSet_Ioo
+      intro x hxm
+      exact mul_nonneg (mul_nonneg (pow_nonneg hxm.1.le N)
+        (pow_nonneg (by linarith [hxm.2] : (0:ℝ) ≤ u - x) N)) (Real.exp_nonneg _)
+    · exact h_majorant_int
+    · filter_upwards [MeasureTheory.ae_restrict_mem measurableSet_Ioi] with u hu
+      exact h_inner_le u hu
+  -- Step 4: combine, converting the s-powers to the rpow exponent N + 1/2
+  rw [h_pull, h_fubini]
+  have h_pow : s^(N+1) / Real.sqrt s = s^((N:ℝ) + 1/2) := by
+    rw [show s^(N+1) = s^(((N+1 : ℕ)) : ℝ) from (Real.rpow_natCast s (N+1)).symm,
+        Real.sqrt_eq_rpow, ← Real.rpow_sub hs]
+    congr 1
+    push_cast
+    ring
+  calc Real.sqrt (π / s) * ∫ u in Set.Ioi 0, ∫ x₀ in Set.Ioo 0 u,
+        x₀^N * (u - x₀)^N * Real.exp (-u^2 / (4 * s))
+      ≤ Real.sqrt (π / s) * ((N.factorial : ℝ) / 2 * (4*s)^(N+1)) :=
+        mul_le_mul_of_nonneg_left h_double_le (Real.sqrt_nonneg _)
+    _ = Real.sqrt π / Real.sqrt s * ((N.factorial : ℝ) / 2 * (4^(N+1) * s^(N+1))) := by
+        rw [Real.sqrt_div' π (le_of_lt hs), mul_pow]
+    _ = Real.sqrt π * (N.factorial : ℝ) * 4^(N+1) / 2 * (s^(N+1) / Real.sqrt s) := by ring
+    _ = Real.sqrt π * (N.factorial : ℝ) * 4^(N+1) / 2 * s^((N:ℝ) + 1/2) := by rw [h_pow]
+
 /-- Helper lemma: t * exp(-b*t²) is integrable on (0, ∞) for b > 0.
     This follows from `integrable_mul_exp_neg_mul_sq` restricted to positive reals. -/
 lemma gaussian_moment_integrableOn_Ioi {b : ℝ} (hb : 0 < b) :
