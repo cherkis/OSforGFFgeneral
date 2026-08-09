@@ -20,6 +20,3 @@ require mathlib from git
 @[default_target]
 lean_lib «OSforGFF» where
   -- add any library configuration options here
-
-lean_lib «DependencyExtractor» where
-  -- Dependency extraction metaprogram

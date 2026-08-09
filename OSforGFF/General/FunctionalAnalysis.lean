@@ -88,11 +88,7 @@ focusing on integrability, Schwartz function properties, and L² embeddings.
 - `integrableOn_ball_of_rpow_decay`: Power-law decay integrable on balls
 - `integrableOn_compact_diff_ball`: Integrability on compact ∖ ball
 - `locallyIntegrable_of_rpow_decay_real`: Local integrability from power decay (d ≥ 3)
-- `polynomial_decay_integrable_3d`: 1/‖x‖ integrable on 3D balls
 - `schwartz_bilinear_integrable_of_translationInvariant_L1`: Bilinear Schwartz integrability
-
-**Vanishing & Bounds:**
-- `schwartz_vanishing_linear_bound_general`: Linear vanishing bounds for Schwartz functions
 
 **Bump Function Convolutions:**
 - `bumpSelfConv`: Self-convolution of bump functions
@@ -491,30 +487,6 @@ theorem locallyIntegrable_of_rpow_decay_real {d : ℕ} (hd : d ≥ 3)
   · -- IntegrableOn f (K \ ball 0 (1/2))
     exact integrableOn_compact_diff_ball hK hC (by norm_num : (0:ℝ) < 1/2) h_decay h_meas
 
-/-- **Polynomial decay is integrable in 3D**: The function 1/(1+‖x‖)^4 is integrable
-    over the spatial slice EuclideanSpace ℝ (Fin (d-1)).
-
-    This is a standard result: decay rate 4 > dimension 3 ensures integrability.
-
-    **Mathematical content**: In the spatial slice with spherical coordinates,
-    ∫ 1/(1+r)^4 · r² dr dΩ = 4π ∫₀^∞ r²/(1+r)^4 dr < ∞
-    since the integrand decays as r⁻² for large r.  The dimension-generic version is
-    `polynomial_decay_integrable_spatial` in `Spacetime/ProdIntegrable.lean`. -/
-lemma polynomial_decay_integrable_3d :
-    Integrable (fun x : EuclideanSpace ℝ (Fin 3) => 1 / (1 + ‖x‖)^4) volume := by
-  -- Use integrable_one_add_norm: (1 + ‖x‖)^(-r) is integrable when r > dim
-  have hdim : Module.finrank ℝ (EuclideanSpace ℝ (Fin 3)) = 3 := finrank_euclideanSpace
-  have hdim_lt : (Module.finrank ℝ (EuclideanSpace ℝ (Fin 3)) : ℝ) < (4 : ℝ) := by
-    rw [hdim]; norm_num
-  have h_int := integrable_one_add_norm (E := EuclideanSpace ℝ (Fin 3)) (μ := volume) (r := 4) hdim_lt
-  -- Convert (1 + ‖x‖)^(-4) to 1 / (1 + ‖x‖)^4
-  convert h_int using 1
-  ext x
-  have h_pos : 0 < 1 + ‖x‖ := by linarith [norm_nonneg x]
-  simp only [Real.rpow_neg (le_of_lt h_pos), one_div]
-  congr 1
-  exact (Real.rpow_natCast (1 + ‖x‖) 4).symm
-
 /-! ## Bilinear Integrability for L¹ Translation-Invariant Kernels
 
 For translation-invariant kernels K₀ that are integrable (L¹), the bilinear form
@@ -683,94 +655,6 @@ lemma norm_exp_neg_I_mul_real (r : ℝ) : ‖Complex.exp (-Complex.I * r)‖ = 1
   rw [Complex.norm_exp]
   simp only [neg_mul, Complex.neg_re, Complex.mul_re, Complex.I_re, Complex.ofReal_re,
     zero_mul, Complex.I_im, Complex.ofReal_im, mul_zero, sub_zero, neg_zero, Real.exp_zero]
-
-/-! ## Linear Vanishing Bound for Schwartz Functions
-
-If a Schwartz function on ℝ × E vanishes for t ≤ 0, then it grows at most linearly in t.
-This is a key lemma for UV regularization in QFT integrals.
--/
-
-namespace SchwartzLinearBound
-
-variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
-
-/-- The Linear Vanishing Bound (general version).
-    If f : 𝓢(ℝ × E, ℂ) vanishes for t ≤ 0, it grows at most linearly in t for t > 0.
-
-    This follows from the Mean Value Theorem: f(t,x) - f(0,x) = ∫₀ᵗ ∂ₜf dt,
-    and since ∂ₜf is bounded (Schwartz), we get |f(t,x)| ≤ C·t.
--/
-theorem schwartz_vanishing_linear_bound_general
-    (f : SchwartzMap (ℝ × E) ℂ)
-    (h_vanish : ∀ t x, t ≤ 0 → f (t, x) = 0) :
-    ∃ C, ∀ t ≥ 0, ∀ x, ‖f (t, x)‖ ≤ C * t := by
-
-  -- 1. Get a bound on the Fréchet derivative using Schwartz seminorms
-  have h_diff : Differentiable ℝ f := f.differentiable
-
-  -- Use the first order seminorm to bound the derivative
-  let C_deriv := (SchwartzMap.seminorm ℝ 0 1).toFun f + 1
-
-  have h_deriv_bound : ∀ y : ℝ × E, ‖iteratedFDeriv ℝ 1 f y‖ ≤ C_deriv := by
-    intro y
-    have h := SchwartzMap.le_seminorm ℝ 0 1 f y
-    simp only [pow_zero, one_mul] at h
-    calc ‖iteratedFDeriv ℝ 1 (⇑f) y‖ ≤ (SchwartzMap.seminorm ℝ 0 1) f := h
-      _ ≤ (SchwartzMap.seminorm ℝ 0 1) f + 1 := by linarith
-      _ = C_deriv := rfl
-
-  -- The convex set (whole space)
-  have h_convex : Convex ℝ (Set.univ : Set (ℝ × E)) := convex_univ
-
-  -- Schwartz functions have FDeriv everywhere
-  have h_hasFDeriv : ∀ y ∈ (Set.univ : Set (ℝ × E)),
-      HasFDerivWithinAt f (fderiv ℝ f y) Set.univ y := by
-    intro y _
-    exact f.differentiableAt.hasFDerivAt.hasFDerivWithinAt
-
-  -- Connection: ‖fderiv ℝ f y‖ = ‖iteratedFDeriv ℝ 1 f y‖
-  have h_fderiv_bound : ∀ y ∈ (Set.univ : Set (ℝ × E)), ‖fderiv ℝ f y‖ ≤ C_deriv := by
-    intro y _
-    have h_norm_eq : ‖iteratedFDeriv ℝ 1 f y‖ = ‖fderiv ℝ f y‖ := by
-      rw [← iteratedFDerivWithin_univ, ← fderivWithin_univ]
-      exact norm_iteratedFDerivWithin_one f uniqueDiffWithinAt_univ
-    linarith [h_deriv_bound y]
-
-  use C_deriv
-  intro t ht x
-
-  -- 2. The reference point: (0, x) where f vanishes
-  let A : ℝ × E := (0, x)
-  let B : ℝ × E := (t, x)
-
-  -- f vanishes at A = (0, x)
-  have h_zero : f A = 0 := h_vanish 0 x (le_refl 0)
-
-  -- Handle the t = 0 case separately
-  by_cases ht0 : t = 0
-  · simp [ht0, h_zero, A]
-
-  -- For t > 0, apply MVT
-  have ht_pos : 0 < t := lt_of_le_of_ne ht (Ne.symm ht0)
-
-  -- Apply the Mean Value Theorem
-  have h_mvt := h_convex.norm_image_sub_le_of_norm_hasFDerivWithin_le
-    h_hasFDeriv h_fderiv_bound (Set.mem_univ A) (Set.mem_univ B)
-
-  -- Simplify: f A = 0, so ‖f B‖ ≤ C_deriv * ‖B - A‖
-  rw [h_zero, sub_zero] at h_mvt
-
-  -- Compute ‖B - A‖ = ‖(t, x) - (0, x)‖ = ‖(t, 0)‖ = |t| = t
-  have h_dist : ‖B - A‖ = t := by
-    simp only [B, A, Prod.mk_sub_mk, sub_zero]
-    rw [Prod.norm_def]
-    simp only [_root_.sub_self, norm_zero, max_eq_left (norm_nonneg t)]
-    rw [Real.norm_eq_abs, abs_of_nonneg ht]
-
-  rw [h_dist] at h_mvt
-  exact h_mvt
-
-end SchwartzLinearBound
 
 /-! ### Schwartz Translation Invariance
 

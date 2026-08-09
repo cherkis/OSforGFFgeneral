@@ -1166,49 +1166,6 @@ The key technical result for `hF_le_G` is computing the Gaussian moment integral
 This is done via change of variables u = x₀ + y₀, v = x₀ - y₀ and standard Gaussian integrals.
 -/
 
-/-- The 1D Gaussian integral ∫₀^∞ u³ exp(-u²/(4s)) du = 8s² for s > 0.
-
-    This follows from the general formula ∫₀^∞ u^n exp(-au²) du using Gamma functions.
-
-    **Proof:**
-    Using `integral_rpow_mul_exp_neg_mul_rpow` with p=2, q=3, b=1/(4s):
-    - ∫ u³ exp(-b·u²) du = b^(-(3+1)/2) * (1/2) * Γ((3+1)/2)
-    - = b^(-2) * (1/2) * Γ(2)
-    - = (4s)² * (1/2) * 1   [since Γ(2) = 1]
-    - = 8s² -/
-lemma integral_u_cubed_gaussian (s : ℝ) (hs : 0 < s) :
-    ∫ u in Set.Ioi 0, u^3 * Real.exp (-u^2 / (4 * s)) = 8 * s^2 := by
-  have hb : 0 < 1 / (4 * s) := by positivity
-
-  -- Rewrite to use rpow throughout
-  have h_integrand_eq : ∀ u : ℝ, u^3 * Real.exp (-u^2 / (4 * s)) =
-                                 u ^ (3:ℝ) * Real.exp (-(1/(4*s)) * u^(2:ℝ)) := by
-    intro u
-    rw [show u^3 = u ^ (3:ℝ) from (Real.rpow_natCast u 3).symm]
-    rw [show u^2 = u ^ (2:ℝ) from (Real.rpow_natCast u 2).symm]
-    congr 2
-    field_simp
-  simp_rw [h_integrand_eq]
-
-  -- Apply the standard Gaussian integral formula
-  have h := integral_rpow_mul_exp_neg_mul_rpow (p := 2) (q := 3) (b := 1/(4*s))
-    (by norm_num : (0:ℝ) < 2) (by norm_num : (-1:ℝ) < 3) hb
-
-  -- Gamma(2) = 1
-  have hG2 : Real.Gamma 2 = 1 := Real.Gamma_two
-
-  -- Now the LHS matches the formula in h
-  calc ∫ u in Set.Ioi 0, u ^ (3:ℝ) * Real.exp (-(1 / (4 * s)) * u ^ (2:ℝ))
-      = (1 / (4 * s)) ^ (-(3 + 1) / 2) * (1 / 2) * Real.Gamma ((3 + 1) / 2) := h
-    _ = (1 / (4 * s)) ^ ((-2) : ℝ) * (1 / 2) * Real.Gamma 2 := by
-        congr 2 <;> norm_num
-    _ = (1 / (4 * s)) ^ ((-2) : ℝ) * (1 / 2) * 1 := by rw [hG2]
-    _ = (4 * s) ^ (2 : ℝ) * (1 / 2) := by
-        rw [Real.rpow_neg (le_of_lt hb), Real.rpow_two, Real.rpow_two]
-        field_simp
-    _ = 16 * s^2 * (1 / 2) := by rw [Real.rpow_two]; ring
-    _ = 8 * s^2 := by ring
-
 /-- **Triangular Fubini identity for the quadrant-to-triangle change of variables**
 
     For non-negative integrable f, the change of variables u = x + y transforms
@@ -1381,291 +1338,13 @@ lemma triangular_fubini_quadrant {f : ℝ → ℝ → ℝ}
           exact h_inner x hx
     _ = ∫ u in Set.Ioi 0, ∫ x in Set.Ioo 0 u, f x u := h_reindex
 
-/-- The double Gaussian moment integral:
-    ∫∫_{x₀,y₀>0} x₀·y₀·√(π/s)·exp(-(x₀+y₀)²/(4s)) dx₀ dy₀ = (4/3)√π · s^{3/2}
-
-    This is the exact first-order moment; the order-N bound used by the OS3 domination
-    chain is `heat_kernel_moment_integral_pow_bound` below.
-
-    **Proof** (following user's verification):
-    Let J be the integral. Change variables: u = x₀ + y₀.
-    For fixed u, x₀ ranges from 0 to u, and y₀ = u - x₀. Jacobian = 1.
-
-    J = √(π/s) ∫₀^∞ exp(-u²/(4s)) [∫₀ᵘ x₀(u - x₀) dx₀] du
-
-    Inner integral: ∫₀ᵘ (ux₀ - x₀²) dx₀ = [ux₀²/2 - x₀³/3]₀ᵘ = u³/2 - u³/3 = u³/6
-
-    So: J = √(π/s) · (1/6) · ∫₀^∞ u³ exp(-u²/(4s)) du
-          = √(π/s) · (1/6) · 8s²  [by integral_u_cubed_gaussian]
-          = √π · s^(-1/2) · (4/3) · s²
-          = (4/3)√π · s^(3/2) -/
-lemma heat_kernel_moment_integral (s : ℝ) (hs : 0 < s) :
-    ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
-      x₀ * y₀ * Real.sqrt (π / s) * Real.exp (-(x₀ + y₀)^2 / (4 * s)) =
-    (4/3) * Real.sqrt π * s^(3/2 : ℝ) := by
-  -- Step 1: Get the key integral ∫₀^∞ u³ exp(-u²/(4s)) du = 8s²
-  have h_u_int := integral_u_cubed_gaussian s hs
-
-  -- Step 2: The algebraic identity: √(π/s) · (1/6) · 8s² = (4/3)√π · s^{3/2}
-  have h_algebra : Real.sqrt (π / s) * (1/6) * (8 * s^2) = (4/3) * Real.sqrt π * s^(3/2 : ℝ) := by
-    have hs' : (0 : ℝ) < s := hs
-    have hs_ne : s ≠ 0 := ne_of_gt hs
-    -- √(π/s) = √π / √s
-    rw [Real.sqrt_div' π (le_of_lt hs)]
-    -- s^{3/2} = s · √s
-    have h32 : s^(3/2 : ℝ) = s * Real.sqrt s := by
-      rw [show (3/2 : ℝ) = 1 + 1/2 by norm_num]
-      rw [Real.rpow_add hs']
-      simp only [Real.rpow_one]
-      rw [Real.sqrt_eq_rpow]
-    rw [h32]
-    -- √s² = s (for s > 0)
-    have hsq : Real.sqrt s ^ 2 = s := Real.sq_sqrt (le_of_lt hs)
-    have hsqrt_pos : 0 < Real.sqrt s := Real.sqrt_pos.mpr hs
-    have hsqrt_ne : Real.sqrt s ≠ 0 := ne_of_gt hsqrt_pos
-    -- Goal: √π / √s * (1/6) * (8 * s²) = 4/3 * √π * (s * √s)
-    calc Real.sqrt π / Real.sqrt s * (1 / 6) * (8 * s ^ 2)
-        = Real.sqrt π * (8 * s^2) / (6 * Real.sqrt s) := by ring
-      _ = Real.sqrt π * (4 * s^2) / (3 * Real.sqrt s) := by ring
-      _ = 4 / 3 * Real.sqrt π * (s^2 / Real.sqrt s) := by ring
-      _ = 4 / 3 * Real.sqrt π * (s * (s / Real.sqrt s)) := by ring
-      _ = 4 / 3 * Real.sqrt π * (s * Real.sqrt s) := by
-          congr 1
-          congr 1
-          -- s / √s = √s (since s = √s · √s)
-          exact div_sqrt
-
-  -- Step 3a: Pull out the constant √(π/s) from the integral
-  have h_pull_const : ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
-      x₀ * y₀ * Real.sqrt (π / s) * Real.exp (-(x₀ + y₀)^2 / (4 * s)) =
-      Real.sqrt (π / s) * ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
-        x₀ * y₀ * Real.exp (-(x₀ + y₀)^2 / (4 * s)) := by
-    conv_lhs =>
-      arg 2; ext x₀; arg 2; ext y₀
-      rw [show x₀ * y₀ * Real.sqrt (π / s) * Real.exp (-(x₀ + y₀)^2 / (4 * s)) =
-          Real.sqrt (π / s) * (x₀ * y₀ * Real.exp (-(x₀ + y₀)^2 / (4 * s))) by ring]
-    simp_rw [MeasureTheory.integral_const_mul]
-
-  -- Step 3b: The polynomial inner integral ∫₀ᵘ x(u-x) dx = u³/6
-  have h_poly_int : ∀ u : ℝ, 0 < u →
-      ∫ x in (0 : ℝ)..u, x * (u - x) = u^3 / 6 := by
-    intro u hu
-    have h1 : ∫ x in (0 : ℝ)..u, x * (u - x) = ∫ x in (0 : ℝ)..u, u * x - x^2 := by
-      congr 1; ext x; ring
-    rw [h1, intervalIntegral.integral_sub]
-    · have hx : ∫ x in (0 : ℝ)..u, x = u^2 / 2 := by
-        rw [show (fun x : ℝ => x) = (fun x => x^1) by ext; simp, integral_pow]
-        simp; ring
-      have hx2 : ∫ x in (0 : ℝ)..u, x^2 = u^3 / 3 := by
-        rw [integral_pow]; simp; ring
-      rw [intervalIntegral.integral_const_mul, hx, hx2]
-      ring
-    · exact (continuous_const.mul continuous_id).intervalIntegrable 0 u
-    · exact (continuous_pow 2).intervalIntegrable 0 u
-
-  -- Step 3c: The double integral via change of variables
-  -- ∫∫_{x₀,y₀>0} x₀ y₀ exp(-(x₀+y₀)²/(4s)) = ∫_{u>0} exp(-u²/(4s)) · [∫₀ᵘ x₀(u-x₀) dx₀] du
-  --                                         = ∫_{u>0} exp(-u²/(4s)) · (u³/6) du
-  --                                         = (1/6) · 8s²
-  have h_double_int : ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
-      x₀ * y₀ * Real.exp (-(x₀ + y₀)^2 / (4 * s)) = (1/6) * (8 * s^2) := by
-    -- The change of variables (x₀, y₀) ↦ (u, t) where u = x₀ + y₀, t = x₀
-    -- transforms the first quadrant to the triangular region {(u,t) : u > 0, 0 < t < u}
-    -- with Jacobian 1 (the inverse map (u,t) ↦ (t, u-t) has det = 1).
-    --
-    -- After change of variables:
-    -- ∫_{u>0} [∫_{0<t<u} t(u-t) dt] exp(-u²/(4s)) du
-    --   = ∫_{u>0} (u³/6) exp(-u²/(4s)) du   [by h_poly_int]
-    --   = (1/6) ∫_{u>0} u³ exp(-u²/(4s)) du
-    --   = (1/6) · 8s²                        [by h_u_int]
-    calc ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0, x₀ * y₀ * Real.exp (-(x₀ + y₀)^2 / (4 * s))
-        = ∫ u in Set.Ioi 0, Real.exp (-u^2 / (4 * s)) * (u^3 / 6) := by
-          -- **Change of variables: First quadrant to triangular region**
-          --
-          -- The key identity is the "triangular Fubini" swap:
-          -- ∫_{x>0} ∫_{y>0} f(x, x+y) dy dx = ∫_{u>0} ∫_{0<x<u} f(x, u) dx du
-          --
-          -- Here we have f(x, y) = x * y * exp(-(x+y)²/(4s)) and after the change
-          -- u = x + y, the integrand becomes x * (u-x) * exp(-u²/(4s)).
-          --
-          -- Step 1: Apply triangular Fubini (change u = x₀ + y₀)
-          -- Step 2: Factor out exp(-u²/(4s)) from inner integral
-          -- Step 3: Compute inner integral ∫₀ᵘ x(u-x) dx = u³/6 using h_poly_int
-
-          -- Apply the triangular Fubini identity via `triangular_fubini_quadrant`
-          -- with g(x, u) = x * (u - x) * exp(-u²/(4s))
-          have h_fubini : ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
-              x₀ * y₀ * Real.exp (-(x₀ + y₀)^2 / (4 * s)) =
-              ∫ u in Set.Ioi 0, ∫ x₀ in Set.Ioo 0 u,
-                x₀ * (u - x₀) * Real.exp (-u^2 / (4 * s)) := by
-            -- Rewrite LHS: x₀ * y₀ = x₀ * ((x₀ + y₀) - x₀) when we set u = x₀ + y₀
-            -- This is exactly the triangular Fubini setup
-            have h_integrand : ∀ x₀ y₀ : ℝ, x₀ * y₀ * Real.exp (-(x₀ + y₀)^2 / (4 * s)) =
-                x₀ * ((x₀ + y₀) - x₀) * Real.exp (-(x₀ + y₀)^2 / (4 * s)) := by
-              intro x₀ y₀; ring_nf
-            simp_rw [h_integrand]
-            -- Apply triangular_fubini_quadrant with g(x, u) = x * (u - x) * exp(-u²/(4s))
-            -- The identity: ∫_{x>0} ∫_{y>0} g(x, x+y) dy = ∫_{u>0} ∫_{0<x<u} g(x, u) dx
-            have hf_nn : ∀ x y : ℝ, 0 ≤ x → 0 ≤ y →
-                0 ≤ (fun x u => x * (u - x) * Real.exp (-u^2 / (4 * s))) x (x + y) := by
-              intro x y hx hy
-              simp only
-              have h1 : x + y - x = y := by ring
-              rw [h1]
-              apply mul_nonneg
-              · exact mul_nonneg hx hy
-              · exact Real.exp_nonneg _
-            convert triangular_fubini_quadrant
-              (f := fun x u => x * (u - x) * Real.exp (-u^2 / (4 * s)))
-              (_hf_nn := hf_nn)
-              (hf_int := by
-                -- Need to show: (x, y) ↦ x·y·exp(-(x+y)²/(4s)) is integrable over (0,∞)²
-                -- Strategy: bound by |x|·exp(-x²/(4s)) · |y|·exp(-y²/(4s)) using
-                -- (x+y)² ≥ x² + y² for x,y > 0, then use Integrable.mul_prod
-                rw [MeasureTheory.integrable_indicator_iff (measurableSet_Ioi.prod measurableSet_Ioi)]
-                rw [MeasureTheory.IntegrableOn]
-                -- Key bound: for x, y > 0, (x+y)² = x² + 2xy + y² > x² + y² since 2xy > 0
-                -- So exp(-(x+y)²/(4s)) < exp(-(x²+y²)/(4s)) = exp(-x²/(4s))·exp(-y²/(4s))
-                -- Thus x·y·exp(-(x+y)²/(4s)) ≤ |x|·exp(-x²/(4s)) · |y|·exp(-y²/(4s))
-                have hb : 0 < 1 / (4 * s) := by positivity
-                have h_int_factor : MeasureTheory.Integrable
-                    (fun x => |x| * Real.exp (-(1/(4*s)) * x^2)) volume := by
-                  have := integrable_mul_exp_neg_mul_sq hb
-                  convert this.norm using 1
-                  ext x; rw [Real.norm_eq_abs, abs_mul, abs_of_pos (Real.exp_pos _)]
-                -- Product integrability on full space dominates restricted
-                have h_prod := MeasureTheory.Integrable.mul_prod h_int_factor h_int_factor
-                -- h_prod is Integrable (on volume.prod volume), goal needs μ.restrict on product
-                -- Since volume on ℝ × ℝ is volume.prod volume, h_prod.restrict gives integrability
-                -- on restricted measure, then use Integrable.mono with pointwise bound
-                have h_prod_restr : MeasureTheory.Integrable
-                    (fun z : ℝ × ℝ => |z.1| * Real.exp (-(1/(4*s)) * z.1^2) *
-                                      (|z.2| * Real.exp (-(1/(4*s)) * z.2^2)))
-                    (MeasureTheory.volume.restrict (Set.Ioi 0 ×ˢ Set.Ioi 0)) := by
-                  convert h_prod.restrict (s := Set.Ioi 0 ×ˢ Set.Ioi 0) using 2
-                apply MeasureTheory.Integrable.mono h_prod_restr
-                · -- Measurability
-                  apply Measurable.aestronglyMeasurable
-                  apply Measurable.mul
-                  apply Measurable.mul
-                  · exact measurable_fst
-                  · -- fun a ↦ a.1 + a.2 - a.1 = fun a ↦ a.2
-                    exact (measurable_fst.add measurable_snd).sub measurable_fst
-                  · apply Measurable.exp
-                    apply Measurable.div_const
-                    apply Measurable.neg
-                    apply Measurable.pow_const
-                    exact measurable_add
-                · -- Pointwise bound on Ioi 0 × Ioi 0
-                  filter_upwards [MeasureTheory.ae_restrict_mem (measurableSet_Ioi.prod measurableSet_Ioi)] with ⟨x, y⟩ hxy
-                  simp only [Set.mem_prod, Set.mem_Ioi] at hxy
-                  obtain ⟨hx, hy⟩ := hxy
-                  simp only [norm_mul, Real.norm_eq_abs]
-                  -- Simplify abs values using x > 0, y > 0, exp > 0
-                  rw [abs_of_pos hx, abs_of_pos hy, abs_of_pos (Real.exp_pos _),
-                      abs_of_pos (Real.exp_pos _), abs_of_pos (Real.exp_pos _)]
-                  -- Now need to rewrite x + y - x to y
-                  have h_simp : x + y - x = y := by ring
-                  rw [h_simp, abs_of_pos hy]
-                  -- Goal: x * y * exp(-(x+y)²/(4s)) ≤ x * exp(-x²/(4s)) * (y * exp(-y²/(4s)))
-                  have h_exp_bound : Real.exp (-(x + y) ^ 2 / (4 * s)) ≤
-                      Real.exp (-x^2 / (4 * s)) * Real.exp (-y^2 / (4 * s)) := by
-                    rw [← Real.exp_add]
-                    apply Real.exp_le_exp.mpr
-                    have hxy_pos : 0 < x * y := mul_pos hx hy
-                    -- Need: -(x+y)²/(4s) ≤ -x²/(4s) - y²/(4s)
-                    -- i.e., -(x+y)²/(4s) ≤ -(x² + y²)/(4s)
-                    -- i.e., (x+y)² ≥ x² + y² (dividing by -1/(4s) reverses)
-                    -- (x+y)² = x² + 2xy + y² ≥ x² + y² since xy > 0
-                    have h1 : -(x + y)^2 / (4 * s) ≤ -(x^2 + y^2) / (4 * s) := by
-                      apply div_le_div_of_nonneg_right _ (le_of_lt (by linarith : 0 < 4 * s))
-                      apply neg_le_neg
-                      nlinarith [sq_nonneg x, sq_nonneg y]
-                    have h2 : -(x^2 + y^2) / (4 * s) = -x^2 / (4 * s) + -y^2 / (4 * s) := by ring
-                    linarith
-                  calc x * y * Real.exp (-(x + y) ^ 2 / (4 * s))
-                      ≤ x * y * (Real.exp (-x^2 / (4 * s)) * Real.exp (-y^2 / (4 * s))) := by
-                        apply mul_le_mul_of_nonneg_left h_exp_bound
-                        apply mul_nonneg (le_of_lt hx) (le_of_lt hy)
-                    _ = (x * Real.exp (-x^2 / (4 * s))) * (y * Real.exp (-y^2 / (4 * s))) := by ring
-                    _ = (x * Real.exp (-(1/(4*s)) * x^2)) * (y * Real.exp (-(1/(4*s)) * y^2)) := by
-                        congr 2 <;> (congr 1; ring)
-                    _ = (|x| * Real.exp (-(1/(4*s)) * x^2)) * (y * Real.exp (-(1/(4*s)) * y^2)) := by
-                        rw [abs_of_pos hx]) using 2
-
-          rw [h_fubini]
-
-          -- Now simplify: factor out exp(-u²/(4s)) and compute inner integral
-          apply MeasureTheory.setIntegral_congr_fun measurableSet_Ioi
-          intro u hu
-          simp only [Set.mem_Ioi] at hu
-
-          -- Goal: ∫_{x₀ ∈ Ioo 0 u} x₀ * (u - x₀) * exp(-u²/(4s)) dx₀ = exp(-u²/(4s)) * (u³/6)
-          -- Factor out the exponential (constant w.r.t. x₀)
-          have h_factor : ∫ x₀ in Set.Ioo 0 u, x₀ * (u - x₀) * Real.exp (-u^2 / (4 * s)) =
-              Real.exp (-u^2 / (4 * s)) * ∫ x₀ in Set.Ioo 0 u, x₀ * (u - x₀) := by
-            have h_exp_const : ∀ x₀ : ℝ, x₀ * (u - x₀) * Real.exp (-u^2 / (4 * s)) =
-                Real.exp (-u^2 / (4 * s)) * (x₀ * (u - x₀)) := fun x₀ => by ring
-            simp_rw [h_exp_const]
-            rw [MeasureTheory.integral_const_mul]
-
-          -- The inner integral is ∫_{x₀ ∈ Ioo 0 u} x₀ * (u - x₀) dx₀
-          -- Convert to interval integral and use h_poly_int
-          have h_inner : ∫ x₀ in Set.Ioo 0 u, x₀ * (u - x₀) = u^3 / 6 := by
-            -- ∫ over Ioo 0 u = ∫ over Ioc 0 u = ∫ in 0..u (for continuous functions)
-            rw [← MeasureTheory.integral_Ioc_eq_integral_Ioo]
-            rw [← intervalIntegral.integral_of_le (le_of_lt hu)]
-            exact h_poly_int u hu
-
-          simp only
-          rw [h_factor, h_inner]
-      _ = (1/6) * ∫ u in Set.Ioi 0, u^3 * Real.exp (-u^2 / (4 * s)) := by
-          conv_lhs => arg 2; ext u; rw [show Real.exp (-u^2 / (4 * s)) * (u^3 / 6) =
-              (1/6) * (u^3 * Real.exp (-u^2 / (4 * s))) by ring]
-          rw [MeasureTheory.integral_const_mul]
-      _ = (1/6) * (8 * s^2) := by rw [h_u_int]
-
-  -- Combine the pieces
-  calc ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
-         x₀ * y₀ * Real.sqrt (π / s) * Real.exp (-(x₀ + y₀)^2 / (4 * s))
-      = Real.sqrt (π / s) * ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
-          x₀ * y₀ * Real.exp (-(x₀ + y₀)^2 / (4 * s)) := h_pull_const
-    _ = Real.sqrt (π / s) * ((1/6) * (8 * s^2)) := by rw [h_double_int]
-    _ = Real.sqrt (π / s) * (1/6) * (8 * s^2) := by ring
-    _ = (4/3) * Real.sqrt π * s^(3/2 : ℝ) := h_algebra
-
-/-- **Bound version**: The double Gaussian moment integral is bounded by a constant times s^{3/2}.
-
-    This is a weaker form of `heat_kernel_moment_integral` that suffices for `F_norm_bound_via_vanishing`.
-    The exact value is (4/3)√π · s^{3/2}, so we use 10 · s^{3/2} as a comfortable upper bound.
-
-    **Proof**: Uses `heat_kernel_moment_integral` and the bound (4/3)√π < 10. -/
-lemma heat_kernel_moment_integral_bound (s : ℝ) (hs : 0 < s) :
-    ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
-      x₀ * y₀ * Real.sqrt (π / s) * Real.exp (-(x₀ + y₀)^2 / (4 * s)) ≤
-    10 * s^(3/2 : ℝ) := by
-  -- Use the exact equality from heat_kernel_moment_integral
-  rw [heat_kernel_moment_integral s hs]
-  -- Now show: (4/3) * √π * s^{3/2} ≤ 10 * s^{3/2}
-  -- Since (4/3)√π ≈ 2.36 < 10
-  have hπ : (4/3 : ℝ) * Real.sqrt π < 10 := by
-    have hsqrt : Real.sqrt π < 2 := by
-      rw [Real.sqrt_lt' (by norm_num : (0:ℝ) < 2)]
-      calc π < 4 := pi_lt_four
-         _ = 2^2 := by norm_num
-    calc (4/3 : ℝ) * Real.sqrt π < (4/3) * 2 := by nlinarith [Real.sqrt_nonneg π]
-      _ = 8/3 := by ring
-      _ < 10 := by norm_num
-  have hs32 : 0 ≤ s^(3/2 : ℝ) := Real.rpow_nonneg (le_of_lt hs) _
-  nlinarith
-
 /-! #### Order-N moment bounds
 
-Order-`N` analogues of the Gaussian moment integrals above: for test functions vanishing to
-order `N` at the time boundary, the boundary moment carries `x₀^N · y₀^N` in place of
-`x₀ · y₀`, and the proper-time scaling improves from `s^{3/2}` to `s^{N+1/2}`.  Only an upper
-bound is needed, so the polynomial inner moment is estimated by the crude
-`∫₀ᵘ x^N (u-x)^N dx ≤ u^{2N+1}` (its exact value is the Beta moment `u^{2N+1}·B(N+1, N+1)`).
+Gaussian moment bounds at boundary-vanishing order `N`: the double moment carries
+`x₀^N · y₀^N`, and the proper-time scaling is `s^{N+1/2}` (one power of `s` per order of
+vanishing).  Only an upper bound is needed, so the polynomial inner moment is estimated by
+the crude `∫₀ᵘ x^N (u-x)^N dx ≤ u^{2N+1}` (its exact value is the Beta moment
+`u^{2N+1}·B(N+1, N+1)`).
 -/
 
 /-- The odd-power Gaussian moment: `∫₀^∞ u^{2N+1} exp(-u²/(4s)) du = (N!/2)·(4s)^{N+1}`.
@@ -2213,7 +1892,7 @@ lemma spacetime_fubini_vanishing_bound (f : (TestFunctionℂ d))
   -- Since G(t) = 0 for t ≤ 0, the integral restricts to (0,∞)²
   -- On (0,∞)², G(t₁) * G(t₂) ≤ C_sp² * t₁ * t₂
 
-  -- Step 4: Apply heat_kernel_moment_integral_bound
+  -- Step 4: Apply heat_kernel_moment_integral_pow_bound
   -- ∫∫_{(0,∞)²} t₁^d * t₂^d * K(t₁,t₂) dt₁ dt₂ ≤ C_mom * s^{d+1/2}
 
   -- The kernel K is measurable
@@ -2276,7 +1955,7 @@ lemma spacetime_fubini_vanishing_bound (f : (TestFunctionℂ d))
         -- The proof uses:
         -- (1) G(t) = 0 for t ≤ 0, so ∫_{ℝ²} = ∫_{(0,∞)²}
         -- (2) On (0,∞)², G(t) ≤ C_sp * t^d
-        -- (3) heat_kernel_moment_integral_bound for the final bound
+        -- (3) heat_kernel_moment_integral_pow_bound for the final bound
         --
         -- Step 1: Rewrite ℝ² integral as (0,∞)² integral using support
         -- When t₁ ≤ 0 or t₂ ≤ 0, G(t₁) = 0 or G(t₂) = 0, so integrand = 0
@@ -2672,17 +2351,15 @@ lemma F_norm_bound_via_vanishing (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ 
   -- ∫∫ |f(x)||f(y)| · √(π/s) · exp(-t²/(4s))
   -- (using |exp(-i·phase)| = 1 and |exp(-t²/(4s))| ≤ 1)
 
-  -- Step C: Use linear vanishing: |f(x)| ≤ C_lin · x₀ when x₀ > 0, and f = 0 when x₀ ≤ 0
-  -- So |f(x)||f(y)| ≤ C_lin² · x₀ · y₀ · 𝟙_{x₀>0,y₀>0}
+  -- Step C: Use order-d vanishing: |f(x)| ≤ C_lin · x₀^d when x₀ > 0, and f = 0 when x₀ ≤ 0
+  -- So |f(x)||f(y)| ≤ C_lin² · x₀^d · y₀^d · 𝟙_{x₀>0,y₀>0}
 
   -- Step D: Bound the heat kernel integral
-  -- ∫∫ C_lin² · x₀ · y₀ · √(π/s) · exp(-(x₀+y₀)²/(4s)) dx₀ dy₀
-  -- = C_lin² · (4/3)√π · s^{3/2}  (by heat_kernel_moment_integral)
-  -- < C_lin² · 5 · s^{3/2}  (since (4/3)√π ≈ 2.36 < 5)
+  -- ∫∫ C_lin² · x₀^d · y₀^d · √(π/s) · exp(-(x₀+y₀)²/(4s)) dx₀ dy₀
+  -- ≤ C_lin² · C_mom · s^{d+1/2}  (by heat_kernel_moment_integral_pow_bound)
 
-  -- The full proof follows this outline. The technical challenge is that SpaceTime d
-  -- while heat_kernel_moment_integral is stated for time coordinates only.
-  -- We need to integrate out the spatial coordinates (which are bounded by Schwartz decay).
+  -- The full proof follows this outline via the time/space Tonelli factorization
+  -- (the spatial coordinates are integrated out using Schwartz decay).
 
   -- First, let's establish some preliminary bounds
   have hexp_bound : Real.exp (-s * ω_sq) ≤ 1 := by
@@ -2701,15 +2378,14 @@ lemma F_norm_bound_via_vanishing (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ 
   -- For the formal proof, we would:
   -- 1. Apply norm_integral_le_integral_norm twice
   -- 2. Factor out exp(-s·ω²)
-  -- 3. Bound |f(x)||f(y)| ≤ C_lin² · max(x₀,0) · max(y₀,0)
+  -- 3. Bound |f(x)||f(y)| ≤ C_lin² · max(x₀,0)^d · max(y₀,0)^d
   -- 4. Use Tonelli to separate (SpaceTime d) = time × space
   -- 5. The spatial integrals factor out (bounded by Schwartz L¹ norms)
-  -- 6. The time integrals give heat_kernel_moment_integral
-  -- 7. Combine with the (4/3)√π < 5 bound
+  -- 6. The time integrals give heat_kernel_moment_integral_pow_bound
 
   -- This is mathematically sound but technically involved.
-  -- The key insight (linear vanishing regularizes the singularity) is captured
-  -- by schwartz_vanishing_linear_bound and heat_kernel_moment_integral.
+  -- The key insight (boundary vanishing regularizes the singularity) is captured
+  -- by schwartz_vanishing_pow_bound and heat_kernel_moment_integral_pow_bound.
 
   -- Step 1: Triangle inequality for outer integral
   have h1 : ‖F_val‖ ≤ ∫ x : (SpaceTime d), ‖∫ y : (SpaceTime d),
@@ -2742,15 +2418,13 @@ lemma F_norm_bound_via_vanishing (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ 
   -- Step 3: Using linear vanishing on the support
   -- On supp(f), f(x) = 0 when x₀ ≤ 0, so the integrand vanishes there.
   -- When x₀ > 0 and y₀ > 0:
-  --   ‖f x‖ ≤ C_lin · x₀  (by h_lin_bound)
-  --   ‖f y‖ ≤ C_lin · y₀  (by h_lin_bound)
-  -- So: ‖f x‖ · ‖f y‖ ≤ C_lin² · x₀ · y₀
+  --   ‖f x‖ ≤ C_lin · x₀^d  (by h_lin_bound)
+  --   ‖f y‖ ≤ C_lin · y₀^d  (by h_lin_bound)
+  -- So: ‖f x‖ · ‖f y‖ ≤ C_lin² · x₀^d · y₀^d
 
-  -- Step 4: Time integral evaluation
-  -- The integral ∫∫_{x₀,y₀>0} x₀·y₀·√(π/s)·exp(-(x₀+y₀)²/(4s)) dx₀ dy₀
-  -- equals (4/3)√π·s^{3/2} by heat_kernel_moment_integral.
-  -- Since (4/3)√π ≈ 2.36 < 5, we have:
-  --   ∫∫ C_lin² · x₀ · y₀ · √(π/s) ≤ C_lin² · 5 · s^{3/2}
+  -- Step 4: Time integral bound
+  -- ∫∫_{x₀,y₀>0} x₀^d·y₀^d·√(π/s)·exp(-(x₀+y₀)²/(4s)) dx₀ dy₀ ≤ C_mom·s^{d+1/2}
+  -- by heat_kernel_moment_integral_pow_bound.
 
   -- Step 5: Final bound
   -- ‖F_val‖ ≤ C_lin² · 5 · s^{3/2} · exp(-s·ω²)
@@ -2807,27 +2481,25 @@ lemma F_norm_bound_via_vanishing (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ 
   -- The CORRECT argument uses:
   -- 1. Linear vanishing (h_lin_bound): On supp(f), ‖f x‖ ≤ C_lin · x₀
   -- 2. Support condition (hf_supp): f x = 0 when x₀ ≤ 0
-  -- 3. Heat kernel moment integral: gives the s^{3/2} factor
+  -- 3. Heat kernel moment bound: gives the s^{d+1/2} factor
   --
   -- The full argument:
   -- ‖F_val‖ ≤ ∫∫ ‖f x‖·‖f y‖·√(π/s)·exp(-(x₀+y₀)²/(4s))·exp(-s·ω²)  [triangle ineq]
-  --         ≤ C_lin² · ∫∫_{x₀,y₀>0} x₀·y₀·√(π/s)·exp(-(x₀+y₀)²/(4s))·exp(-s·ω²) [linear vanishing]
-  --         = C_lin² · exp(-s·ω²) · ∫∫_{x₀,y₀>0} x₀·y₀·√(π/s)·exp(-(x₀+y₀)²/(4s)) [factor out]
-  --         = C_lin² · exp(-s·ω²) · (4/3)√π·s^{3/2}  [heat_kernel_moment_integral]
-  --         < C_lin² · 5 · s^{3/2} · exp(-s·ω²)  [since (4/3)√π ≈ 2.36 < 5]
+  --         ≤ C_lin² · ∫∫_{x₀,y₀>0} x₀^d·y₀^d·√(π/s)·exp(-(x₀+y₀)²/(4s))·exp(-s·ω²) [vanishing]
+  --         = C_lin² · exp(-s·ω²) · ∫∫_{x₀,y₀>0} x₀^d·y₀^d·√(π/s)·exp(-(x₀+y₀)²/(4s)) [factor out]
+  --         ≤ C_lin² · C_mom · s^{d+1/2} · exp(-s·ω²)  [heat_kernel_moment_integral_pow_bound]
   --
   -- The formalization requires:
   -- (a) A refined pointwise bound keeping the heat kernel factor
   -- (b) Decomposing (SpaceTime d) = ℝ × ℝ^{d−1} via Fubini
   -- (c) Showing spatial integrals are bounded (Schwartz decay)
-  -- (d) Applying heat_kernel_moment_integral to time integrals
+  -- (d) Applying heat_kernel_moment_integral_pow_bound to time integrals
   --
   -- Key lemmas available:
   -- - h1: Triangle inequality for outer integral
   -- - h_pointwise: Pointwise norm bound (bounds heat kernel by 1 - TOO WEAK)
-  -- - h_lin_bound: Linear vanishing from schwartz_vanishing_linear_bound
-  -- - heat_kernel_moment_integral: Time integral evaluates to (4/3)√π·s^{3/2}
-  -- - heat_kernel_moment_integral_bound: ≤ 10·s^{3/2}
+  -- - h_lin_bound: order-d vanishing from schwartz_vanishing_pow_bound
+  -- - heat_kernel_moment_integral_pow_bound: time double moment ≤ C_mom·s^{d+1/2}
 
   -- KEY INSIGHT: h_pointwise bounds exp(-(x₀+y₀)²/(4s)) ≤ 1, losing the s^{3/2} factor.
   -- We need a REFINED bound that keeps the heat kernel factor.

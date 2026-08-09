@@ -21,10 +21,6 @@ open scoped ENNReal
 
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
 
-namespace SchwartzLinearBound
-
-end SchwartzLinearBound
-
 /-! ## Time-slice machinery for `SpaceTime d`
 
 The time coordinate of `x : SpaceTime d` is accessed via `x 0`.
@@ -34,9 +30,6 @@ These lemmas match the signatures needed in OS3_MixedRepInfra.lean.
 section TimeSlice
 
 variable {d : ℕ} [Fact (2 ≤ d)]
-
-/-- The spatial slice of 4D spacetime: ℝ³. -/
-abbrev SpatialCoords3 : Type := EuclideanSpace ℝ (Fin 3)
 
 /-- Decomposition of spacetime as time × space: `(t, x) ↦ (t, x₁, …, x_{d-1})`. -/
 noncomputable def spacetimeOfTimeSpace (t : ℝ) (x : SpatialCoords d) : SpaceTime d :=
@@ -448,36 +441,6 @@ theorem spatialNormIntegral_pow_bound (N : ℕ) (f : TestFunctionℂ d)
     _ = C_pt * t ^ N * K := h_factor
     _ ≤ C_pt * t ^ N * (K + 1) := by nlinarith [mul_pos hC_pt_pos (pow_pos ht N)]
     _ = C_pt * (K + 1) * t ^ N := by ring
-
-/-! ### Linear (order-1) corollaries
-
-The order-one special cases of the bounds above, in their historical linear statements. -/
-
-/-- For a Schwartz function vanishing on {x₀ ≤ 0}, the linear bound ‖f(x)‖ ≤ C · x₀ holds
-    for x₀ > 0.  The `N = 1` case of `schwartz_vanishing_pow_bound`. -/
-theorem schwartz_vanishing_linear_bound (f : TestFunctionℂ d)
-    (hf_supp : ∀ x : SpaceTime d, x 0 ≤ 0 → f x = 0) :
-    ∃ C : ℝ, 0 < C ∧ ∀ x : SpaceTime d, 0 < x 0 → ‖f x‖ ≤ C * (x 0) := by
-  obtain ⟨C, hC_pos, hC⟩ := schwartz_vanishing_pow_bound 1 f hf_supp
-  exact ⟨C, hC_pos, fun x hx => by simpa using hC x hx⟩
-
-/-- Combined FTC + Schwartz decay bound: for a Schwartz function f vanishing at t ≤ 0,
-    ‖f(t, x_sp)‖ ≤ C · t / (1 + ‖x_sp‖)^d.  The `N = 1` case of
-    `schwartz_vanishing_pow_decay`. -/
-lemma schwartz_vanishing_ftc_decay (f : TestFunctionℂ d)
-    (hf_supp : ∀ x : SpaceTime d, x 0 ≤ 0 → f x = 0) :
-    ∃ C : ℝ, 0 < C ∧ ∀ (t : ℝ) (_ht : 0 < t) (x_sp : SpatialCoords d),
-      ‖f (spacetimeOfTimeSpace t x_sp)‖ ≤ C * t / (1 + ‖x_sp‖) ^ d := by
-  obtain ⟨C, hC_pos, hC⟩ := schwartz_vanishing_pow_decay 1 f hf_supp
-  exact ⟨C, hC_pos, fun t ht x_sp => by simpa using hC t ht x_sp⟩
-
-/-- The linear spatial-integral bound `G(t) ≤ C · t` for `t > 0`.  The `N = 1` case of
-    `spatialNormIntegral_pow_bound`. -/
-theorem spatialNormIntegral_linear_bound (f : TestFunctionℂ d)
-    (hf_supp : ∀ x : SpaceTime d, x 0 ≤ 0 → f x = 0) :
-    ∃ C : ℝ, 0 < C ∧ ∀ t : ℝ, 0 < t → spatialNormIntegral f t ≤ C * t := by
-  obtain ⟨C, hC_pos, hC⟩ := spatialNormIntegral_pow_bound 1 f hf_supp
-  exact ⟨C, hC_pos, fun t ht => by simpa using hC t ht⟩
 
 end TimeSlice
 
