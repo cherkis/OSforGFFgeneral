@@ -1,10 +1,4 @@
 /-
-Copyright (c) 2025 Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim. All rights reserved.
-Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Sergey A. Cherkis, Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
--/
-
-/-
 Build-enforced guardrails for the dimension-generic refactor.
 
 This file is compiled as part of the library, so `lake build` is the enforcer: the build FAILS
