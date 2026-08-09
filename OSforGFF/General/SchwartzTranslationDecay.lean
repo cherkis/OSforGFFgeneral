@@ -464,9 +464,8 @@ theorem schwartz_bilinear_prod_integrable
         right_inv := fun p => by simp [add_sub_cancel_right]
         measurable_toFun := Measurable.prodMk (measurable_fst.sub measurable_snd) measurable_snd
         measurable_invFun := Measurable.prodMk (measurable_fst.add measurable_snd) measurable_snd }
-    have he_preserves : MeasurePreserving e (volume.prod volume) (volume.prod volume) := by
-      have := measurePreserving_sub_prod (G := E) volume volume
-      convert this using 1
+    have he_preserves : MeasurePreserving e (volume.prod volume) (volume.prod volume) :=
+      measurePreserving_sub_prod (G := E) volume volume
     have h_Ks_shifted : Integrable (fun p : E × E => (K_sing (p.1 - p.2) : ℂ) * g (p.2 - a))
         (volume.prod volume) := by
       have heq : (fun p : E × E => (K_sing (p.1 - p.2) : ℂ) * g (p.2 - a)) =
@@ -1057,7 +1056,7 @@ theorem schwartz_bilinear_translation_decay_proof
         by_cases hnt : Nontrivial E
         · -- Nontrivial case: sphere and singleton have measure 0
           haveI := hnt
-          haveI : NoAtoms (volume : Measure E) := inferInstance
+          haveI : NullSingletonClass (volume : Measure E) := inferInstance
 
           -- Sphere has measure 0
           have h_vol_sphere : volume (Metric.sphere y₀ R₀) = 0 :=

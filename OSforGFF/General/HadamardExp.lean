@@ -55,7 +55,7 @@ lemma continuous_entrywiseExp (ι : Type u) [Fintype ι] [DecidableEq ι] :
   -- Coordinate map R ↦ R i j is continuous; compose with exp
   have hcoord : Continuous (fun R : Matrix ι ι ℝ => R i j) :=
     (continuous_apply j).comp (continuous_apply i)
-  simpa [entrywiseExp] using (Real.continuous_exp.comp hcoord)
+  simpa [entrywiseExp, Function.comp_def] using (Real.continuous_exp.comp hcoord)
 
 /-- Over `ℝ`, entrywise exponential preserves Hermitian symmetry. -/
 private lemma isHermitian_entrywiseExp_real (R : Matrix ι ι ℝ)
@@ -506,11 +506,11 @@ lemma posSemidef_entrywiseExp_hadamardSeries_of_posSemidef
     have h_quad_continuous : Continuous (fun A : Matrix ι ι ℝ => x ⬝ᵥ A.mulVec x) := by
       -- Quadratic forms are finite sums of coordinate functions, hence continuous
       simp only [Matrix.mulVec, dotProduct]
-      apply continuous_finset_sum
+      apply continuous_finsetSum
       intro i _
       -- Inner sum over j is continuous, then multiply by constant x i
       have h_inner : Continuous (fun A : Matrix ι ι ℝ => ∑ j, A i j * x j) := by
-        apply continuous_finset_sum
+        apply continuous_finsetSum
         intro j _
         have h_ij : Continuous fun A : Matrix ι ι ℝ => A i j :=
           (continuous_apply j).comp (continuous_apply i)

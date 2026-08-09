@@ -108,7 +108,7 @@ private lemma bessel_symmetry_gen (ν z : ℝ) (hz : 0 < z) :
   have hf_Iic : IntegrableOn (fun u => exp (ν * u) * exp (-z * cosh u)) (Iic 0) := hpos.integrableOn
   have hg_Ioi : IntegrableOn (fun u => exp (-(ν * u)) * exp (-z * cosh u)) (Ioi 0) := by
     refine hneg.integrableOn.congr_fun (fun u _ => ?_) measurableSet_Ioi
-    rw [neg_mul]
+    simp [neg_mul]
   rw [← intervalIntegral.integral_Iic_add_Ioi (b := 0) hf_Iic hf_Ioi]
   have h_neg_part : ∫ u in Iic 0, exp (ν * u) * exp (-z * cosh u) =
       ∫ u in Ioi 0, exp (-(ν * u)) * exp (-z * cosh u) := by
@@ -209,7 +209,7 @@ lemma besselK_half (z : ℝ) :
       intro t _
       have h1 : HasDerivAt (fun t : ℝ => t / 2) (1 / 2) t := (hasDerivAt_id t).div_const 2
       have h2 : HasDerivAt (fun t : ℝ => sinh (t / 2)) (cosh (t / 2) * (1 / 2)) t := by
-        simpa [Function.comp] using (Real.hasDerivAt_sinh (t / 2)).comp t h1
+        simpa [Function.comp_def] using (Real.hasDerivAt_sinh (t / 2)).comp t h1
       rw [show cosh (t / 2) / 2 = cosh (t / 2) * (1 / 2) by ring]
       exact h2.hasDerivWithinAt
     have hmono : MonotoneOn (fun t => sinh (t / 2)) (Ici 0) :=

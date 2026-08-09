@@ -1993,7 +1993,7 @@ theorem integral_comp_neg_spacetime {E : Type*} [NormedAddCommGroup E] [NormedSp
     (f : SpaceTime4 → E) : ∫ k, f (-k) = ∫ k, f k := by
   have h := (LinearIsometryEquiv.measurePreserving negSpaceTime).integral_comp
     negSpaceTime.toHomeomorph.measurableEmbedding f
-  simpa using h
+  exact h
 
 /-- Position-space free covariance is symmetric: `C(x,y) = C(y,x)`. -/
 lemma freeCovariance_symmetric (m : ℝ) (x y : SpaceTime4) :

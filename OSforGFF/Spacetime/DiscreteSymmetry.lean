@@ -19,7 +19,7 @@ import Mathlib.Analysis.SpecialFunctions.Complex.Analytic
 import Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
 import Mathlib.Analysis.InnerProductSpace.PiL2
 
-import Mathlib.Topology.Algebra.Module.LinearMapPiProd
+import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.PiProd
 import Mathlib.Topology.MetricSpace.Isometry
 
 import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
@@ -150,7 +150,7 @@ def timeReflectionLE : (SpaceTime d) ≃ₗᵢ[ℝ] (SpaceTime d) :=
 lemma timeReflection_measurePreserving :
     MeasurePreserving (timeReflection (d := d)) volume volume := by
   -- Any linear isometry equivalence preserves the volume measure.
-  simpa [timeReflection] using (timeReflectionLE).measurePreserving
+  exact (timeReflectionLE).measurePreserving
 
 example (x : (SpaceTime d)) :
     timeReflectionCLM x =

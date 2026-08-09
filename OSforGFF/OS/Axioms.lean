@@ -17,7 +17,7 @@ import Mathlib.Analysis.SpecialFunctions.Complex.Analytic
 import Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
 import Mathlib.Analysis.Calculus.BumpFunction.Convolution
 
-import Mathlib.Topology.Algebra.Module.LinearMapPiProd
+import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.PiProd
 
 import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
 import Mathlib.MeasureTheory.Measure.Haar.OfBasis

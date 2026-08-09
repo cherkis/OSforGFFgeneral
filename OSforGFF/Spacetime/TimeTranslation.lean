@@ -284,14 +284,14 @@ omit [Fact (2 ≤ d)] in
 lemma timeTranslationSchwartz_add_fun (s : ℝ) (f g : (TestFunction d)) :
     timeTranslationSchwartz s (f + g) = timeTranslationSchwartz s f + timeTranslationSchwartz s g := by
   ext u
-  simp only [timeTranslationSchwartz_apply, SchwartzMap.add_apply]
+  simp only [timeTranslationSchwartz_apply, _root_.add_apply]
 
 omit [Fact (2 ≤ d)] in
 /-- Time translation preserves scalar multiplication of Schwartz functions -/
 lemma timeTranslationSchwartz_smul (s : ℝ) (c : ℝ) (f : (TestFunction d)) :
     timeTranslationSchwartz s (c • f) = c • timeTranslationSchwartz s f := by
   ext u
-  simp only [timeTranslationSchwartz_apply, SchwartzMap.smul_apply]
+  simp only [timeTranslationSchwartz_apply, _root_.smul_apply]
 
 /-! ### Fundamental Theorem of Calculus for Time Translation
 

@@ -11,7 +11,7 @@ import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 import Mathlib.MeasureTheory.Integral.MeanInequalities
-import Mathlib.Topology.Algebra.Module.WeakDual
+import Mathlib.Topology.Algebra.Module.Spaces.WeakDual
 import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 import Mathlib.Analysis.Calculus.ContDiff.Basic
 import Mathlib.Topology.Algebra.InfiniteSum.NatInt
@@ -157,7 +157,7 @@ lemma euclidean_action_timeTranslationE (t : ℝ) (f : TestFunctionℂ d) :
   congr 1
   simp only [QFT.inv_R, QFT.inv_t, QFT.LinearIsometry.inv]
   have h1 : ∀ v, (LinearIsometry.toLinearIsometryEquiv (1 : QFT.O4 d) rfl).symm v = v := fun v => by
-    have hv : (LinearIsometry.toLinearIsometryEquiv (1 : QFT.O4 d) rfl) v = v := by simp [LinearIsometry.toLinearIsometryEquiv]
+    have hv : (LinearIsometry.toLinearIsometryEquiv (1 : QFT.O4 d) rfl) v = v := rfl
     rw [← hv]; exact LinearIsometryEquiv.symm_apply_apply _ v
   simp only [LinearIsometryEquiv.coe_toLinearIsometry, h1, neg_neg]
 

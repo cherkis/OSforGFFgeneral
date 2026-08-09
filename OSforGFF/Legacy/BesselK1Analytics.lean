@@ -396,10 +396,18 @@ lemma besselK1_asymptotic (z : ℝ) (hz : 1 ≤ z) :
     have hF_deriv : ∀ t, HasDerivAt F (g t) t := by
       intro t
       have h1 : HasDerivAt (fun s => -z * exp s / 2) (-z / 2 * exp t) t := by
-        have := (hasDerivAt_exp t).const_mul (-z / 2); convert this using 1; funext; ring
+        have h0 : (fun s : ℝ => -z * exp s / 2) = fun s => -z / 2 * exp s := by
+          funext s; ring
+        rw [h0]
+        exact (Real.hasDerivAt_exp t).const_mul (-z / 2)
       have h2 : HasDerivAt (fun s => exp (-z * exp s / 2)) (exp (-z * exp t / 2) * (-z / 2 * exp t)) t :=
         (hasDerivAt_exp _).comp t h1
-      simp only [g]; convert h2.const_mul (-2/z) using 1; field_simp
+      have h3 := h2.const_mul (-2/z)
+      have hzne : z ≠ 0 := by positivity
+      have hval : (-2/z) * (exp (-z * exp t / 2) * (-z / 2 * exp t)) = g t := by
+        simp only [g]
+        field_simp
+      exact hval ▸ h3
     have hF_cont : ContinuousWithinAt F (Ici 1) 1 := by
       apply ContinuousAt.continuousWithinAt
       exact continuousAt_const.mul (continuous_exp.continuousAt.comp
@@ -592,14 +600,18 @@ lemma besselK1_mul_self_le (z : ℝ) (hz : 0 < z) (hz_le : z ≤ 1) :
     have hF_deriv : ∀ t, HasDerivAt F (g t) t := by
       intro t
       have h1 : HasDerivAt (fun s => -z * exp s / 2) (-z / 2 * exp t) t := by
-        have := (hasDerivAt_exp t).const_mul (-z / 2)
-        convert this using 1; funext; ring
+        have h0 : (fun s : ℝ => -z * exp s / 2) = fun s => -z / 2 * exp s := by
+          funext s; ring
+        rw [h0]
+        exact (Real.hasDerivAt_exp t).const_mul (-z / 2)
       have h2 : HasDerivAt (fun s => exp (-z * exp s / 2)) (exp (-z * exp t / 2) * (-z / 2 * exp t)) t :=
         (hasDerivAt_exp _).comp t h1
       have h3 := h2.const_mul (-2/z)
-      simp only [g] at *
-      convert h3 using 1
-      field_simp
+      have hzne : z ≠ 0 := by positivity
+      have hval : (-2/z) * (exp (-z * exp t / 2) * (-z / 2 * exp t)) = g t := by
+        simp only [g]
+        field_simp
+      exact hval ▸ h3
     -- F is continuous at 1
     have hF_cont : ContinuousWithinAt F (Ici 1) 1 := by
       apply ContinuousAt.continuousWithinAt

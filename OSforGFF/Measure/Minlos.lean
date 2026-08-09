@@ -13,7 +13,7 @@ import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Fintype.Basic
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Analysis.LocallyConvex.Basic
-import Mathlib.Topology.Algebra.Module.WeakDual
+import Mathlib.Topology.Algebra.Module.Spaces.WeakDual
 import Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
 import OSforGFF.Measure.NuclearSpace
 import Mathlib.Data.Matrix.Basic

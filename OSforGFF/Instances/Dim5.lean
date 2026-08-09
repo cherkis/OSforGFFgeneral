@@ -73,7 +73,7 @@ lemma besselK_three_half (z : ℝ) (hz : 0 < z) :
       intro t _
       have h1 : HasDerivAt (fun t : ℝ => t/2) (1/2) t := (hasDerivAt_id t).div_const 2
       have h2 : HasDerivAt (fun t : ℝ => sinh (t/2)) (cosh (t/2) * (1/2)) t := by
-        simpa [Function.comp] using (Real.hasDerivAt_sinh (t/2)).comp t h1
+        simpa [Function.comp_def] using (Real.hasDerivAt_sinh (t/2)).comp t h1
       rw [show cosh (t/2) / 2 = cosh (t/2) * (1/2) by ring]
       exact h2.hasDerivWithinAt
     have hmono : MonotoneOn (fun t => sinh (t/2)) (Ici 0) :=
@@ -102,7 +102,7 @@ lemma besselK_three_half (z : ℝ) (hz : 0 < z) :
       refine (integrableOn_rpow_mul_exp_neg_mul_rpow (s := 2) (p := 2) (b := 2*z)
         (by norm_num) (by norm_num) hb).congr_fun (fun u hu => ?_) measurableSet_Ioi
       have hu0 : (0:ℝ) < u := hu
-      rw [Real.rpow_two]
+      simp only [Real.rpow_two]
     rw [show (fun u => exp (-(2*z) * u^2) * (1 + 4 * u^2))
           = (fun u => exp (-(2*z) * u^2) + 4 * (u^2 * exp (-(2*z) * u^2))) from by funext u; ring,
         MeasureTheory.integral_add hIntG (hIntM.const_mul 4), MeasureTheory.integral_const_mul,

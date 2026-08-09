@@ -88,7 +88,7 @@ omit [Fact (2 ≤ d)] in
 /-- For `c : ℝ` and Schwartz functions over ℂ, ℝ-smul equals ℂ-smul by the canonical coercion. -/
 private lemma schwartz_real_smul_eq_complex (c : ℝ) (f : SchwartzMap (SpaceTime d) ℂ) :
     c • f = (c : ℂ) • f := by
-  ext x; simp [SchwartzMap.smul_apply]
+  ext x; simp [_root_.smul_apply]
 
 omit [Fact (2 ≤ d)] in
 /-- For `c : ℝ` and `Lp ℂ 2`, ℝ-smul equals ℂ-smul by the canonical coercion. -/
@@ -232,7 +232,7 @@ lemma sqrtPropagatorMap_linear_add (m : ℝ) [Fact (0 < m)] (f g : TestFunction 
       SchwartzMap.fourierTransformCLM ℂ (toComplex f) +
         SchwartzMap.fourierTransformCLM ℂ (toComplex g) :=
     map_add _ _ _
-  simp only [hadd, hmap, SchwartzMap.add_apply, Pi.add_apply, add_mul]
+  simp only [hadd, hmap, _root_.add_apply, Pi.add_apply, add_mul]
 
 omit [Fact (2 ≤ d)] in
 /-- The map is ℝ-linear (scalar multiplication). -/
@@ -244,7 +244,7 @@ lemma sqrtPropagatorMap_linear_smul (m : ℝ) [Fact (0 < m)] (c : ℝ) (f : Test
   have hmap : SchwartzMap.fourierTransformCLM ℂ ((c : ℂ) • toComplex f) =
       (c : ℂ) • SchwartzMap.fourierTransformCLM ℂ (toComplex f) :=
     ContinuousLinearMap.map_smul _ _ _
-  simp only [hsmul, hmap, SchwartzMap.smul_apply, smul_eq_mul, Pi.smul_apply, Complex.real_smul]
+  simp only [hsmul, hmap, _root_.smul_apply, smul_eq_mul, Pi.smul_apply, Complex.real_smul]
   ring
 
 /-! ## Connection to Covariance -/
@@ -392,8 +392,8 @@ lemma embeddingMapCLM_apply (m : ℝ) [Fact (0 < m)] (f : TestFunction d) :
       fun k => (freePropagatorMomSqrt d m k : ℂ) * A k := by
     simpa [h_eval]
   have h_A : (fun k => A k) =ᵐ[volume] fun k => g k := by
-    simpa [A, g, hA, hg]
-      using (g.memLp 2 (volume : Measure (SpaceTime d))).coeFn_toLp
+    simpa [A, hA]
+      using g.coeFn_toLp 2 (volume : Measure (SpaceTime d))
   have h_weight : (fun k => (freePropagatorMomSqrt d m k : ℂ) * A k)
       =ᵐ[volume] fun k => (freePropagatorMomSqrt d m k : ℂ) * g k := by
     refine h_A.mono ?_
@@ -772,10 +772,9 @@ lemma freeCovarianceFormR_reflection_cross
     change
         (QFT.compTimeReflectionReal
             (QFT.compTimeReflectionReal f) : TestFunction d) x = f x
-    have h_time_aux := QFT.timeReflectionLE.right_inv x
     have h_time :
-        QFT.timeReflectionLinear (QFT.timeReflectionLinear x) = x := by
-      convert h_time_aux using 1
+        QFT.timeReflectionLinear (QFT.timeReflectionLinear x) = x :=
+      QFT.timeReflection_involutive x
     simp [QFT.compTimeReflectionReal, QFT.timeReflectionCLM,
       QFT.timeReflectionLinear, QFT.timeReflection]
   have h_invol_g :
@@ -784,10 +783,9 @@ lemma freeCovarianceFormR_reflection_cross
     change
         (QFT.compTimeReflectionReal
             (QFT.compTimeReflectionReal g) : TestFunction d) x = g x
-    have h_time_aux := QFT.timeReflectionLE.right_inv x
     have h_time :
-        QFT.timeReflectionLinear (QFT.timeReflectionLinear x) = x := by
-      convert h_time_aux using 1
+        QFT.timeReflectionLinear (QFT.timeReflectionLinear x) = x :=
+      QFT.timeReflection_involutive x
     simp [QFT.compTimeReflectionReal, QFT.timeReflectionCLM,
       QFT.timeReflectionLinear, QFT.timeReflection]
   have h_step :

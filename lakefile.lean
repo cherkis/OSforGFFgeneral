@@ -15,7 +15,7 @@ require GaussianField from git
   "https://github.com/mrdouglasny/gaussian-field.git" @ "main"
 
 require mathlib from git
-  "https://github.com/leanprover-community/mathlib4.git"
+  "https://github.com/leanprover-community/mathlib4.git" @ "v4.33.0-rc1"
 
 @[default_target]
 lean_lib «OSforGFF» where

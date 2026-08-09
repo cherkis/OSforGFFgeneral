@@ -88,49 +88,6 @@ private lemma measurePreserving_tripleReorder :
     MeasureTheory.Measure.measurePreserving_swap
   exact h2.comp h1
 
-/-- **Fubini reordering for triple integrals.**
-
-    For integrable functions on α × α × α, we can reorder
-    the integration from ∫x ∫y ∫k to ∫k ∫x ∫y.
-
-    This follows from Fubini-Tonelli: if F is integrable on the product space,
-    then we can integrate in any order. -/
-lemma fubini_triple_reorder {F : α → α → α → ℂ}
-    (hF : Integrable (fun p : α × α × α => F p.1 p.2.1 p.2.2)
-      (volume.prod (volume.prod volume))) :
-    ∫ x, ∫ y, ∫ k, F x y k ∂volume ∂volume ∂volume =
-    ∫ k, ∫ x, ∫ y, F x y k ∂volume ∂volume ∂volume := by
-  let fL : α × (α × α) → ℂ := fun p => F p.1 p.2.1 p.2.2
-  let fR : α × (α × α) → ℂ := fun q => F q.2.1 q.2.2 q.1
-  have hfL_eq : ∀ p, fL p = fR (tripleReorder p) := fun _ => rfl
-  have hfR : Integrable fR ((volume : Measure α).prod (volume.prod volume)) := by
-    rw [← (measurePreserving_tripleReorder (α := α)).integrable_comp_emb
-        (tripleReorder (α := α)).measurableEmbedding]
-    convert hF using 1
-  have hLHS : ∫ x, ∫ y, ∫ k, F x y k ∂volume ∂volume ∂volume =
-      ∫ p, fL p ∂((volume : Measure α).prod (volume.prod volume)) := by
-    have inner_fubini : ∀ᵐ x ∂(volume : Measure α),
-        ∫ y, ∫ k, F x y k ∂volume ∂volume = ∫ yk, F x yk.1 yk.2 ∂(volume.prod volume) := by
-      filter_upwards [hF.prod_right_ae] with x hx
-      exact (integral_prod (fun yk => F x yk.1 yk.2) hx).symm
-    rw [integral_congr_ae inner_fubini]
-    exact (integral_prod fL hF).symm
-  have hRHS : ∫ k, ∫ x, ∫ y, F x y k ∂volume ∂volume ∂volume =
-      ∫ q, fR q ∂((volume : Measure α).prod (volume.prod volume)) := by
-    have inner_fubini : ∀ᵐ k ∂(volume : Measure α),
-        ∫ x, ∫ y, F x y k ∂volume ∂volume = ∫ xy, F xy.1 xy.2 k ∂(volume.prod volume) := by
-      filter_upwards [hfR.prod_right_ae] with k hk
-      exact (integral_prod (fun xy => F xy.1 xy.2 k) hk).symm
-    rw [integral_congr_ae inner_fubini]
-    exact (integral_prod fR hfR).symm
-  calc ∫ x, ∫ y, ∫ k, F x y k ∂volume ∂volume ∂volume
-      = ∫ p, fL p ∂((volume : Measure α).prod (volume.prod volume)) := hLHS
-    _ = ∫ p, fR (tripleReorder p) ∂((volume : Measure α).prod (volume.prod volume)) := rfl
-    _ = ∫ q, fR q ∂((volume : Measure α).prod (volume.prod volume)) :=
-        (measurePreserving_tripleReorder (α := α)).integral_comp
-          (tripleReorder (α := α)).measurableEmbedding fR
-    _ = ∫ k, ∫ x, ∫ y, F x y k ∂volume ∂volume ∂volume := hRHS.symm
-
 /-- The exponential decay function is integrable when μ > 0.
     Proof: Split ℝ into (-∞, 0] ∪ (0, ∞) and use:
     - integrableOn_exp_mul_Iic for exp(μx) on (-∞, 0] (since μ > 0)
@@ -188,36 +145,6 @@ lemma ik_add_ne_zero (α : ℝ) (hα : α ≠ 0) (k : ℝ) : Complex.I * k + (α
              Complex.I_im, Complex.ofReal_im, mul_zero, zero_mul, sub_zero] at hre
   simp only [zero_add] at hre
   exact hα hre
-
-/-- The antiderivative of e^{(ik+α)x} for α ≠ 0.
-    This is the indefinite integral: ∫ e^{(ik+α)x} dx = e^{(ik+α)x} / (ik + α)
-
-    The denominator ik + α is never zero since Re(ik + α) = α ≠ 0.
-
-    Special cases:
-    - α = -μ (μ > 0): gives decay on [0,∞), converges at +∞
-    - α = +μ (μ > 0): gives growth on (-∞,0], converges at -∞ -/
-lemma antideriv_exp_complex_linear (α : ℝ) (hα : α ≠ 0) (k x : ℝ) :
-    HasDerivAt (fun t : ℝ => Complex.exp ((Complex.I * k + α) * t) / (Complex.I * k + α))
-               (Complex.exp ((Complex.I * k + α) * x))
-               x := by
-  -- Let c = ik + α, which is nonzero
-  set c : ℂ := Complex.I * k + α with hc_def
-  have hc_ne : c ≠ 0 := ik_add_ne_zero α hα k
-  -- We want to show d/dx [e^{cx}/c] = e^{cx}
-  -- First, d/dx [e^{cx}] = e^{cx} * c by chain rule
-  have h_exp_deriv : HasDerivAt (fun t : ℝ => Complex.exp (c * t)) (Complex.exp (c * x) * c) x := by
-    have h1 : HasDerivAt (fun t : ℝ => c * (t : ℂ)) c x := by
-      have hid : HasDerivAt (fun t : ℝ => (t : ℂ)) 1 x := Complex.ofRealCLM.hasDerivAt
-      convert hid.const_mul c using 1
-      ring
-    exact HasDerivAt.cexp h1
-  -- Dividing by c: d/dx [e^{cx}/c] = (e^{cx} * c)/c = e^{cx}
-  have h_div : HasDerivAt (fun t : ℝ => Complex.exp (c * t) / c) (Complex.exp (c * x) * c / c) x := by
-    exact h_exp_deriv.div_const c
-  -- Simplify: (e^{cx} * c)/c = e^{cx}
-  convert h_div using 1
-  field_simp
 
 /-- Complex exponential e^{cx} tends to 0 as x → +∞ when Re(c) < 0.
     Proof: ‖e^{cx}‖ = e^{Re(c)·x} → 0 since Re(c) < 0 and x → +∞. -/
@@ -329,7 +256,7 @@ theorem fourier_exp_decay_positive_halfline (μ : ℝ) (hμ : 0 < μ) (k : ℝ) 
     intro x _
     have h1 : HasDerivAt (fun t : ℝ => c * (t : ℂ)) c x := by
       have hid : HasDerivAt (fun t : ℝ => (t : ℂ)) 1 x := Complex.ofRealCLM.hasDerivAt
-      convert hid.const_mul c using 1; ring
+      simpa using hid.const_mul c
     have h_exp : HasDerivAt (fun t : ℝ => Complex.exp (c * t)) (Complex.exp (c * x) * c) x :=
       HasDerivAt.cexp h1
     have h_div : HasDerivAt (fun t : ℝ => Complex.exp (c * t) / c)
@@ -387,7 +314,7 @@ theorem fourier_exp_decay_negative_halfline (μ : ℝ) (hμ : 0 < μ) (k : ℝ) 
     intro x _
     have h1 : HasDerivAt (fun t : ℝ => c * (t : ℂ)) c x := by
       have hid : HasDerivAt (fun t : ℝ => (t : ℂ)) 1 x := Complex.ofRealCLM.hasDerivAt
-      convert hid.const_mul c using 1; ring
+      simpa using hid.const_mul c
     have h_exp : HasDerivAt (fun t : ℝ => Complex.exp (c * t)) (Complex.exp (c * x) * c) x :=
       HasDerivAt.cexp h1
     have h_div : HasDerivAt (fun t : ℝ => Complex.exp (c * t) / c)
@@ -806,11 +733,10 @@ The main result `fourier_lorentzian_1d` is derived via Fourier inversion:
 
 ### Key Lemmas (in dependency order)
 
-1. `antideriv_exp_complex_linear`: d/dx[e^{cx}/c] = e^{cx}
-2. `tendsto_cexp_atTop_zero`, `tendsto_cexp_atBot_zero`: Limits at ±∞
-3. `integrableOn_exp_decay_Ioi`, `integrableOn_exp_growth_Iic`: Integrability
-4. `fourier_exp_decay_positive_halfline`, `fourier_exp_decay_negative_halfline`: Half-line integrals
-5. `fourier_exponential_decay_split`: Sum to get 2μ/(k² + μ²)
+1. `tendsto_cexp_atTop_zero`, `tendsto_cexp_atBot_zero`: Limits at ±∞
+2. `integrableOn_exp_decay_Ioi`, `integrableOn_exp_growth_Iic`: Integrability
+3. `fourier_exp_decay_positive_halfline`, `fourier_exp_decay_negative_halfline`: Half-line integrals
+4. `fourier_exponential_decay_split`: Sum to get 2μ/(k² + μ²)
 6. `fourier_inversion_exp_decay`: Inversion gives e^{-μ|x|}
 7. `fourier_lorentzian_1d`: Main result
 

@@ -586,7 +586,8 @@ lemma schwinger_bound_integrand_integral_xy (s : ℝ) (hs : 0 < s)
   calc
     ∫ p : (SpaceTime d) × (SpaceTime d), G p
         = ∫ x : (SpaceTime d), ∫ y : (SpaceTime d), G (x, y) := by
-            simpa using h_prod
+            rw [MeasureTheory.Measure.volume_eq_prod]
+            exact h_prod
     _ = ∫ x : (SpaceTime d), ‖f x‖ * Cf * Real.exp (-s * m^2) := by
           refine integral_congr_ae ?_
           filter_upwards with x
@@ -1049,7 +1050,7 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
                   (s := ((d : ℝ) + 2) / 2) (p := 1) (b := m^2)
                   (by linarith : (-1 : ℝ) < ((d : ℝ) + 2) / 2) (le_refl 1) (by positivity)
                 refine h0.congr_fun (fun s hs => ?_) measurableSet_Ioi
-                rw [Real.rpow_one]
+                simp only [Real.rpow_one]
                 ring_nf
               have h_prod_int : IntegrableOn
                   (fun s => π ^ (((d : ℝ) - 1) / 2) * s ^ (((d : ℝ) + 2) / 2) *
@@ -1471,7 +1472,8 @@ lemma heat_kernel_moment_integral_pow_bound (N : ℕ) :
             (fun z : ℝ × ℝ => |z.1|^N * Real.exp (-(1/(4*s)) * z.1^2) *
                               (|z.2|^N * Real.exp (-(1/(4*s)) * z.2^2)))
             (MeasureTheory.volume.restrict (Set.Ioi 0 ×ˢ Set.Ioi 0)) := by
-          convert h_prod.restrict (s := Set.Ioi 0 ×ˢ Set.Ioi 0) using 2
+          rw [MeasureTheory.Measure.volume_eq_prod]
+          exact h_prod.restrict
         apply MeasureTheory.Integrable.mono h_prod_restr
         · apply Measurable.aestronglyMeasurable
           apply Measurable.mul
@@ -1530,8 +1532,9 @@ lemma heat_kernel_moment_integral_pow_bound (N : ℕ) :
       have : (0 : ℝ) ≤ ((2*N+1 : ℕ) : ℝ) := Nat.cast_nonneg _
       linarith)
     simp_rw [Real.rpow_natCast] at h0
-    exact h0.congr_fun (fun x _ => by rw [show -(1/(4*s)) * x^2 = -x^2/(4*s) by ring])
-      measurableSet_Ioi
+    refine h0.congr_fun (fun x _ => ?_) measurableSet_Ioi
+    simp only []
+    rw [show -(1/(4*s)) * x^2 = -x^2/(4*s) by ring]
   have h_double_le : ∫ u in Set.Ioi 0, ∫ x₀ in Set.Ioo 0 u,
       x₀^N * (u - x₀)^N * Real.exp (-u^2 / (4 * s)) ≤
       (N.factorial : ℝ) / 2 * (4*s)^(N+1) := by
@@ -1635,7 +1638,8 @@ lemma heat_kernel_moment_integrableOn_quadrant (n : ℕ) (s : ℝ) (hs : 0 < s) 
       (fun z : ℝ × ℝ => |z.1|^n * Real.exp (-(1/(4*s)) * z.1^2) *
                         (|z.2|^n * Real.exp (-(1/(4*s)) * z.2^2)))
       (volume.restrict (Set.Ioi 0 ×ˢ Set.Ioi 0)) := by
-    convert h_prod.restrict (s := Set.Ioi 0 ×ˢ Set.Ioi 0) using 2
+    rw [MeasureTheory.Measure.volume_eq_prod]
+    exact h_prod.restrict
   -- Dominate by √(π/s) * h_prod_restr
   apply MeasureTheory.Integrable.mono (h_prod_restr.const_mul (Real.sqrt (π/s)))
   · apply Measurable.aestronglyMeasurable
@@ -2242,7 +2246,7 @@ lemma schwartz_iterated_integral_integrable (f : (TestFunctionℂ d))
       have h4 : Continuous (fun p : (SpaceTime d) × (SpaceTime d) => Real.exp (-(p.1 0 + p.2 0)^2 * (1 / (4 * s)))) :=
         (Real.continuous_exp.comp h3)
       simpa [div_eq_mul_inv, mul_comm, mul_left_comm, mul_assoc] using h4.aestronglyMeasurable
-    simpa [G, mul_assoc, mul_left_comm, mul_comm] using
+    simpa [G, Pi.mul_def, mul_assoc, mul_left_comm, mul_comm] using
       ((((h_f1.mul h_f2).mul h_c1).mul h_exp).mul h_c2)
 
   have hG_int : Integrable G (volume.prod volume) := by
@@ -2940,7 +2944,7 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d)) (k_s
           exact PiLp.continuous_apply 2 (fun _ : Fin d => ℝ) (⟨i.val + 1, h⟩ : Fin d)
         have h_sum : Continuous (fun p : ℝ × (SpaceTime d) × (SpaceTime d) =>
             ∑ i, k_sp i * (spatialPart p.2.1 - spatialPart p.2.2) i) := by
-          apply continuous_finset_sum
+          apply continuous_finsetSum
           intro i _
           have hv_i : Continuous (fun (p : ℝ × (SpaceTime d) × (SpaceTime d)) =>
               (spatialPart p.2.1 - spatialPart p.2.2) i) :=
@@ -3087,7 +3091,7 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d)) (k_s
                   apply Continuous.mul continuous_const
                   apply continuous_ofReal.comp
                   unfold spatialDot
-                  apply continuous_finset_sum
+                  apply continuous_finsetSum
                   intro i _
                   have hv_i : Continuous (fun (xy : (SpaceTime d) × (SpaceTime d)) =>
                       (spatialPart xy.1 - spatialPart xy.2) i) :=
@@ -3289,7 +3293,7 @@ lemma fubini_ksp_xy_full_integrand_integrable (s : ℝ) (hs : 0 < s) (f : (TestF
       apply continuous_ofReal.comp
       -- spatialDot k_sp v = Σ i, k_sp i * v i is continuous in both arguments
       unfold spatialDot
-      apply continuous_finset_sum
+      apply continuous_finsetSum
       intro i _
       have hk_i : Continuous (fun (p : (SpatialCoords d) × (SpaceTime d) × (SpaceTime d)) => p.1 i) :=
         (PiLp.continuous_apply 2 (fun _ : Fin (d - 1) => ℝ) i).comp continuous_fst
@@ -3443,7 +3447,7 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : (TestFunctionℂ d)) :
           apply Continuous.mul continuous_const
           apply continuous_ofReal.comp
           unfold spatialDot
-          apply continuous_finset_sum
+          apply continuous_finsetSum
           intro i _
           have hk_i : Continuous (fun (p : (SpaceTime d) × (SpatialCoords d)) => p.2 i) :=
             (PiLp.continuous_apply 2 (fun _ : Fin (d - 1) => ℝ) i).comp continuous_snd
@@ -3560,7 +3564,7 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : (TestFunctionℂ d)) :
           apply Continuous.mul continuous_const
           apply continuous_ofReal.comp
           unfold spatialDot
-          apply continuous_finset_sum
+          apply continuous_finsetSum
           intro i _
           have hk_i : Continuous (fun p : ((SpaceTime d) × (SpatialCoords d)) × (SpaceTime d) => p.1.2 i) :=
             (PiLp.continuous_apply 2 (fun _ : Fin (d - 1) => ℝ) i).comp

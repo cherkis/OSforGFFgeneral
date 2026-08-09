@@ -298,7 +298,7 @@ lemma schwartz_vanishing_fderiv_time (f : TestFunctionℂ d)
     simpa using f.differentiableAt.hasFDerivAt
   have h1 : HasDerivWithinAt (fun s : ℝ => f (x + s • e₀)) (fderiv ℝ f x e₀) (Set.Iic 0) 0 := by
     have h_comp := h_fd.comp_hasDerivAt 0 h_path
-    exact ((by simpa [Function.comp] using h_comp : HasDerivAt _ _ _)).hasDerivWithinAt
+    exact ((by simpa [Function.comp_def] using h_comp : HasDerivAt _ _ _)).hasDerivWithinAt
   have h2 : HasDerivWithinAt (fun s : ℝ => f (x + s • e₀)) 0 (Set.Iic 0) 0 :=
     (hasDerivWithinAt_const 0 _ (0 : ℂ)).congr h_vanish (h_vanish 0 Set.self_mem_Iic)
   have e1 := h1.derivWithin (uniqueDiffWithinAt_Iic 0)
@@ -359,16 +359,20 @@ theorem schwartz_vanishing_pow_decay (N : ℕ) (f : TestFunctionℂ d)
         have h_fd : HasFDerivAt f (fderiv ℝ f (spacetimeOfTimeSpace s x_sp))
             (spacetimeOfTimeSpace s x_sp) := f.differentiableAt.hasFDerivAt
         have h_comp := h_fd.comp_hasDerivAt s h_path
-        simpa [Function.comp, hg_apply] using h_comp
+        simpa [Function.comp_def, hg_apply] using h_comp
       have h_F0 : F 0 = 0 := hf_supp _ (le_of_eq (spacetimeOfTimeSpace_time 0 x_sp))
       have h_B : ∀ s : ℝ,
           HasDerivAt (fun r : ℝ => K * r ^ (N + 1) / ((N : ℝ) + 1)) (K * s ^ N) s := by
         intro s
-        have h1 := ((hasDerivAt_pow (N + 1) s).const_mul K).div_const ((N : ℝ) + 1)
-        convert h1 using 1
+        have h1 : HasDerivAt (fun r : ℝ => r ^ (N + 1)) (((N : ℝ) + 1) * s ^ N) s := by
+          simpa using hasDerivAt_pow (N + 1) s
+        have h2 := (h1.const_mul K).div_const ((N : ℝ) + 1)
         have hN1 : ((N : ℝ) + 1) ≠ 0 := by positivity
-        push_cast
-        field_simp
+        have hval : K * (((N : ℝ) + 1) * s ^ N) / ((N : ℝ) + 1) = K * s ^ N := by
+          rw [show K * (((N : ℝ) + 1) * s ^ N) / ((N : ℝ) + 1)
+              = K * s ^ N * (((N : ℝ) + 1) / ((N : ℝ) + 1)) from by ring,
+            div_self hN1, mul_one]
+        exact hval ▸ h2
       have h_bound : ∀ s ∈ Set.Ico (0 : ℝ) t, ‖g (spacetimeOfTimeSpace s x_sp)‖ ≤ K * s ^ N := by
         intro s hs
         rcases eq_or_lt_of_le hs.1 with hs0 | hs0

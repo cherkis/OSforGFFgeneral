@@ -11,7 +11,7 @@ import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 import Mathlib.MeasureTheory.Integral.MeanInequalities
-import Mathlib.Topology.Algebra.Module.WeakDual
+import Mathlib.Topology.Algebra.Module.Spaces.WeakDual
 import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 import Mathlib.Analysis.Calculus.ContDiff.Basic
 import Mathlib.Topology.Algebra.InfiniteSum.NatInt
@@ -307,7 +307,8 @@ lemma time_average_memLp_two (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (
     have h_int_meas : AEStronglyMeasurable (fun ω => ∫ s in Set.Icc 0 T, A s ω) μ :=
       AEStronglyMeasurable.integral_prod_right' h_swap
     -- c * f = c • f for ℂ
-    convert AEStronglyMeasurable.const_smul h_int_meas (1/T : ℂ)
+    exact (AEStronglyMeasurable.const_smul h_int_meas (1/T : ℂ)).congr
+      (Filter.Eventually.of_forall fun ω => rfl)
   -- Apply the proved theorem from L2TimeIntegral
   exact OSforGFF.time_average_memLp_two μ A T hT h_As_L2 h_uniform h_joint_meas h_avg_meas
 
@@ -332,6 +333,7 @@ lemma gff_err_sq_integrable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (T : �
   have h_diff_L2 : MemLp (fun ω => (1/T : ℂ) * (∫ s in Set.Icc (0 : ℝ) T, A s ω) - EA) 2 μ := by
     have h := h_avg_L2.sub h_const_L2
     convert h using 2
+    rfl
   -- Step 4: L² function has integrable square
   have h_sq_int : Integrable (fun ω => ‖(1/T : ℂ) * (∫ s in Set.Icc (0 : ℝ) T, A s ω) - EA‖^2) μ := by
     have h_meas := h_diff_L2.1
@@ -479,6 +481,7 @@ lemma gff_covariance_timeTranslation_continuous (m : ℝ) [Fact (0 < m)] [GFFPro
     let L : ℝ →L[ℝ] ℝ →L[ℝ] ℝ := ContinuousLinearMap.mul ℝ ℝ
     have h_conv := Integrable.convolution_integrand L hg_int hK_norm
     convert h_conv using 1
+    rfl
   -- Apply continuous_of_dominated
   apply MeasureTheory.continuous_of_dominated
   · intro s
@@ -1040,7 +1043,9 @@ lemma variance_decay_from_clustering (m : ℝ) [Fact (0 < m)] [GFFPropagator d m
     have h2 : Filter.Tendsto (fun T : ℝ => (2 * c * C) * T⁻¹) Filter.atTop (nhds ((2 * c * C) * 0)) :=
       Filter.Tendsto.const_mul (2 * c * C) h1
     simp only [mul_zero] at h2
-    convert h2 using 1 with T
+    convert h2 using 1
+    funext T
+    rw [div_eq_mul_inv]
 
   -- Lower bound: variance ≥ 0
   have h_nonneg : ∀ T, 0 ≤ ∫ ω, ‖(1 / T) * ∫ s in Set.Icc (0 : ℝ) T,
@@ -1065,7 +1070,7 @@ lemma norm_sq_weighted_sum_le {n : ℕ} (w : Fin n → ℂ) (a : Fin n → ℂ) 
     sq_le_sq' (by nlinarith [norm_nonneg (∑ j, w j * a j)]) h1
   have h3 : (∑ j : Fin n, ‖w j‖ * ‖a j‖)^2 ≤ (∑ j, ‖w j‖^2) * (∑ j, ‖a j‖^2) := by
     have := Finset.sum_mul_sq_le_sq_mul_sq Finset.univ (fun j => ‖w j‖) (fun j => ‖a j‖)
-    simp at this; exact this
+    exact this
   linarith
 
 /-- OS4' → OS4: Generating function ergodicity implies full ergodicity.
@@ -1095,7 +1100,7 @@ theorem OS4'_implies_OS4 (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
 
   -- The sum of Var_j tends to 0 (finite sum of convergent sequences)
   have h_sum_tends : Filter.Tendsto (fun T => ∑ j, Var_j j T) Filter.atTop (nhds 0) := by
-    have := tendsto_finset_sum Finset.univ (fun j _ => h_each_tends j)
+    have := tendsto_finsetSum Finset.univ (fun j _ => h_each_tends j)
     simp at this; exact this
 
   -- The constant ∑|zⱼ|²
@@ -1111,7 +1116,7 @@ theorem OS4'_implies_OS4 (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
       intro ω
       simp only [A, Err]
       -- Linearity: ∫ (∑ zⱼ expⱼ) = ∑ zⱼ · ∫ expⱼ, then distribute 1/T and subtraction
-      -- Key lemmas: MeasureTheory.integral_finset_sum (for both integrals)
+      -- Key lemmas: MeasureTheory.integral_finsetSum (for both integrals)
       -- Each exp(⟨T_s ω, f_j⟩) is integrable by Fernique (gff_exp_pairing_integrable)
       -- The structure is: (1/T) * ∫_s (∑ z_j exp_j - mean) = ∑_j z_j * ((1/T) * ∫_s (exp_j - mean_j))
       -- where mean = ∫_ω' (∑_j z_j exp_j) is constant in s
@@ -1126,7 +1131,7 @@ theorem OS4'_implies_OS4 (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
         exact gff_exp_pairing_integrable m (f j)
       have h_mean_sum : ∫ ω', ∑ j, z j * Complex.exp (distributionPairingℂ_real ω' (f j)) ∂μ =
           ∑ j, z j * ∫ ω', Complex.exp (distributionPairingℂ_real ω' (f j)) ∂μ := by
-        rw [MeasureTheory.integral_finset_sum Finset.univ (fun j _ => h_exp_int j)]
+        rw [MeasureTheory.integral_finsetSum Finset.univ (fun j _ => h_exp_int j)]
         have h_icm : ∀ (c : ℂ) (g : (FieldConfiguration d) → ℂ),
             ∫ a, c * g a ∂μ = c * ∫ a, g a ∂μ :=
           fun c g => MeasureTheory.integral_const_mul (L := ℂ) c g
@@ -1156,7 +1161,7 @@ theorem OS4'_implies_OS4 (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
 
       -- Now rewrite LHS
       simp_rw [h_integrand_eq]
-      rw [MeasureTheory.integral_finset_sum Finset.univ (fun j _ => h_diff_int j)]
+      rw [MeasureTheory.integral_finsetSum Finset.univ (fun j _ => h_diff_int j)]
       have h_icm2 : ∀ (c : ℂ) (g : ℝ → ℂ),
           ∫ s in Set.Icc (0 : ℝ) T, c * g s = c * ∫ s in Set.Icc (0 : ℝ) T, g s :=
         fun c g => MeasureTheory.integral_const_mul (L := ℂ) c g
@@ -1167,7 +1172,7 @@ theorem OS4'_implies_OS4 (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
     -- Apply Cauchy-Schwarz pointwise
     have h_cs : ∀ ω, ‖∑ j, z j * Err j T ω‖^2 ≤ Z * ∑ j, ‖Err j T ω‖^2 :=
       fun ω => norm_sq_weighted_sum_le z (fun j => Err j T ω)
-    -- Each ‖Err j T ·‖² is integrable (needed for integral_mono and integral_finset_sum)
+    -- Each ‖Err j T ·‖² is integrable (needed for integral_mono and integral_finsetSum)
     have h_each_int : ∀ j, Integrable (fun ω => ‖Err j T ω‖^2) μ := by
       intro j
       -- gff_err_sq_integrable gives integrability for ((1/T) • ∫ exp) - mean
@@ -1207,7 +1212,7 @@ theorem OS4'_implies_OS4 (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
     -- RHS integrability: Z * ∑ ‖Err_j‖² where each term is integrable
     have h_sum_int : Integrable (fun ω => Z * ∑ j, ‖Err j T ω‖^2) μ := by
       apply Integrable.const_mul
-      apply MeasureTheory.integrable_finset_sum
+      apply MeasureTheory.integrable_finsetSum
       intro j _; exact h_each_int j
     -- Each Err j T · is AEStronglyMeasurable
     -- We derive this from h_each_int: Integrable (‖Err j T ·‖²) implies AEStronglyMeasurable (Err j T ·)
@@ -1257,7 +1262,7 @@ theorem OS4'_implies_OS4 (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
       _ = Z * ∫ ω, ∑ j, ‖Err j T ω‖^2 ∂μ := by rw [← MeasureTheory.integral_const_mul]
       _ = Z * ∑ j, ∫ ω, ‖Err j T ω‖^2 ∂μ := by
           congr 1
-          exact integral_finset_sum Finset.univ fun i a ↦ h_each_int i
+          exact integral_finsetSum Finset.univ fun i a ↦ h_each_int i
       _ = Z * ∑ j, Var_j j T := rfl
 
   -- Squeeze: 0 ≤ variance ≤ Z · (∑ Var_j) → 0

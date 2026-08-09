@@ -392,9 +392,9 @@ lemma fourier_normSq_eq_conj_autocorr (f : TestFunctionℂ d) (z : SpaceTime d) 
           have hchar : (Real.fourierChar (-⟪k, z⟫) : ℂ) * (Real.fourierChar ⟪y, k⟫ : ℂ)
               = (Real.fourierChar (-⟪k, z - y⟫) : ℂ) := by
             rw [fourierChar_coe_mul]
-            congr 1
+            congr 2
             rw [inner_sub_right, real_inner_comm y k]
-            ring_nf
+            ring
           calc ((Real.fourierChar (-⟪k, z⟫) : ℂ) * F k)
                 * ((Real.fourierChar ⟪y, k⟫ : ℂ) * starRingEnd ℂ (f y))
               = starRingEnd ℂ (f y) * (((Real.fourierChar (-⟪k, z⟫) : ℂ)

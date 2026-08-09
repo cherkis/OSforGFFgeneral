@@ -314,7 +314,7 @@ private lemma expIPartial_tendsto (x : ℝ) :
               (fun n => (Complex.I : ℂ) ^ n * (x : ℂ) ^ n / (n.factorial : ℂ))) := by
     funext N; simp [expIPartial]
   -- Final: tendsto of our partial sums
-  simpa [hsum_def] using htend.comp hshift
+  simpa [hsum_def, Function.comp_def] using htend.comp hshift
 
 private lemma expIPartial_norm_le (x : ℝ) (N : ℕ) :
   ‖expIPartial N x‖ ≤ Real.exp (|x|) := by

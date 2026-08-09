@@ -183,7 +183,7 @@ lemma gff_generating_bound_by_imaginary (m : ℝ) [Fact (0 < m)] [GFFPropagator 
   let fiC := toComplex fIm
   have hf : f = frC + Complex.I • fiC := by
     ext x
-    simpa [frC, fiC, toComplex_apply, smul_eq_mul, complex_testfunction_decompose]
+    simpa [frC, fiC, fRe, fIm, toComplex_apply, smul_eq_mul, complex_testfunction_decompose]
       using complex_testfunction_decompose_recompose f x
   -- Expand the bilinear form using bilinearity
   have h_expand : freeCovarianceℂ_bilinear m f f =
@@ -343,7 +343,7 @@ lemma covariance_imaginary_L2_bound (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
     have hnorm_sq : ‖f x‖ ^ 2 = (f x).re ^ 2 + (f x).im ^ 2 := by
       simpa [Complex.normSq_apply, pow_two] using (Complex.sq_norm (f x))
     have hsq : |(f x).im| ^ 2 ≤ ‖f x‖ ^ 2 := by simpa [habs_sq, hnorm_sq] using hineq
-    simpa [hL] using hsq
+    simpa [hL, fIm] using hsq
 
   -- Show integrability of both sides to apply integral monotonicity
   have hIm_memLp : MemLp (toComplex fIm) 2 volume := (toComplex fIm).memLp 2 volume

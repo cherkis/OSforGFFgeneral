@@ -64,7 +64,9 @@ lemma glasser_lower_bound (c u : ℝ) (hu : u ≠ 0) : (c / u - u)^2 ≥ u^2 - 2
 /-- The derivative of u ↦ c/u - u is -c/u² - 1 -/
 lemma hasDerivAt_glasser_map (c : ℝ) (u : ℝ) (hu : u ≠ 0) :
     HasDerivAt (fun x => c / x - x) (-c / u^2 - 1) u := by
-  convert ((hasDerivAt_inv hu).const_mul c).sub (hasDerivAt_id u) using 1; field_simp
+  have h1 : HasDerivAt (fun x : ℝ => c / x) (-c / u ^ 2) u := by
+    simpa [div_eq_mul_inv, mul_neg, neg_div] using (hasDerivAt_inv hu).const_mul c
+  exact h1.sub (hasDerivAt_id u)
 
 /-! ## Part 3: The core Glasser integral
 
@@ -167,7 +169,7 @@ theorem glasser_integrable (c : ℝ) (_hc : 0 < c) :
     have h_gauss_int : IntegrableOn (fun u => exp (2*c) * exp (-u^2)) (Ioi 1) := by
       have h1 : IntegrableOn (fun u => exp (-u^2)) (Ioi 0) := by
         simpa using integrableOn_Ioi_exp_neg_mul_sq_iff.mpr one_pos
-      simpa [smul_eq_mul] using (h1.mono_set (Ioi_subset_Ioi one_pos.le)).smul (exp (2*c))
+      exact (h1.mono_set (Ioi_subset_Ioi one_pos.le)).const_mul (exp (2*c))
     have h_contOn : ContinuousOn (fun u : ℝ => exp (-(c/u - u)^2)) (Ioi 1) := by
       apply Real.continuous_exp.comp_continuousOn
       apply ContinuousOn.neg; apply ContinuousOn.pow
@@ -229,8 +231,9 @@ theorem glasser_weighted_integrable (c : ℝ) (hc : 0 < c) :
     have h_deriv : ∀ u ∈ Ioc (0 : ℝ) 1, HasDerivWithinAt (fun u => c / u) (-c / u^2) (Ioc 0 1) u := by
       intro u hu
       have hu_ne : u ≠ 0 := ne_of_gt hu.1
-      convert (HasDerivAt.const_mul c (hasDerivAt_inv hu_ne)).hasDerivWithinAt using 1
-      field_simp
+      have h1 : HasDerivAt (fun x : ℝ => c / x) (-c / u ^ 2) u := by
+        simpa [div_eq_mul_inv, mul_neg, neg_div] using (hasDerivAt_inv hu_ne).const_mul c
+      exact h1.hasDerivWithinAt
     -- Apply the key change of variables lemma for integrability
     rw [← h_image] at h_int_image
     have h_cov := integrableOn_image_iff_integrableOn_deriv_smul_of_antitoneOn
@@ -280,7 +283,7 @@ theorem glasser_weighted_integrable (c : ℝ) (hc : 0 < c) :
     have h_dom_int : IntegrableOn (fun u => c * exp (2*c) * exp (-u^2)) (Ioi 1) := by
       have h1 : IntegrableOn (fun u => exp (-u^2)) (Ioi 0) := by
         simpa using integrableOn_Ioi_exp_neg_mul_sq_iff.mpr one_pos
-      simpa using (h1.mono_set (Ioi_subset_Ioi one_pos.le)).const_mul (c * exp (2*c))
+      exact (h1.mono_set (Ioi_subset_Ioi one_pos.le)).const_mul (c * exp (2*c))
     have h_contOn : ContinuousOn (fun u : ℝ => (c/u^2) * exp (-(c/u - u)^2)) (Ioi 1) := by
       apply ContinuousOn.mul
       · exact continuousOn_const.div (continuousOn_pow 2) (fun x hx => pow_ne_zero 2 (ne_of_gt (lt_trans one_pos hx)))

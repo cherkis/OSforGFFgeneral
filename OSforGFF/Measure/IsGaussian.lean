@@ -145,6 +145,7 @@ lemma gff_slice_analytic_z0 (f g : TestFunction d) (t : ℂ) :
       Set.univ := by
     have hc := AnalyticOn.comp h2param he_an (fun _ _ => trivial)
     convert hc using 2
+    simp [e]
   -- AnalyticOn on univ → AnalyticOnNhd on univ
   exact analyticOn_univ.mp hcomp
 
@@ -445,6 +446,7 @@ lemma schwinger_eq_covarianceℂ_on_reals (f g : TestFunction d) :
   -- Step 4: Apply the real Schwinger = covariance equality and agreement on reals
   -- Note: ω f is notation for distributionPairing ω f, and convert handles this
   convert congrArg (↑· : ℝ → ℂ) (schwinger_eq_covariance_real m f g) using 2
+  · rfl
   · exact freeCovarianceℂ_bilinear_agrees_on_reals m f g
 
 end GFFIsGaussian
@@ -474,11 +476,11 @@ theorem gff_two_point_equals_covarianceℂ_free {d : ℕ} [Fact (2 ≤ d)] (m : 
   -- Prove the decompositions: f = frC + I • fiC, g = grC + I • giC
   have hf : f = frC + Complex.I • fiC := by
     ext x
-    simpa [frC, fiC, toComplex_apply, smul_eq_mul, complex_testfunction_decompose]
+    simpa [frC, fiC, fRe, fIm, toComplex_apply, smul_eq_mul, complex_testfunction_decompose]
       using complex_testfunction_decompose_recompose f x
   have hg : g = grC + Complex.I • giC := by
     ext x
-    simpa [grC, giC, toComplex_apply, smul_eq_mul, complex_testfunction_decompose]
+    simpa [grC, giC, gRe, gIm, toComplex_apply, smul_eq_mul, complex_testfunction_decompose]
       using complex_testfunction_decompose_recompose g x
   rw [hf, hg]
   -- Extract bilinearity properties from CovarianceBilinear
