@@ -669,5 +669,205 @@ theorem spatialNormIntegral_linear_bound (f : TestFunctionℂ d)
     _ ≤ C_pt * t * (K + 1) := by nlinarith [mul_pos hC_pt_pos ht]
     _ = C_pt * (K + 1) * t := by ring
 
+/-! ### Order-N boundary-vanishing bounds
+
+A Schwartz function that vanishes on the closed half-space `{x₀ ≤ 0}` is flat to all orders at
+the time boundary: its time derivative is again a Schwartz function vanishing on the half-space,
+so integrating repeatedly along the time direction upgrades the linear bound `‖f‖ ≲ t` to
+`‖f‖ ≲ tᴺ` for every order `N` — uniformly in the spatial coordinates, with polynomial spatial
+decay `(1 + ‖x̄‖)⁻ᵈ`.
+-/
+
+omit [Fact (2 ≤ d)] in
+/-- Pointwise polynomial decay of a Schwartz function: `‖f y‖ ≤ C / (1 + ‖y‖)^d`. -/
+lemma schwartz_pointwise_decay_bound (f : TestFunctionℂ d) :
+    ∃ C : ℝ, 0 < C ∧ ∀ y : SpaceTime d, ‖f y‖ ≤ C / (1 + ‖y‖) ^ d := by
+  obtain ⟨S, hS⟩ : ∃ S : ℝ, ∀ y : SpaceTime d, (1 + ‖y‖) ^ d * ‖f y‖ ≤ S :=
+    ⟨_, fun y => by
+      have h := SchwartzMap.one_add_le_sup_seminorm_apply (𝕜 := ℂ) (m := ((d, 0) : ℕ × ℕ))
+        (k := d) (n := 0) le_rfl le_rfl f y
+      rwa [norm_iteratedFDeriv_zero] at h⟩
+  have hS_nonneg : 0 ≤ S := le_trans (by positivity) (hS 0)
+  refine ⟨S + 1, by linarith, fun y => ?_⟩
+  have h1y_pow : (0 : ℝ) < (1 + ‖y‖) ^ d := pow_pos (by linarith [norm_nonneg y]) d
+  rw [le_div_iff₀ h1y_pow]
+  calc ‖f y‖ * (1 + ‖y‖) ^ d = (1 + ‖y‖) ^ d * ‖f y‖ := by ring
+    _ ≤ S := hS y
+    _ ≤ S + 1 := by linarith
+
+/-- Every spacetime point is recovered from its time and spatial components:
+    `x = (x₀, x̄)` with `x₀ = x 0` and `x̄ = spatialPart x`. -/
+lemma spacetimeOfTimeSpace_spatialPart (x : SpaceTime d) :
+    spacetimeOfTimeSpace (x 0) (spatialPart x) = x := by
+  obtain ⟨n, rfl⟩ : ∃ n, d = n + 1 := ⟨d - 1, by have h : 2 ≤ d := Fact.out; omega⟩
+  ext j
+  cases' j using Fin.cases with j
+  · exact spacetimeOfTimeSpace_time _ _
+  · rfl
+
+/-- If a Schwartz function vanishes on the closed half-space `{x₀ ≤ 0}`, so does its time
+    derivative `x ↦ (fderiv ℝ f x) e₀`: along the time line through such a point the function
+    is identically zero for nonpositive times, so the (unique) derivative within that ray
+    vanishes. -/
+lemma schwartz_vanishing_fderiv_time (f : TestFunctionℂ d)
+    (hf_supp : ∀ x : SpaceTime d, x 0 ≤ 0 → f x = 0)
+    (x : SpaceTime d) (hx : x 0 ≤ 0) :
+    fderiv ℝ f x (EuclideanSpace.single (0 : Fin d) (1 : ℝ)) = 0 := by
+  set e₀ : SpaceTime d := EuclideanSpace.single (0 : Fin d) (1 : ℝ) with he₀
+  have h_time : ∀ s : ℝ, (x + s • e₀) 0 = x 0 + s := by
+    intro s
+    simp [he₀]
+  have h_vanish : ∀ s ∈ Set.Iic (0 : ℝ), f (x + s • e₀) = 0 := fun s hs =>
+    hf_supp _ (by rw [h_time s]; exact add_nonpos hx hs)
+  have h_path : HasDerivAt (fun s : ℝ => x + s • e₀) e₀ 0 := by
+    simpa using ((hasDerivAt_id (0 : ℝ)).smul_const e₀).const_add x
+  have h_fd : HasFDerivAt f (fderiv ℝ f x) ((fun s : ℝ => x + s • e₀) 0) := by
+    simpa using f.differentiableAt.hasFDerivAt
+  have h1 : HasDerivWithinAt (fun s : ℝ => f (x + s • e₀)) (fderiv ℝ f x e₀) (Set.Iic 0) 0 := by
+    have h_comp := h_fd.comp_hasDerivAt 0 h_path
+    exact ((by simpa [Function.comp] using h_comp : HasDerivAt _ _ _)).hasDerivWithinAt
+  have h2 : HasDerivWithinAt (fun s : ℝ => f (x + s • e₀)) 0 (Set.Iic 0) 0 :=
+    (hasDerivWithinAt_const 0 _ (0 : ℂ)).congr h_vanish (h_vanish 0 Set.self_mem_Iic)
+  have e1 := h1.derivWithin (uniqueDiffWithinAt_Iic 0)
+  have e2 := h2.derivWithin (uniqueDiffWithinAt_Iic 0)
+  rw [← e1, e2]
+
+/-- **Order-`N` boundary-vanishing bound with spatial decay.**  A Schwartz function vanishing
+    on the half-space `{x₀ ≤ 0}` satisfies `‖f(t, x̄)‖ ≤ C · tᴺ / (1 + ‖x̄‖)^d` for every `N`.
+    The case `N = 1` is the fundamental-theorem estimate; the general case follows by
+    induction, applying the inductive bound to the time derivative of `f` (again a Schwartz
+    function vanishing on the half-space) and integrating along the time direction. -/
+theorem schwartz_vanishing_pow_decay (N : ℕ) (f : TestFunctionℂ d)
+    (hf_supp : ∀ x : SpaceTime d, x 0 ≤ 0 → f x = 0) :
+    ∃ C : ℝ, 0 < C ∧ ∀ (t : ℝ) (_ : 0 < t) (x_sp : SpatialCoords d),
+      ‖f (spacetimeOfTimeSpace t x_sp)‖ ≤ C * t ^ N / (1 + ‖x_sp‖) ^ d := by
+  induction N generalizing f with
+  | zero =>
+      obtain ⟨C, hC_pos, hC⟩ := schwartz_pointwise_decay_bound f
+      refine ⟨C, hC_pos, fun t ht x_sp => ?_⟩
+      have h1x : (0 : ℝ) < 1 + ‖x_sp‖ := by linarith [norm_nonneg x_sp]
+      have h_norm_ge := spacetimeOfTimeSpace_norm_ge t x_sp
+      have h_mono : (1 + ‖x_sp‖) ^ d ≤ (1 + ‖spacetimeOfTimeSpace t x_sp‖) ^ d := by
+        apply pow_le_pow_left₀ (by linarith) (by linarith)
+      calc ‖f (spacetimeOfTimeSpace t x_sp)‖
+          ≤ C / (1 + ‖spacetimeOfTimeSpace t x_sp‖) ^ d := hC _
+        _ ≤ C / (1 + ‖x_sp‖) ^ d := by
+            apply div_le_div_of_nonneg_left hC_pos.le (pow_pos h1x d) h_mono
+        _ = C * t ^ 0 / (1 + ‖x_sp‖) ^ d := by rw [pow_zero, mul_one]
+  | succ N ih =>
+      set e₀ : SpaceTime d := EuclideanSpace.single (0 : Fin d) (1 : ℝ) with he₀
+      set g : TestFunctionℂ d := LineDeriv.lineDerivOp e₀ f with hg_def
+      have hg_apply : ∀ y : SpaceTime d, g y = fderiv ℝ f y e₀ := fun y => rfl
+      have hg_supp : ∀ x : SpaceTime d, x 0 ≤ 0 → g x = 0 := fun x hx => by
+        rw [hg_apply x, he₀]
+        exact schwartz_vanishing_fderiv_time f hf_supp x hx
+      obtain ⟨C, hC_pos, hC⟩ := ih g hg_supp
+      refine ⟨C / ((N : ℝ) + 1), by positivity, fun t ht x_sp => ?_⟩
+      have h1x : (0 : ℝ) < 1 + ‖x_sp‖ := by linarith [norm_nonneg x_sp]
+      have hP : (0 : ℝ) < (1 + ‖x_sp‖) ^ d := pow_pos h1x d
+      set K : ℝ := C / (1 + ‖x_sp‖) ^ d with hK_def
+      have hK_pos : 0 < K := div_pos hC_pos hP
+      set F : ℝ → ℂ := fun s => f (spacetimeOfTimeSpace s x_sp) with hF_def
+      have h_path_eq : (fun r : ℝ => spacetimeOfTimeSpace (d := d) r x_sp) =
+          (fun r : ℝ => spacetimeOfTimeSpace 0 x_sp + r • e₀) := by
+        funext r
+        rw [spacetimeOfTimeSpace_decompose r x_sp, spacetimeOfTimeSpace_eq_smul_single, add_comm,
+          he₀]
+      have h_path_cont : Continuous (fun r : ℝ => spacetimeOfTimeSpace (d := d) r x_sp) := by
+        rw [h_path_eq]
+        exact continuous_const.add (continuous_id.smul continuous_const)
+      have h_F_cont : ContinuousOn F (Set.Icc 0 t) :=
+        (f.continuous.comp h_path_cont).continuousOn
+      have h_F_deriv : ∀ s : ℝ, HasDerivAt F (g (spacetimeOfTimeSpace s x_sp)) s := by
+        intro s
+        have h_path : HasDerivAt (fun r : ℝ => spacetimeOfTimeSpace (d := d) r x_sp) e₀ s := by
+          rw [h_path_eq]
+          simpa using ((hasDerivAt_id s).smul_const e₀).const_add (spacetimeOfTimeSpace 0 x_sp)
+        have h_fd : HasFDerivAt f (fderiv ℝ f (spacetimeOfTimeSpace s x_sp))
+            (spacetimeOfTimeSpace s x_sp) := f.differentiableAt.hasFDerivAt
+        have h_comp := h_fd.comp_hasDerivAt s h_path
+        simpa [Function.comp, hg_apply] using h_comp
+      have h_F0 : F 0 = 0 := hf_supp _ (le_of_eq (spacetimeOfTimeSpace_time 0 x_sp))
+      have h_B : ∀ s : ℝ,
+          HasDerivAt (fun r : ℝ => K * r ^ (N + 1) / ((N : ℝ) + 1)) (K * s ^ N) s := by
+        intro s
+        have h1 := ((hasDerivAt_pow (N + 1) s).const_mul K).div_const ((N : ℝ) + 1)
+        convert h1 using 1
+        have hN1 : ((N : ℝ) + 1) ≠ 0 := by positivity
+        push_cast
+        field_simp
+      have h_bound : ∀ s ∈ Set.Ico (0 : ℝ) t, ‖g (spacetimeOfTimeSpace s x_sp)‖ ≤ K * s ^ N := by
+        intro s hs
+        rcases eq_or_lt_of_le hs.1 with hs0 | hs0
+        · rw [← hs0, hg_supp _ (le_of_eq (spacetimeOfTimeSpace_time 0 x_sp)), norm_zero]
+          exact mul_nonneg hK_pos.le (pow_nonneg le_rfl N)
+        · calc ‖g (spacetimeOfTimeSpace s x_sp)‖
+              ≤ C * s ^ N / (1 + ‖x_sp‖) ^ d := hC s hs0 x_sp
+            _ = K * s ^ N := by rw [hK_def]; ring
+      have h_main := image_norm_le_of_norm_deriv_right_le_deriv_boundary
+        (f' := fun s => g (spacetimeOfTimeSpace s x_sp))
+        (B := fun r : ℝ => K * r ^ (N + 1) / ((N : ℝ) + 1)) (B' := fun s => K * s ^ N)
+        h_F_cont (fun s _ => (h_F_deriv s).hasDerivWithinAt)
+        (by simp [h_F0]) h_B h_bound (Set.right_mem_Icc.mpr ht.le)
+      calc ‖f (spacetimeOfTimeSpace t x_sp)‖ = ‖F t‖ := rfl
+        _ ≤ K * t ^ (N + 1) / ((N : ℝ) + 1) := h_main
+        _ = C / ((N : ℝ) + 1) * t ^ (N + 1) / (1 + ‖x_sp‖) ^ d := by
+            rw [hK_def]
+            field_simp
+
+/-- **Order-`N` boundary-vanishing bound (global form).**  A Schwartz function vanishing on
+    the half-space `{x₀ ≤ 0}` satisfies `‖f x‖ ≤ C · x₀ᴺ` for `x₀ > 0`. -/
+theorem schwartz_vanishing_pow_bound (N : ℕ) (f : TestFunctionℂ d)
+    (hf_supp : ∀ x : SpaceTime d, x 0 ≤ 0 → f x = 0) :
+    ∃ C : ℝ, 0 < C ∧ ∀ x : SpaceTime d, 0 < x 0 → ‖f x‖ ≤ C * (x 0) ^ N := by
+  obtain ⟨C, hC_pos, hC⟩ := schwartz_vanishing_pow_decay N f hf_supp
+  refine ⟨C, hC_pos, fun x hx => ?_⟩
+  have h_pow : (1 : ℝ) ≤ (1 + ‖spatialPart x‖) ^ d :=
+    one_le_pow₀ (by linarith [norm_nonneg (spatialPart x)])
+  have h_bd := hC (x 0) hx (spatialPart x)
+  rw [spacetimeOfTimeSpace_spatialPart x] at h_bd
+  calc ‖f x‖ ≤ C * (x 0) ^ N / (1 + ‖spatialPart x‖) ^ d := h_bd
+    _ ≤ C * (x 0) ^ N / 1 := by
+        apply div_le_div_of_nonneg_left (by positivity) one_pos h_pow
+    _ = C * (x 0) ^ N := div_one _
+
+/-- **Order-`N` spatial-integral bound**: for a Schwartz function vanishing on `{x₀ ≤ 0}`,
+    `∫_{ℝ^{d-1}} ‖f(t, x̄)‖ dx̄ ≤ C · tᴺ` for `t > 0`.  Integrates the pointwise order-`N`
+    bound against the integrable spatial decay `(1 + ‖x̄‖)⁻ᵈ`. -/
+theorem spatialNormIntegral_pow_bound (N : ℕ) (f : TestFunctionℂ d)
+    (hf_supp : ∀ x : SpaceTime d, x 0 ≤ 0 → f x = 0) :
+    ∃ C : ℝ, 0 < C ∧ ∀ t : ℝ, 0 < t → spatialNormIntegral f t ≤ C * t ^ N := by
+  obtain ⟨C_pt, hC_pt_pos, h_pt_bound⟩ := schwartz_vanishing_pow_decay N f hf_supp
+  have h_decay_int := polynomial_decay_integrable_spatial (d := d)
+  let K := ∫ x : SpatialCoords d, 1 / (1 + ‖x‖) ^ d
+  have hK_nonneg : 0 ≤ K := integral_nonneg (fun x => by positivity)
+  refine ⟨C_pt * (K + 1), mul_pos hC_pt_pos (by linarith), fun t ht => ?_⟩
+  have h_pointwise : ∀ x : SpatialCoords d,
+      ‖f (spacetimeOfTimeSpace t x)‖ ≤ C_pt * t ^ N / (1 + ‖x‖) ^ d := fun x =>
+    h_pt_bound t ht x
+  have h_bound_int :
+      Integrable (fun x : SpatialCoords d => C_pt * t ^ N / (1 + ‖x‖) ^ d) volume := by
+    have h_eq : (fun x : SpatialCoords d => C_pt * t ^ N / (1 + ‖x‖) ^ d) =
+        (fun x : SpatialCoords d => (C_pt * t ^ N) * (1 / (1 + ‖x‖) ^ d)) := by
+      ext x; ring
+    rw [h_eq]
+    exact h_decay_int.const_mul (C_pt * t ^ N)
+  have h_mono := integral_mono_of_nonneg
+    (f := fun x : SpatialCoords d => ‖f (spacetimeOfTimeSpace t x)‖)
+    (g := fun x : SpatialCoords d => C_pt * t ^ N / (1 + ‖x‖) ^ d)
+    (ae_of_all _ fun x => norm_nonneg _) h_bound_int (ae_of_all _ h_pointwise)
+  have h_factor : ∫ x : SpatialCoords d, C_pt * t ^ N / (1 + ‖x‖) ^ d = C_pt * t ^ N * K := by
+    have h_eq : (fun x : SpatialCoords d => C_pt * t ^ N / (1 + ‖x‖) ^ d) =
+        (fun x : SpatialCoords d => (C_pt * t ^ N) * (1 / (1 + ‖x‖) ^ d)) := by ext x; ring
+    rw [h_eq]
+    simp only [← smul_eq_mul, integral_smul]
+    rfl
+  calc spatialNormIntegral f t
+      = ∫ x : SpatialCoords d, ‖f (spacetimeOfTimeSpace t x)‖ := rfl
+    _ ≤ ∫ x : SpatialCoords d, C_pt * t ^ N / (1 + ‖x‖) ^ d := h_mono
+    _ = C_pt * t ^ N * K := h_factor
+    _ ≤ C_pt * t ^ N * (K + 1) := by nlinarith [mul_pos hC_pt_pos (pow_pos ht N)]
+    _ = C_pt * (K + 1) * t ^ N := by ring
+
 end TimeSlice
 
