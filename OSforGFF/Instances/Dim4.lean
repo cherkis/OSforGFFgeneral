@@ -4,10 +4,8 @@ Copyright (c) 2026 Sergey A. Cherkis. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sergey A. Cherkis, Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
-import OSforGFF.Spacetime.Basic
 import OSforGFF.General.BesselK
 import OSforGFF.Covariance.Propagator
-import OSforGFF.Measure.Construct
 
 /-!
 # The four-dimensional instance of `GFFPropagator`
@@ -15,9 +13,7 @@ import OSforGFF.Measure.Construct
 The radial profile of the free covariance in four dimensions is the Bessel closed form
 `(m/(4π²r)) K₁(mr)`; its identification with the generic proper-time integral
 `properTimeCovariance` is the evaluation `properTimeCovariance_dim4_eq` (the order `ν = -1` case of
-the master identity `schwingerIntegral_eq_besselK1`, `General/BesselK`). At this instance the
-generic kernel `freeCovariance 4 m` coincides definitionally with the Bessel kernel
-`freeCovariance4 m`, defined here.
+the master identity `schwingerIntegral_eq_besselK1`, `General/BesselK`).
 -/
 
 noncomputable section
@@ -56,21 +52,5 @@ noncomputable instance instGFFPropagatorDim4 (m : ℝ) [Fact (0 < m)] :
   Cprofile r := if r = 0 then 0 else (m / (4 * Real.pi ^ 2 * r)) * besselK1 (m * r)
   schwinger_eq r hr := by
     rw [if_neg (ne_of_gt hr), properTimeCovariance_dim4_eq m r Fact.out hr]
-
-/-- The free covariance in position space via the Bessel representation:
-    `C(x, y) = (m/(4π²|x−y|)) K₁(m|x−y|)`, regularized to `0` at coincident points. This is the
-    explicit formula for the massive scalar field propagator in four dimensions. -/
-noncomputable def freeCovarianceBessel (m : ℝ) (x y : SpaceTime 4) : ℝ :=
-  let r := ‖x - y‖
-  if r = 0 then 0
-  else (m / (4 * Real.pi ^ 2 * r)) * besselK1 (m * r)
-
-/-- The free covariance in position space (abbreviation for the Bessel representation). -/
-noncomputable abbrev freeCovariance4 (m : ℝ) (x y : SpaceTime 4) : ℝ :=
-  freeCovarianceBessel m x y
-
-/-- At `d = 4` the generic kernel is definitionally the Bessel kernel. -/
-lemma freeCovariance_dim4_eq (m : ℝ) [Fact (0 < m)] (x y : SpaceTime 4) :
-    freeCovariance 4 m x y = freeCovariance4 m x y := rfl
 
 end

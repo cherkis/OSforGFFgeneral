@@ -35,7 +35,7 @@ hence integrable.
 2. **Inductive Step**: Use Gaussian moment properties and Cauchy-Schwarz
 3. **Nuclear Foundation**: Leverage nuclear covariance structure
 
-This generalizes `gaussian_pairing_product_integrable_free_core` to arbitrary n,
+This generalizes `gaussian_pairing_product_integrable_free_2point` to arbitrary n,
 providing a unified foundation for all Schwinger function computations.
 -/
 
@@ -48,71 +48,6 @@ variable {d : ℕ} [Fact (2 ≤ d)]
 
 /-! ## n-Point Integrability for Gaussian Free Fields -/
 
-namespace GaussianMoments
-
-open MeasureTheory Complex
-
-/-- Auxiliary lemma: the complex pairing has an integrable square under the free GFF measure.
-This is the complex analogue of `gaussian_pairing_square_integrable_real` and will serve as the
-base estimate for higher Gaussian moments. -/
-lemma gaussian_complex_pairing_abs_sq_integrable
-    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (φ : TestFunctionℂ d) :
-  Integrable (fun ω => ‖distributionPairingℂ_real ω φ‖ ^ 2)
-    (gaussianFreeField_free m).toMeasure := by
-  classical
-  -- Split the complex test function into real and imaginary parts
-  set φRe : TestFunction d := (complex_testfunction_decompose φ).1
-  set φIm : TestFunction d := (complex_testfunction_decompose φ).2
-
-  -- Use the proven theorem from GFFbridge (derives from gff_pairing_is_gaussian)
-  have hRe_mem :
-      MemLp (distributionPairingCLM φRe) (2 : ENNReal)
-        (gaussianFreeField_free m).toMeasure :=
-    gaussianFreeField_pairing_memLp (m := m) (φ := φRe) (p := (2 : ENNReal)) (hp := by simp)
-  have hIm_mem :
-      MemLp (distributionPairingCLM φIm) (2 : ENNReal)
-        (gaussianFreeField_free m).toMeasure :=
-    gaussianFreeField_pairing_memLp (m := m) (φ := φIm) (p := (2 : ENNReal)) (hp := by simp)
-
-  -- Convert the MemLp statements to integrability of the square magnitudes
-  have hRe_sq : Integrable (fun ω => (distributionPairing ω φRe) ^ 2)
-      (gaussianFreeField_free m).toMeasure := by
-    exact hRe_mem.integrable_sq
-  have hIm_sq : Integrable (fun ω => (distributionPairing ω φIm) ^ 2)
-      (gaussianFreeField_free m).toMeasure := by
-    exact hIm_mem.integrable_sq
-
-  -- Assemble the complex absolute square from the real and imaginary components
-  have h_pointwise :
-      (fun ω => ‖distributionPairingℂ_real ω φ‖ ^ 2) =
-        (fun ω => (distributionPairing ω φRe) ^ 2 + (distributionPairing ω φIm) ^ 2) := by
-    funext ω
-    -- Use the fact that ‖a + bi‖² = a² + b² for complex numbers
-    rw [Complex.sq_norm, Complex.normSq_apply]
-    -- Simplify using the definition of distributionPairingℂ_real
-    simp only [distributionPairingℂ_real, φRe, φIm]
-    -- Expand using the real and imaginary parts of a + I*b where a,b are real
-    -- For z = a + I*b with a,b real: z.re = a, z.im = b
-    -- So ‖z‖² = z.re² + z.im² = a² + b²
-    simp only [Complex.add_re, Complex.add_im, Complex.ofReal_re, Complex.ofReal_im,
-               Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im]
-    -- Simplify arithmetic: I.re = 0, I.im = 1, (real number).im = 0
-    simp only [zero_mul, one_mul, mul_zero, zero_sub, zero_add]
-    -- Convert back to distributionPairing and square notation
-    simp only [distributionPairing, ← sq]
-    -- Final simplification: a + (-0) = a
-    simp only [neg_zero, add_zero]
-
-  -- Finish by using integrability of the individual squares
-  have h_sum : Integrable
-      (fun ω => (distributionPairing ω φRe) ^ 2 + (distributionPairing ω φIm) ^ 2)
-        (gaussianFreeField_free m).toMeasure :=
-    hRe_sq.add hIm_sq
-  simpa [h_pointwise]
-    using h_sum
-
-end GaussianMoments
-
 /-- **Foundation**: The original 2-point case implemented directly.
     This provides the base case for the general n-point theorem. -/
 theorem gaussian_pairing_product_integrable_free_2point
@@ -120,7 +55,7 @@ theorem gaussian_pairing_product_integrable_free_2point
   Integrable (fun ω => distributionPairingℂ_real ω φ * distributionPairingℂ_real ω ψ)
     (gaussianFreeField_free m).toMeasure := by
   -- Strategy: Decompose both complex test functions into real and imaginary parts
-  -- and use the existing real pairing integrability (following gaussian_complex_pairing_abs_sq_integrable)
+  -- and use the existing real pairing integrability
 
   classical
   -- Decompose φ and ψ into real and imaginary parts

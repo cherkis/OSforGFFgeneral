@@ -37,14 +37,6 @@ namespace GFFIsGaussian
 
 variable {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
 
-/-- For the Gaussian Free Field measure, the product of two complex pairings with test functions
-    is integrable. Uses the direct 2-point theorem from GaussianMoments. -/
-lemma gaussian_pairing_product_integrable_free_core
-    (φ ψ : TestFunctionℂ d) :
-    Integrable (fun ω => distributionPairingℂ_real ω φ * distributionPairingℂ_real ω ψ)
-      (gaussianFreeField_free m).toMeasure :=
-  gaussian_pairing_product_integrable_free_2point m φ ψ
-
 /-! ## Core Theorems
 
 The proofs use OS0's derivative interchange machinery:

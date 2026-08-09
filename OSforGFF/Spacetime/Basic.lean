@@ -89,10 +89,6 @@ variable (x : (SpaceTime d))
 /- Probability distribution over field configurations (distributions) -/
 def pointwiseMulCLM : ℂ →L[ℂ] ℂ →L[ℂ] ℂ := ContinuousLinearMap.mul ℂ ℂ
 
-/-- Multiplication lifted to the Schwartz space. -/
-def schwartzMul (g : (TestFunctionℂ d)) : (TestFunctionℂ d) →L[ℂ] (TestFunctionℂ d) :=
-  (SchwartzMap.bilinLeftCLM pointwiseMulCLM (SchwartzMap.hasTemperateGrowth_general g))
-
 
 
 /-! ## Glimm-Jaffe Distribution Framework
@@ -261,9 +257,6 @@ def GJMean (dμ_config : ProbabilityMeasure (FieldConfiguration d))
 
 /-- Spatial coordinates: ℝ^{d-1} (space without time) as EuclideanSpace for L2 norm -/
 abbrev SpatialCoords (d : ℕ) := EuclideanSpace ℝ (Fin (d - 1))
-
-/-- L² space on spatial slices (real-valued) -/
-abbrev SpatialL2 (d : ℕ) := Lp ℝ 2 (volume : Measure (SpatialCoords d))
 
 /-- Extract spatial part of spacetime coordinate -/
 def spatialPart (x : SpaceTime d) : SpatialCoords d :=

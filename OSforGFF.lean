@@ -7,7 +7,6 @@ Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 
 -- General mathematics (pure Mathlib extensions, no project imports)
 import «OSforGFF».General.FunctionalAnalysis
-import «OSforGFF».General.FrobeniusPositivity
 import «OSforGFF».General.SchurProduct
 import «OSforGFF».General.HadamardExp
 import «OSforGFF».General.PositiveDefinite

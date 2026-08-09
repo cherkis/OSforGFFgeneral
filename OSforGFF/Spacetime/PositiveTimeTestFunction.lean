@@ -31,7 +31,6 @@ the star operation (complex conjugation composed with time reflection) for test 
 
 ## Main results
 
-* `is_open_positiveTimeSet`: The positive time set is open
 * `Star (TestFunctionℂ d)`: Star instance for complex test functions
 -/
 
@@ -46,11 +45,6 @@ def HasPositiveTime (x : (SpaceTime d)) : Prop := getTimeComponent x > 0
 
 /-- The set of all spacetime points with positive time -/
 def positiveTimeSet : Set (SpaceTime d) := {x | HasPositiveTime x}
-
-/-- The positive time set is open -/
-lemma is_open_positiveTimeSet : IsOpen (positiveTimeSet (d := d)) :=
-  isOpen_lt continuous_const
-    (PiLp.continuous_apply 2 (fun _ => ℝ) (⟨0, by have h : 2 ≤ d := Fact.out; omega⟩ : Fin d))
 
 /-- Submodule of **real-valued** test functions supported in the positive time region -/
 def PositiveTimeTestFunctions.submodule : Submodule ℝ (TestFunction d) where

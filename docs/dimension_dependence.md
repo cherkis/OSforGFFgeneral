@@ -89,7 +89,6 @@ These files reference `STDimension` or `SpaceTime` but work for any $d \ge 2$.
 | `General/LaplaceIntegral.lean` | Laplace/Glasser integrals |
 | `General/HadamardExp.lean` | Hadamard exponential |
 | `General/SchurProduct.lean` | Schur product theorem |
-| `General/FrobeniusPositivity.lean` | Frobenius inner product positivity |
 | `General/PositiveDefinite.lean` | Positive-definite function theory |
 | `General/GaussianRBF.lean` | Gaussian RBF positive definiteness |
 | `General/QuantitativeDecay.lean` | Polynomial decay estimates |

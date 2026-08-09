@@ -25,10 +25,8 @@ particularly for proving reflection positivity of the free covariance.
 - `fourier_lorentzian_1d`: The 1D Fourier transform of the Lorentzian 1/(k² + μ²)
   gives exponential decay: ∫ dk e^{ikx} / (k² + μ²) = (π/μ) e^{-μ|x|}
 
-- `fourier_exponential_decay`: The inverse transform - Fourier transform of e^{-μ|x|}
-  gives the Lorentzian: ∫ dx e^{-ikx} e^{-μ|x|} = 2μ/(k² + μ²)
-
-- `exp_factorization_reflection`: Key factorization for reflection positivity
+- `fourier_exponential_decay'`: The inverse transform - Fourier transform of e^{-μ|x|}
+  gives the Lorentzian: ∫ dx e^{ikx} e^{-μ|x|} = 2μ/(k² + μ²)
 
 ## Mathematical Background
 
@@ -182,28 +180,6 @@ theorem integrableOn_exp_decay_Ioi (μ : ℝ) (hμ : 0 < μ) (k : ℝ) :
                Complex.I_im, Complex.ofReal_im, mul_zero, zero_mul, sub_zero]
     linarith
   exact integrableOn_exp_mul_complex_Ioi hc_re 0
-
-/-- Exponential e^{bx} is integrable on (-∞, a) when b > 0.
-    Proved by change of variables from exp_neg_integrableOn_Ioi. -/
-theorem exp_pos_integrableOn_Iio (a : ℝ) {b : ℝ} (h : 0 < b) :
-    MeasureTheory.IntegrableOn (fun x => Real.exp (b * x)) (Set.Iio a) MeasureTheory.volume := by
-  have h_neg : MeasureTheory.IntegrableOn (fun x => Real.exp (-b * x)) (Set.Ioi (-a)) MeasureTheory.volume :=
-    exp_neg_integrableOn_Ioi (-a) h
-  have h_eq : (fun x => Real.exp (b * x)) = (fun x => Real.exp (-b * (-x))) := by
-    ext x; ring_nf
-  rw [h_eq]
-  have h_set : Set.Iio a = -Set.Ioi (-a) := by
-    ext x
-    simp only [Set.mem_Iio, Set.mem_neg, Set.mem_Ioi]
-    constructor <;> intro hx <;> linarith
-  rw [h_set]
-  exact h_neg.comp_neg
-
-/-- Exponential e^{bx} is integrable on (-∞, a] when b > 0.
-    Follows from Iio version since measure of a point is 0. -/
-theorem exp_pos_integrableOn_Iic (a : ℝ) {b : ℝ} (h : 0 < b) :
-    MeasureTheory.IntegrableOn (fun x => Real.exp (b * x)) (Set.Iic a) MeasureTheory.volume :=
-  integrableOn_exp_mul_Iic h a
 
 /-- The integrand e^{(ik+μ)x} is integrable on (-∞, 0] when μ > 0.
     This follows from the exponential decay since Re(ik + μ) = μ > 0. -/
@@ -423,17 +399,6 @@ lemma fourier_exponential_decay' (μ : ℝ) (hμ : 0 < μ) (k : ℝ) :
     exact MeasureTheory.setIntegral_univ.symm
   rw [h_split, h_Iic, h_Ioi]
   exact fourier_exponential_decay_split μ hμ k
-
-/-- Variant with negative frequency convention e^{-ikx}. -/
-lemma fourier_exponential_decay (μ : ℝ) (hμ : 0 < μ) (k : ℝ) :
-    ∫ x : ℝ, Complex.exp (-Complex.I * k * x) * Real.exp (-μ * |x|) =
-      2 * μ / (k^2 + μ^2) := by
-  -- e^{-ikx} = e^{i(-k)x}
-  have h1 : ∫ x : ℝ, Complex.exp (-Complex.I * k * x) * Real.exp (-μ * |x|) =
-      ∫ x : ℝ, Complex.exp (Complex.I * (-k) * x) * Real.exp (-μ * |x|) := by
-    congr 1; funext x; ring_nf
-  rw [h1]
-  convert fourier_exponential_decay' μ hμ (-k) using 2 <;> simp
 
 /-! ### Fourier Inversion and the Lorentzian Transform
 
@@ -669,17 +634,6 @@ theorem fourier_lorentzian_1d (μ : ℝ) (hμ : 0 < μ) (x : ℝ) :
   rw [h_solve]
   -- Simplify: e^{...} / (μ/π) = e^{...} * (π/μ) = (π/μ) * e^{...}
   rw [div_div_eq_mul_div]
-  ring
-
-/-- The exponential from the Lorentzian Fourier transform factorizes.
-    For x, y with x ≥ 0 and y ≤ 0, we have |x - y| = x - y = x + |y|,
-    so e^{-μ|x-y|} = e^{-μx} · e^{-μ|y|} = e^{-μx} · e^{μy}. -/
-lemma exp_factorization_reflection (μ : ℝ) (x y : ℝ) (hx : 0 ≤ x) (hy : y ≤ 0) :
-    Real.exp (-μ * |x - y|) = Real.exp (-μ * x) * Real.exp (μ * y) := by
-  have h_diff : |x - y| = x - y := abs_of_nonneg (by linarith)
-  rw [h_diff]
-  rw [← Real.exp_add]
-  congr 1
   ring
 
 end

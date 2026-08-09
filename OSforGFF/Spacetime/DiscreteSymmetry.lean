@@ -61,19 +61,6 @@ variable {d : ℕ} [Fact (2 ≤ d)]
 abbrev timeReflection (x : (SpaceTime d)) : (SpaceTime d) :=
   (WithLp.equiv 2 _).symm (Function.update x.ofLp 0 (-x.ofLp 0))
 
-def timeReflectionMatrix : Matrix (Fin d) (Fin d) ℝ :=
-  Matrix.diagonal (fun i => if i = 0 then -1 else 1)
-
-lemma timeReflectionMatrix_is_orthogonal :
-   timeReflectionMatrix ∈ Matrix.orthogonalGroup (Fin d) ℝ := by
-      simp [Matrix.mem_orthogonalGroup_iff, timeReflectionMatrix, Matrix.diagonal_transpose, Matrix.diagonal_mul_diagonal]
-      ext i j
-      simp [Matrix.one_apply]
-      split_ifs <;> norm_num
-
-def timeReflectionIsometry  : Matrix.orthogonalGroup (Fin d) ℝ :=
-  ⟨timeReflectionMatrix, timeReflectionMatrix_is_orthogonal⟩
-
 def timeReflectionLinear : (SpaceTime d) →ₗ[ℝ] (SpaceTime d) :=
 { toFun := timeReflection
   map_add' := by

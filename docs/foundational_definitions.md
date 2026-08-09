@@ -152,7 +152,7 @@ consumes only the class and the lemmas derived once from its two fields.
 | `freeCovarianceKernel d m` | centered kernel `freeCovariance d m 0 ·` (continuity, integrability, exponential decay) |
 
 The four-dimensional Bessel kernel `freeCovarianceBessel` / `freeCovariance4` = (m/4π²r)K₁(mr)
-lives in `Instances/Dim4Bessel.lean`. The original momentum-space program (`freePropagatorMomentum`,
+lives off-graph in `Legacy/Dim4Bessel.lean`. The original momentum-space program (`freePropagatorMomentum`,
 `heatKernelPositionSpace`, `covarianceSchwingerRep`, `freeCovariance_regulated`, the momentum-weight
 operators) is preserved off the build graph in `OSforGFF/Legacy/`.
 

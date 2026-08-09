@@ -139,14 +139,6 @@ lemma schwingerTwoPoint_ae_eq_kernel (m : ℝ) [Fact (0 < m)] [GFFPropagator d m
   exact Filter.eventuallyEq_of_mem h_mem
     (fun x hx => schwingerTwoPointFunction_eq_freeCovariance m x hx)
 
-/-- The abstract two-point Schwinger function of the GFF is a.e. strongly measurable. -/
-theorem schwingerTwoPoint_measurable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
-    AEStronglyMeasurable
-      (fun x => SchwingerTwoPointFunction (gaussianFreeField_free (d := d) m) x)
-      volume :=
-  (freeCovarianceKernel_integrable (d := d) (m := m)).aestronglyMeasurable.congr
-    (schwingerTwoPoint_ae_eq_kernel m).symm
-
 /-! ## GFF Exponential Bound
 
 Elementary bound on the GFF generating function using complex exponential properties.

@@ -65,8 +65,6 @@ focusing on integrability, Schwartz function properties, and L² embeddings.
 
 **Schwartz Space Properties:**
 - `SchwartzMap.hasTemperateGrowth_general`: Schwartz functions have temperate growth
-- `SchwartzMap.integrable_mul_bounded`: Schwartz × bounded → integrable
-- `SchwartzMap.integrable_conj`: Conjugate of Schwartz function is integrable
 - `SchwartzMap.translate`: Translation of Schwartz functions
 - `schwartz_integrable_decay`: Decay bounds for Schwartz function integrals
 
@@ -76,17 +74,14 @@ focusing on integrability, Schwartz function properties, and L² embeddings.
 
 **Schwartz→L² Embedding:**
 - `schwartzToL2`: Embedding Schwartz functions into L² space
-- `schwartzToL2'`: Alternative embedding for EuclideanSpace types
 
 **L∞·L² Multiplication:**
 - `linfty_mul_L2_CLM`: Continuous bilinear map L∞ × L² → L²
-- `linfty_mul_L2_CLM_norm_bound`: Norm bound ‖f · g‖₂ ≤ ‖f‖∞ · ‖g‖₂
 
 **Integrability Results:**
 - `integrableOn_ball_of_radial`: Radial functions integrable on balls
 - `integrableOn_ball_of_rpow_decay`: Power-law decay integrable on balls
 - `integrableOn_compact_diff_ball`: Integrability on compact ∖ ball
-- `locallyIntegrable_of_rpow_decay_real`: Local integrability from power decay (d ≥ 3)
 - `schwartz_bilinear_integrable_of_translationInvariant_L1`: Bilinear Schwartz integrability
 
 **Bump Function Convolutions:**
@@ -96,7 +91,7 @@ focusing on integrability, Schwartz function properties, and L² embeddings.
 - `double_mollifier_convergence`: Convergence of double mollifier approximations
 
 **Utility Lemmas:**
-- `norm_exp_I_mul_real`, `norm_exp_neg_I_mul_real`: ‖exp(±i·r)‖ = 1
+- `norm_exp_neg_I_mul_real`: ‖exp(-i·r)‖ = 1
 - `sub_const_hasTemperateGrowth`: Translation has temperate growth
 -/
 
@@ -109,9 +104,8 @@ noncomputable section
 /-! ## Proven theorems in this file
 
 The following L∞ × L² multiplication theorems are fully proven (2025-12-13):
-- `linfty_mul_L2_CLM` (line ~607): L∞ × L² → L² bounded linear operator
-- `linfty_mul_L2_CLM_spec` (line ~639): pointwise specification (g·f)(x) = g(x)·f(x) a.e.
-- `linfty_mul_L2_CLM_norm_bound` (line ~650): operator norm bound ‖T_g f‖ ≤ C·‖f‖
+- `linfty_mul_L2_CLM`: L∞ × L² → L² bounded linear operator
+- `linfty_mul_L2_CLM_spec`: pointwise specification (g·f)(x) = g(x)·f(x) a.e.
 -/
 
 open MeasureTheory.Measure
@@ -233,13 +227,6 @@ abbrev L2Complex (d : ℕ) := Lp ℂ 2 (volume : Measure (EuclideanRd d))
 noncomputable def schwartzToL2 (d : ℕ) : SchwartzRd d →L[ℂ] L2Complex d :=
   SchwartzMap.toLpCLM ℂ ℂ 2 (volume : Measure (EuclideanRd d))
 
-/-- Alternative embedding that produces the exact L² type expected by the unprimed theorems.
-    This maps Schwartz functions to Lp ℂ 2 (volume : Measure (EuclideanSpace ℝ (Fin d))).
-    The difference from schwartzToL2 is only in the type representation, not the mathematical content. -/
-noncomputable def schwartzToL2' (d : ℕ) [NeZero d] [Fintype (Fin d)] :
-  SchwartzMap (EuclideanSpace ℝ (Fin d)) ℂ →L[ℂ] Lp ℂ 2 (volume : Measure (EuclideanSpace ℝ (Fin d))) :=
-  SchwartzMap.toLpCLM ℂ ℂ 2 (volume : Measure (EuclideanSpace ℝ (Fin d)))
-
 /-! ## L∞ Multiplication on L² Spaces
 
 This section proves that multiplication by L∞ functions defines bounded operators on L².
@@ -278,23 +265,6 @@ lemma linfty_mul_L2_CLM_spec {μ : Measure α}
   filter_upwards [hg_mem.coeFn_toLp,
     (ContinuousLinearMap.mul ℂ ℂ).coeFn_holder (r := 2) hg_mem.toLp f] with x hg h
   simp [h, hg]
-
-/-- The operator norm of the multiplication operator is bounded by C.
-    This gives ‖Mg f‖₂ ≤ C · ‖f‖₂ for all f ∈ L². -/
-theorem linfty_mul_L2_CLM_norm_bound {μ : Measure α}
-    (g : α → ℂ) (hg_meas : Measurable g) (C : ℝ) (hC : 0 ≤ C)
-    (hg_bound : ∀ᵐ x ∂μ, ‖g x‖ ≤ C)
-    (f : Lp ℂ 2 μ) :
-    ‖linfty_mul_L2_CLM g hg_meas C hg_bound f‖ ≤ C * ‖f‖ := by
-  have hg_mem := memLp_top_of_bound hg_meas.aestronglyMeasurable C hg_bound
-  calc
-    _ ≤ ‖(ContinuousLinearMap.mul ℂ ℂ)‖ * ‖hg_mem.toLp‖ * ‖f‖ := by
-      apply ContinuousLinearMap.norm_holder_apply_apply_le
-    _ ≤ C * ‖f‖ := by
-      simp only [ContinuousLinearMap.opNorm_mul, Lp.norm_toLp, eLpNorm_exponent_top, one_mul]
-      gcongr
-      refine toReal_le_of_le_ofReal hC ?_
-      exact eLpNormEssSup_le_of_ae_bound hg_bound
 
 /-! ## Local Integrability of Power-Law Decay Functions
 
@@ -447,36 +417,6 @@ lemma integrableOn_compact_diff_ball {d : ℕ}
     rw [Set.not_nonempty_iff_eq_empty.mp hne]
     exact integrableOn_empty
 
-/-- Functions with polynomial decay are locally integrable.
-    For d-dimensional space, if α < d and |f(x)| ≤ C‖x‖^{-α}, then f is locally integrable. -/
-theorem locallyIntegrable_of_rpow_decay_real {d : ℕ} (hd : d ≥ 3)
-    {f : EuclideanSpace ℝ (Fin d) → ℝ} {C : ℝ} {α : ℝ}
-    (hC : C > 0) (hα : α < d)
-    (h_decay : ∀ x, |f x| ≤ C * ‖x‖ ^ (-α))
-    (h_meas : AEStronglyMeasurable f volume) :
-    LocallyIntegrable f volume := by
-  rw [locallyIntegrable_iff]
-  intro K hK
-  -- Cover K with ball 0 1 and K \ ball 0 (1/2)
-  have h_cover : K ⊆ (K ∩ Metric.ball 0 1) ∪ (K \ Metric.ball 0 (1/2)) := by
-    intro x hx
-    by_cases hxb : x ∈ Metric.ball 0 1
-    · exact Or.inl ⟨hx, hxb⟩
-    · simp only [Metric.mem_ball, dist_zero_right, not_lt] at hxb
-      right
-      constructor
-      · exact hx
-      · simp only [Metric.mem_ball, dist_zero_right, not_lt]
-        linarith
-  apply IntegrableOn.mono_set _ h_cover
-  apply IntegrableOn.union
-  · -- IntegrableOn f (K ∩ ball 0 1)
-    apply IntegrableOn.mono_set _ Set.inter_subset_right
-    exact integrableOn_ball_of_rpow_decay (by omega : d ≥ 1) hC hα (by norm_num : (0:ℝ) < 1)
-      h_decay h_meas
-  · -- IntegrableOn f (K \ ball 0 (1/2))
-    exact integrableOn_compact_diff_ball hK hC (by norm_num : (0:ℝ) < 1/2) h_decay h_meas
-
 /-! ## Bilinear Integrability for L¹ Translation-Invariant Kernels
 
 For translation-invariant kernels K₀ that are integrable (L¹), the bilinear form
@@ -594,50 +534,10 @@ theorem schwartz_bilinear_integrable_of_translationInvariant_L1
             _ = Cf * ‖K₀ (p.1 - p.2)‖ * ‖g p.2‖ := by ring
       _ = Cf * (‖K₀ (p.1 - p.2)‖ * ‖g p.2‖) := by ring
 
-/-! ## Schwartz Functions Times Bounded Functions
-
-These lemmas establish integrability of Schwartz functions multiplied by bounded
-measurable functions, which is essential for Fourier transform computations.
--/
-
-section SchwartzBounded
-
-variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [MeasurableSpace E] [BorelSpace E]
-  [SecondCountableTopology E] {μ : Measure E} [μ.HasTemperateGrowth]
-
-/-- A Schwartz function times a bounded measurable function is integrable.
-    This is the key technical lemma for Fourier-type integrals. -/
-lemma SchwartzMap.integrable_mul_bounded (f : SchwartzMap E ℂ) (g : E → ℂ)
-    (hg_meas : Measurable g) (hg_bdd : ∀ x, ‖g x‖ ≤ 1) :
-    Integrable (fun x => f x * g x) μ := by
-  have hf_int : Integrable f μ := f.integrable
-  -- Use bdd_mul: Integrable f → AEStronglyMeasurable g → (∀ᵐ x, ‖g x‖ ≤ C) → Integrable (g * f)
-  -- Then convert by commutativity
-  have hg_ae : AEStronglyMeasurable g μ := hg_meas.aestronglyMeasurable
-  have hg_ae_bdd : ∀ᵐ x ∂μ, ‖g x‖ ≤ 1 := Filter.Eventually.of_forall hg_bdd
-  exact Integrable.mul_bdd hf_int hg_ae hg_ae_bdd
-
-/-- The conjugate of a Schwartz function is integrable. -/
-lemma SchwartzMap.integrable_conj (f : SchwartzMap E ℂ) :
-    Integrable (fun y => starRingEnd ℂ (f y)) μ := by
-  have hf_int : Integrable f μ := f.integrable
-  have hf_star_meas : AEStronglyMeasurable (fun y => starRingEnd ℂ (f y)) μ :=
-    hf_int.aestronglyMeasurable.star
-  have h_norm_eq : ∀ᵐ y ∂μ, ‖f y‖ = ‖starRingEnd ℂ (f y)‖ := by
-    filter_upwards with y
-    exact (RCLike.norm_conj (f y)).symm
-  exact hf_int.congr' hf_star_meas h_norm_eq
-
-end SchwartzBounded
-
 /-! ## Phase Exponential Lemmas
 
 Lemmas about complex exponentials of pure imaginary arguments, used in Fourier analysis.
 -/
-
-/-- Complex exponential of pure imaginary argument has norm 1. -/
-lemma norm_exp_I_mul_real (r : ℝ) : ‖Complex.exp (Complex.I * r)‖ = 1 :=
-  norm_exp_I_mul_ofReal r
 
 /-- Complex exponential of negative pure imaginary argument has norm 1. -/
 lemma norm_exp_neg_I_mul_real (r : ℝ) : ‖Complex.exp (-Complex.I * r)‖ = 1 := by

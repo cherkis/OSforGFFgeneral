@@ -53,7 +53,7 @@ The Minlos proof uses the external library [kolmogorov_extension4](https://githu
 
 ## Project Structure
 
-The 54 on-graph library files (plus 2 off-graph `Legacy/` files, below) are organized into 7 layers, with imports flowing from
+The 53 on-graph library files (plus 6 off-graph `Legacy/` files, below) are organized into 7 layers, with imports flowing from
 earlier to later sections. See [docs/architecture.md](docs/architecture.md) for dependency structure,
 design choices, and proof outlines, and [docs/dimension_generic.md](docs/dimension_generic.md)
 for the dimension-generic design. For a pedagogical, axiom-by-axiom walkthrough of the
@@ -70,7 +70,6 @@ Pure extensions of Mathlib with no project-specific definitions.
 | File | Contents |
 |------|----------|
 | [FunctionalAnalysis](OSforGFF/General/FunctionalAnalysis.lean) | [L² Fourier transform infrastructure, Plancherel identity](summary/OSforGFF/General/FunctionalAnalysis.md) |
-| [FrobeniusPositivity](OSforGFF/General/FrobeniusPositivity.lean) | [Frobenius inner product, positive semidefinite matrix theory](summary/OSforGFF/General/FrobeniusPositivity.md) |
 | [SchurProduct](OSforGFF/General/SchurProduct.lean) | [Schur product theorem (Hadamard product preserves PSD)](summary/OSforGFF/General/SchurProduct.md) |
 | [HadamardExp](OSforGFF/General/HadamardExp.lean) | [Entrywise exponential of PSD matrices is PSD](summary/OSforGFF/General/HadamardExp.md) |
 | [PositiveDefinite](OSforGFF/General/PositiveDefinite.lean) | [Positive definite functions and kernels](summary/OSforGFF/General/PositiveDefinite.md) |
@@ -184,16 +183,21 @@ Per-dimension closed forms of the covariance, packaged as `GFFPropagator` instan
 
 ### Legacy (off the build graph)
 
-`OSforGFF/Legacy/` preserves genuine proven mathematics from the original four-dimensional
-development that has been superseded in role by the dimension-generic machinery. These files are
-**not** imported by `OSforGFF.lean` and are not compiled by `lake build`; each carries a module
-docstring with its supersession map, and is verified in isolation with `lake env lean` (build
-`BesselK1Analytics`'s olean first, since `Dim4Bessel` depends on it).
+`OSforGFF/Legacy/` preserves genuine proven mathematics that the on-graph library no longer
+consumes: the original four-dimensional development superseded in role by the dimension-generic
+machinery, and the verified-dead declarations quarantined by the library-wide sweep. These files
+are **not** imported by `OSforGFF.lean` and are not compiled by `lake build`; each carries a
+module docstring with its supersession map, and is verified in isolation with `lake env lean`
+(build `BesselK1Analytics`'s olean first, since `Dim4Bessel` depends on it).
 
 | File | Description |
 | --- | --- |
-| [Legacy/Dim4Bessel](OSforGFF/Legacy/Dim4Bessel.lean) | The original 4D Bessel/momentum program: regulated-covariance / Fubini / momentum-space development, heat-kernel and Schwinger-representation defs, superseded by `Covariance/Propagator.lean` + `Covariance/ParsevalGeneric.lean` + `General/BesselK.lean` |
+| [Legacy/Dim4Bessel](OSforGFF/Legacy/Dim4Bessel.lean) | The original 4D Bessel/momentum program: the named Bessel kernel `freeCovarianceBessel`/`freeCovariance4`, regulated-covariance / Fubini / momentum-space development, heat-kernel and Schwinger-representation defs, superseded by `Covariance/Propagator.lean` + `Covariance/ParsevalGeneric.lean` + `General/BesselK.lean` |
 | [Legacy/BesselK1Analytics](OSforGFF/Legacy/BesselK1Analytics.lean) | The K₁ analytic lemmas (positivity, continuity, asymptotic/near-origin bounds, radial integrability) that supported the 4D analysis |
+| [Legacy/UnusedGeneral](OSforGFF/Legacy/UnusedGeneral.lean) | Consumer-less general-analysis lemmas (Fourier/functional-analysis side lemmas, the entire former `FrobeniusPositivity.lean`, the L² time-average and weighted-Minkowski programs) |
+| [Legacy/UnusedSpacetime](OSforGFF/Legacy/UnusedSpacetime.lean) | Consumer-less spacetime-layer declarations (Schwartz multiplication, spatial L², the matrix presentation of time reflection, unified Euclidean actions, openness of the positive-time set) |
+| [Legacy/UnusedMeasureSchwinger](OSforGFF/Legacy/UnusedMeasureSchwinger.lean) | Consumer-less measure/Schwinger-layer declarations (the alternative `OS0_alt` program, RBF/symmetry Minlos corollaries, the exponential-series expansion of the generating functional) |
+| [Legacy/UnusedOS](OSforGFF/Legacy/UnusedOS.lean) | Consumer-less OS-layer declarations (OS0 side lemmas, pre-H3 OS3 chain steps incl. `bilinear_to_k0_inside`, the ε–δ clustering formulation, kernel isometry invariance) |
 
 ---
 

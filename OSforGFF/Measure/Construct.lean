@@ -54,7 +54,6 @@ then using Mathlib's `memLp_id_gaussianReal`.
 
 ## Main definitions
 
-- `CovarianceFunction`, `CovarianceNuclear`: covariance structure
 - `isGaussianGJ`: characteristic functional Z[J] = exp(−½⟨J,CJ⟩)
 - `constructGaussianMeasureMinlos_free`: the GFF measure for mass m > 0
 -/
@@ -78,15 +77,6 @@ private lemma distributionPairingCLM_measurable (φ : TestFunction d) :
 
 /-! ## Gaussian Measures on Field Configurations
 -/
-
-/-- A covariance function on test functions that determines the Gaussian measure -/
-structure CovarianceFunction (d : ℕ) where
-  covar : TestFunctionℂ d → TestFunctionℂ d → ℂ
-  symmetric : ∀ f g, covar f g = (starRingEnd ℂ) (covar g f)
-  bilinear_left : ∀ c f₁ f₂ g, covar (c • f₁ + f₂) g = c * covar f₁ g + covar f₂ g
-  bilinear_right : ∀ f c g₁ g₂, covar f (c • g₁ + g₂) = (starRingEnd ℂ) c * covar f g₁ + covar f g₂
-  positive_semidefinite : ∀ f, 0 ≤ (covar f f).re
-  bounded : ∃ M > 0, ∀ f, ‖covar f f‖ ≤ M * (∫ x, ‖f x‖ ∂volume) * (∫ x, ‖f x‖^2 ∂volume)^(1/2)
 
 /-- A measure is centered (has zero mean) -/
 def isCenteredGJ (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=

@@ -391,18 +391,4 @@ noncomputable def euclidean_action_CLM (g : (E d)) : (TestFunctionℂ d) →L[�
     (hg := euclidean_pullback_temperate_growth g)
     (hg_upper := euclidean_pullback_polynomial_bounds g)
 
-/-- Both actions are instances of the same abstract pattern. -/
-lemma euclidean_actions_unified (g : (E d)) :
-    (∃ (T_test : (TestFunctionℂ d) →L[ℂ] (TestFunctionℂ d)),
-       ∀ f, euclidean_action g f = T_test f) ∧
-    (∃ (T_L2 : Lp ℂ 2 (volume : Measure (SpaceTime d)) → Lp ℂ 2 (volume : Measure (SpaceTime d))),
-       ∀ f, euclidean_action_L2 g f = T_L2 f) := by
-  constructor
-  · use euclidean_action_CLM g
-    intro f
-    rfl  -- by definition of euclidean_action
-  · use euclidean_action_L2 g
-    intro f
-    rfl  -- by definition of euclidean_action_L2
-
 

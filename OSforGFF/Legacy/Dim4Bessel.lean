@@ -68,14 +68,34 @@ rather than deleted, because the preserved regulated program consumes them.
   `_mul_self_le`, `_near_origin_bound`, `radial_besselK1_integrable`) live in
   `General/BesselFunction.lean`.
 
-The live four-dimensional kernel `freeCovarianceBessel` / `freeCovariance4` — the only externally
-consumed declarations of the original file — has been extracted to `Instances/Dim4.lean`
-(on the build graph) and is imported here for the lemmas below that still refer to it.
+The named four-dimensional kernel `freeCovarianceBessel` / `freeCovariance4` and the
+identification `freeCovariance_dim4_eq` (`freeCovariance 4 m ≡ freeCovariance4 m`, a `rfl`)
+are defined below: nothing on the build graph consumes them — `instGFFPropagatorDim4`
+(`Instances/Dim4.lean`) states the Bessel closed form directly — so they live here with the
+rest of the four-dimensional program.
 -/
 
 open MeasureTheory Complex Real Filter
 open TopologicalSpace
 open scoped Real InnerProductSpace BigOperators
+
+/-! ### The named four-dimensional Bessel kernel (moved here from `Instances/Dim4.lean`) -/
+
+/-- The free covariance in position space via the Bessel representation:
+    `C(x, y) = (m/(4π²|x−y|)) K₁(m|x−y|)`, regularized to `0` at coincident points. This is the
+    explicit formula for the massive scalar field propagator in four dimensions. -/
+noncomputable def freeCovarianceBessel (m : ℝ) (x y : SpaceTime 4) : ℝ :=
+  let r := ‖x - y‖
+  if r = 0 then 0
+  else (m / (4 * Real.pi ^ 2 * r)) * besselK1 (m * r)
+
+/-- The free covariance in position space (abbreviation for the Bessel representation). -/
+noncomputable abbrev freeCovariance4 (m : ℝ) (x y : SpaceTime 4) : ℝ :=
+  freeCovarianceBessel m x y
+
+/-- At `d = 4` the generic kernel is definitionally the Bessel kernel. -/
+lemma freeCovariance_dim4_eq (m : ℝ) [Fact (0 < m)] (x y : SpaceTime 4) :
+    freeCovariance 4 m x y = freeCovariance4 m x y := rfl
 
 /-- Private four-dimensional shorthands local to this off-graph legacy file:
     `SpaceTime 4`, `TestFunctionℂ 4`, and the dimension `4`. -/

@@ -488,13 +488,4 @@ lemma freeCovariance_symm (x y : EuclideanSpace ℝ (Fin d)) :
   unfold freeCovariance
   rw [norm_sub_rev]
 
-/-- The covariance kernel is invariant under simultaneous isometric moves of both points:
-    for a linear isometry `R` and translation `t`, `C(Rx + t, Ry + t) = C(x, y)`. -/
-lemma freeCovariance_isometry_invariant
-    (R : LinearIsometry (RingHom.id ℝ) (EuclideanSpace ℝ (Fin d)) (EuclideanSpace ℝ (Fin d)))
-    (t : EuclideanSpace ℝ (Fin d)) (x y : EuclideanSpace ℝ (Fin d)) :
-    freeCovariance d m (R x + t) (R y + t) = freeCovariance d m x y := by
-  unfold freeCovariance
-  rw [show R x + t - (R y + t) = R (x - y) by rw [map_sub]; abel, R.norm_map]
-
 end

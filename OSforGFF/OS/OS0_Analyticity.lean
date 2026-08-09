@@ -82,23 +82,6 @@ where dμ is the Gaussian measure on field configurations.
 variable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
 
 omit [Fact (2 ≤ d)] in
-/-- The complex pairing is continuous in ω.
-    This follows from the continuity of the evaluation map on WeakDual. -/
-theorem distributionPairingℂ_real_continuous (f : TestFunctionℂ d) :
-    Continuous (fun ω : FieldConfiguration d => distributionPairingℂ_real ω f) := by
-  -- distributionPairingℂ_real ω f = ω f_re + I * ω f_im
-  -- where f_re = schwartz_comp_clm f reCLM and f_im = schwartz_comp_clm f imCLM
-  simp only [distributionPairingℂ_real, complex_testfunction_decompose]
-  -- Now we need: Continuous (ω ↦ ↑(ω (schwartz_comp_clm f reCLM)) + I * ↑(ω (schwartz_comp_clm f imCLM)))
-  -- Each evaluation ω ↦ ω g is continuous by WeakDual.eval_continuous
-  have h_re : Continuous (fun ω : FieldConfiguration d => (ω (schwartz_comp_clm f Complex.reCLM) : ℂ)) :=
-    Complex.continuous_ofReal.comp (WeakDual.eval_continuous _)
-  have h_im : Continuous (fun ω : FieldConfiguration d => (ω (schwartz_comp_clm f Complex.imCLM) : ℂ)) :=
-    Complex.continuous_ofReal.comp (WeakDual.eval_continuous _)
-  -- The full pairing is a continuous combination
-  exact h_re.add (continuous_const.mul h_im)
-
-omit [Fact (2 ≤ d)] in
 /-- The complex pairing is measurable in ω (cylinder σ-algebra version).
     This follows from the measurability of the evaluation map on WeakDual. -/
 lemma distributionPairingℂ_real_measurable (f : TestFunctionℂ d) :
@@ -116,78 +99,6 @@ theorem gff_integrand_measurable
       (gaussianFreeField_free (d := d) m).toMeasure := by
   exact (Complex.continuous_exp.measurable.comp
     (measurable_const.mul (distributionPairingℂ_real_measurable _))).aestronglyMeasurable
-
-omit [Fact (2 ≤ d)] in
-/-- The GFF integrand is analytic in z for each fixed field configuration ω.
-    This follows from the fact that:
-    1. z ↦ ∑ᵢ zᵢ • Jᵢ is linear (hence analytic) in z
-    2. ω ↦ ⟨ω, f⟩ is linear in f
-    3. exp(i · _) is entire -/
-theorem gff_integrand_analytic
-    (n : ℕ) (J : Fin n → TestFunctionℂ d) (ω : FieldConfiguration d) (z₀ : Fin n → ℂ) :
-    AnalyticAt ℂ
-      (fun z : Fin n → ℂ =>
-        Complex.exp (Complex.I * distributionPairingℂ_real ω (∑ i, z i • J i)))
-      z₀ := by
-  -- The function is exp ∘ (I * pairing ∘ linear_combination)
-  -- Each component is analytic, and composition of analytic functions is analytic
-  -- exp is entire, so we need to show the argument is analytic
-  apply AnalyticAt.cexp
-  -- Now show I * distributionPairingℂ_real ω (∑ i, z i • J i) is analytic in z
-  apply AnalyticAt.mul
-  · -- Complex.I is constant, hence analytic
-    exact analyticAt_const
-  · -- distributionPairingℂ_real ω (∑ i, z i • J i) is analytic in z
-    -- The function z ↦ distributionPairingℂ_real ω (∑ i, z i • J i) is linear in z
-    -- because distributionPairingℂ_real is linear in its test function argument
-    -- and the sum is linear in z.
-
-    -- A linear function from a finite-dimensional space to ℂ is analytic.
-    -- The function is: z ↦ ∑ i, z i * (distributionPairingℂ_real ω (J i))
-    -- which is a finite sum of z i times constants.
-
-    -- Rewrite using linearity of distributionPairingℂ_real
-    have h_linear : ∀ z : Fin n → ℂ, distributionPairingℂ_real ω (∑ i, z i • J i) =
-        ∑ i, z i * distributionPairingℂ_real ω (J i) := fun z => by
-      -- distributionPairingℂ_real is linear in the test function
-      -- Use pairing_linear_combo: pairing(t•f + s•g) = t * pairing(f) + s * pairing(g)
-      -- First establish the basic linearity properties
-      have h_add : ∀ f g : TestFunctionℂ d, distributionPairingℂ_real ω (f + g) =
-          distributionPairingℂ_real ω f + distributionPairingℂ_real ω g := fun f g => by
-        have := pairing_linear_combo ω f g 1 1
-        simp at this
-        exact this
-      have h_smul : ∀ (c : ℂ) (f : TestFunctionℂ d), distributionPairingℂ_real ω (c • f) =
-          c * distributionPairingℂ_real ω f := fun c f => by
-        have := pairing_linear_combo ω f 0 c 0
-        simp at this
-        exact this
-      have h_zero : distributionPairingℂ_real ω 0 = 0 := by
-        have := pairing_linear_combo ω 0 0 0 0
-        simp at this
-        exact this
-      -- Use Finset.induction_on for the sum
-      have h_gen : ∀ (s : Finset (Fin n)),
-          distributionPairingℂ_real ω (∑ i ∈ s, z i • J i) =
-          ∑ i ∈ s, z i * distributionPairingℂ_real ω (J i) := by
-        intro s
-        induction s using Finset.induction_on with
-        | empty => simp [h_zero]
-        | insert i s hi ih =>
-          rw [Finset.sum_insert hi, Finset.sum_insert hi]
-          rw [h_add, h_smul, ih]
-      exact h_gen Finset.univ
-    -- Now show ∑ i, z i * c_i is analytic (it's a polynomial)
-    simp_rw [h_linear]
-    -- Use Finset.analyticAt_fun_sum: if each f_i is analytic, then z ↦ ∑ i, f_i z is analytic
-    apply Finset.analyticAt_fun_sum
-    intro i _
-    -- Show z ↦ z i * c_i is analytic
-    apply AnalyticAt.mul
-    · -- z ↦ z i is a continuous linear map (projection), hence analytic
-      exact ContinuousLinearMap.analyticAt (ContinuousLinearMap.proj (R := ℂ) i) z₀
-    · -- c_i = distributionPairingℂ_real ω (J i) is a constant function in z
-      exact analyticAt_const
 
 omit [Fact (2 ≤ d)] in
 /-- The norm of exp(I * distributionPairingℂ_real ω f) equals exp(-(ω f_im))
@@ -394,61 +305,6 @@ lemma gff_exp_abs_pairing_integrable (f : TestFunction d) :
     Integrable (fun ω : FieldConfiguration d => Real.exp |ω f|) (gaussianFreeField_free (d := d) m).toMeasure :=
   memLp_one_iff_integrable.mp (gff_exp_abs_pairing_memLp m f 1 ENNReal.one_ne_top)
 
-/-- Product of exponentials of absolute pairings is in L².
-    If we have k test functions g₁, ..., gₖ, then exp(∑ᵢ |ω gᵢ|) = ∏ᵢ exp(|ω gᵢ|).
-    Each exp(|ω gᵢ|) ∈ L^(2k) by gff_exp_abs_pairing_memLp.
-    By generalized Hölder (MemLp.prod'), a product of k functions in L^(2k) is in L². -/
-lemma gff_exp_abs_sum_memLp {ι : Type*} (s : Finset ι) (g : ι → TestFunction d) :
-    MemLp (fun ω : FieldConfiguration d => Real.exp (∑ i ∈ s, |ω (g i)|)) 2 (gaussianFreeField_free (d := d) m).toMeasure := by
-  -- Rewrite exp(sum) as product of exp
-  have h_eq : (fun ω : FieldConfiguration d => Real.exp (∑ i ∈ s, |ω (g i)|)) =
-              (fun ω : FieldConfiguration d => ∏ i ∈ s, Real.exp |ω (g i)|) := by
-    ext ω; exact Real.exp_sum s (fun i => |ω (g i)|)
-  rw [h_eq]
-  -- Handle empty case
-  rcases s.eq_empty_or_nonempty with rfl | hs
-  · simp [memLp_const]
-  -- For nonempty s, use MemLp.prod' with p i = 2 * s.card for each i
-  let k : ℕ := s.card
-  have hk_pos : 0 < k := Finset.card_pos.mpr hs
-  -- Each factor is in L^(2k)
-  have h_each : ∀ i ∈ s, MemLp (fun ω : FieldConfiguration d => Real.exp |ω (g i)|)
-      (2 * k : ℕ) (gaussianFreeField_free (d := d) m).toMeasure := by
-    intro i _
-    exact gff_exp_abs_pairing_memLp m (g i) (2 * k : ℕ) (ENNReal.natCast_ne_top _)
-  -- Apply MemLp.prod' with constant exponent 2k for each factor
-  have h_prod := MemLp.prod' (s := s) (p := fun _ => (2 * k : ℕ))
-    (f := fun i (ω : FieldConfiguration d) => Real.exp |ω (g i)|)
-    (fun i hi => h_each i hi)
-  -- The resulting exponent is (∑ i ∈ s, 1/(2k))⁻¹ = (k/(2k))⁻¹ = 2
-  convert h_prod using 1
-  -- Goal: 2 = (∑ i ∈ s, ((2 * k : ℕ) : ENNReal)⁻¹)⁻¹
-  rw [Finset.sum_const, nsmul_eq_mul]
-  -- Goal: 2 = (s.card * ((2 * k : ℕ) : ENNReal)⁻¹)⁻¹
-  -- Since k = s.card, this is (k * (2k)⁻¹)⁻¹ = (1/2)⁻¹ = 2
-  have hk_ne_zero : (s.card : ENNReal) ≠ 0 := by
-    simp only [ne_eq, Nat.cast_eq_zero]
-    exact hk_pos.ne'
-  have hk_ne_top : (s.card : ENNReal) ≠ ⊤ := ENNReal.natCast_ne_top s.card
-  -- Rewrite (2 * k : ℕ) as 2 * s.card in ENNReal using k = s.card
-  simp only [k]
-  have h_cast : ((2 * s.card : ℕ) : ENNReal) = 2 * s.card := by norm_cast
-  rw [h_cast]
-  -- Goal: 2 = (s.card * (2 * s.card)⁻¹)⁻¹
-  -- Strategy: s.card * (2 * s.card)⁻¹ = s.card / (2 * s.card) = 1/2, so inverse is 2
-  have h2_ne_zero : (2 : ENNReal) ≠ 0 := by norm_num
-  have h2_ne_top : (2 : ENNReal) ≠ ⊤ := by norm_num
-  -- First simplify (2 * s.card)⁻¹ = 2⁻¹ * s.card⁻¹
-  rw [ENNReal.mul_inv (Or.inl h2_ne_zero) (Or.inl h2_ne_top)]
-  -- Goal: 2 = (s.card * (2⁻¹ * s.card⁻¹))⁻¹
-  rw [mul_comm (2 : ENNReal)⁻¹ (s.card : ENNReal)⁻¹]
-  rw [← mul_assoc]
-  rw [ENNReal.mul_inv_cancel hk_ne_zero hk_ne_top]
-  -- Goal: 2 = (1 * 2⁻¹)⁻¹
-  rw [one_mul]
-  -- Goal: 2 = 2⁻¹⁻¹
-  simp only [inv_inv]
-
 /-- The integral of ‖exp(I * distributionPairingℂ_real ω f)‖ is finite for any complex test function.
     This follows from the Gaussian exponential integrability applied to the imaginary part. -/
 lemma gff_integrand_norm_integrable (f : TestFunctionℂ d) :
@@ -461,23 +317,6 @@ lemma gff_integrand_norm_integrable (f : TestFunctionℂ d) :
   exact gff_exp_neg_pairing_integrable m (complex_testfunction_decompose f).2
 
 
-
-/-- The GFF integrand is integrable for each z.
-    This follows from the norm being exp(-(ω f_im)) which is integrable by
-    Gaussian exponential integrability. -/
-theorem gff_integrand_integrable (n : ℕ) (J : Fin n → TestFunctionℂ d) (z : Fin n → ℂ) :
-    Integrable
-      (fun ω : FieldConfiguration d =>
-        Complex.exp (Complex.I * distributionPairingℂ_real ω (∑ i, z i • J i)))
-      (gaussianFreeField_free (d := d) m).toMeasure := by
-  -- The norm is exp(-(ω f_im)) which is integrable
-  have h_norm := gff_integrand_norm_integrable m (∑ i, z i • J i)
-  -- Use Integrable.of_norm - h_norm is already an Integrable statement
-  -- We need to convert from norm integrable to integrable
-  have h_meas : AEStronglyMeasurable
-      (fun ω => Complex.exp (Complex.I * distributionPairingℂ_real ω (∑ i, z i • J i)))
-      (gaussianFreeField_free (d := d) m).toMeasure := gff_integrand_measurable m n J z
-  exact (integrable_norm_iff h_meas).mp h_norm
 
 /-! ## Complex Characteristic Functional
 

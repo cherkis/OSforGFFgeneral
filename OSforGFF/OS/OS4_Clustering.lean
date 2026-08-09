@@ -474,23 +474,6 @@ theorem gaussianFreeField_satisfies_OS4 (m : ℝ) [Fact (0 < m)] [GFFPropagator 
       < 2 * δ := h_bound
     _ ≤ ε := hδ_gives_ε
 
-/-! ## Alternative: Direct (ε-δ) Formulation
-
-These are not used in the main OS4 proof path (which goes through `OS4_PolynomialClustering`),
-but kept as an alternative qualitative formulation of clustering. -/
-
-/-- Covariance clustering property: the 2-point function decays at large separations. -/
-def CovarianceClustering_real (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
-  ∀ (f g : (TestFunction d)) (ε : ℝ), ε > 0 →
-    ∃ R > 0, ∀ a : (SpaceTime d), ‖a‖ > R →
-      ‖SchwingerFunction₂ dμ_config f (g.translate a)‖ < ε
-
-/-- The free covariance has the clustering property. -/
-theorem freeCovarianceClustering_real (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
-    CovarianceClustering_real (gaussianFreeField_free (d := d) m) := by
-  intro f g ε hε
-  exact schwartz_cross_covariance_decay_real m f g ε hε
-
 /-! ## OS4 Polynomial Clustering for GFF
 
 The GFF satisfies polynomial clustering with any decay rate α > 0, because

@@ -97,10 +97,6 @@ lemma hadamardPow_apply (R : Matrix ι ι ℝ) (n : ℕ) (i j : ι) :
   | zero => simp [hadamardPow, hadamardOne]
   | succ n ih => simp [Matrix.hadamard, ih, pow_succ]
 
-/-- One term of the Hadamard-series for the entrywise exponential. -/
-noncomputable def entrywiseExpSeriesTerm (R : Matrix ι ι ℝ) (n : ℕ) : Matrix ι ι ℝ :=
-  (1 / (Nat.factorial n : ℝ)) • hadamardPow R n
-
 /-- Series definition of the entrywise exponential using Hadamard powers (entrywise `tsum`). -/
 noncomputable def entrywiseExp_hadamardSeries (R : Matrix ι ι ℝ) : Matrix ι ι ℝ :=
   fun i j => tsum (fun n : ℕ => (1 / (Nat.factorial n : ℝ)) * (hadamardPow R n i j))

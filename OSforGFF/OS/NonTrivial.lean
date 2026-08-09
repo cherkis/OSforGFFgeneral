@@ -360,9 +360,8 @@ theorem properTimeCovariance_tendsto_atTop_at_zero (m : ℝ) (hm : 0 < m) (hd : 
     The radial profile `Cprofile r = properTimeCovariance d m r` diverges at `r → 0⁺`
     (`properTimeCovariance_tendsto_atTop_at_zero`); composing with `‖x₀ − x‖ → 0⁺` gives the UV
     blow-up. The covariance kernel is thus unbounded, so the GFF measure is not a point mass.
-    Specialising to `d = 4` recovers the Bessel-kernel statement (`freeCovariance 4 m ≡
-    freeCovarianceBessel m`), to `d = 3` the Yukawa kernel, and to `d = 2` the logarithmically
-    divergent `K₀` kernel. -/
+    Specialising to `d = 4` recovers the Bessel-`K₁` kernel statement, to `d = 3` the Yukawa
+    kernel, and to `d = 2` the logarithmically divergent `K₀` kernel. -/
 theorem freeCovariance_tendsto_atTop (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
     (x₀ : SpaceTime d) :
     Filter.Tendsto (fun x => freeCovariance d m x₀ x)
