@@ -229,11 +229,11 @@ The dimension-generic master theorem, its all-dimensions corollary, and the four
 
 ```
 theorem gaussianFreeField_satisfies_all_OS_axioms_generic
-    {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)] :
+    {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
     SatisfiesAllOS (gaussianFreeField_free (d := d) m)
 
 theorem gaussianFreeField_satisfies_all_OS_axioms_of_dim (d : ℕ) [Fact (2 ≤ d)]
-    (m : ℝ) [Fact (0 < m)] [Fact (d ≤ 5)] : … (via GFFPropagator.ofProperTime)
+    (m : ℝ) [Fact (0 < m)] : … (via GFFPropagator.ofProperTime)
 
 theorem gaussianFreeField_satisfies_all_OS_axioms_dim4      (m) [Fact (0 < m)] : SatisfiesAllOS (μ_GFF 4 m)  -- d = 4
 theorem gaussianFreeField_satisfies_all_OS_axioms_dim3 (m) [Fact (0 < m)] : SatisfiesAllOS (μ_GFF 3 m)  -- d = 3

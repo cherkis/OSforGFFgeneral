@@ -1,7 +1,7 @@
 # The Osterwalder–Schrader Axioms for the Free Field: A Reader's Index
 
 *A pedagogical map of the six-part OS verification for the unified, dimension-generic
-Gaussian Free Field ($d = 2, 3, 4, 5$). Written for a reader who knows Euclidean QFT
+Gaussian Free Field (every $d \ge 2$). Written for a reader who knows Euclidean QFT
 and functional integrals but not Lean: the mathematics leads, and the Lean names in
 `monospace` are just clickable anchors into the formalization that you can ignore.*
 
@@ -69,7 +69,7 @@ structure SatisfiesAllOS (dμ_config : ProbabilityMeasure (FieldConfiguration d)
 
 `OS/Master.lean` assembles these six fields, each from one dedicated theorem, and exports
 **six headline theorems**: the dimension-generic master
-`gaussianFreeField_satisfies_all_OS_axioms_generic` for any $2 \le d \le 5$
+`gaussianFreeField_satisfies_all_OS_axioms_generic` for any $d \ge 2$
 ([`Master.lean:60`](../../OSforGFF/OS/Master.lean#L60)); the all-dimensions corollary
 `..._of_dim` ([`:79`](../../OSforGFF/OS/Master.lean#L79)); and the four concrete instances
 $d=4$ ([`:91`](../../OSforGFF/OS/Master.lean#L91)),
@@ -283,34 +283,25 @@ properties — and, through the mass $m > 0$, they *all* trace back to that one 
 
 ---
 
-## The `Fact (d ≤ 5)` bound belongs to OS3 alone
+## No upper bound on the dimension
 
-The master theorem carries a `[Fact (d ≤ 5)]` hypothesis. **It is specific to OS3.** OS0,
-OS1, OS2, OS4 — together with the Minlos construction, Plancherel, positive-definiteness,
-and the covariance's decay and integrability — are all **uniform in $d \ge 2$**. The lower
+Every OS axiom — together with the Minlos construction, Plancherel, positive-definiteness,
+and the covariance's decay and integrability — is **uniform in $d \ge 2$**. The lower
 bound $2 \le d$ is intrinsic and permanent: reflection positivity reflects a time
 coordinate, which needs a time axis and the $\mathbb{R} \times \mathbb{R}^{d-1}$ split.
 
-The upper bound $d \le 5$ is a **technical artifact, not a physical limitation.** It enters
-at exactly one place: the proper-time / spatial-momentum **Fubini exchange** inside the
-OS3 mixed representation (`OS3_MixedRepInfra.integrable_dominate_G`). Using only the
-*first-order* vanishing of positive-time test functions at the time boundary yields a
-dominating function whose outer proper-time integrand behaves like
-$$\sim s^{(4-d)/2}\, e^{-s m^2},$$
-which fails to be integrable at $s = 0$ once $d > 5$ (one needs $(4-d)/2 > -1$). For
-first-order vanishing this is sharp.
+The delicate point is the proper-time / spatial-momentum **Fubini exchange** inside the
+OS3 mixed representation (`OS3_MixedRepInfra.integrable_dominate_G`). Positive-time
+Schwartz functions are flat to *all* orders at the time boundary, and the domination uses
+vanishing to order $d$: the outer proper-time integrand behaves like
+$$\sim s^{(d+2)/2}\, e^{-s m^2},$$
+integrable at $s = 0$ in every dimension. (First-order vanishing gives the sharp historical
+constraint $d \le 5$; the history of that bound and its removal is written up in
+[`../general_dimension.md`](../general_dimension.md), and the architecture in
+[`../dimension_generic.md`](../dimension_generic.md).)
 
-But positive-time Schwartz functions are flat to *all* orders at the boundary, so a
-higher-order **Hadamard/Malgrange boundary-vanishing** estimate replaces the boundary
-moment with an Euler Beta integral and pushes the integrand to $\sim s^{\,N+1-d/2}e^{-sm^2}$,
-integrable at $s = 0$ for *every* $d$ once $N > d/2 - 2$. The present library is the $N=1$
-case (valid through $d = 5$); the general-$d$ program — classical mathematics, a few weeks
-of Lean — is written up in [`../general_dimension.md`](../general_dimension.md), and the
-architecture that isolates this single bound is in
-[`../dimension_generic.md`](../dimension_generic.md).
-
-> **One line:** $2 \le d$ is structural and permanent; $d \le 5$ is one OS3 Fubini estimate
-> away from removable.
+> **One line:** $2 \le d$ is structural and permanent; there is no upper bound — the OS3
+> Fubini dominator uses order-$d$ boundary vanishing.
 
 ---
 

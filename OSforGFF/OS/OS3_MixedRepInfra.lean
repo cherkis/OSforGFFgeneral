@@ -1635,7 +1635,7 @@ lemma heat_kernel_moment_integral (s : ℝ) (hs : 0 < s) :
 
 /-- **Bound version**: The double Gaussian moment integral is bounded by a constant times s^{3/2}.
 
-    This is a weaker form of `heat_kernel_moment_integral` that suffices for `F_norm_bound_via_linear_vanishing`.
+    This is a weaker form of `heat_kernel_moment_integral` that suffices for `F_norm_bound_via_vanishing`.
     The exact value is (4/3)√π · s^{3/2}, so we use 10 · s^{3/2} as a comfortable upper bound.
 
     **Proof**: Uses `heat_kernel_moment_integral` and the bound (4/3)√π < 10. -/
@@ -2107,7 +2107,7 @@ lemma heatKernelMoment_setIntegral_integrableOn (n : ℕ) (s : ℝ) (hs : 0 < s)
 
     **Reference**: Rudin "Real and Complex Analysis" Ch.8 (Fubini);
                   Standard heat kernel estimates. -/
-lemma spacetime_fubini_linear_vanishing_bound (f : (TestFunctionℂ d))
+lemma spacetime_fubini_vanishing_bound (f : (TestFunctionℂ d))
     (hf_supp : ∀ x : (SpaceTime d), x 0 ≤ 0 → f x = 0) :
     ∃ K : ℝ, 0 < K ∧ ∀ (s : ℝ) (_hs : 0 < s),
       ∫ x : (SpaceTime d), ∫ y : (SpaceTime d), ‖f x‖ * ‖f y‖ * Real.sqrt (π / s) *
@@ -2519,7 +2519,7 @@ lemma schwartz_heat_product_aestronglymeasurable (f : (TestFunctionℂ d))
     **Mathematical content:**
     By Fubini/Tonelli, if ∫∫ |F(x,y)| < ∞, then ∫_y |F(x,y)| is integrable in x.
     Here F(x,y) = ‖f x‖ · ‖f y‖ · (bounded factors), and the double integral is finite
-    by spacetime_fubini_linear_vanishing_bound (using linear vanishing) or by
+    by spacetime_fubini_vanishing_bound (using linear vanishing) or by
     direct Schwartz decay estimates.
 
     **Reference**: Rudin "Real and Complex Analysis" Ch.8 (Fubini);
@@ -2635,8 +2635,8 @@ lemma schwartz_iterated_integral_integrable (f : (TestFunctionℂ d))
     5. Combine: ≤ C_bound · s^{d+1/2} · exp(-s(‖k‖²+m²))
 
     The heavy lifting (steps 2–4 through the time/space Tonelli factorization) is
-    `spacetime_fubini_linear_vanishing_bound`. -/
-lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d))
+    `spacetime_fubini_vanishing_bound`. -/
+lemma F_norm_bound_via_vanishing (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d))
     (hf_supp : ∀ x : (SpaceTime d), x 0 ≤ 0 → f x = 0) :
     ∃ C_bound : ℝ, 0 < C_bound ∧ ∀ (s : ℝ) (_hs : 0 < s) (k_sp : (SpatialCoords d)),
       let F_val := ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
@@ -2646,7 +2646,7 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : (TestFunct
             Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y))
       ‖F_val‖ ≤ C_bound * s^((d : ℝ) + 1/2) * Real.exp (-s * (‖k_sp‖^2 + m^2)) := by
   -- Step 1: Get the Fubini bound constant (uses order-d vanishing internally)
-  obtain ⟨K_fubini, hK_fubini_pos, h_fubini_forall⟩ := spacetime_fubini_linear_vanishing_bound f hf_supp
+  obtain ⟨K_fubini, hK_fubini_pos, h_fubini_forall⟩ := spacetime_fubini_vanishing_bound f hf_supp
   -- Also get the order-d pointwise bound for intermediate steps
   obtain ⟨C_lin, hC_lin_pos, h_lin_bound⟩ := schwartz_vanishing_pow_bound d f hf_supp
   -- Use the Fubini constant as C_bound
@@ -2867,9 +2867,9 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : (TestFunct
            exact mul_nonneg (le_of_lt hC_lin_pos) (pow_nonneg (le_of_lt hx) d)
       _ = C_lin^2 * (x 0)^d * (y 0)^d := by ring
 
-  -- MAIN BOUND using spacetime_fubini_linear_vanishing_bound
+  -- MAIN BOUND using spacetime_fubini_vanishing_bound
 
-  -- The key estimate from spacetime_fubini_linear_vanishing_bound (using K_fubini from earlier)
+  -- The key estimate from spacetime_fubini_vanishing_bound (using K_fubini from earlier)
   have h_fubini_bound := h_fubini_forall s hs
 
   -- Abbreviate the exponential factor
@@ -3039,9 +3039,9 @@ theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d))
     -- By compactness of Schwartz "effective support", there exists t_min > 0.
     -- (This is the atomic fact about Schwartz functions vanishing at t=0)
 
-    -- Step 2: Define the dominating function using the constant from F_norm_bound_via_linear_vanishing
+    -- Step 2: Define the dominating function using the constant from F_norm_bound_via_vanishing
     -- Get the constant C_bound from the linear vanishing bound
-    obtain ⟨C_bound, hC_pos, h_F_bound⟩ := F_norm_bound_via_linear_vanishing m f hf_supp
+    obtain ⟨C_bound, hC_pos, h_F_bound⟩ := F_norm_bound_via_vanishing m f hf_supp
     let G := dominate_G (d := d) C_bound m
     -- Note: We omit exp(-t_min²/(4s)) for simplicity; the mass term suffices for large s,
     -- and the full argument needs the UV regulator for small s.
@@ -3061,7 +3061,7 @@ theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d))
         apply Eventually.of_forall
         intro k_sp
         have hs' : 0 < s := hs
-        -- Apply F_norm_bound_via_linear_vanishing with the obtained constant
+        -- Apply F_norm_bound_via_vanishing with the obtained constant
         have h_bound := h_F_bound s hs' k_sp
         -- dominate_G equals C * s^(d+1/2) * exp(-s*(‖k‖² + m²)) for s > 0
         simp only [G, dominate_G, hs', ↓reduceIte]

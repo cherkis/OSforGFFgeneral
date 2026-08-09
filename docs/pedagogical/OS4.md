@@ -343,10 +343,9 @@ $d = 2$, the $K_{1/2}$ Yukawa for $d = 3$, $K_1$ for $d = 4$, $K_{3/2}$ for
 $d = 5$) — but **only the exponential factor matters for OS4**: it is what makes
 clustering hold at any polynomial rate (§3) and what makes the time-averaged
 variance summable (§4). Every lemma above runs over the section variables
-`{d : ℕ} [Fact (2 ≤ d)]`; the proof is written once and instantiates unchanged at
-$d = 2, 3, 4, 5$. (The lower bound $d \ge 2$ is only there so a time axis exists to
-translate along; OS4 imposes no upper bound — that `Fact (d ≤ 5)` belongs to OS3
-alone.)
+`{d : ℕ} [Fact (2 ≤ d)]`; the proof is written once and instantiates unchanged in
+every dimension $d \ge 2$. (The lower bound $d \ge 2$ is only there so a time axis
+exists to translate along; no OS axiom imposes an upper bound on the dimension.)
 
 ---
 

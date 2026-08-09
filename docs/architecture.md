@@ -38,7 +38,7 @@ the later OS proofs (OS1–OS4 need S₂ = C).
 ## No assumed axioms
 
 Everything is proved: `#print axioms` for the master theorem — the dimension-generic form, the
-all-dimensions corollary (`2 ≤ d ≤ 5`), and each concrete instance (`d = 2, 3, 4, 5`) — shows
+all-dimensions corollary (`d ≥ 2`), and each concrete instance (`d = 2, 3, 4, 5`) — shows
 exactly Lean's three foundational axioms: `propext`, `Classical.choice`, `Quot.sound`.
 `Guardrails.lean` freezes this footprint and the exact statement of all six headline theorems into
 the build, so any regression fails `lake build`.
@@ -51,8 +51,8 @@ OS3 (reflection positivity) is the most technically involved axiom, spanning
 1. **MixedRepInfra** (~3800 lines): Schwinger parametrization makes all
    integrals absolutely convergent (the naive momentum-space approach fails
    because 1/√(k²+m²) is not L¹ in the spatial momentum space). Proves ~36
-   Fubini exchange and integrability lemmas; the single place the hypothesis
-   `d ≤ 5` is used (see `dimension_generic.md`).
+   Fubini exchange and integrability lemmas, with the dominating function built
+   from order-`d` boundary vanishing (see `dimension_generic.md`).
 
 2. **MixedRep** (~1900 lines): Chains the exchanges to reach the mixed
    representation ⟨Θf, Cf⟩ = ∫ (1/ω)|F_ω(k̄)|² dk̄, going through
@@ -116,4 +116,4 @@ OS3 (reflection positivity) is the most technically involved axiom, spanning
   (m/4π²r)K₁(mr) at d=4, (1+mr)e^{−mr}/(8π²r³) at d=5 — each the order ν=1−d/2
   case of the master identity in `General/BesselK.lean`. `ofProperTime`
   (`Covariance/Propagator.lean`) additionally discharges the class in every
-  dimension `2 ≤ d ≤ 5` with no closed form, giving the all-dimensions corollary.
+  dimension `d ≥ 2` with no closed form, giving the all-dimensions corollary.

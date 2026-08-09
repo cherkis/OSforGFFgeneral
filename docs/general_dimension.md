@@ -1,10 +1,12 @@
 # Toward general dimension `d ≥ 2` — lifting the OS3 `d ≤ 5` bound
 
-> **Status: proposed future exploration (not implemented).** This note records a concrete
-> program for removing the `d ≤ 5` hypothesis, so that the free-field Osterwalder–Schrader
-> theorems hold in *every* spacetime dimension `d ≥ 2`. Nothing here is in the build: the
-> current library proves OS0–OS4 for `2 ≤ d ≤ 5` (see
-> [`dimension_generic.md`](dimension_generic.md)).
+> **Status: IMPLEMENTED (Stage H, August 2026).** The program below has been carried out:
+> the `d ≤ 5` hypothesis is gone, and the free-field Osterwalder–Schrader theorems hold in
+> *every* spacetime dimension `d ≥ 2`
+> (`gaussianFreeField_satisfies_all_OS_axioms_of_dim`, see
+> [`dimension_generic.md`](dimension_generic.md)). The note is kept as the mathematical
+> record of the obstruction and its removal; the *Implementation notes* section at the end
+> records where the formalization deviated from the plan.
 
 ## Summary
 
@@ -76,8 +78,8 @@ so the dominator becomes `∝ s^{N+1/2}` and the outer `s`-integrand becomes
     ∝ s^{N + 1 − d/2} · e^{−s m²} ,
 
 integrable near `s = 0` iff `N + 1 − d/2 > −1`, i.e. `N > d/2 − 2`. Taking `N = d` (or any
-`N ≥ ⌈d/2⌉ − 1`) works for every `d`. The present library is exactly the `N = 1` case, valid through
-`d = 5`.
+`N ≥ ⌈d/2⌉ − 1`) works for every `d`. The library takes `N = d`; the historical `N = 1` case
+(valid through `d = 5`) survives as the order-one corollaries.
 
 ## Formalization plan
 
@@ -103,6 +105,31 @@ The ingredients live in mathlib, but the packaged estimate does not; the work is
    and update `Guardrails.lean` accordingly.
 
 Estimated **1–3 weeks**, dominated by step 1; the mathematics carries no research risk.
+
+## Implementation notes (Stage H, August 2026)
+
+The four steps above were carried out, with three deviations:
+
+1. **Step 1 (uniform order-`N` bound) — by induction, not Taylor.** Instead of an `N`-th
+   order Taylor formula, `Spacetime/ProdIntegrable.lean` proves
+   `schwartz_vanishing_pow_decay` by induction on `N` at the level of Schwartz functions:
+   the time derivative `∂₀f` of a Schwartz function vanishing on `{x₀ ≤ 0}` is again such a
+   function (`schwartz_vanishing_fderiv_time`, via one-sided derivative uniqueness on
+   `Iic 0`), and one ODE-comparison step
+   (`image_norm_le_of_norm_deriv_right_le_deriv_boundary`, boundary function
+   `K·s^{N+1}/(N+1)`) upgrades order `N` to `N+1`; the `1/N!` constants accumulate silently
+   in the existential constant. The transverse decay `ρ_N` is realized as the uniform
+   `(1 + ‖x̄‖)^{-d}` weight.
+2. **Step 2 (Beta moment) — a bound suffices.** The OS3 chain consumes only an upper bound,
+   so `∫₀^u x^N(u−x)^N dx ≤ u^{2N+1}` (integrand ≤ `u^{2N}`) replaces the exact Beta value;
+   the odd Gaussian moment `∫₀^∞ u^{2N+1}e^{−u²/4s}du = (N!/2)(4s)^{N+1}` is proved exactly
+   (`integral_odd_pow_gaussian`), giving `heat_kernel_moment_integral_pow_bound`:
+   the double moment is `≤ C_N·s^{N+1/2}`.
+3. **Step 3/4 (domination and rethread) — at `N = d`.** `dominate_G` carries `s^{d+1/2}`;
+   the outer proper-time integrand is `s^{(d+2)/2}e^{−sm²}`, integrable for every `d`
+   (`integrable_dominate_G`, no dimension hypothesis). All twenty `[Fact (d ≤ 5)]` sites
+   and the per-instance `Fact (n ≤ 5)` boilerplate were removed, and `Guardrails.lean`'s
+   frozen statement of `_of_dim` was re-captured in its all-dimensions form.
 
 ## Payoff
 

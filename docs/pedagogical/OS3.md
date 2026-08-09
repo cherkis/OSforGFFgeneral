@@ -1,7 +1,7 @@
 # OS3 — Reflection Positivity: the Euclidean shadow of unitarity
 
 *A physics-first walkthrough of the deepest and longest of the Osterwalder–Schrader
-axioms for the unified, dimension-generic Gaussian Free Field ($d = 2, 3, 4, 5$).
+axioms for the unified, dimension-generic Gaussian Free Field (every $d \ge 2$).
 Written for someone who knows Euclidean QFT and functional integrals but not Lean:
 the mathematics leads, and the Lean names in `monospace` with `:NNN` line links are
 just clickable anchors into the formalization that you can ignore.*
@@ -33,8 +33,8 @@ the objects, then straight into the physics:
   axis — that is where the permanent lower bound $d \ge 2$ comes from.
 
 The field is `gaussianFreeField_free (d := d) m` (the measure `μ_GFF d m`), the covariance
-is the radial kernel `freeCovariance d m`, and the dimension is a silent parameter — with
-**one** exception, the technical bound `d ≤ 5` in the closing dimension note.
+is the radial kernel `freeCovariance d m`, and the dimension is a silent parameter; the
+closing dimension note explains why no upper bound on $d$ is needed.
 
 ---
 
@@ -192,19 +192,19 @@ is built from absolutely convergent integrals. The file's job is to certify exac
   ([`schwinger_bound_integrable_fubini`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L600),
   [`schwinger_bound_integrable`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L714)) showing every
   integrand the next file reorders is absolutely convergent;
-- the **domination lemma** [`integrable_dominate_G`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L854)
+- the **domination lemma** [`integrable_dominate_G`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L856)
   and the proper-time / spatial-momentum swap
-  [`fubini_s_ksp_swap`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L2785) — the two crucial
-  exchanges, and the **only** place `Fact (d ≤ 5)` is used (dimension note).
+  [`fubini_s_ksp_swap`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L2973) — the two crucial
+  exchanges (dimension note).
 
 The dominating function is
-[`dominate_G`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L843),
-$(s, \bar k) \mapsto C\, s^{3/2}\, e^{-s(\lVert \bar k\rVert^2 + m^2)}$. The power $s^{3/2}$
-is the **first-order vanishing** of positive-time test functions at the time boundary,
-$\lVert f(x)\rVert \lesssim x_0$, after the time-Gaussian moment
-$\int_0^\infty u^3 e^{-u^2/4s}\, du = 8 s^2$
-([`integral_u_cubed_gaussian`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L1179)). That one
-$s$-power is what will cap the dimension at $d \le 5$.
+[`dominate_G`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L845),
+$(s, \bar k) \mapsto C\, s^{d+1/2}\, e^{-s(\lVert \bar k\rVert^2 + m^2)}$. The power $s^{d+1/2}$
+is the **order-$d$ vanishing** of positive-time test functions at the time boundary,
+$\lVert f(x)\rVert \lesssim x_0^d$, after the odd time-Gaussian moment
+$\int_0^\infty u^{2d+1} e^{-u^2/4s}\, du = (d!/2)(4s)^{d+1}$
+([`integral_odd_pow_gaussian`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L1663)). That
+$s$-power is what keeps the domination integrable in **every** dimension (dimension note).
 
 > **One line:** the propagator is a proper-time integral of Gaussians — and *that* is what
 > makes every subsequent integral interchange absolutely convergent.
@@ -495,55 +495,44 @@ positive-definite inner product — equivalently, a Hamiltonian with non-negativ
 
 ---
 
-## Dimension note: `d ≤ 5` is a technical artifact, not fundamental
+## Dimension note: why there is no upper bound on $d$
 
-OS3 is the **only** OS axiom carrying `[Fact (d ≤ 5)]`. All of OS0, OS1, OS2, OS4, the Minlos
-measure construction, Plancherel, positive-definiteness, and the covariance's decay and
-integrability are **uniform in $d \ge 2$** (see [`../dimension_generic.md`](../dimension_generic.md));
-only OS3 is capped, and the cap enters at exactly one site. The lower bound $2 \le d$, by
-contrast, is intrinsic and permanent: reflection positivity reflects a *time* coordinate,
-which needs a time axis and the $\mathbb{R} \times \mathbb{R}^{d-1}$ split.
-
-**Where the upper bound comes from.** Justifying the proper-time / spatial-momentum Fubini
-exchange ([`fubini_s_ksp_swap`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L2785)) requires an
+Every OS axiom — and the Minlos measure construction, Plancherel, positive-definiteness, and
+the covariance's decay and integrability — is **uniform in $d \ge 2$** (see
+[`../dimension_generic.md`](../dimension_generic.md)). The lower bound $2 \le d$ is intrinsic
+and permanent: reflection positivity reflects a *time* coordinate, which needs a time axis
+and the $\mathbb{R} \times \mathbb{R}^{d-1}$ split. The delicate point is OS3's proper-time /
+spatial-momentum Fubini exchange
+([`fubini_s_ksp_swap`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L2973)), which requires an
 $s$-integrable dominator near $s = 0$
-([`integrable_dominate_G`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L854)). The current argument
-uses only the **first-order** vanishing of positive-time test functions at the time boundary,
-$\lVert f(x)\rVert \lesssim x_0$, producing the $d$-independent dominator
-$\sim s^{3/2}\, e^{-s(\lVert \bar k\rVert^2 + m^2)}$ (the heat-kernel prefactor
+([`integrable_dominate_G`](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L856)).
+
+**Why order-$d$ vanishing.** A positive-time Schwartz function is flat to *all* orders at
+$\{x_0 = 0\}$: its time derivative is again a Schwartz function vanishing on the half-space,
+so induction gives, for every $N$, a bound $\lVert f(x)\rVert \le C_N\, x_0^N$
+([`schwartz_vanishing_pow_bound`](../../OSforGFF/Spacetime/ProdIntegrable.lean)). Feeding the
+order-$N$ bound through the time-Gaussian moment produces the dominator
+$\sim s^{\,N + 1/2}\, e^{-s(\lVert \bar k\rVert^2 + m^2)}$ (the heat-kernel prefactor
 $(4\pi s)^{-d/2}$ cancels the spatial Fourier volume $(4\pi s)^{(d-1)/2}$, leaving the 1-D
-factor $(4\pi s)^{-1/2}$). Integrating the momentum over $\mathbb{R}^{d-1}$ leaves the outer
-$s$-integrand
+factor $(4\pi s)^{-1/2}$, and each order of vanishing contributes one power of $s$).
+Integrating the momentum over $\mathbb{R}^{d-1}$ leaves the outer $s$-integrand
 
-$$\sim s^{(4-d)/2}\, e^{-s m^2}, \qquad \text{integrable near } s = 0 \iff \tfrac{4-d}{2} > -1 \iff d \le 5.$$
+$$\sim s^{\,N + 1 - d/2}\, e^{-s m^2}, \qquad \text{integrable near } s = 0 \iff N > \tfrac{d}{2} - 2,$$
 
-The bound propagates mechanically up the chain —
-`bessel_bilinear_eq_mixed_representation`, `freeCovariance_reflection_positive_*`,
-`gaussianFreeField_OS3` — into the master theorem. The Schur–Hadamard lift of Section 4 is
-entirely dimension-free.
+so taking $N = d$ works in every dimension. (First-order vanishing, $N = 1$, gives the sharp
+constraint $d \le 5$ — the historical form of the library, whose $N = 1$ lemmas survive as
+corollaries.) The Schur–Hadamard lift of Section 4 is entirely dimension-free. The history of
+the $d \le 5$ bound and its removal is recorded in
+[`../general_dimension.md`](../general_dimension.md).
 
-**This bound is a technical artifact, not a physical limitation.** It is the *sharp*
-integrability coming from using only first-order boundary vanishing. A positive-time Schwartz
-function is flat to *all* orders at $\{x_0 = 0\}$, so for every $N$ there is a bound
-$\lVert f(x)\rVert \le C_N\, x_0^N\, \rho_N(\bar x)$; feeding the order-$N$ bound through the
-same computation replaces the boundary moment with an Euler Beta integral and yields a
-dominator $\sim s^{\,N + 1 - d/2}\, e^{-s m^2}$, integrable at $s = 0$ for *every* $d$ once
-$N > d/2 - 2$. The present library is the $N = 1$ case (valid through $d = 5$). Lifting the
-bound — one uniform higher-order Hadamard/Malgrange boundary-vanishing estimate plus
-mechanical rethreading — is a well-scoped, low-risk formalization program that would turn
-`gaussianFreeField_satisfies_all_OS_axioms_of_dim` into a genuine all-dimensions theorem for
-every $d \ge 2$. The full plan is in [`../general_dimension.md`](../general_dimension.md), and
-the architecture that isolates this single bound is in
-[`../dimension_generic.md`](../dimension_generic.md).
-
-> **One line:** $2 \le d$ is structural and permanent; $d \le 5$ is one OS3 Fubini estimate
-> away from removable — higher-order boundary vanishing lifts it.
+> **One line:** $2 \le d$ is structural and permanent; the upper bound is gone — order-$d$
+> boundary vanishing keeps the OS3 domination integrable in every dimension.
 
 ---
 
 ## One-paragraph summary
 
-OS3 is proved by a four-stage pipeline, uniform in $2 \le d \le 5$. `OS3_MixedRepInfra`
+OS3 is proved by a four-stage pipeline, uniform in $d \ge 2$. `OS3_MixedRepInfra`
 establishes that the relevant heat-kernel integrals converge and may be interchanged,
 replacing the non-integrable naive Fourier kernel by the proper-time (Schwinger)
 representation. `OS3_MixedRep` uses that to rewrite the reflected two-point form
@@ -561,8 +550,9 @@ reconstruction (Section 5) this positivity is exactly what makes the reflected f
 $(\cdot,\cdot)_{\mathrm{phys}}$ a positive-definite inner product — yielding the physical Fock
 space, a Hamiltonian $H \ge 0$, and Wick rotation to real time. OS3 is thus both the *deepest*
 axiom (two real ideas — the mixed representation and entrywise-exponential positivity) and the
-*longest* (a large technical Fubini layer beneath them). Its only dimension restriction,
-$d \le 5$, is a sharp but non-fundamental artifact of one Fubini dominator.
+*longest* (a large technical Fubini layer beneath them). Its only dimension restriction is the
+structural $d \ge 2$; the Fubini dominator runs at boundary-vanishing order $d$, so no upper
+bound is needed.
 
 ---
 
@@ -573,7 +563,7 @@ Optional — for when you open the Lean. Every visible `:NNN` label matches its 
 | Result | File | Name |
 |---|---|---|
 | Heat-kernel / Schwinger rep of the propagator | [OS/OS3_MixedRepInfra.lean:184](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L184) | `heatKernel_eq_gaussianFT` |
-| Fubini domination (site of `Fact (d ≤ 5)`) | [OS/OS3_MixedRepInfra.lean:854](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L854) | `integrable_dominate_G` |
+| Fubini domination (order-$d$ dominator) | [OS/OS3_MixedRepInfra.lean:856](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L856) | `integrable_dominate_G` |
 | Proper-time / spatial-momentum swap | [OS/OS3_MixedRepInfra.lean:2785](../../OSforGFF/OS/OS3_MixedRepInfra.lean#L2785) | `fubini_s_ksp_swap` |
 | Mixed representation (MR) | [OS/OS3_MixedRep.lean:1649](../../OSforGFF/OS/OS3_MixedRep.lean#L1649) | `bessel_bilinear_eq_mixed_representation` |
 | Covariance reflection positivity (complex) | [OS/OS3_CovarianceRP.lean:411](../../OSforGFF/OS/OS3_CovarianceRP.lean#L411) | `freeCovariance_reflection_positive_bilinear` |

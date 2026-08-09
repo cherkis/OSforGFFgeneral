@@ -1,7 +1,7 @@
 # The dimension-generic architecture
 
 How one library proves the Osterwalder–Schrader axioms for the free field in every
-dimension `2 ≤ d ≤ 5` at once, and what a new dimension has to supply.
+dimension `d ≥ 2` at once, and what a new dimension has to supply.
 
 ## The idea in one paragraph
 
@@ -50,16 +50,15 @@ hypotheses of the Minlos theorem, by which the measure exists on `S′(ℝ^d)`.
 - **Everywhere `d` is a silent parameter.** Types (`SpaceTime d = ℝ^d`, spatial slice
   `ℝ^{d−1}`), Plancherel factors `(2π)^d`, `(2π)^{d−1}`, heat-kernel prefactors
   `(4πs)^{−d/2}`, Schwartz decay exponents. These thread through mechanically.
-- **OS3 and the bound `d ≤ 5`.** The mixed representation requires exchanging the
-  proper-time integral with the spatial momentum integral. The dominating function comes
-  from first-order vanishing of positive-time test functions at the time boundary, giving
-  `s^{3/2} e^{−s(‖k‖²+m²)}` (the power is dimension-independent: the heat-kernel prefactor
-  `(4πs)^{−d/2}` cancels against the `(4πs)^{(d−1)/2}` of the spatial Fourier transform).
-  Its `k`-integral is `∼ s^{(4−d)/2} e^{−sm²}`, integrable near `s = 0` iff `d ≤ 5`. The
-  hypothesis `[Fact (d ≤ 5)]` enters only there (`OS3_MixedRepInfra.integrable_dominate_G`)
-  and propagates to the OS3 axiom and the master theorem. Higher-order boundary vanishing
-  would remove the bound (the concrete instances `d ∈ {2,3,4,5}` do not need it); see
-  [`general_dimension.md`](general_dimension.md) for a concrete program to reach all `d ≥ 2`.
+- **OS3 and the order-`d` domination.** The mixed representation requires exchanging the
+  proper-time integral with the spatial momentum integral. A positive-time test function is
+  flat to *all* orders at the time boundary, and the dominating function uses vanishing to
+  order `d`, giving `s^{d+1/2} e^{−s(‖k‖²+m²)}` (the heat-kernel prefactor `(4πs)^{−d/2}`
+  cancels against the `(4πs)^{(d−1)/2}` of the spatial Fourier transform, and each order of
+  boundary vanishing contributes one power of `s`). Its `k`-integral is
+  `∼ s^{(d+2)/2} e^{−sm²}`, integrable near `s = 0` for every `d` — so the OS3 chain carries
+  no upper bound on the dimension (`OS3_MixedRepInfra.integrable_dominate_G`); see
+  [`general_dimension.md`](general_dimension.md) for the history of this bound and its removal.
 - **The UV statement.** `C(x,y) → ∞` as `x → y` (`OS/NonTrivial.lean`) is generic for every
   `d ≥ 2`: on the proper-time window `[r², (4π)⁻¹]` the integrand dominates a constant
   multiple of `1/s`, so the integral grows at least like `log(1/r²)` — the sharp rate at
@@ -90,12 +89,12 @@ same identity, using `K_{−ν} = K_ν`:
 proper-time integral itself, needing no closed form. The master theorem
 
     gaussianFreeField_satisfies_all_OS_axioms_generic :
-      ∀ {d} [Fact (2 ≤ d)] (m) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)],
+      ∀ {d} [Fact (2 ≤ d)] (m) [Fact (0 < m)] [GFFPropagator d m],
         SatisfiesAllOS (gaussianFreeField_free d m)
 
 specializes to the concrete headlines `SatisfiesAllOS (μ_GFF 4 m)` (d = 4), `μ_GFF 3 m`,
 `μ_GFF 2 m`, `μ_GFF 5 m`, and to the all-dimensions corollary `gaussianFreeField_satisfies_all_OS_axioms_of_dim`
-for every `2 ≤ d ≤ 5` — each with the same axiom footprint (`propext`, `Classical.choice`,
+for every `d ≥ 2` — each with the same axiom footprint (`propext`, `Classical.choice`,
 `Quot.sound` — nothing else). `Guardrails.lean` freezes all six of these facts into the build.
 
 The original four-dimensional Bessel/momentum development (the regulated-covariance program and the

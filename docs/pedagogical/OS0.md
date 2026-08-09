@@ -1,7 +1,7 @@
 # OS0 — Analyticity of the Generating Functional
 
 *A physics-first walkthrough of the analyticity axiom for the **dimension-generic**
-Gaussian Free Field ($d = 2, 3, 4, 5$). Written for a reader who knows Euclidean QFT
+Gaussian Free Field (every $d \ge 2$). Written for a reader who knows Euclidean QFT
 and functional integrals but not Lean: the mathematics leads, and the Lean names in
 `monospace` are optional clickable anchors into the formalization — ignore them on a
 first read.*
@@ -267,9 +267,8 @@ generating functional entire.*
 
 ## 6. Dimension note — nothing depends on $d$
 
-A striking feature: `OS0_Analyticity.lean` contains **no dimension-specific content**,
-and unlike the concrete-instance theorems it carries **no $d \le 5$ hypothesis** — it runs
-under bare `{d : ℕ} [Fact (2 ≤ d)]`. It never names the explicit covariance kernel. The
+A striking feature: `OS0_Analyticity.lean` contains **no dimension-specific content** —
+it runs under bare `{d : ℕ} [Fact (2 ≤ d)]`. It never names the explicit covariance kernel. The
 proof uses only two facts about the theory:
 
 - $C_{\mathbb C}$ is a **$\mathbb{C}$-bilinear form** (Halves A and B), and
@@ -277,8 +276,7 @@ proof uses only two facts about the theory:
 
 The dimension enters *solely* through the value of the covariance — supplied by the
 `GFFPropagator d m` typeclass as a black box — so OS0's proof is genuinely uniform in
-$d \ge 2$: written once, instantiated for $d = 2, 3, 4, 5$. (Contrast OS3, whose
-Fubini estimate is the *only* place the upper bound $d \le 5$ appears at all.) This is
+$d \ge 2$: written once, instantiated in every dimension. This is
 the payoff of the unified library — one proof where the older per-dimension development
 kept a separate OS0 file in each directory.
 
@@ -286,7 +284,7 @@ The lower bound $2 \le d$ is not even used here; it rides along from the ambient
 variables and belongs, physically, to OS3 (which needs a time axis).
 
 > **One line:** OS0 is dimension-agnostic — one proof over `[Fact (2 ≤ d)]`, the
-> propagator abstracted behind `GFFPropagator d m`, no $d \le 5$.
+> propagator abstracted behind `GFFPropagator d m`.
 
 ---
 
@@ -303,7 +301,7 @@ Mathlib's Leibniz rule), which needs a dominating function supplied by **Ferniqu
 theorem** plus Young's inequality — the Gaussian tails of the free field being precisely
 what make $Z$ entire. The proof touches no dimension-specific structure: it runs over
 `{d : ℕ} [Fact (2 ≤ d)]` with the propagator hidden behind `GFFPropagator d m`, and one
-proof covers $d = 2, 3, 4, 5$.
+proof covers every $d \ge 2$.
 
 ---
 

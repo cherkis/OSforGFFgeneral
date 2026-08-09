@@ -497,11 +497,8 @@ theorem locallyIntegrable_of_rpow_decay_real {d : ℕ} (hd : d ≥ 3)
 
     **Mathematical content**: In the spatial slice with spherical coordinates,
     ∫ 1/(1+r)^4 · r² dr dΩ = 4π ∫₀^∞ r²/(1+r)^4 dr < ∞
-    since the integrand decays as r⁻² for large r.
-
-    **Used by**: `spatialNormIntegral_linear_bound` and `F_norm_bound_via_linear_vanishing`
-    to show that spatial integrals of Schwartz functions with linear time vanishing
-    are bounded by C·t. -/
+    since the integrand decays as r⁻² for large r.  The dimension-generic version is
+    `polynomial_decay_integrable_spatial` in `Spacetime/ProdIntegrable.lean`. -/
 lemma polynomial_decay_integrable_3d :
     Integrable (fun x : EuclideanSpace ℝ (Fin 3) => 1 / (1 + ‖x‖)^4) volume := by
   -- Use integrable_one_add_norm: (1 + ‖x‖)^(-r) is integrable when r > dim

@@ -6,9 +6,9 @@ dimension `d : ℕ` (a `variable {d}` in scope), so `SpaceTime`, `TestFunction`,
 `FieldConfiguration d`. The master theorem is:
 
 ```lean
--- dimension-generic form (2 ≤ d ≤ 5, given a GFFPropagator d m instance):
+-- dimension-generic form (any d ≥ 2, given a GFFPropagator d m instance):
 theorem gaussianFreeField_satisfies_all_OS_axioms_generic
-    {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)] :
+    {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
     SatisfiesAllOS (gaussianFreeField_free (d := d) m)
 
 -- four-dimensional instance:

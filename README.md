@@ -8,7 +8,7 @@ methods of proof in Glimm and Jaffe, *Quantum Physics: A Functional Integral
 Point of View* (Springer, 1987).
 
 The library is **dimension-generic**: the spacetime dimension is a parameter
-`d` (with `2 ≤ d ≤ 5`), and the only per-dimension input is the closed form of
+`d` (any `d ≥ 2`), and the only per-dimension input is the closed form of
 the radial covariance profile, isolated behind the two-field typeclass
 `GFFPropagator d m` (see [docs/dimension_generic.md](docs/dimension_generic.md)).
 Four instances are provided in `OSforGFF/Instances/`: the four-dimensional Bessel
@@ -20,7 +20,7 @@ kernel (1+mr)e^{−mr}/(8π²r³).
 
 ```lean
 theorem gaussianFreeField_satisfies_all_OS_axioms_generic
-    {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] [Fact (d ≤ 5)] :
+    {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
     SatisfiesAllOS (gaussianFreeField_free (d := d) m)
 
 theorem gaussianFreeField_satisfies_all_OS_axioms_dim4 (m : ℝ) [Fact (0 < m)] :
@@ -40,11 +40,11 @@ where `SatisfiesAllOS` bundles OS0 (analyticity), OS1 (regularity), OS2
 (Euclidean invariance), OS3 (reflection positivity), OS4 (clustering) and OS4
 (ergodicity). The four `_dim4`/`_dim3`/`_dim2`/`_dim5` theorems are the closed-form
 instances (Bessel K₁, Yukawa, K₀, K_{3/2}) of the first; the corollary
-`gaussianFreeField_satisfies_all_OS_axioms_of_dim` covers every `2 ≤ d ≤ 5` via the
-canonical proper-time propagator. The bound `d ≤ 5` enters only through the proper-time
-Fubini domination in the OS3 argument.
+`gaussianFreeField_satisfies_all_OS_axioms_of_dim` covers every `d ≥ 2` via the
+canonical proper-time propagator: the OS3 proper-time Fubini domination runs at
+boundary-vanishing order `d`, so no upper bound on the dimension is needed.
 
-**Status:** Version 3.1 (dimension-generic), July 2026. 0 sorries, 0 axioms, ~31,500 lines of Lean across 54 files. Instances for `d = 2, 3, 4, 5`; the axiom footprint and statement type of every headline theorem (generic, all-dimensions `2 ≤ d ≤ 5`, `d = 4`, `d = 3`, `d = 2`, `d = 5`) are build-frozen in `OSforGFF/Guardrails.lean`.
+**Status:** Version 3.2 (general dimension `d ≥ 2`), August 2026. 0 sorries, 0 axioms, ~31,500 lines of Lean across 54 files. Instances for `d = 2, 3, 4, 5`; the axiom footprint and statement type of every headline theorem (generic, all-dimensions `d ≥ 2`, `d = 4`, `d = 3`, `d = 2`, `d = 5`) are build-frozen in `OSforGFF/Guardrails.lean`.
 
 All results are fully proved — no assumed axioms. Nuclear space structure and the Minlos theorem
 are provided by the external libraries [bochner](https://github.com/mrdouglasny/bochner) and
@@ -255,11 +255,11 @@ baseline (blocking new `axiom`/escape-hatch declarations).
 
 1. ~~The `d = 2` instance (the K₀ kernel (1/2π)K₀(mr))~~ — Done. The `d = 2` (K₀), `d = 3` (Yukawa), and `d = 4` (Bessel) instances are all provided, completing the dimensions discussed in [docs/dimension_dependence.md](docs/dimension_dependence.md).
 2. ~~Explicit construction of the measure not using Minlos~~ — Done. The Minlos theorem and Kolmogorov extension are now fully proved in [bochner](https://github.com/mrdouglasny/bochner) and [kolmogorov_extension4](https://github.com/remydegenne/kolmogorov_extension4).
-3. **General dimension `d ≥ 2`** — the OS theorems currently hold for `2 ≤ d ≤ 5`. The single obstruction to all `d ≥ 2` (a sharp integrability in the OS3 Fubini domination) and a concrete program to remove it via higher-order (Hadamard/Malgrange) boundary vanishing are written up in [docs/general_dimension.md](docs/general_dimension.md).
+3. ~~General dimension `d ≥ 2`~~ — Done. The OS3 Fubini domination now runs at boundary-vanishing order `d` (positive-time test functions are flat to all orders at the time boundary), so the OS theorems hold in **every** dimension `d ≥ 2`; the program and its implementation are written up in [docs/general_dimension.md](docs/general_dimension.md).
 
 ## Authors
 
-Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
+Sergey A. Cherkis, Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 
 ### Coding Assistance
 

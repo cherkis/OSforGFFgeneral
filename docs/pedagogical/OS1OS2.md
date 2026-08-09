@@ -1,7 +1,7 @@
 # OS1 (Regularity) & OS2 (Euclidean Invariance): The Two Light Axioms
 
 *A combined, physics-first walkthrough of the two easiest Osterwalder–Schrader axioms for the
-dimension-generic massive Gaussian Free Field ($d = 2, 3, 4, 5$). Written for a reader who knows
+dimension-generic massive Gaussian Free Field (every $d \ge 2$). Written for a reader who knows
 Euclidean QFT and functional integrals but not Lean: the mathematics leads, and the Lean names in
 `monospace` are just clickable anchors into the formalization — ignore them on a first read.*
 
@@ -165,8 +165,7 @@ $\lVert x\rVert^{-\alpha}$ estimate is needed.
 
 ## Dimension note
 
-Both axioms are **uniform in $d \ge 2$** — there is no $d \le 5$ restriction (that constraint lives
-entirely in OS3's Fubini estimate, and enters the master theorem only through OS4's clustering rate).
+Both axioms are **uniform in $d \ge 2$**, like every axiom in the library.
 The proofs sit in the `OS/` directory only because they mention the $d$-baked spacetime and test-function
 types, not because the mathematics changes:
 
@@ -179,7 +178,7 @@ types, not because the mathematics changes:
   $\{0\}$, rather than on a dimension-dependent local-integrability argument.
 
 So OS1 and OS2 hold verbatim, with the identical proof term, for every `[GFFPropagator d m]` instance
-in the library ($d = 2, 3, 4, 5$).
+in the library (any $d \ge 2$; closed forms at $d = 2, 3, 4, 5$).
 
 ---
 
