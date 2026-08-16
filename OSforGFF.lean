@@ -7,7 +7,6 @@ Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 
 -- General mathematics (pure Mathlib extensions, no project imports)
 import «OSforGFF».General.FunctionalAnalysis
-import «OSforGFF».General.FrobeniusPositivity
 import «OSforGFF».General.SchurProduct
 import «OSforGFF».General.HadamardExp
 import «OSforGFF».General.PositiveDefinite
@@ -15,6 +14,8 @@ import «OSforGFF».General.GaussianRBF
 import «OSforGFF».General.FourierTransforms
 import «OSforGFF».General.LaplaceIntegral
 import «OSforGFF».General.BesselFunction
+import «OSforGFF».General.BesselK0
+import «OSforGFF».General.BesselK
 import «OSforGFF».General.QuantitativeDecay
 import «OSforGFF».General.SchwartzTranslationDecay
 import «OSforGFF».General.L2TimeIntegral
@@ -36,10 +37,13 @@ import «OSforGFF».Schwinger.TwoPoint
 import «OSforGFF».Schwinger.GaussianMoments
 
 -- Covariance (free propagator)
-import «OSforGFF».Covariance.Momentum
-import «OSforGFF».Covariance.Position
+import «OSforGFF».Covariance.Propagator
+import «OSforGFF».Covariance.ParsevalGeneric
+import «OSforGFF».Instances.Dim4
+import «OSforGFF».Instances.Dim3
+import «OSforGFF».Instances.Dim2
+import «OSforGFF».Instances.Dim5
 import «OSforGFF».Covariance.RealForm
-import «OSforGFF».Covariance.Parseval
 
 -- Measure (Minlos + GFF construction)
 import «OSforGFF».Measure.NuclearSpace
@@ -64,3 +68,6 @@ import «OSforGFF».OS.OS4_Ergodicity
 
 -- Master theorem
 import «OSforGFF».OS.Master
+
+-- Build-enforced guardrails (axiom-footprint + statement-type). See OSforGFF/Guardrails.lean.
+import «OSforGFF».Guardrails

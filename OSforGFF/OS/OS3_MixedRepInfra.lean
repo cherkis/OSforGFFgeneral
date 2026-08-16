@@ -1,7 +1,8 @@
 /-
 Copyright (c) 2025 Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim. All rights reserved.
+Copyright (c) 2026 Sergey A. Cherkis. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
+Authors: Sergey A. Cherkis, Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 
 import Mathlib.Analysis.Fourier.FourierTransform
@@ -25,8 +26,7 @@ import OSforGFF.Spacetime.Euclidean
 import OSforGFF.Spacetime.DiscreteSymmetry
 import OSforGFF.Schwinger.Defs
 import OSforGFF.General.FunctionalAnalysis
-import OSforGFF.Covariance.Momentum
-import OSforGFF.Covariance.Position
+import OSforGFF.Covariance.ParsevalGeneric
 import OSforGFF.General.FourierTransforms
 import OSforGFF.OS.Axioms
 import OSforGFF.Spacetime.ProdIntegrable
@@ -39,39 +39,52 @@ import OSforGFF.General.LaplaceIntegral
 
 The naive Fourier representation of covariance reflection positivity requires exchanging
 the k₀ integral with the x,y integrals, but the integrand 1/√(k²+m²) is NOT absolutely
-integrable in 3D k-space. The Schwinger parametrization resolves this:
+integrable in the (d−1)-dimensional spatial momentum space. The Schwinger parametrization
+resolves this:
 
-  ⟨Θf, Cf⟩ = ∫₀^∞ e^{−sm²} [∫_x ∫_y f*(x) f(y) H(s, |Θx−y|)] ds
+  ⟨Θf, Cf⟩ = ∫₀^∞ e^{−sm²} [∫_x ∫_y f*(x) f(y) H_d(s, |Θx−y|)] ds
 
-where H(s,r) = (4πs)^{−2} exp(−r²/4s) is the heat kernel, bounded by s^{−2}.
-The integrand is absolutely integrable: Schwartz functions are bounded, H is bounded,
-and e^{−sm²} provides exponential decay in s.
+where H_d(s,r) = (4πs)^{−d/2} exp(−r²/4s) is the heat kernel (`heatKernelProfile`); this
+representation is exactly the `schwinger_eq` field of `GFFPropagator`, so the whole chain is
+uniform in the dimension d. The integrand is absolutely integrable: Schwartz functions are
+bounded, H_d is bounded for fixed s > 0, and e^{−sm²} provides exponential decay in s.
 
 This file proves the Fubini theorems justifying integration order exchanges between
 proper-time s, spatial momenta k_sp, and spacetime points x,y. The integrability
-bounds use |f(x)||f(y)| ≤ C · x₀y₀ / (1+|x̄|²)^N(1+|ȳ|²)^N for positive-time
+bounds use order-d boundary vanishing |f(x)||f(y)| ≤ C · x₀^d y₀^d for positive-time
 test functions, combined with Gaussian moment formulas for the time integrals.
+
+**Where the dimension enters.** A test function vanishing on {x₀ ≤ 0} is flat to all
+orders at the time boundary (`schwartz_vanishing_pow_bound`). Using the order-d bound
+|f(x)| ≤ C·x₀^d, the x₀^d y₀^d-moment of the time Gaussian gives the s^{d+1/2} in the
+dominating function `dominate_G ∼ s^{d+1/2} e^{−s(‖k‖²+m²)}` — the (4πs)^{−d/2} heat-kernel
+prefactor cancels against the (4πs)^{(d−1)/2} volume factor of the spatial Fourier
+transform, leaving the one-dimensional time factor (4πs)^{−1/2}, and each order of boundary
+vanishing contributes one power of s. The spatial k-integral of the dominator is then
+∼ s^{(d+2)/2} e^{−sm²}, integrable near s = 0 for every d — so the OS3 chain carries no
+upper bound on the dimension.
 -/
 
-open MeasureTheory Complex Real Filter QFT
+open MeasureTheory Complex Real Filter QFT OSforGFF
 open TopologicalSpace
 open scoped Real InnerProductSpace BigOperators
 
 noncomputable section
 
-variable {m : ℝ} [Fact (0 < m)]
+variable {d : ℕ} [Fact (2 ≤ d)] {m : ℝ} [Fact (0 < m)]
 /-! ## Core Definitions -/
 
 /-- Inner product on spatial coordinates: k_spatial · x_spatial = Σᵢ kᵢ xᵢ -/
-noncomputable def spatialDot (k_spatial x_spatial : SpatialCoords) : ℝ :=
+noncomputable def spatialDot (k_spatial x_spatial : (SpatialCoords d)) : ℝ :=
   ∑ i, k_spatial i * x_spatial i
 
 /-- Inner product on ℝ equals multiplication. -/
 lemma real_inner_eq_mul (x y : ℝ) : @inner ℝ ℝ _ x y = x * y := by
   simp [inner, mul_comm]
 
-/-- spatialDot equals the real inner product on SpatialCoords. -/
-lemma spatialDot_eq_inner (k_spatial x_spatial : SpatialCoords) :
+omit [Fact (2 ≤ d)] in
+/-- spatialDot equals the real inner product on (SpatialCoords d). -/
+lemma spatialDot_eq_inner (k_spatial x_spatial : (SpatialCoords d)) :
     spatialDot k_spatial x_spatial = ⟪k_spatial, x_spatial⟫_ℝ := by
   unfold spatialDot
   rw [PiLp.inner_apply]
@@ -79,20 +92,21 @@ lemma spatialDot_eq_inner (k_spatial x_spatial : SpatialCoords) :
   ext i
   rw [real_inner_eq_mul]
 
-/-- The inner product on SpaceTime decomposes into time and spatial parts:
+/-- The inner product on (SpaceTime d) decomposes into time and spatial parts:
     ⟪k, z⟫ = k₀ z₀ + ⟪k_sp, z_sp⟫ = k₀ z₀ + spatialDot(k_sp, z_sp) -/
-lemma spacetime_inner_decompose (k z : SpaceTime) :
+lemma spacetime_inner_decompose (k z : (SpaceTime d)) :
     ⟪k, z⟫_ℝ = k 0 * z 0 + spatialDot (spatialPart k) (spatialPart z) := by
+  obtain ⟨n, rfl⟩ : ∃ n, d = n + 1 := ⟨d - 1, by have := (Fact.out : 2 ≤ d); omega⟩
   unfold spatialDot spatialPart
   rw [PiLp.inner_apply]
   -- Convert inner products to multiplications
   simp only [real_inner_eq_mul]
-  -- The sum over Fin 4 decomposes into index 0 plus sum over indices 1,2,3
+  -- The sum over Fin (n+1) decomposes into index 0 plus the spatial indices
   conv_lhs => rw [Fin.sum_univ_succ]
   -- The sums are definitionally equal after unfolding
   congr 1
 
-/-! ### Integral Decomposition for SpaceTime -/
+/-! ### Integral Decomposition for (SpaceTime d) -/
 
 /-- Auxiliary: The weighted Laplace-Fourier transform appearing in reflection positivity.
     F_ω(k_spatial) = ∫ dx f(x) exp(-|x₀| ω(k)) exp(i k_spatial · x_spatial)
@@ -100,20 +114,20 @@ lemma spacetime_inner_decompose (k z : SpaceTime) :
     This is the key quantity that appears after contour integration. For functions
     supported on positive time (x₀ ≥ 0), this becomes a product of two Fourier-Laplace
     transforms, leading to the squared norm factorization. -/
-noncomputable def weightedLaplaceFourier (m : ℝ) (f : TestFunctionℂ) (k_spatial : SpatialCoords) : ℂ :=
+noncomputable def weightedLaplaceFourier (m : ℝ) (f : (TestFunctionℂ d)) (k_spatial : (SpatialCoords d)) : ℂ :=
   let ω := Real.sqrt (‖k_spatial‖^2 + m^2)
-  ∫ x : SpaceTime, f x * Complex.exp (-|x 0| * ω) *
+  ∫ x : (SpaceTime d), f x * Complex.exp (-|x 0| * ω) *
     Complex.exp (Complex.I * spatialDot k_spatial (spatialPart x))
 
 /-! ## Time Reflection Properties -/
 
 /-- Time reflection is measure-preserving (it's a linear isometry). -/
 lemma timeReflection_measurePreserving :
-  MeasurePreserving timeReflection (volume : Measure SpaceTime) volume :=
+  MeasurePreserving timeReflection (volume : Measure (SpaceTime d)) volume :=
   timeReflectionLE.measurePreserving
 
 /-- Time reflection is an involution: Θ(Θx) = x -/
-lemma timeReflection_involutive (x : SpaceTime) :
+lemma timeReflection_involutive (x : (SpaceTime d)) :
     timeReflection (timeReflection x) = x := by
   simp [timeReflection, Function.update]
 
@@ -122,7 +136,7 @@ lemma timeReflection_involutive (x : SpaceTime) :
 The key step in the reflection positivity proof is to convert the Bessel bilinear form
 to a momentum representation where the k₀ integral is innermost.
 
-**Important mathematical point**: The naive d⁴k momentum integral does NOT converge
+**Important mathematical point**: The naive dᵈk momentum integral does NOT converge
 as a Lebesgue integral (it decays like 1/k² which is not integrable in 4D).
 The correct procedure uses the "mixed representation" of the Bessel kernel:
 
@@ -155,12 +169,12 @@ The substitution u = √(a/b) exp(t) transforms this into an integral related to
 Since K_{1/2}(z) = √(π/(2z)) exp(-z), the identity follows.
 -/
 
+omit [Fact (2 ≤ d)] in
 /-- **d-dimensional Gaussian Fourier transform.**
 
-    For d = 4, this states:
-    (1/(2π)^4) ∫_{ℝ^4} exp(-ik·z) exp(-s|k|²) d⁴k = (4πs)^{-2} exp(-|z|²/(4s))
+    (1/(2π)^d) ∫_{ℝ^d} exp(-ik·z) exp(-s|k|²) d^d k = (4πs)^{-d/2} exp(-|z|²/(4s))
 
-    which equals `heatKernelPositionSpace s |z|`.
+    which equals `heatKernelProfile d s |z|`.
 
     **Proof:**
     Uses Mathlib's `integral_cexp_neg_mul_sq_norm_add` with b = s, c = -I, w = z:
@@ -169,14 +183,14 @@ Since K_{1/2}(z) = √(π/(2z)) exp(-z), the identity follows.
 
     Combined with the normalization (1/(2π)^d) and the heat kernel formula:
     (1/(2π)^d) * (π/s)^{d/2} = (4πs)^{-d/2} -/
-theorem heatKernel_eq_gaussianFT (s : ℝ) (hs : 0 < s) (z : SpaceTime) :
-    (heatKernelPositionSpace s ‖z‖ : ℂ) =
-    (1 / (2 * π) ^ STDimension : ℝ) *
-    ∫ k : SpaceTime, Complex.exp (-Complex.I * ⟪k, z⟫_ℝ) * Complex.exp (-(s : ℂ) * ‖k‖^2) := by
+theorem heatKernel_eq_gaussianFT (s : ℝ) (hs : 0 < s) (z : (SpaceTime d)) :
+    (heatKernelProfile d s ‖z‖ : ℂ) =
+    (1 / (2 * π) ^ d : ℝ) *
+    ∫ k : (SpaceTime d), Complex.exp (-Complex.I * ⟪k, z⟫_ℝ) * Complex.exp (-(s : ℂ) * ‖k‖^2) := by
   -- Step 1: Rewrite the integral as ∫ exp(-s‖k‖² - I⟪k,z⟫) = ∫ exp(-s‖k‖² + (-I)⟪z,k⟫)
-  have h_integral : ∫ k : SpaceTime, Complex.exp (-Complex.I * ⟪k, z⟫_ℝ) *
+  have h_integral : ∫ k : (SpaceTime d), Complex.exp (-Complex.I * ⟪k, z⟫_ℝ) *
       Complex.exp (-(s : ℂ) * ‖k‖^2) =
-      ∫ k : SpaceTime, Complex.exp (-(s : ℂ) * ‖k‖^2 + (-Complex.I) * ⟪z, k⟫_ℝ) := by
+      ∫ k : (SpaceTime d), Complex.exp (-(s : ℂ) * ‖k‖^2 + (-Complex.I) * ⟪z, k⟫_ℝ) := by
     congr 1
     ext k
     rw [← Complex.exp_add]
@@ -189,7 +203,7 @@ theorem heatKernel_eq_gaussianFT (s : ℝ) (hs : 0 < s) (z : SpaceTime) :
 
   -- Step 2: Apply Mathlib's integral_cexp_neg_mul_sq_norm_add
   have hs_re : 0 < (s : ℂ).re := by simp [hs]
-  have h_main := GaussianFourier.integral_cexp_neg_mul_sq_norm_add (V := SpaceTime) hs_re (-Complex.I) z
+  have h_main := GaussianFourier.integral_cexp_neg_mul_sq_norm_add (V := (SpaceTime d)) hs_re (-Complex.I) z
   rw [h_main]
 
   -- Step 3: Simplify (-I)² = -1
@@ -199,50 +213,54 @@ theorem heatKernel_eq_gaussianFT (s : ℝ) (hs : 0 < s) (z : SpaceTime) :
 
   -- Step 4: Verify the coefficient equality
   -- Need: (4πs)^{-d/2} exp(-‖z‖²/(4s)) = (1/(2π)^d) * (π/s)^{d/2} * exp(-‖z‖²/(4s))
-  -- For d = 4: (4πs)^{-2} = (1/(2π)^4) * (π/s)^2
-  -- LHS = 1/(16π²s²)
-  -- RHS = 1/(16π⁴) * π²/s² = 1/(16π²s²) ✓
+  rw [finrank_euclideanSpace_fin]
 
-  -- Expand heatKernelPositionSpace
-  rw [heatKernelPositionSpace_4D s hs ‖z‖]
-
-  -- The finrank of SpaceTime is 4
-  have h_finrank : Module.finrank ℝ SpaceTime = 4 := finrank_euclideanSpace_fin
-  rw [h_finrank]
-
-  -- Simplify the complex exponent ↑4 / 2 = 2
-  have h_exp_eq : (↑π / ↑s : ℂ) ^ ((4 : ℕ) / 2 : ℂ) = (↑π / ↑s : ℂ) ^ (2 : ℂ) := by
-    congr 1
-    norm_num
-  rw [h_exp_eq]
-
-  -- (π/s)^2 as complex power equals (π/s)² as a natural power
-  have h_pow_div : (↑π / ↑s : ℂ) = ↑(π / s) := by push_cast; ring
+  -- Convert the complex power (π/s)^(d/2) to a real power
+  have hps : (0 : ℝ) < π / s := by positivity
+  have h_pow_div : (↑π / ↑s : ℂ) = ((π / s : ℝ) : ℂ) := by push_cast; ring
   rw [h_pow_div]
+  have h_cpow : (((π / s : ℝ)) : ℂ) ^ (((d : ℕ) : ℂ) / 2)
+      = (((π / s) ^ ((d : ℝ) / 2) : ℝ) : ℂ) := by
+    rw [Complex.ofReal_cpow hps.le]
+    congr 1
+    push_cast
+    ring
+  rw [h_cpow]
 
-  -- Convert complex power (2 : ℂ) to natural power
-  have h_cpow_two : (↑(π / s) : ℂ) ^ (2 : ℂ) = (↑(π / s) : ℂ) ^ (2 : ℕ) := Complex.cpow_natCast _ 2
-  rw [h_cpow_two]
+  -- The real coefficient identity: (4πs)^{-d/2} = (1/(2π)^d) * (π/s)^{d/2}
+  have hpos : (0 : ℝ) < 4 * π * s := by positivity
+  have h2pi : (0 : ℝ) < 2 * π := by positivity
+  have hcoeff : (4 * π * s) ^ (-(d : ℝ) / 2)
+      = 1 / (2 * π) ^ d * (π / s) ^ ((d : ℝ) / 2) := by
+    have h1 : ((2 * π : ℝ) ^ d) = (4 * π ^ 2) ^ ((d : ℝ) / 2) := by
+      rw [show (4 * π ^ 2 : ℝ) = (2 * π) ^ (2 : ℝ) by rw [Real.rpow_two]; ring,
+        ← Real.rpow_natCast (2 * π) d, ← Real.rpow_mul h2pi.le]
+      congr 1
+      ring
+    rw [h1, div_mul_eq_mul_div, one_mul,
+      ← Real.div_rpow hps.le (by positivity : (0 : ℝ) ≤ 4 * π ^ 2),
+      show (π / s / (4 * π ^ 2) : ℝ) = (4 * π * s)⁻¹ by
+        rw [div_div, show (s * (4 * π ^ 2) : ℝ) = π * (4 * π * s) by ring,
+        div_mul_cancel_left₀ (Real.pi_ne_zero)],
+      Real.inv_rpow hpos.le, ← Real.rpow_neg hpos.le, neg_div]
 
-  -- Now combine everything
-  have hπ : π ≠ 0 := Real.pi_ne_zero
-  have hs_ne : s ≠ 0 := ne_of_gt hs
-  have hd : (STDimension : ℕ) = 4 := rfl
-  simp only [hd, pow_two]
+  -- Assemble: expand the heat kernel and match the real-cast products
+  unfold heatKernelProfile
+  rw [hcoeff, Complex.ofReal_mul, Complex.ofReal_mul, Complex.ofReal_exp]
   push_cast
-  field_simp
-  ring
+  ring_nf
 
 /-! ### Technical Integration Lemmas
 
 The following lemmas establish integrability and measurability conditions
 that are mathematically standard but require substantial Mathlib plumbing. -/
 
+omit [Fact (2 ≤ d)] in
 /-- The heat kernel is jointly continuous on (0, ∞) × ℝ as a function of (t, r). -/
 lemma heatKernelPositionSpace_continuousOn :
-    ContinuousOn (fun p : ℝ × ℝ => heatKernelPositionSpace p.1 p.2)
+    ContinuousOn (fun p : ℝ × ℝ => heatKernelProfile d p.1 p.2)
       (Set.Ioi 0 ×ˢ Set.univ) := by
-  unfold heatKernelPositionSpace
+  unfold heatKernelProfile
   apply ContinuousOn.mul
   · -- (4 * π * t) ^ (-(d : ℝ) / 2) is continuous for t > 0
     apply ContinuousOn.rpow
@@ -272,7 +290,7 @@ lemma heatKernelPositionSpace_continuousOn :
 
 /-- **Heat kernel composition is AEStronglyMeasurable.**
 
-    The function `p ↦ heatKernelPositionSpace p.1 ‖timeReflection p.2.1 - p.2.2‖`
+    The function `p ↦ heatKernelProfile d p.1 ‖timeReflection p.2.1 - p.2.2‖`
     is AEStronglyMeasurable with respect to the restricted product measure
     `(volume.restrict (Set.Ioi 0)).prod (volume.prod volume)`.
 
@@ -283,28 +301,28 @@ lemma heatKernelPositionSpace_continuousOn :
     4. Apply ContinuousOn.aestronglyMeasurable -/
 theorem heatKernelPositionSpace_aestronglyMeasurable :
     AEStronglyMeasurable
-      (fun p : ℝ × SpaceTime × SpaceTime =>
-        (heatKernelPositionSpace p.1 ‖timeReflection p.2.1 - p.2.2‖ : ℂ))
+      (fun p : ℝ × (SpaceTime d) × (SpaceTime d) =>
+        (heatKernelProfile d p.1 ‖timeReflection p.2.1 - p.2.2‖ : ℂ))
       ((volume.restrict (Set.Ioi 0)).prod (volume.prod volume)) := by
   -- Step 1: Rewrite the product measure as a restriction
   have h_measure : ((volume : Measure ℝ).restrict (Set.Ioi (0 : ℝ))).prod
-      ((volume : Measure SpaceTime).prod (volume : Measure SpaceTime)) =
-      ((volume : Measure ℝ).prod ((volume : Measure SpaceTime).prod (volume : Measure SpaceTime))).restrict
+      ((volume : Measure (SpaceTime d)).prod (volume : Measure (SpaceTime d))) =
+      ((volume : Measure ℝ).prod ((volume : Measure (SpaceTime d)).prod (volume : Measure (SpaceTime d)))).restrict
         ((Set.Ioi (0 : ℝ)) ×ˢ Set.univ) := by
     exact Measure.restrict_prod_eq_prod_univ (Set.Ioi (0 : ℝ))
   rw [h_measure]
 
   -- Step 2: The underlying real function is continuous on the support
   have h_real_cont : ContinuousOn
-      (fun p : ℝ × SpaceTime × SpaceTime =>
-        heatKernelPositionSpace p.1 ‖timeReflection p.2.1 - p.2.2‖)
+      (fun p : ℝ × (SpaceTime d) × (SpaceTime d) =>
+        heatKernelProfile d p.1 ‖timeReflection p.2.1 - p.2.2‖)
       (Set.Ioi 0 ×ˢ Set.univ) := by
-    -- Compose heatKernelPositionSpace with (s, x, y) ↦ (s, ‖Θx - y‖)
+    -- Compose heatKernelProfile d with (s, x, y) ↦ (s, ‖Θx - y‖)
     have h_proj : ContinuousOn
-        (fun p : ℝ × SpaceTime × SpaceTime => (p.1, ‖timeReflection p.2.1 - p.2.2‖))
+        (fun p : ℝ × (SpaceTime d) × (SpaceTime d) => (p.1, ‖timeReflection p.2.1 - p.2.2‖))
         (Set.Ioi (0 : ℝ) ×ˢ Set.univ) := by
       -- Build continuity of (p.1, ‖Θ p.2.1 - p.2.2‖)
-      have h_norm : Continuous (fun p : ℝ × SpaceTime × SpaceTime =>
+      have h_norm : Continuous (fun p : ℝ × (SpaceTime d) × (SpaceTime d) =>
           ‖timeReflection p.2.1 - p.2.2‖) := by
         apply continuous_norm.comp
         apply Continuous.sub
@@ -313,7 +331,7 @@ theorem heatKernelPositionSpace_aestronglyMeasurable :
       exact ContinuousOn.prodMk continuousOn_fst h_norm.continuousOn
     -- The image of (Ioi 0 ×ˢ univ) under this map is in (Ioi 0 ×ˢ univ)
     have h_maps : Set.MapsTo
-        (fun p : ℝ × SpaceTime × SpaceTime => (p.1, ‖timeReflection p.2.1 - p.2.2‖))
+        (fun p : ℝ × (SpaceTime d) × (SpaceTime d) => (p.1, ‖timeReflection p.2.1 - p.2.2‖))
         (Set.Ioi 0 ×ˢ Set.univ) (Set.Ioi 0 ×ˢ Set.univ) := by
       intro ⟨s, x, y⟩ ⟨hs, _⟩
       exact ⟨hs, Set.mem_univ _⟩
@@ -321,41 +339,41 @@ theorem heatKernelPositionSpace_aestronglyMeasurable :
 
   -- Step 3: Casting to ℂ preserves continuity
   have h_coe_cont : ContinuousOn
-      (fun p : ℝ × SpaceTime × SpaceTime =>
-        (heatKernelPositionSpace p.1 ‖timeReflection p.2.1 - p.2.2‖ : ℂ))
+      (fun p : ℝ × (SpaceTime d) × (SpaceTime d) =>
+        (heatKernelProfile d p.1 ‖timeReflection p.2.1 - p.2.2‖ : ℂ))
       (Set.Ioi 0 ×ˢ Set.univ) := by
     exact Complex.continuous_ofReal.comp_continuousOn h_real_cont
 
   -- Step 4: Apply ContinuousOn.aestronglyMeasurable
-  have h_meas : MeasurableSet (Set.Ioi (0 : ℝ) ×ˢ (Set.univ : Set (SpaceTime × SpaceTime))) :=
+  have h_meas : MeasurableSet (Set.Ioi (0 : ℝ) ×ˢ (Set.univ : Set ((SpaceTime d) × (SpaceTime d)))) :=
     measurableSet_Ioi.prod MeasurableSet.univ
   exact h_coe_cont.aestronglyMeasurable h_meas
 
 /-- Real-valued version of `heatKernelPositionSpace_aestronglyMeasurable`. -/
 theorem heatKernelPositionSpace_aestronglyMeasurable_real :
     AEStronglyMeasurable
-      (fun p : ℝ × SpaceTime × SpaceTime =>
-        heatKernelPositionSpace p.1 ‖timeReflection p.2.1 - p.2.2‖)
+      (fun p : ℝ × (SpaceTime d) × (SpaceTime d) =>
+        heatKernelProfile d p.1 ‖timeReflection p.2.1 - p.2.2‖)
       ((volume.restrict (Set.Ioi 0)).prod (volume.prod volume)) := by
   -- Step 1: Rewrite the product measure as a restriction
   have h_measure : ((volume : Measure ℝ).restrict (Set.Ioi (0 : ℝ))).prod
-      ((volume : Measure SpaceTime).prod (volume : Measure SpaceTime)) =
-      ((volume : Measure ℝ).prod ((volume : Measure SpaceTime).prod (volume : Measure SpaceTime))).restrict
+      ((volume : Measure (SpaceTime d)).prod (volume : Measure (SpaceTime d))) =
+      ((volume : Measure ℝ).prod ((volume : Measure (SpaceTime d)).prod (volume : Measure (SpaceTime d)))).restrict
         ((Set.Ioi (0 : ℝ)) ×ˢ Set.univ) := by
     exact Measure.restrict_prod_eq_prod_univ (Set.Ioi (0 : ℝ))
   rw [h_measure]
 
   -- Step 2: The underlying real function is continuous on the support
   have h_real_cont : ContinuousOn
-      (fun p : ℝ × SpaceTime × SpaceTime =>
-        heatKernelPositionSpace p.1 ‖timeReflection p.2.1 - p.2.2‖)
+      (fun p : ℝ × (SpaceTime d) × (SpaceTime d) =>
+        heatKernelProfile d p.1 ‖timeReflection p.2.1 - p.2.2‖)
       (Set.Ioi 0 ×ˢ Set.univ) := by
-    -- Compose heatKernelPositionSpace with (s, x, y) ↦ (s, ‖Θx - y‖)
+    -- Compose heatKernelProfile d with (s, x, y) ↦ (s, ‖Θx - y‖)
     have h_proj : ContinuousOn
-        (fun p : ℝ × SpaceTime × SpaceTime => (p.1, ‖timeReflection p.2.1 - p.2.2‖))
+        (fun p : ℝ × (SpaceTime d) × (SpaceTime d) => (p.1, ‖timeReflection p.2.1 - p.2.2‖))
         (Set.Ioi (0 : ℝ) ×ˢ Set.univ) := by
       -- Build continuity of (p.1, ‖Θ p.2.1 - p.2.2‖)
-      have h_norm : Continuous (fun p : ℝ × SpaceTime × SpaceTime =>
+      have h_norm : Continuous (fun p : ℝ × (SpaceTime d) × (SpaceTime d) =>
           ‖timeReflection p.2.1 - p.2.2‖) := by
         apply continuous_norm.comp
         apply Continuous.sub
@@ -364,133 +382,136 @@ theorem heatKernelPositionSpace_aestronglyMeasurable_real :
       exact ContinuousOn.prodMk continuousOn_fst h_norm.continuousOn
     -- The image of (Ioi 0 ×ˢ univ) under this map is in (Ioi 0 ×ˢ univ)
     have h_maps : Set.MapsTo
-        (fun p : ℝ × SpaceTime × SpaceTime => (p.1, ‖timeReflection p.2.1 - p.2.2‖))
+        (fun p : ℝ × (SpaceTime d) × (SpaceTime d) => (p.1, ‖timeReflection p.2.1 - p.2.2‖))
         (Set.Ioi 0 ×ˢ Set.univ) (Set.Ioi 0 ×ˢ Set.univ) := by
       intro ⟨s, x, y⟩ ⟨hs, _⟩
       exact ⟨hs, Set.mem_univ _⟩
     exact heatKernelPositionSpace_continuousOn.comp h_proj h_maps
 
   -- Step 3: Apply ContinuousOn.aestronglyMeasurable
-  have h_meas : MeasurableSet (Set.Ioi (0 : ℝ) ×ˢ (Set.univ : Set (SpaceTime × SpaceTime))) :=
+  have h_meas : MeasurableSet (Set.Ioi (0 : ℝ) ×ˢ (Set.univ : Set ((SpaceTime d) × (SpaceTime d)))) :=
     measurableSet_Ioi.prod MeasurableSet.univ
   exact h_real_cont.aestronglyMeasurable h_meas
 
+omit [Fact (2 ≤ d)] in
 /-- The heat kernel integral is translation invariant:
-    ∫_y H(s, ‖a - y‖) dy = ∫_z H(s, ‖z‖) dz = 1 for any a ∈ SpaceTime.
+    ∫_y H(s, ‖a - y‖) dy = ∫_z H(s, ‖z‖) dz = 1 for any a ∈ (SpaceTime d).
 
     This follows from:
-    1. Lebesgue measure on SpaceTime is translation invariant
+    1. Lebesgue measure on (SpaceTime d) is translation invariant
     2. The norm satisfies ‖a - y‖ = ‖-(y - a)‖ = ‖y - a‖
-    3. The heat kernel integrates to 1 (heatKernelPositionSpace_integral_eq_one) -/
-lemma heatKernelPositionSpace_integral_translated (s : ℝ) (hs : 0 < s) (a : SpaceTime) :
-    ∫ y : SpaceTime, heatKernelPositionSpace s ‖a - y‖ = 1 := by
+    3. The heat kernel integrates to 1 (heatKernelProfile_integral_eq_one) -/
+lemma heatKernelPositionSpace_integral_translated (s : ℝ) (hs : 0 < s) (a : (SpaceTime d)) :
+    ∫ y : (SpaceTime d), heatKernelProfile d s ‖a - y‖ = 1 := by
   -- First, ‖a - y‖ = ‖y - a‖ (norm is symmetric under negation)
   have h_norm_eq : ∀ y, ‖a - y‖ = ‖y - a‖ := fun y => by
     rw [← neg_sub, norm_neg]
-  have h_fun : (fun y : SpaceTime => heatKernelPositionSpace s ‖a - y‖) =
-      (fun y : SpaceTime => heatKernelPositionSpace s ‖y - a‖) := by
+  have h_fun : (fun y : (SpaceTime d) => heatKernelProfile d s ‖a - y‖) =
+      (fun y : (SpaceTime d) => heatKernelProfile d s ‖y - a‖) := by
     funext y
     rw [h_norm_eq y]
   rw [h_fun]
   -- Use translation invariance: ∫ f(y - a) dy = ∫ f(z) dz
-  -- SpaceTime = EuclideanSpace ℝ (Fin 4) has translation-invariant Lebesgue measure
-  have h_transl := @MeasureTheory.integral_sub_right_eq_self SpaceTime ℝ _ _ _
-    (volume : Measure SpaceTime) _ _ _
-    (fun z => heatKernelPositionSpace s ‖z‖) a
+  -- (SpaceTime d) = EuclideanSpace ℝ (Fin d) has translation-invariant Lebesgue measure
+  have h_transl := @MeasureTheory.integral_sub_right_eq_self (SpaceTime d) ℝ _ _ _
+    (volume : Measure (SpaceTime d)) _ _ _
+    (fun z => heatKernelProfile d s ‖z‖) a
   rw [h_transl]
   -- Now apply the normalization lemma
-  exact heatKernelPositionSpace_integral_eq_one s hs
+  exact heatKernelProfile_integral_eq_one d s hs
 
+omit [Fact (2 ≤ d)] in
 /-- The translated heat kernel is integrable (since its integral equals 1). -/
-lemma heatKernelPositionSpace_integrable (s : ℝ) (hs : 0 < s) (a : SpaceTime) :
-    Integrable (fun y : SpaceTime => heatKernelPositionSpace s ‖a - y‖)
-      (volume : Measure SpaceTime) := by
+lemma heatKernelPositionSpace_integrable (s : ℝ) (hs : 0 < s) (a : (SpaceTime d)) :
+    Integrable (fun y : (SpaceTime d) => heatKernelProfile d s ‖a - y‖)
+      (volume : Measure (SpaceTime d)) := by
   apply integrable_of_integral_eq_one
   exact heatKernelPositionSpace_integral_translated s hs a
 
 /-- Nonnegativity of the Schwinger bound integrand (fixed s > 0). -/
 lemma schwinger_bound_integrand_nonneg (s : ℝ) (hs : 0 < s)
-    (f : TestFunctionℂ) (Cf : ℝ) (hCf_nonneg : 0 ≤ Cf) (m : ℝ) (x y : SpaceTime) :
+    (f : (TestFunctionℂ d)) (Cf : ℝ) (hCf_nonneg : 0 ≤ Cf) (m : ℝ) (x y : (SpaceTime d)) :
     0 ≤ ‖f x‖ * Cf * Real.exp (-s * m^2) *
-      heatKernelPositionSpace s ‖timeReflection x - y‖ := by
+      heatKernelProfile d s ‖timeReflection x - y‖ := by
   apply mul_nonneg
   apply mul_nonneg
   apply mul_nonneg
   · exact norm_nonneg _
   · exact hCf_nonneg
   · exact Real.exp_nonneg _
-  · exact heatKernelPositionSpace_nonneg s hs ‖timeReflection x - y‖
+  · exact heatKernelProfile_nonneg d s ‖timeReflection x - y‖ hs
 
 /-- Integrability in `y` of the Schwinger bound integrand for fixed `s > 0`, `x`. -/
 lemma schwinger_bound_integrand_integrable_y (s : ℝ) (hs : 0 < s)
-    (f : TestFunctionℂ) (Cf : ℝ) (m : ℝ) (x : SpaceTime) :
-    Integrable (fun y : SpaceTime =>
+    (f : (TestFunctionℂ d)) (Cf : ℝ) (m : ℝ) (x : (SpaceTime d)) :
+    Integrable (fun y : (SpaceTime d) =>
       (‖f x‖ * Cf * Real.exp (-s * m^2)) *
-        heatKernelPositionSpace s ‖timeReflection x - y‖)
-      (volume : Measure SpaceTime) := by
-  have hH : Integrable (fun y : SpaceTime =>
-      heatKernelPositionSpace s ‖timeReflection x - y‖) :=
+        heatKernelProfile d s ‖timeReflection x - y‖)
+      (volume : Measure (SpaceTime d)) := by
+  have hH : Integrable (fun y : (SpaceTime d) =>
+      heatKernelProfile d s ‖timeReflection x - y‖) :=
     heatKernelPositionSpace_integrable s hs (timeReflection x)
   exact hH.const_mul (‖f x‖ * Cf * Real.exp (-s * m^2))
 
 /-- Evaluate the `y`-integral of the Schwinger bound integrand for fixed `s > 0`, `x`. -/
 lemma schwinger_bound_integrand_integral_y (s : ℝ) (hs : 0 < s)
-    (f : TestFunctionℂ) (Cf : ℝ) (m : ℝ) (x : SpaceTime) :
-    ∫ y : SpaceTime,
+    (f : (TestFunctionℂ d)) (Cf : ℝ) (m : ℝ) (x : (SpaceTime d)) :
+    ∫ y : (SpaceTime d),
         (‖f x‖ * Cf * Real.exp (-s * m^2)) *
-          heatKernelPositionSpace s ‖timeReflection x - y‖ =
+          heatKernelProfile d s ‖timeReflection x - y‖ =
       ‖f x‖ * Cf * Real.exp (-s * m^2) := by
   let r : ℝ := (‖f x‖ * Cf) * Real.exp (-s * m^2)
-  have h_eq : ∫ y : SpaceTime, r *
-        heatKernelPositionSpace s ‖timeReflection x - y‖ =
-      r * ∫ y : SpaceTime, heatKernelPositionSpace s ‖timeReflection x - y‖ := by
+  have h_eq : ∫ y : (SpaceTime d), r *
+        heatKernelProfile d s ‖timeReflection x - y‖ =
+      r * ∫ y : (SpaceTime d), heatKernelProfile d s ‖timeReflection x - y‖ := by
     simpa using
       (integral_const_mul r
-        (fun y : SpaceTime => heatKernelPositionSpace s ‖timeReflection x - y‖))
-  have h_int : ∫ y : SpaceTime, heatKernelPositionSpace s ‖timeReflection x - y‖ = 1 :=
+        (fun y : (SpaceTime d) => heatKernelProfile d s ‖timeReflection x - y‖))
+  have h_int : ∫ y : (SpaceTime d), heatKernelProfile d s ‖timeReflection x - y‖ = 1 :=
     heatKernelPositionSpace_integral_translated s hs (timeReflection x)
   simpa [r, h_int, mul_assoc] using h_eq
 
+omit [Fact (2 ≤ d)] in
 /-- Integrability in `x` of the Schwinger bound integrand (after integrating in `y`). -/
 lemma schwinger_bound_integrand_integrable_x (s : ℝ)
-    (f : TestFunctionℂ) (Cf : ℝ) (m : ℝ)
-    (h_f_int : Integrable (fun x => ‖f x‖) (volume : Measure SpaceTime)) :
-    Integrable (fun x : SpaceTime => ‖f x‖ * Cf * Real.exp (-s * m^2))
-      (volume : Measure SpaceTime) := by
+    (f : (TestFunctionℂ d)) (Cf : ℝ) (m : ℝ)
+    (h_f_int : Integrable (fun x => ‖f x‖) (volume : Measure (SpaceTime d))) :
+    Integrable (fun x : (SpaceTime d) => ‖f x‖ * Cf * Real.exp (-s * m^2))
+      (volume : Measure (SpaceTime d)) := by
   have h := h_f_int.mul_const (Cf * Real.exp (-s * m^2))
   simpa [mul_assoc] using h
 
 /-- Integrability of the Schwinger bound integrand on `(x,y)` for fixed `s > 0`. -/
 lemma schwinger_bound_integrable_xy (s : ℝ) (hs : 0 < s)
-    (f : TestFunctionℂ) (Cf : ℝ) (m : ℝ) (hCf_nonneg : 0 ≤ Cf)
-    (h_f_int : Integrable (fun x => ‖f x‖) (volume : Measure SpaceTime)) :
+    (f : (TestFunctionℂ d)) (Cf : ℝ) (m : ℝ) (hCf_nonneg : 0 ≤ Cf)
+    (h_f_int : Integrable (fun x => ‖f x‖) (volume : Measure (SpaceTime d))) :
     Integrable
-      (fun p : SpaceTime × SpaceTime =>
+      (fun p : (SpaceTime d) × (SpaceTime d) =>
         ‖f p.1‖ * Cf * Real.exp (-s * m^2) *
-          heatKernelPositionSpace s ‖timeReflection p.1 - p.2‖)
+          heatKernelProfile d s ‖timeReflection p.1 - p.2‖)
       (volume.prod volume) := by
   -- Use integrable_prod_iff on (x,y)
-  let G : SpaceTime × SpaceTime → ℝ := fun p =>
+  let G : (SpaceTime d) × (SpaceTime d) → ℝ := fun p =>
     ‖f p.1‖ * Cf * Real.exp (-s * m^2) *
-      heatKernelPositionSpace s ‖timeReflection p.1 - p.2‖
+      heatKernelProfile d s ‖timeReflection p.1 - p.2‖
   have hG_meas : AEStronglyMeasurable G (volume.prod volume) := by
-    have h_fG : AEStronglyMeasurable (fun p : SpaceTime × SpaceTime => ‖f p.1‖)
+    have h_fG : AEStronglyMeasurable (fun p : (SpaceTime d) × (SpaceTime d) => ‖f p.1‖)
         (volume.prod volume) := by
-      have hf_cont : Continuous (fun p : SpaceTime × SpaceTime => f p.1) :=
+      have hf_cont : Continuous (fun p : (SpaceTime d) × (SpaceTime d) => f p.1) :=
         (SchwartzMap.continuous f).comp continuous_fst
       exact hf_cont.aestronglyMeasurable.norm
     have h_heatG : AEStronglyMeasurable
-        (fun p : SpaceTime × SpaceTime =>
-          heatKernelPositionSpace s ‖timeReflection p.1 - p.2‖)
+        (fun p : (SpaceTime d) × (SpaceTime d) =>
+          heatKernelProfile d s ‖timeReflection p.1 - p.2‖)
         (volume.prod volume) := by
-      have h_norm : Continuous (fun p : SpaceTime × SpaceTime =>
+      have h_norm : Continuous (fun p : (SpaceTime d) × (SpaceTime d) =>
           ‖timeReflection p.1 - p.2‖) := by
         apply continuous_norm.comp
         apply Continuous.sub
         · exact (LinearIsometryEquiv.continuous timeReflectionLE).comp continuous_fst
         · exact continuous_snd
-      have h_cont_r : Continuous (fun r : ℝ => heatKernelPositionSpace s r) := by
-        have h_cont_on : ContinuousOn (fun r : ℝ => heatKernelPositionSpace s r) Set.univ := by
+      have h_cont_r : Continuous (fun r : ℝ => heatKernelProfile d s r) := by
+        have h_cont_on : ContinuousOn (fun r : ℝ => heatKernelProfile d s r) Set.univ := by
           have h_proj : ContinuousOn (fun r : ℝ => (s, r)) Set.univ := by
             exact (continuous_const.prodMk continuous_id).continuousOn
           have h_maps : Set.MapsTo (fun r : ℝ => (s, r)) Set.univ (Set.Ioi 0 ×ˢ Set.univ) := by
@@ -499,7 +520,7 @@ lemma schwinger_bound_integrable_xy (s : ℝ) (hs : 0 < s)
         exact (continuousOn_univ.mp h_cont_on)
       exact (h_cont_r.comp h_norm).aestronglyMeasurable
     have h_fCexp : AEStronglyMeasurable
-        (fun p : SpaceTime × SpaceTime => (‖f p.1‖ * Cf) * Real.exp (-s * m^2))
+        (fun p : (SpaceTime d) × (SpaceTime d) => (‖f p.1‖ * Cf) * Real.exp (-s * m^2))
         (volume.prod volume) :=
       (h_fG.mul_const Cf).mul_const (Real.exp (-s * m^2))
     have h_all : AEStronglyMeasurable G (volume.prod volume) :=
@@ -511,12 +532,12 @@ lemma schwinger_bound_integrable_xy (s : ℝ) (hs : 0 < s)
     intro x
     exact schwinger_bound_integrand_integrable_y s hs f Cf m x
   · -- integrable in x of the norm-integral
-    have h_norm : ∀ x : SpaceTime,
-        ∫ y : SpaceTime, ‖G (x, y)‖ = ‖f x‖ * Cf * Real.exp (-s * m^2) := by
+    have h_norm : ∀ x : (SpaceTime d),
+        ∫ y : (SpaceTime d), ‖G (x, y)‖ = ‖f x‖ * Cf * Real.exp (-s * m^2) := by
       intro x
-      have h_eq : (fun y : SpaceTime => ‖G (x, y)‖) =
-          (fun y : SpaceTime => (‖f x‖ * Cf * Real.exp (-s * m^2)) *
-            heatKernelPositionSpace s ‖timeReflection x - y‖) := by
+      have h_eq : (fun y : (SpaceTime d) => ‖G (x, y)‖) =
+          (fun y : (SpaceTime d) => (‖f x‖ * Cf * Real.exp (-s * m^2)) *
+            heatKernelProfile d s ‖timeReflection x - y‖) := by
         funext y
         have hy : 0 ≤ G (x, y) :=
           schwinger_bound_integrand_nonneg s hs f Cf hCf_nonneg m x y
@@ -524,104 +545,105 @@ lemma schwinger_bound_integrable_xy (s : ℝ) (hs : 0 < s)
           simpa using (Real.norm_of_nonneg hy)
         simpa [G, this, mul_assoc]
       calc
-        ∫ y : SpaceTime, ‖G (x, y)‖
-            = ∫ y : SpaceTime,
+        ∫ y : (SpaceTime d), ‖G (x, y)‖
+            = ∫ y : (SpaceTime d),
                 (‖f x‖ * Cf * Real.exp (-s * m^2)) *
-                  heatKernelPositionSpace s ‖timeReflection x - y‖ := by
+                  heatKernelProfile d s ‖timeReflection x - y‖ := by
                 exact integral_congr_ae (by
                   filter_upwards with y
                   have h := congrArg (fun h => h y) h_eq
                   simpa using h)
         _ = (‖f x‖ * Cf * Real.exp (-s * m^2)) :=
               schwinger_bound_integrand_integral_y s hs f Cf m x
-    have h_int_x : Integrable (fun x : SpaceTime => ‖f x‖ * Cf * Real.exp (-s * m^2)) :=
+    have h_int_x : Integrable (fun x : (SpaceTime d) => ‖f x‖ * Cf * Real.exp (-s * m^2)) :=
       schwinger_bound_integrand_integrable_x s f Cf m h_f_int
     exact h_int_x.congr (by
       filter_upwards with x
       have h := h_norm x
-      have h' : ∫ y : SpaceTime, |G (x, y)| = ‖f x‖ * Cf * Real.exp (-s * m^2) := by
+      have h' : ∫ y : (SpaceTime d), |G (x, y)| = ‖f x‖ * Cf * Real.exp (-s * m^2) := by
         simpa [Real.norm_eq_abs] using h
       exact h'.symm)
 
 /-- Compute the (x,y)-integral of the Schwinger bound integrand for fixed `s > 0`. -/
 lemma schwinger_bound_integrand_integral_xy (s : ℝ) (hs : 0 < s)
-    (f : TestFunctionℂ) (Cf : ℝ) (m : ℝ) (hCf_nonneg : 0 ≤ Cf)
-    (h_f_int : Integrable (fun x => ‖f x‖) (volume : Measure SpaceTime)) :
-    ∫ p : SpaceTime × SpaceTime,
+    (f : (TestFunctionℂ d)) (Cf : ℝ) (m : ℝ) (hCf_nonneg : 0 ≤ Cf)
+    (h_f_int : Integrable (fun x => ‖f x‖) (volume : Measure (SpaceTime d))) :
+    ∫ p : (SpaceTime d) × (SpaceTime d),
       ‖f p.1‖ * Cf * Real.exp (-s * m^2) *
-        heatKernelPositionSpace s ‖timeReflection p.1 - p.2‖ =
-      (Cf * (∫ x : SpaceTime, ‖f x‖)) * Real.exp (-s * m^2) := by
-  let G : SpaceTime × SpaceTime → ℝ := fun p =>
+        heatKernelProfile d s ‖timeReflection p.1 - p.2‖ =
+      (Cf * (∫ x : (SpaceTime d), ‖f x‖)) * Real.exp (-s * m^2) := by
+  let G : (SpaceTime d) × (SpaceTime d) → ℝ := fun p =>
     ‖f p.1‖ * Cf * Real.exp (-s * m^2) *
-      heatKernelPositionSpace s ‖timeReflection p.1 - p.2‖
+      heatKernelProfile d s ‖timeReflection p.1 - p.2‖
   have hG_int : Integrable G (volume.prod volume) :=
     schwinger_bound_integrable_xy s hs f Cf m hCf_nonneg h_f_int
   have h_prod := MeasureTheory.integral_prod (μ := volume) (ν := volume) (f := G) hG_int
   -- rewrite using the y-integral formula
-  have h_inner : ∀ x : SpaceTime,
-      ∫ y : SpaceTime, G (x, y) = ‖f x‖ * Cf * Real.exp (-s * m^2) := by
+  have h_inner : ∀ x : (SpaceTime d),
+      ∫ y : (SpaceTime d), G (x, y) = ‖f x‖ * Cf * Real.exp (-s * m^2) := by
     intro x
     simpa [G] using schwinger_bound_integrand_integral_y s hs f Cf m x
   calc
-    ∫ p : SpaceTime × SpaceTime, G p
-        = ∫ x : SpaceTime, ∫ y : SpaceTime, G (x, y) := by
+    ∫ p : (SpaceTime d) × (SpaceTime d), G p
+        = ∫ x : (SpaceTime d), ∫ y : (SpaceTime d), G (x, y) := by
+            rw [MeasureTheory.Measure.volume_eq_prod]
             exact h_prod
-    _ = ∫ x : SpaceTime, ‖f x‖ * Cf * Real.exp (-s * m^2) := by
+    _ = ∫ x : (SpaceTime d), ‖f x‖ * Cf * Real.exp (-s * m^2) := by
           refine integral_congr_ae ?_
           filter_upwards with x
           simp [h_inner]
-    _ = (Cf * (∫ x : SpaceTime, ‖f x‖)) * Real.exp (-s * m^2) := by
+    _ = (Cf * (∫ x : (SpaceTime d), ‖f x‖)) * Real.exp (-s * m^2) := by
           -- pull out the constant
           let r : ℝ := Cf * Real.exp (-s * m^2)
-          have h_eq : ∫ x : SpaceTime, r * ‖f x‖ = r * ∫ x : SpaceTime, ‖f x‖ := by
-            simpa using (integral_const_mul r (fun x : SpaceTime => ‖f x‖))
+          have h_eq : ∫ x : (SpaceTime d), r * ‖f x‖ = r * ∫ x : (SpaceTime d), ‖f x‖ := by
+            simpa using (integral_const_mul r (fun x : (SpaceTime d) => ‖f x‖))
           simpa [r, mul_comm, mul_left_comm, mul_assoc] using h_eq
 
 /-- Fubini/Tonelli step for Schwinger bound integrability. -/
-theorem schwinger_bound_integrable_fubini (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ)
+theorem schwinger_bound_integrable_fubini (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d))
     (Cf : ℝ) (hCf : ∀ x, ‖f x‖ ≤ Cf)
-    (h_f_int : Integrable (fun x => ‖f x‖) (volume : Measure SpaceTime))
+    (h_f_int : Integrable (fun x => ‖f x‖) (volume : Measure (SpaceTime d)))
     (hCf_nonneg : 0 ≤ Cf)
-    (h_y_eq_one : ∀ s > 0, ∀ x : SpaceTime,
-        ∫ y : SpaceTime, heatKernelPositionSpace s ‖timeReflection x - y‖ = 1)
+    (h_y_eq_one : ∀ s > 0, ∀ x : (SpaceTime d),
+        ∫ y : (SpaceTime d), heatKernelProfile d s ‖timeReflection x - y‖ = 1)
     (h_exp_int : ∫ s in Set.Ioi 0, Real.exp (-s * m^2) = 1 / m^2) :
     Integrable
-      (fun p : ℝ × SpaceTime × SpaceTime =>
+      (fun p : ℝ × (SpaceTime d) × (SpaceTime d) =>
         ‖f p.2.1‖ * Cf * Real.exp (-p.1 * m^2) *
-          heatKernelPositionSpace p.1 ‖timeReflection p.2.1 - p.2.2‖)
+          heatKernelProfile d p.1 ‖timeReflection p.2.1 - p.2.2‖)
       ((volume.restrict (Set.Ioi 0)).prod (volume.prod volume)) := by
   classical
   -- Mark unused parameters as used (they are part of the hypotheses contract).
   have _ := hCf
   have _ := h_y_eq_one
-  let F : ℝ × SpaceTime × SpaceTime → ℝ := fun p =>
+  let F : ℝ × (SpaceTime d) × (SpaceTime d) → ℝ := fun p =>
     ‖f p.2.1‖ * Cf * Real.exp (-p.1 * m^2) *
-      heatKernelPositionSpace p.1 ‖timeReflection p.2.1 - p.2.2‖
+      heatKernelProfile d p.1 ‖timeReflection p.2.1 - p.2.2‖
   have h_meas : AEStronglyMeasurable F
       ((volume.restrict (Set.Ioi 0)).prod (volume.prod volume)) := by
-    have h_f : AEStronglyMeasurable (fun p : ℝ × SpaceTime × SpaceTime => ‖f p.2.1‖)
+    have h_f : AEStronglyMeasurable (fun p : ℝ × (SpaceTime d) × (SpaceTime d) => ‖f p.2.1‖)
         ((volume.restrict (Set.Ioi 0)).prod (volume.prod volume)) := by
-      have hf_cont : Continuous (fun p : ℝ × SpaceTime × SpaceTime => f p.2.1) :=
+      have hf_cont : Continuous (fun p : ℝ × (SpaceTime d) × (SpaceTime d) => f p.2.1) :=
         (SchwartzMap.continuous f).comp (continuous_snd.fst)
       exact hf_cont.aestronglyMeasurable.norm
-    have h_exp : AEStronglyMeasurable (fun p : ℝ × SpaceTime × SpaceTime =>
+    have h_exp : AEStronglyMeasurable (fun p : ℝ × (SpaceTime d) × (SpaceTime d) =>
         Real.exp (-p.1 * m^2)) ((volume.restrict (Set.Ioi 0)).prod (volume.prod volume)) := by
-      have h_cont : Continuous (fun p : ℝ × SpaceTime × SpaceTime => Real.exp (-p.1 * m^2)) :=
+      have h_cont : Continuous (fun p : ℝ × (SpaceTime d) × (SpaceTime d) => Real.exp (-p.1 * m^2)) :=
         (Real.continuous_exp.comp (continuous_fst.neg.mul continuous_const))
       exact h_cont.aestronglyMeasurable
     have h_heat : AEStronglyMeasurable
-        (fun p : ℝ × SpaceTime × SpaceTime =>
-          heatKernelPositionSpace p.1 ‖timeReflection p.2.1 - p.2.2‖)
+        (fun p : ℝ × (SpaceTime d) × (SpaceTime d) =>
+          heatKernelProfile d p.1 ‖timeReflection p.2.1 - p.2.2‖)
         ((volume.restrict (Set.Ioi 0)).prod (volume.prod volume)) :=
       heatKernelPositionSpace_aestronglyMeasurable_real
     have h_fCexp : AEStronglyMeasurable
-        (fun p : ℝ × SpaceTime × SpaceTime => (‖f p.2.1‖ * Cf) * Real.exp (-p.1 * m^2))
+        (fun p : ℝ × (SpaceTime d) × (SpaceTime d) => (‖f p.2.1‖ * Cf) * Real.exp (-p.1 * m^2))
         ((volume.restrict (Set.Ioi 0)).prod (volume.prod volume)) :=
       (h_f.mul_const Cf).mul h_exp
     have h_all : AEStronglyMeasurable
-        (fun p : ℝ × SpaceTime × SpaceTime =>
+        (fun p : ℝ × (SpaceTime d) × (SpaceTime d) =>
           (‖f p.2.1‖ * Cf) * Real.exp (-p.1 * m^2) *
-            heatKernelPositionSpace p.1 ‖timeReflection p.2.1 - p.2.2‖)
+            heatKernelProfile d p.1 ‖timeReflection p.2.1 - p.2.2‖)
         ((volume.restrict (Set.Ioi 0)).prod (volume.prod volume)) :=
       h_fCexp.mul h_heat
     simpa [F, mul_assoc, mul_left_comm, mul_comm] using h_all
@@ -640,19 +662,19 @@ theorem schwinger_bound_integrable_fubini (m : ℝ) [Fact (0 < m)] (f : TestFunc
     have h_exp_intg : Integrable (fun s : ℝ => Real.exp (-s * m^2))
         (volume.restrict (Set.Ioi 0)) :=
       Integrable.of_integral_ne_zero h_exp_ne_zero
-    have h_const : Integrable (fun s : ℝ => (Cf * (∫ x : SpaceTime, ‖f x‖)) *
+    have h_const : Integrable (fun s : ℝ => (Cf * (∫ x : (SpaceTime d), ‖f x‖)) *
         Real.exp (-s * m^2)) (volume.restrict (Set.Ioi 0)) := by
-      have h := h_exp_intg.const_mul (Cf * (∫ x : SpaceTime, ‖f x‖))
+      have h := h_exp_intg.const_mul (Cf * (∫ x : (SpaceTime d), ‖f x‖))
       simpa [mul_comm, mul_left_comm, mul_assoc] using h
     refine h_const.congr ?_
     refine (ae_restrict_mem measurableSet_Ioi).mono ?_
     intro s hs
     have hs' : 0 < s := hs
     have h_eq_norm :
-        ∫ p : SpaceTime × SpaceTime, ‖F (s, p.1, p.2)‖ =
-          ∫ p : SpaceTime × SpaceTime,
+        ∫ p : (SpaceTime d) × (SpaceTime d), ‖F (s, p.1, p.2)‖ =
+          ∫ p : (SpaceTime d) × (SpaceTime d),
             ‖f p.1‖ * Cf * Real.exp (-s * m^2) *
-              heatKernelPositionSpace s ‖timeReflection p.1 - p.2‖ := by
+              heatKernelProfile d s ‖timeReflection p.1 - p.2‖ := by
       refine integral_congr_ae ?_
       filter_upwards with p
       have h_nonneg' : 0 ≤ F (s, p.1, p.2) := by
@@ -662,14 +684,14 @@ theorem schwinger_bound_integrable_fubini (m : ℝ) [Fact (0 < m)] (f : TestFunc
         simpa using (Real.norm_of_nonneg h_nonneg')
       simpa [F, this, mul_assoc]
     have h_eq :
-        ∫ p : SpaceTime × SpaceTime, ‖F (s, p.1, p.2)‖ =
-          (Cf * (∫ x : SpaceTime, ‖f x‖)) * Real.exp (-s * m^2) := by
+        ∫ p : (SpaceTime d) × (SpaceTime d), ‖F (s, p.1, p.2)‖ =
+          (Cf * (∫ x : (SpaceTime d), ‖f x‖)) * Real.exp (-s * m^2) := by
       calc
-        ∫ p : SpaceTime × SpaceTime, ‖F (s, p.1, p.2)‖
-            = ∫ p : SpaceTime × SpaceTime,
+        ∫ p : (SpaceTime d) × (SpaceTime d), ‖F (s, p.1, p.2)‖
+            = ∫ p : (SpaceTime d) × (SpaceTime d),
                 ‖f p.1‖ * Cf * Real.exp (-s * m^2) *
-                  heatKernelPositionSpace s ‖timeReflection p.1 - p.2‖ := h_eq_norm
-        _ = (Cf * (∫ x : SpaceTime, ‖f x‖)) * Real.exp (-s * m^2) :=
+                  heatKernelProfile d s ‖timeReflection p.1 - p.2‖ := h_eq_norm
+        _ = (Cf * (∫ x : (SpaceTime d), ‖f x‖)) * Real.exp (-s * m^2) :=
               schwinger_bound_integrand_integral_xy s hs' f Cf m hCf_nonneg h_f_int
     exact h_eq.symm
 
@@ -677,7 +699,7 @@ theorem schwinger_bound_integrable_fubini (m : ℝ) [Fact (0 < m)] (f : TestFunc
 
     For any Schwartz function f and mass m > 0, the bound
     `p ↦ ‖f p.2.1‖ * ‖f‖_∞ * exp(-p.1 * m²) * H(p.1, ‖Θ p.2.1 - p.2.2‖)`
-    is integrable on `(Ioi 0) × SpaceTime × SpaceTime`.
+    is integrable on `(Ioi 0) × (SpaceTime d) × (SpaceTime d)`.
 
     **Proof structure:**
     Using Tonelli's theorem in the order (y, x, s):
@@ -692,23 +714,23 @@ theorem schwinger_bound_integrable_fubini (m : ℝ) [Fact (0 < m)] (f : TestFunc
     - `integral_exp_neg_mul_Ioi_eq_inv` for exponential integral
 
     The proof delegates to `schwinger_bound_integrable_fubini` for the technical Tonelli step. -/
-theorem schwinger_bound_integrable (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ)
+theorem schwinger_bound_integrable (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d))
     (Cf : ℝ) (hCf : ∀ x, ‖f x‖ ≤ Cf) :
     Integrable
-      (fun p : ℝ × SpaceTime × SpaceTime =>
+      (fun p : ℝ × (SpaceTime d) × (SpaceTime d) =>
         ‖f p.2.1‖ * Cf * Real.exp (-p.1 * m^2) *
-          heatKernelPositionSpace p.1 ‖timeReflection p.2.1 - p.2.2‖)
+          heatKernelProfile d p.1 ‖timeReflection p.2.1 - p.2.2‖)
       ((volume.restrict (Set.Ioi 0)).prod (volume.prod volume)) := by
   -- Mass positivity
   have hm : 0 < m := Fact.out
 
   -- Key ingredient 1: Heat kernel integrates to 1 for any translation
-  have h_heat_L1 : ∀ s > 0, ∀ a : SpaceTime,
-      ∫ y : SpaceTime, heatKernelPositionSpace s ‖a - y‖ = 1 :=
+  have h_heat_L1 : ∀ s > 0, ∀ a : (SpaceTime d),
+      ∫ y : (SpaceTime d), heatKernelProfile d s ‖a - y‖ = 1 :=
     fun s hs a => heatKernelPositionSpace_integral_translated s hs a
 
   -- Key ingredient 2: f is L¹ (Schwartz functions are integrable)
-  have h_f_int : Integrable (fun x => ‖f x‖) (volume : Measure SpaceTime) :=
+  have h_f_int : Integrable (fun x => ‖f x‖) (volume : Measure (SpaceTime d)) :=
     f.integrable.norm
 
   -- Key ingredient 3: exponential integral converges
@@ -719,8 +741,8 @@ theorem schwinger_bound_integrable (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ
     ext s; ring_nf
 
   -- For the inner y-integral: ∫_y H(s, ‖Θx - y‖) dy = 1
-  have h_y_eq_one : ∀ s > 0, ∀ x : SpaceTime,
-      ∫ y : SpaceTime, heatKernelPositionSpace s ‖timeReflection x - y‖ = 1 :=
+  have h_y_eq_one : ∀ s > 0, ∀ x : (SpaceTime d),
+      ∫ y : (SpaceTime d), heatKernelProfile d s ‖timeReflection x - y‖ = 1 :=
     fun s hs x => h_heat_L1 s hs (timeReflection x)
 
   -- The total integral is: ∫_s ∫_x ∫_y bound = Cf * ‖f‖_{L¹} / m² < ∞
@@ -735,8 +757,8 @@ theorem schwinger_bound_integrable (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ
     linarith [norm_nonneg (f 0)]
 
   -- The integrand is nonnegative when s > 0 (all factors are nonnegative)
-  have h_nonneg : ∀ p : ℝ × SpaceTime × SpaceTime, p.1 > 0 →
-      0 ≤ ‖f p.2.1‖ * Cf * Real.exp (-p.1 * m ^ 2) * heatKernelPositionSpace p.1 ‖timeReflection p.2.1 - p.2.2‖ := by
+  have h_nonneg : ∀ p : ℝ × (SpaceTime d) × (SpaceTime d), p.1 > 0 →
+      0 ≤ ‖f p.2.1‖ * Cf * Real.exp (-p.1 * m ^ 2) * heatKernelProfile d p.1 ‖timeReflection p.2.1 - p.2.2‖ := by
     intro ⟨s, x, y⟩ hs
     apply mul_nonneg
     apply mul_nonneg
@@ -744,7 +766,7 @@ theorem schwinger_bound_integrable (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ
     · exact norm_nonneg _
     · exact hCf_nonneg
     · exact Real.exp_nonneg _
-    · exact heatKernelPositionSpace_nonneg s hs ‖timeReflection x - y‖
+    · exact heatKernelProfile_nonneg d s ‖timeReflection x - y‖ hs
 
   exact schwinger_bound_integrable_fubini m f Cf hCf h_f_int hCf_nonneg h_y_eq_one h_exp_int
 
@@ -818,28 +840,29 @@ theorem integrable_s_inv_sq_exp_neg_inv_s {a : ℝ} (ha : 0 < a) :
 
 /-- Dominating function for the Fubini swap in `fubini_s_ksp_swap`.
 
-    Represents the bound `C * s^(3/2) * exp(-s(m² + k²))` which comes from:
-    1. Linear vanishing of f at t=0 giving s^(3/2) scaling (offsetting s^(-2) divergence).
+    Represents the bound `C * s^(d + 1/2) * exp(-s(m² + k²))` which comes from:
+    1. Order-`d` vanishing of f at t=0 giving s^(d + 1/2) scaling (offsetting the
+       s^(-(d-1)/2) growth of the spatial momentum integral).
     2. Exponential decay in mass and momentum. -/
-def dominate_G (C : ℝ) (m : ℝ) (p : ℝ × SpatialCoords) : ℝ :=
+def dominate_G (C : ℝ) (m : ℝ) (p : ℝ × (SpatialCoords d)) : ℝ :=
   if p.1 > 0 then
-    C * p.1 ^ (3 / 2 : ℝ) * Real.exp (-p.1 * (‖p.2‖^2 + m^2))
+    C * p.1 ^ ((d : ℝ) + 1 / 2) * Real.exp (-p.1 * (‖p.2‖^2 + m^2))
   else 0
 
-/-- Theoretically proven integrability of `dominate_G`.
+/-- Integrability of `dominate_G`, in every dimension `d ≥ 2`.
 
-    Integrable on (0, ∞) × ℝ³ because:
-    ∫ exp(-s|k|²) dk = (π/s)^(3/2).
-    ∫ s^(3/2) * (π/s)^(3/2) * exp(-s*m²) ds = π^(3/2) ∫ exp(-s*m²) ds.
-    The latter converges for m > 0. -/
+    Integrable on (0, ∞) × ℝ^(d-1) because:
+    ∫ exp(-s|k|²) dk = (π/s)^((d-1)/2).
+    ∫ s^(d+1/2) * (π/s)^((d-1)/2) * exp(-s*m²) ds = π^((d-1)/2) ∫ s^((d+2)/2) exp(-s*m²) ds.
+    The latter converges for m > 0 and every d (the exponent (d+2)/2 exceeds -1). -/
 theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
-    Integrable (dominate_G C m) ((volume.restrict (Set.Ioi 0)).prod volume) := by
+    Integrable (dominate_G (d := d) C m) ((volume.restrict (Set.Ioi 0)).prod volume) := by
   have hm : 0 < m := Fact.out
-  let μ : Measure (ℝ × SpatialCoords) := (volume.restrict (Set.Ioi 0)).prod volume
+  let μ : Measure (ℝ × (SpatialCoords d)) := (volume.restrict (Set.Ioi 0)).prod volume
 
-  -- Core function G₀(s,k) = s^(3/2) * exp(-s(|k|² + m²)) for s > 0, else 0
-  let G₀ : ℝ × SpatialCoords → ℝ := fun p =>
-    if p.1 > 0 then p.1 ^ (3/2 : ℝ) * Real.exp (-p.1 * (‖p.2‖^2 + m^2)) else 0
+  -- Core function G₀(s,k) = s^(d+1/2) * exp(-s(|k|² + m²)) for s > 0, else 0
+  let G₀ : ℝ × (SpatialCoords d) → ℝ := fun p =>
+    if p.1 > 0 then p.1 ^ ((d : ℝ) + 1/2) * Real.exp (-p.1 * (‖p.2‖^2 + m^2)) else 0
 
   -- dominate_G = C * G₀
   have hG_eq : dominate_G C m = fun p => C * G₀ p := by
@@ -860,7 +883,7 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
     · exact measurable_const
 
   -- G₀ is nonnegative
-  have hG₀_nn : ∀ p : ℝ × SpatialCoords, 0 ≤ G₀ p := by
+  have hG₀_nn : ∀ p : ℝ × (SpatialCoords d), 0 ≤ G₀ p := by
     intro p
     simp only [G₀]
     split_ifs with hp
@@ -874,41 +897,38 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
     exact hG₀_int.const_mul C
 
   -- Key: the lintegral of G₀ is finite
-  -- ∫∫ G₀(s,k) dk ds = ∫_s ∫_k s^(3/2) exp(-s(|k|² + m²)) dk ds
-  --                  = ∫_s s^(3/2) exp(-sm²) * (π/s)^(3/2) ds
-  --                  = π^(3/2) ∫_s exp(-sm²) ds = π^(3/2) / m²
+  -- ∫∫ G₀(s,k) dk ds = ∫_s ∫_k s^(d+1/2) exp(-s(|k|² + m²)) dk ds
+  --                  = ∫_s s^(d+1/2) exp(-sm²) * (π/s)^((d-1)/2) ds
+  --                  = π^((d-1)/2) ∫_s s^((d+2)/2) exp(-sm²) ds < ∞
 
-  have h_lintegral_finite : ∫⁻ p : ℝ × SpatialCoords, ENNReal.ofReal (G₀ p) ∂μ < ⊤ := by
+  have h_lintegral_finite : ∫⁻ p : ℝ × (SpatialCoords d), ENNReal.ofReal (G₀ p) ∂μ < ⊤ := by
     -- Use Tonelli to factor the lintegral
     have hG₀_ae_meas : AEMeasurable G₀ μ := hG₀_meas.aemeasurable
-    have h_eq : ∫⁻ p : ℝ × SpatialCoords, ENNReal.ofReal (G₀ p) ∂μ =
-        ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : SpatialCoords,
+    have h_eq : ∫⁻ p : ℝ × (SpatialCoords d), ENNReal.ofReal (G₀ p) ∂μ =
+        ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : (SpatialCoords d),
           ENNReal.ofReal (G₀ (s, k)) ∂volume ∂volume := by
       simp only [μ]
       rw [MeasureTheory.lintegral_prod _ (hG₀_meas.ennreal_ofReal.aemeasurable)]
     rw [h_eq]
 
     -- Strategy: Bound the inner integral, then show outer integral is finite
-    -- G₀(s,k) = s^(3/2) * exp(-sm²) * exp(-s|k|²) for s > 0, k ∈ ℝ³
+    -- G₀(s,k) = s^(d+1/2) * exp(-sm²) * exp(-s|k|²) for s > 0, spatial momentum k
 
-    -- The inner integral ∫_k s^(3/2) exp(-sm²) exp(-s|k|²) dk
-    -- = s^(3/2) * exp(-sm²) * (π/s)^(3/2)  [Gaussian integral]
-    -- = π^(3/2) * exp(-sm²)
+    -- The inner integral ∫_k s^(d+1/2) exp(-sm²) exp(-s|k|²) dk
+    -- = s^(d+1/2) * exp(-sm²) * (π/s)^((d-1)/2)  [Gaussian integral]
+    -- = π^((d-1)/2) * s^((d+2)/2) * exp(-sm²)
 
-    -- Bound: for s ∈ Ioi 0, G₀(s,k) ≤ s^(3/2) * exp(-s*|k|²)
-    -- (since exp(-sm²) ≤ 1)
-
-    -- Key helper: s^(3/2) * (π/s)^(3/2) = π^(3/2) is a finite constant
-    -- The outer integral ∫_0^∞ π^(3/2) * exp(-sm²) ds = π^(3/2) / m² < ∞
+    -- The outer integral ∫_0^∞ π^((d-1)/2) * s^((d+2)/2) * exp(-sm²) ds is finite
+    -- since the exponent (d+2)/2 exceeds -1 for every d
 
     -- Use monotonicity and bound by a computable integral
     -- First show the equality of integrands on Ioi 0
-    have h_eq_integrand : ∀ᵐ s ∂(volume.restrict (Set.Ioi 0)), ∀ k : SpatialCoords,
-        G₀ (s, k) = s ^ (3/2 : ℝ) * Real.exp (-s * m^2) * Real.exp (-s * ‖k‖^2) := by
+    have h_eq_integrand : ∀ᵐ s ∂(volume.restrict (Set.Ioi 0)), ∀ k : (SpatialCoords d),
+        G₀ (s, k) = s ^ ((d : ℝ) + 1/2) * Real.exp (-s * m^2) * Real.exp (-s * ‖k‖^2) := by
       filter_upwards [ae_restrict_mem measurableSet_Ioi] with s hs k
       have hs_pos : s > 0 := hs
       simp only [G₀, hs_pos, ↓reduceIte]
-      -- G₀(s,k) = s^(3/2) * exp(-s(|k|² + m²)) = s^(3/2) * exp(-sm²) * exp(-s|k|²)
+      -- G₀(s,k) = s^(d+1/2) * exp(-s(|k|² + m²)) = s^(d+1/2) * exp(-sm²) * exp(-s|k|²)
       -- Split: exp(-s(|k|² + m²)) = exp(-s*|k|² + (-s*m²)) = exp(-s*|k|²) * exp(-s*m²)
       have h_exp_split : Real.exp (-s * (‖k‖^2 + m^2)) =
           Real.exp (-s * ‖k‖^2) * Real.exp (-s * m^2) := by
@@ -918,10 +938,10 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
       rw [h_exp_split]
       ring
 
-    calc ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : SpatialCoords,
+    calc ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : (SpatialCoords d),
           ENNReal.ofReal (G₀ (s, k)) ∂volume ∂volume
-        = ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : SpatialCoords,
-            ENNReal.ofReal (s ^ (3/2 : ℝ) * Real.exp (-s * m^2) *
+        = ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : (SpatialCoords d),
+            ENNReal.ofReal (s ^ ((d : ℝ) + 1/2) * Real.exp (-s * m^2) *
               Real.exp (-s * ‖k‖^2)) ∂volume ∂volume := by
           apply lintegral_congr_ae
           filter_upwards [h_eq_integrand] with s hs
@@ -932,97 +952,114 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
           -- Strategy: Compute exact inner integral using Gaussian formula, then bound outer
           --
           -- For s > 0, the integrand factors as:
-          -- s^(3/2) * exp(-sm²) * exp(-s|k|²)
+          -- s^(d+1/2) * exp(-sm²) * exp(-s|k|²)
           --
-          -- Inner k-integral: ∫_k exp(-s|k|²) dk = (π/s)^(3/2)  [Gaussian integral]
-          -- So s^(3/2) * (π/s)^(3/2) = π^(3/2), giving inner = π^(3/2) * exp(-sm²)
+          -- Inner k-integral: ∫_k exp(-s|k|²) dk = (π/s)^((d-1)/2)  [Gaussian integral]
+          -- So the s-integrand is π^((d-1)/2) * s^((d+2)/2) * exp(-sm²)
           --
-          -- Outer s-integral: ∫_0^∞ π^(3/2) * exp(-sm²) ds = π^(3/2) / m² < ∞
+          -- Outer s-integral: converges since (d+2)/2 > -1 for every d
+
+          have hd1 : 1 ≤ d := by have := (Fact.out : 2 ≤ d); omega
+          have hd_cast : ((d - 1 : ℕ) : ℝ) = (d : ℝ) - 1 := by
+            push_cast [hd1]; ring
 
           -- First show inner integral equality
           have h_inner : ∀ s ∈ Set.Ioi (0 : ℝ),
-              ∫⁻ k : SpatialCoords, ENNReal.ofReal (s ^ (3/2 : ℝ) * Real.exp (-s * m^2) *
-                Real.exp (-s * ‖k‖^2)) = ENNReal.ofReal (π ^ (3/2 : ℝ) * Real.exp (-s * m^2)) := by
+              ∫⁻ k : (SpatialCoords d), ENNReal.ofReal (s ^ ((d : ℝ) + 1/2) * Real.exp (-s * m^2) *
+                Real.exp (-s * ‖k‖^2)) = ENNReal.ofReal
+                  (π ^ (((d : ℝ) - 1) / 2) * s ^ (((d : ℝ) + 2) / 2) * Real.exp (-s * m^2)) := by
             intro s hs
             have hs_pos : 0 < s := hs
             -- The Gaussian exp(-s|k|²) is integrable for s > 0
             -- (Inline proof since gaussian_integrable_spatialCoords is defined later)
-            have h_gauss_int : Integrable (fun k_sp : SpatialCoords => Real.exp (-s * ‖k_sp‖^2)) := by
+            have h_gauss_int : Integrable (fun k_sp : (SpatialCoords d) => Real.exp (-s * ‖k_sp‖^2)) := by
               have hs' : 0 < (s : ℂ).re := by simp [hs_pos]
-              have h := GaussianFourier.integrable_cexp_neg_mul_sq_norm_add (V := SpatialCoords) hs' 0 0
+              have h := GaussianFourier.integrable_cexp_neg_mul_sq_norm_add (V := (SpatialCoords d)) hs' 0 0
               simp only [zero_mul, add_zero, inner_zero_left, Complex.ofReal_zero] at h
-              have h_eq : (fun k_sp : SpatialCoords => Complex.exp (-(s : ℂ) * ‖k_sp‖^2)) =
+              have h_eq : (fun k_sp : (SpatialCoords d) => Complex.exp (-(s : ℂ) * ‖k_sp‖^2)) =
                   (fun k_sp => (Real.exp (-s * ‖k_sp‖^2) : ℂ)) := by
                 ext k_sp
                 simp only [Complex.ofReal_exp, Complex.ofReal_neg, Complex.ofReal_mul, Complex.ofReal_pow]
               rw [h_eq] at h
               exact h.re
             -- Show integrand is nonnegative
-            have h_integrand_nn : ∀ k : SpatialCoords,
-                0 ≤ s ^ (3/2 : ℝ) * Real.exp (-s * m^2) * Real.exp (-s * ‖k‖^2) := by
+            have h_integrand_nn : ∀ k : (SpatialCoords d),
+                0 ≤ s ^ ((d : ℝ) + 1/2) * Real.exp (-s * m^2) * Real.exp (-s * ‖k‖^2) := by
               intro k
               positivity
             -- Show integrand is integrable
             have h_integrand_int : Integrable
-                (fun k : SpatialCoords => s ^ (3/2 : ℝ) * Real.exp (-s * m^2) * Real.exp (-s * ‖k‖^2)) := by
-              have h1 : Integrable (fun k : SpatialCoords => Real.exp (-s * ‖k‖^2)) := h_gauss_int
+                (fun k : (SpatialCoords d) => s ^ ((d : ℝ) + 1/2) * Real.exp (-s * m^2) * Real.exp (-s * ‖k‖^2)) := by
+              have h1 : Integrable (fun k : (SpatialCoords d) => Real.exp (-s * ‖k‖^2)) := h_gauss_int
               exact h1.const_mul _
             -- Convert lintegral to integral using ofReal_integral_eq_lintegral_ofReal
             rw [← MeasureTheory.ofReal_integral_eq_lintegral_ofReal h_integrand_int
                 (ae_of_all _ h_integrand_nn)]
             -- Pull out constant
-            have h_factor : (fun k : SpatialCoords => s ^ (3/2 : ℝ) * Real.exp (-s * m^2) *
-                Real.exp (-s * ‖k‖^2)) = fun k => (s ^ (3/2 : ℝ) * Real.exp (-s * m^2)) *
+            have h_factor : (fun k : (SpatialCoords d) => s ^ ((d : ℝ) + 1/2) * Real.exp (-s * m^2) *
+                Real.exp (-s * ‖k‖^2)) = fun k => (s ^ ((d : ℝ) + 1/2) * Real.exp (-s * m^2)) *
                 Real.exp (-s * ‖k‖^2) := by ext k; ring
             rw [h_factor, MeasureTheory.integral_const_mul]
-            -- Use Gaussian formula: ∫ exp(-s|k|²) dk = (π/s)^(3/2)
-            have h_dim : Module.finrank ℝ SpatialCoords = 3 := by simp [SpatialCoords]
-            have h_gauss_val := GaussianFourier.integral_rexp_neg_mul_sq_norm (V := SpatialCoords) hs_pos
+            -- Use Gaussian formula: ∫ exp(-s|k|²) dk = (π/s)^((d-1)/2)
+            have h_dim : Module.finrank ℝ (SpatialCoords d) = d - 1 := finrank_euclideanSpace_fin
+            have h_gauss_val := GaussianFourier.integral_rexp_neg_mul_sq_norm (V := (SpatialCoords d)) hs_pos
             rw [h_dim] at h_gauss_val
             rw [h_gauss_val]
-            -- Now: s^(3/2) * exp(-sm²) * (π/s)^(3/2) = π^(3/2) * exp(-sm²)
+            -- Now: s^(d+1/2) * exp(-sm²) * (π/s)^((d-1)/2) = π^((d-1)/2) * s^((d+2)/2) * exp(-sm²)
             congr 1
-            -- Goal: s^(3/2) * exp(-sm²) * (π/s)^(3/2) = π^(3/2) * exp(-sm²)
             have hs_ne : s ≠ 0 := ne_of_gt hs_pos
-            have h_s_pos' : 0 < s ^ (3/2 : ℝ) := Real.rpow_pos_of_pos hs_pos _
-            have h_pi_pos : 0 < π ^ (3/2 : ℝ) := Real.rpow_pos_of_pos Real.pi_pos _
-            -- (π/s)^(3/2) = π^(3/2) / s^(3/2) for s > 0
-            -- Note: the exponent in Gaussian formula comes as ↑3/2 = (3:ℕ)/2 : ℝ
-            have h_exp_eq : (↑3 : ℝ) / 2 = (3/2 : ℝ) := by norm_num
-            rw [h_exp_eq]
-            rw [Real.div_rpow (le_of_lt Real.pi_pos) (le_of_lt hs_pos)]
-            -- s^(3/2) * exp(-sm²) * (π^(3/2) / s^(3/2)) = π^(3/2) * exp(-sm²)
-            have h_s_ne' : s ^ (3/2 : ℝ) ≠ 0 := ne_of_gt h_s_pos'
-            field_simp [h_s_ne']
-            -- After field_simp, goal should be s^(3/2) * exp * π^(3/2) = π^(3/2) * exp * s^(3/2)
-            ring_nf
+            rw [hd_cast, Real.div_rpow (le_of_lt Real.pi_pos) (le_of_lt hs_pos)]
+            rw [show s ^ ((d : ℝ) + 1/2) * Real.exp (-s * m ^ 2) *
+                  (π ^ (((d : ℝ) - 1) / 2) / s ^ (((d : ℝ) - 1) / 2))
+                = π ^ (((d : ℝ) - 1) / 2) * (s ^ ((d : ℝ) + 1/2) / s ^ (((d : ℝ) - 1) / 2)) *
+                  Real.exp (-s * m ^ 2) by ring]
+            rw [← Real.rpow_sub hs_pos]
+            rw [show ((d : ℝ) + 1/2) - ((d : ℝ) - 1) / 2 = ((d : ℝ) + 2) / 2 by ring]
 
           -- Outer integral: use the inner equality to simplify
           -- We need: ∫⁻ s ∈ Ioi 0, (LHS inner) = ∫⁻ s ∈ Ioi 0, (RHS inner)
           have h_eqon : Set.EqOn
-              (fun s => ∫⁻ k : SpatialCoords,
-                ENNReal.ofReal (s ^ (3/2 : ℝ) * Real.exp (-s * m^2) * Real.exp (-s * ‖k‖^2)))
-              (fun s => ENNReal.ofReal (π ^ (3/2 : ℝ) * Real.exp (-s * m^2)))
+              (fun s => ∫⁻ k : (SpatialCoords d),
+                ENNReal.ofReal (s ^ ((d : ℝ) + 1/2) * Real.exp (-s * m^2) * Real.exp (-s * ‖k‖^2)))
+              (fun s => ENNReal.ofReal
+                (π ^ (((d : ℝ) - 1) / 2) * s ^ (((d : ℝ) + 2) / 2) * Real.exp (-s * m^2)))
               (Set.Ioi 0) := by
             intro s hs
             exact h_inner s hs
-          have h_lintegral_eq : ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : SpatialCoords,
-                ENNReal.ofReal (s ^ (3/2 : ℝ) * Real.exp (-s * m^2) *
+          have h_lintegral_eq : ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : (SpatialCoords d),
+                ENNReal.ofReal (s ^ ((d : ℝ) + 1/2) * Real.exp (-s * m^2) *
                   Real.exp (-s * ‖k‖^2)) ∂volume ∂volume =
               ∫⁻ s in Set.Ioi (0 : ℝ),
-                ENNReal.ofReal (π ^ (3/2 : ℝ) * Real.exp (-s * m^2)) ∂volume := by
+                ENNReal.ofReal
+                  (π ^ (((d : ℝ) - 1) / 2) * s ^ (((d : ℝ) + 2) / 2) *
+                    Real.exp (-s * m^2)) ∂volume := by
             exact MeasureTheory.setLIntegral_congr_fun measurableSet_Ioi h_eqon
-          calc ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : SpatialCoords,
-                ENNReal.ofReal (s ^ (3/2 : ℝ) * Real.exp (-s * m^2) *
+          calc ∫⁻ s in Set.Ioi (0 : ℝ), ∫⁻ k : (SpatialCoords d),
+                ENNReal.ofReal (s ^ ((d : ℝ) + 1/2) * Real.exp (-s * m^2) *
                   Real.exp (-s * ‖k‖^2)) ∂volume ∂volume
             = ∫⁻ s in Set.Ioi (0 : ℝ),
-                ENNReal.ofReal (π ^ (3/2 : ℝ) * Real.exp (-s * m^2)) ∂volume := h_lintegral_eq
+                ENNReal.ofReal
+                  (π ^ (((d : ℝ) - 1) / 2) * s ^ (((d : ℝ) + 2) / 2) *
+                    Real.exp (-s * m^2)) ∂volume := h_lintegral_eq
             _ < ⊤ := by
-              -- The integrand is nonnegative and integrable
-              have h_exp_int : IntegrableOn (fun s => Real.exp (-s * m^2)) (Set.Ioi 0) :=
-                integrableOn_exp_neg_mul_sq_Ioi m hm
-              have h_prod_int : IntegrableOn (fun s => π ^ (3/2 : ℝ) * Real.exp (-s * m^2)) (Set.Ioi 0) :=
-                h_exp_int.const_mul _
+              -- s^((d+2)/2) * exp(-sm²) is integrable on (0,∞): (d+2)/2 > -1 for every d
+              have hd_nn : (0 : ℝ) ≤ (d : ℝ) := Nat.cast_nonneg d
+              have h_rpow_int : IntegrableOn
+                  (fun s : ℝ => s ^ (((d : ℝ) + 2) / 2) * Real.exp (-s * m^2)) (Set.Ioi 0) := by
+                have h0 := integrableOn_rpow_mul_exp_neg_mul_rpow
+                  (s := ((d : ℝ) + 2) / 2) (p := 1) (b := m^2)
+                  (by linarith : (-1 : ℝ) < ((d : ℝ) + 2) / 2) (le_refl 1) (by positivity)
+                refine h0.congr_fun (fun s hs => ?_) measurableSet_Ioi
+                simp only [Real.rpow_one]
+                ring_nf
+              have h_prod_int : IntegrableOn
+                  (fun s => π ^ (((d : ℝ) - 1) / 2) * s ^ (((d : ℝ) + 2) / 2) *
+                    Real.exp (-s * m^2)) (Set.Ioi 0) := by
+                have h1 : IntegrableOn (fun s : ℝ => π ^ (((d : ℝ) - 1) / 2) *
+                    (s ^ (((d : ℝ) + 2) / 2) * Real.exp (-s * m^2))) (Set.Ioi 0) :=
+                  h_rpow_int.const_mul _
+                refine IntegrableOn.congr_fun h1 (fun s hs => ?_) measurableSet_Ioi
+                ring
               exact h_prod_int.setLIntegral_lt_top
 
   refine ⟨hG₀_meas.aestronglyMeasurable, ?_⟩
@@ -1037,13 +1074,14 @@ theorem integrable_dominate_G (C : ℝ) (m : ℝ) [Fact (0 < m)] :
           simp only [Real.nnnorm_of_nonneg h_nn, ENNReal.ofReal_eq_coe_nnreal h_nn]
     _ < ⊤ := h_lintegral_finite
 
+omit [Fact (2 ≤ d)] in
 /-- `spatialPart` is measurable. -/
-lemma spatialPart_measurable : Measurable (spatialPart : SpaceTime → SpatialCoords) := by
+lemma spatialPart_measurable : Measurable (spatialPart : (SpaceTime d) → (SpatialCoords d)) := by
   -- spatialPart is a composition of continuous functions (linear maps), hence measurable
   unfold spatialPart
   apply Measurable.comp
   · -- ContinuousLinearEquiv is continuous, hence measurable
-    exact (EuclideanSpace.equiv (Fin (STDimension - 1)) ℝ).symm.continuous.measurable
+    exact (EuclideanSpace.equiv (Fin (d - 1)) ℝ).symm.continuous.measurable
   · apply measurable_pi_lambda
     intro i
     exact (measurable_pi_apply _).comp (WithLp.measurable_ofLp 2 _)
@@ -1054,21 +1092,21 @@ lemma spatialPart_measurable : Measurable (spatialPart : SpaceTime → SpatialCo
     `((s, k_sp), x, y) ↦ f̄(x) · f(y) · √(π/s) · exp(...) · exp(...) · exp(...)`
 
     After two applications of `StronglyMeasurable.integral_prod_right`, the type is:
-    `(((ℝ × SpatialCoords) × SpaceTime) × SpaceTime) → ℂ`
-    represented as `x : (ℝ × SpatialCoords) × SpaceTime`, `y : SpaceTime`.
+    `(((ℝ × (SpatialCoords d)) × (SpaceTime d)) × (SpaceTime d)) → ℂ`
+    represented as `x : (ℝ × (SpatialCoords d)) × (SpaceTime d)`, `y : (SpaceTime d)`.
 
     This is a product of continuous/measurable functions, hence measurable. -/
-lemma fubini_s_ksp_integrand_stronglyMeasurable (m : ℝ) (f : TestFunctionℂ) :
-    StronglyMeasurable (Function.uncurry fun (x : (ℝ × SpatialCoords) × SpaceTime) (y : SpaceTime) =>
+lemma fubini_s_ksp_integrand_stronglyMeasurable (m : ℝ) (f : (TestFunctionℂ d)) :
+    StronglyMeasurable (Function.uncurry fun (x : (ℝ × (SpatialCoords d)) × (SpaceTime d)) (y : (SpaceTime d)) =>
       (starRingEnd ℂ (f x.2)) * f y *
         (Real.sqrt (π / x.1.1) : ℂ) * Complex.exp (-((-(x.2.ofLp 0) - y.ofLp 0)^2 / (4 * x.1.1) : ℝ)) *
         Complex.exp (-(x.1.1 : ℂ) * (‖x.1.2‖^2 + m^2)) *
         Complex.exp (-Complex.I * spatialDot x.1.2 (spatialPart x.2 - spatialPart y))) := by
   -- The integrand is a product of measurable functions
-  -- Variable structure after uncurry: a : ((ℝ × SpatialCoords) × SpaceTime) × SpaceTime
-  -- a.1 = (ℝ × SpatialCoords) × SpaceTime, a.1.1 = (ℝ × SpatialCoords)
-  -- a.1.1.1 = s : ℝ, a.1.1.2 = k_sp : SpatialCoords
-  -- a.1.2 = first SpaceTime (x), a.2 = second SpaceTime (y)
+  -- Variable structure after uncurry: a : ((ℝ × (SpatialCoords d)) × (SpaceTime d)) × (SpaceTime d)
+  -- a.1 = (ℝ × (SpatialCoords d)) × (SpaceTime d), a.1.1 = (ℝ × (SpatialCoords d))
+  -- a.1.1.1 = s : ℝ, a.1.1.2 = k_sp : (SpatialCoords d)
+  -- a.1.2 = first (SpaceTime d) (x), a.2 = second (SpaceTime d) (y)
   apply Measurable.stronglyMeasurable
   -- Let's use refine to handle each piece
   refine Measurable.mul ?_ ?_
@@ -1076,7 +1114,7 @@ lemma fubini_s_ksp_integrand_stronglyMeasurable (m : ℝ) (f : TestFunctionℂ) 
     · refine Measurable.mul ?_ ?_
       · refine Measurable.mul ?_ ?_
         · refine Measurable.mul ?_ ?_
-          · -- star (f x.2) where x = a.1 and x.2 = a.1.2 : SpaceTime
+          · -- star (f x.2) where x = a.1 and x.2 = a.1.2 : (SpaceTime d)
             exact (continuous_star.comp (f.continuous.comp (continuous_snd.comp continuous_fst))).measurable
           · -- f y where y = a.2
             exact (f.continuous.comp continuous_snd).measurable
@@ -1128,49 +1166,6 @@ The key technical result for `hF_le_G` is computing the Gaussian moment integral
 
 This is done via change of variables u = x₀ + y₀, v = x₀ - y₀ and standard Gaussian integrals.
 -/
-
-/-- The 1D Gaussian integral ∫₀^∞ u³ exp(-u²/(4s)) du = 8s² for s > 0.
-
-    This follows from the general formula ∫₀^∞ u^n exp(-au²) du using Gamma functions.
-
-    **Proof:**
-    Using `integral_rpow_mul_exp_neg_mul_rpow` with p=2, q=3, b=1/(4s):
-    - ∫ u³ exp(-b·u²) du = b^(-(3+1)/2) * (1/2) * Γ((3+1)/2)
-    - = b^(-2) * (1/2) * Γ(2)
-    - = (4s)² * (1/2) * 1   [since Γ(2) = 1]
-    - = 8s² -/
-lemma integral_u_cubed_gaussian (s : ℝ) (hs : 0 < s) :
-    ∫ u in Set.Ioi 0, u^3 * Real.exp (-u^2 / (4 * s)) = 8 * s^2 := by
-  have hb : 0 < 1 / (4 * s) := by positivity
-
-  -- Rewrite to use rpow throughout
-  have h_integrand_eq : ∀ u : ℝ, u^3 * Real.exp (-u^2 / (4 * s)) =
-                                 u ^ (3:ℝ) * Real.exp (-(1/(4*s)) * u^(2:ℝ)) := by
-    intro u
-    rw [show u^3 = u ^ (3:ℝ) from (Real.rpow_natCast u 3).symm]
-    rw [show u^2 = u ^ (2:ℝ) from (Real.rpow_natCast u 2).symm]
-    congr 2
-    field_simp
-  simp_rw [h_integrand_eq]
-
-  -- Apply the standard Gaussian integral formula
-  have h := integral_rpow_mul_exp_neg_mul_rpow (p := 2) (q := 3) (b := 1/(4*s))
-    (by norm_num : (0:ℝ) < 2) (by norm_num : (-1:ℝ) < 3) hb
-
-  -- Gamma(2) = 1
-  have hG2 : Real.Gamma 2 = 1 := Real.Gamma_two
-
-  -- Now the LHS matches the formula in h
-  calc ∫ u in Set.Ioi 0, u ^ (3:ℝ) * Real.exp (-(1 / (4 * s)) * u ^ (2:ℝ))
-      = (1 / (4 * s)) ^ (-(3 + 1) / 2) * (1 / 2) * Real.Gamma ((3 + 1) / 2) := h
-    _ = (1 / (4 * s)) ^ ((-2) : ℝ) * (1 / 2) * Real.Gamma 2 := by
-        congr 2 <;> norm_num
-    _ = (1 / (4 * s)) ^ ((-2) : ℝ) * (1 / 2) * 1 := by rw [hG2]
-    _ = (4 * s) ^ (2 : ℝ) * (1 / 2) := by
-        rw [Real.rpow_neg (le_of_lt hb), Real.rpow_two, Real.rpow_two]
-        field_simp
-    _ = 16 * s^2 * (1 / 2) := by rw [Real.rpow_two]; ring
-    _ = 8 * s^2 := by ring
 
 /-- **Triangular Fubini identity for the quadrant-to-triangle change of variables**
 
@@ -1344,334 +1339,265 @@ lemma triangular_fubini_quadrant {f : ℝ → ℝ → ℝ}
           exact h_inner x hx
     _ = ∫ u in Set.Ioi 0, ∫ x in Set.Ioo 0 u, f x u := h_reindex
 
-/-- The double Gaussian moment integral:
-    ∫∫_{x₀,y₀>0} x₀·y₀·√(π/s)·exp(-(x₀+y₀)²/(4s)) dx₀ dy₀ = (4/3)√π · s^{3/2}
+/-! #### Order-N moment bounds
 
-    This is the key bound relating linear vanishing of f at t=0 to the s^{3/2} scaling in dominate_G.
+Gaussian moment bounds at boundary-vanishing order `N`: the double moment carries
+`x₀^N · y₀^N`, and the proper-time scaling is `s^{N+1/2}` (one power of `s` per order of
+vanishing).  Only an upper bound is needed, so the polynomial inner moment is estimated by
+the crude `∫₀ᵘ x^N (u-x)^N dx ≤ u^{2N+1}` (its exact value is the Beta moment
+`u^{2N+1}·B(N+1, N+1)`).
+-/
 
-    **Proof** (following user's verification):
-    Let J be the integral. Change variables: u = x₀ + y₀.
-    For fixed u, x₀ ranges from 0 to u, and y₀ = u - x₀. Jacobian = 1.
+/-- The odd-power Gaussian moment: `∫₀^∞ u^{2N+1} exp(-u²/(4s)) du = (N!/2)·(4s)^{N+1}`.
+    Follows from `∫₀^∞ u^q exp(-b·u²) du = b^{-(q+1)/2}·(1/2)·Γ((q+1)/2)` at `q = 2N+1`,
+    `b = 1/(4s)`, with `Γ(N+1) = N!`. -/
+lemma integral_odd_pow_gaussian (N : ℕ) (s : ℝ) (hs : 0 < s) :
+    ∫ u in Set.Ioi 0, u^(2*N+1) * Real.exp (-u^2 / (4 * s)) =
+    (N.factorial : ℝ) / 2 * (4*s)^(N+1) := by
+  have hb : 0 < 1 / (4 * s) := by positivity
+  have h_integrand_eq : ∀ u : ℝ, u^(2*N+1) * Real.exp (-u^2 / (4 * s)) =
+      u ^ ((2*N+1 : ℕ) : ℝ) * Real.exp (-(1/(4*s)) * u^(2:ℝ)) := by
+    intro u
+    rw [show u^(2*N+1) = u ^ ((2*N+1 : ℕ) : ℝ) from (Real.rpow_natCast u (2*N+1)).symm]
+    rw [show u^2 = u ^ (2:ℝ) from (Real.rpow_natCast u 2).symm]
+    congr 2
+    field_simp
+  simp_rw [h_integrand_eq]
+  have hq : (-1 : ℝ) < ((2*N+1 : ℕ) : ℝ) := by
+    have : (0 : ℝ) ≤ ((2*N+1 : ℕ) : ℝ) := Nat.cast_nonneg _
+    linarith
+  have h := integral_rpow_mul_exp_neg_mul_rpow (p := 2) (q := ((2*N+1 : ℕ) : ℝ))
+    (b := 1/(4*s)) (by norm_num : (0:ℝ) < 2) hq hb
+  calc ∫ u in Set.Ioi 0, u ^ ((2*N+1:ℕ):ℝ) * Real.exp (-(1 / (4 * s)) * u ^ (2:ℝ))
+      = (1/(4*s)) ^ (-(((2*N+1:ℕ):ℝ) + 1) / 2) * (1 / 2) *
+        Real.Gamma ((((2*N+1:ℕ):ℝ) + 1) / 2) := h
+    _ = (1/(4*s)) ^ (-((N:ℝ) + 1)) * (1 / 2) * Real.Gamma ((N:ℝ) + 1) := by
+        congr 2
+        · push_cast; ring_nf
+        · push_cast; ring_nf
+    _ = (1/(4*s)) ^ (-((N:ℝ) + 1)) * (1 / 2) * (N.factorial : ℝ) := by
+        rw [Real.Gamma_nat_eq_factorial]
+    _ = (4*s) ^ ((N:ℝ) + 1) * (1 / 2) * (N.factorial : ℝ) := by
+        congr 2
+        rw [one_div, Real.rpow_neg (inv_nonneg.mpr (by positivity)), ← Real.inv_rpow (by positivity)]
+        rw [inv_inv]
+    _ = (4*s) ^ (N + 1) * (1 / 2) * (N.factorial : ℝ) := by
+        rw [show ((N:ℝ) + 1) = ((N + 1 : ℕ) : ℝ) by push_cast; ring, Real.rpow_natCast]
+    _ = (N.factorial : ℝ) / 2 * (4*s)^(N+1) := by ring
 
-    J = √(π/s) ∫₀^∞ exp(-u²/(4s)) [∫₀ᵘ x₀(u - x₀) dx₀] du
+/-- Crude Beta-moment bound: `∫₀ᵘ x^N (u-x)^N dx ≤ u^{2N+1}`.  The integrand is at most
+    `u^{2N}` on `(0, u)`; the exact value is the Beta moment `u^{2N+1}·B(N+1, N+1)`. -/
+lemma integral_pow_mul_sub_pow_le (N : ℕ) (u : ℝ) (hu : 0 < u) :
+    ∫ x in Set.Ioo (0:ℝ) u, x^N * (u - x)^N ≤ u^(2*N+1) := by
+  have h_cont : Continuous (fun x : ℝ => x^N * (u - x)^N) := by fun_prop
+  have h_int : MeasureTheory.IntegrableOn (fun x : ℝ => x^N * (u - x)^N) (Set.Ioo 0 u) :=
+    (h_cont.continuousOn.integrableOn_compact isCompact_Icc).mono_set Set.Ioo_subset_Icc_self
+  have h_le : ∀ x ∈ Set.Ioo (0:ℝ) u, x^N * (u - x)^N ≤ u^(2*N) := by
+    intro x hx
+    obtain ⟨hx0, hxu⟩ := hx
+    have h1 : x^N ≤ u^N := pow_le_pow_left₀ hx0.le hxu.le N
+    have h2 : (u - x)^N ≤ u^N := pow_le_pow_left₀ (by linarith) (by linarith) N
+    calc x^N * (u - x)^N ≤ u^N * u^N :=
+          mul_le_mul h1 h2 (pow_nonneg (by linarith) N) (pow_nonneg (by linarith) N)
+      _ = u^(2*N) := by rw [← pow_add]; ring_nf
+  calc ∫ x in Set.Ioo (0:ℝ) u, x^N * (u - x)^N
+      ≤ ∫ _x in Set.Ioo (0:ℝ) u, u^(2*N) := by
+        apply MeasureTheory.setIntegral_mono_on h_int
+          (MeasureTheory.integrableOn_const (by rw [Real.volume_Ioo]; exact ENNReal.ofReal_ne_top))
+          measurableSet_Ioo h_le
+    _ = u * u^(2*N) := by
+        rw [MeasureTheory.setIntegral_const, smul_eq_mul,
+          Real.volume_real_Ioo_of_le hu.le, sub_zero]
+    _ = u^(2*N+1) := by rw [pow_succ]; ring
 
-    Inner integral: ∫₀ᵘ (ux₀ - x₀²) dx₀ = [ux₀²/2 - x₀³/3]₀ᵘ = u³/2 - u³/3 = u³/6
-
-    So: J = √(π/s) · (1/6) · ∫₀^∞ u³ exp(-u²/(4s)) du
-          = √(π/s) · (1/6) · 8s²  [by integral_u_cubed_gaussian]
-          = √π · s^(-1/2) · (4/3) · s²
-          = (4/3)√π · s^(3/2) -/
-lemma heat_kernel_moment_integral (s : ℝ) (hs : 0 < s) :
-    ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
-      x₀ * y₀ * Real.sqrt (π / s) * Real.exp (-(x₀ + y₀)^2 / (4 * s)) =
-    (4/3) * Real.sqrt π * s^(3/2 : ℝ) := by
-  -- Step 1: Get the key integral ∫₀^∞ u³ exp(-u²/(4s)) du = 8s²
-  have h_u_int := integral_u_cubed_gaussian s hs
-
-  -- Step 2: The algebraic identity: √(π/s) · (1/6) · 8s² = (4/3)√π · s^{3/2}
-  have h_algebra : Real.sqrt (π / s) * (1/6) * (8 * s^2) = (4/3) * Real.sqrt π * s^(3/2 : ℝ) := by
-    have hs' : (0 : ℝ) < s := hs
-    have hs_ne : s ≠ 0 := ne_of_gt hs
-    -- √(π/s) = √π / √s
-    rw [Real.sqrt_div' π (le_of_lt hs)]
-    -- s^{3/2} = s · √s
-    have h32 : s^(3/2 : ℝ) = s * Real.sqrt s := by
-      rw [show (3/2 : ℝ) = 1 + 1/2 by norm_num]
-      rw [Real.rpow_add hs']
-      simp only [Real.rpow_one]
-      rw [Real.sqrt_eq_rpow]
-    rw [h32]
-    -- √s² = s (for s > 0)
-    have hsq : Real.sqrt s ^ 2 = s := Real.sq_sqrt (le_of_lt hs)
-    have hsqrt_pos : 0 < Real.sqrt s := Real.sqrt_pos.mpr hs
-    have hsqrt_ne : Real.sqrt s ≠ 0 := ne_of_gt hsqrt_pos
-    -- Goal: √π / √s * (1/6) * (8 * s²) = 4/3 * √π * (s * √s)
-    calc Real.sqrt π / Real.sqrt s * (1 / 6) * (8 * s ^ 2)
-        = Real.sqrt π * (8 * s^2) / (6 * Real.sqrt s) := by ring
-      _ = Real.sqrt π * (4 * s^2) / (3 * Real.sqrt s) := by ring
-      _ = 4 / 3 * Real.sqrt π * (s^2 / Real.sqrt s) := by ring
-      _ = 4 / 3 * Real.sqrt π * (s * (s / Real.sqrt s)) := by ring
-      _ = 4 / 3 * Real.sqrt π * (s * Real.sqrt s) := by
-          congr 1
-          congr 1
-          -- s / √s = √s (since s = √s · √s)
-          exact div_sqrt
-
-  -- Step 3a: Pull out the constant √(π/s) from the integral
-  have h_pull_const : ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
-      x₀ * y₀ * Real.sqrt (π / s) * Real.exp (-(x₀ + y₀)^2 / (4 * s)) =
+/-- **Order-`N` double Gaussian moment bound**:
+    `∫∫_{x₀,y₀>0} x₀^N y₀^N √(π/s) exp(-(x₀+y₀)²/(4s)) dx₀ dy₀ ≤ C_N · s^{N+1/2}`.
+    The change of variables `u = x₀ + y₀` reduces the double integral to the inner moment
+    `∫₀ᵘ x^N (u-x)^N dx ≤ u^{2N+1}` against the Gaussian `exp(-u²/(4s))`, whose odd moment
+    supplies the `s^{N+1}` scaling; the 1-D normalization `√(π/s)` contributes `s^{-1/2}`. -/
+lemma heat_kernel_moment_integral_pow_bound (N : ℕ) :
+    ∃ C : ℝ, 0 < C ∧ ∀ s : ℝ, 0 < s →
+      ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
+        x₀^N * y₀^N * Real.sqrt (π / s) * Real.exp (-(x₀ + y₀)^2 / (4 * s)) ≤
+      C * s^((N : ℝ) + 1/2) := by
+  have hC_pos : 0 < Real.sqrt π * (N.factorial : ℝ) * 4^(N+1) / 2 := by
+    have h1 : 0 < Real.sqrt π := Real.sqrt_pos.mpr pi_pos
+    have h2 : 0 < (N.factorial : ℝ) := by exact_mod_cast N.factorial_pos
+    positivity
+  refine ⟨Real.sqrt π * (N.factorial : ℝ) * 4^(N+1) / 2, hC_pos, fun s hs => ?_⟩
+  have hb : 0 < 1 / (4 * s) := by positivity
+  -- Step 1: pull the constant √(π/s) out of the double integral
+  have h_pull : ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
+      x₀^N * y₀^N * Real.sqrt (π / s) * Real.exp (-(x₀ + y₀)^2 / (4 * s)) =
       Real.sqrt (π / s) * ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
-        x₀ * y₀ * Real.exp (-(x₀ + y₀)^2 / (4 * s)) := by
+        x₀^N * y₀^N * Real.exp (-(x₀ + y₀)^2 / (4 * s)) := by
     conv_lhs =>
       arg 2; ext x₀; arg 2; ext y₀
-      rw [show x₀ * y₀ * Real.sqrt (π / s) * Real.exp (-(x₀ + y₀)^2 / (4 * s)) =
-          Real.sqrt (π / s) * (x₀ * y₀ * Real.exp (-(x₀ + y₀)^2 / (4 * s))) by ring]
+      rw [show x₀^N * y₀^N * Real.sqrt (π / s) * Real.exp (-(x₀ + y₀)^2 / (4 * s)) =
+          Real.sqrt (π / s) * (x₀^N * y₀^N * Real.exp (-(x₀ + y₀)^2 / (4 * s))) by ring]
     simp_rw [MeasureTheory.integral_const_mul]
-
-  -- Step 3b: The polynomial inner integral ∫₀ᵘ x(u-x) dx = u³/6
-  have h_poly_int : ∀ u : ℝ, 0 < u →
-      ∫ x in (0 : ℝ)..u, x * (u - x) = u^3 / 6 := by
+  -- Step 2: change of variables u = x₀ + y₀ (triangular Fubini)
+  have h_fubini : ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
+      x₀^N * y₀^N * Real.exp (-(x₀ + y₀)^2 / (4 * s)) =
+      ∫ u in Set.Ioi 0, ∫ x₀ in Set.Ioo 0 u,
+        x₀^N * (u - x₀)^N * Real.exp (-u^2 / (4 * s)) := by
+    have h_integrand : ∀ x₀ y₀ : ℝ, x₀^N * y₀^N * Real.exp (-(x₀ + y₀)^2 / (4 * s)) =
+        x₀^N * ((x₀ + y₀) - x₀)^N * Real.exp (-(x₀ + y₀)^2 / (4 * s)) := by
+      intro x₀ y₀; ring_nf
+    simp_rw [h_integrand]
+    have hf_nn : ∀ x y : ℝ, 0 ≤ x → 0 ≤ y →
+        0 ≤ (fun x u => x^N * (u - x)^N * Real.exp (-u^2 / (4 * s))) x (x + y) := by
+      intro x y hx hy
+      simp only
+      rw [show x + y - x = y by ring]
+      positivity
+    convert triangular_fubini_quadrant
+      (f := fun x u => x^N * (u - x)^N * Real.exp (-u^2 / (4 * s)))
+      (_hf_nn := hf_nn)
+      (hf_int := by
+        rw [MeasureTheory.integrable_indicator_iff (measurableSet_Ioi.prod measurableSet_Ioi)]
+        rw [MeasureTheory.IntegrableOn]
+        have h_int_factor : MeasureTheory.Integrable
+            (fun x : ℝ => |x|^N * Real.exp (-(1/(4*s)) * x^2)) volume := by
+          have h0 := integrable_rpow_mul_exp_neg_mul_sq hb
+            (s := (N : ℝ)) (by
+              have : (0 : ℝ) ≤ (N : ℝ) := Nat.cast_nonneg _
+              linarith)
+          simp_rw [Real.rpow_natCast] at h0
+          convert h0.norm using 1
+          ext x
+          rw [Real.norm_eq_abs, abs_mul, abs_pow, abs_of_pos (Real.exp_pos _)]
+        have h_prod := MeasureTheory.Integrable.mul_prod h_int_factor h_int_factor
+        have h_prod_restr : MeasureTheory.Integrable
+            (fun z : ℝ × ℝ => |z.1|^N * Real.exp (-(1/(4*s)) * z.1^2) *
+                              (|z.2|^N * Real.exp (-(1/(4*s)) * z.2^2)))
+            (MeasureTheory.volume.restrict (Set.Ioi 0 ×ˢ Set.Ioi 0)) := by
+          rw [MeasureTheory.Measure.volume_eq_prod]
+          exact h_prod.restrict
+        apply MeasureTheory.Integrable.mono h_prod_restr
+        · apply Measurable.aestronglyMeasurable
+          apply Measurable.mul
+          apply Measurable.mul
+          · exact measurable_fst.pow_const N
+          · exact ((measurable_fst.add measurable_snd).sub measurable_fst).pow_const N
+          · apply Measurable.exp
+            apply Measurable.div_const
+            apply Measurable.neg
+            apply Measurable.pow_const
+            exact measurable_add
+        · filter_upwards [MeasureTheory.ae_restrict_mem
+            (measurableSet_Ioi.prod measurableSet_Ioi)] with ⟨x, y⟩ hxy
+          simp only [Set.mem_prod, Set.mem_Ioi] at hxy
+          obtain ⟨hx, hy⟩ := hxy
+          simp only [norm_mul, Real.norm_eq_abs]
+          rw [show x + y - x = y by ring, abs_of_pos hx, abs_of_pos hy,
+              abs_of_pos (pow_pos hx N), abs_of_pos (pow_pos hy N),
+              abs_of_pos (Real.exp_pos _), abs_of_pos (Real.exp_pos _),
+              abs_of_pos (Real.exp_pos _)]
+          have h_exp_bound : Real.exp (-(x + y) ^ 2 / (4 * s)) ≤
+              Real.exp (-x^2 / (4 * s)) * Real.exp (-y^2 / (4 * s)) := by
+            rw [← Real.exp_add]
+            apply Real.exp_le_exp.mpr
+            have h1 : -(x + y)^2 / (4 * s) ≤ -(x^2 + y^2) / (4 * s) := by
+              apply div_le_div_of_nonneg_right _ (le_of_lt (by linarith : (0:ℝ) < 4 * s))
+              apply neg_le_neg
+              nlinarith [mul_pos hx hy]
+            have h2 : -(x^2 + y^2) / (4 * s) = -x^2 / (4 * s) + -y^2 / (4 * s) := by ring
+            linarith
+          calc x^N * y^N * Real.exp (-(x + y) ^ 2 / (4 * s))
+              ≤ x^N * y^N * (Real.exp (-x^2 / (4 * s)) * Real.exp (-y^2 / (4 * s))) := by
+                apply mul_le_mul_of_nonneg_left h_exp_bound
+                exact mul_nonneg (pow_nonneg hx.le N) (pow_nonneg hy.le N)
+            _ = x^N * Real.exp (-(1/(4*s)) * x^2) * (y^N * Real.exp (-(1/(4*s)) * y^2)) := by
+                rw [show -x^2 / (4*s) = -(1/(4*s)) * x^2 by ring,
+                    show -y^2 / (4*s) = -(1/(4*s)) * y^2 by ring]
+                ring)
+      using 2
+  -- Step 3: bound the triangular integral by the odd-power Gaussian moment
+  have h_inner_le : ∀ u ∈ Set.Ioi (0:ℝ),
+      ∫ x₀ in Set.Ioo 0 u, x₀^N * (u - x₀)^N * Real.exp (-u^2 / (4 * s)) ≤
+      u^(2*N+1) * Real.exp (-u^2 / (4 * s)) := by
     intro u hu
-    have h1 : ∫ x in (0 : ℝ)..u, x * (u - x) = ∫ x in (0 : ℝ)..u, u * x - x^2 := by
-      congr 1; ext x; ring
-    rw [h1, intervalIntegral.integral_sub]
-    · have hx : ∫ x in (0 : ℝ)..u, x = u^2 / 2 := by
-        rw [show (fun x : ℝ => x) = (fun x => x^1) by ext; simp, integral_pow]
-        simp; ring
-      have hx2 : ∫ x in (0 : ℝ)..u, x^2 = u^3 / 3 := by
-        rw [integral_pow]; simp; ring
-      rw [intervalIntegral.integral_const_mul, hx, hx2]
-      ring
-    · exact (continuous_const.mul continuous_id).intervalIntegrable 0 u
-    · exact (continuous_pow 2).intervalIntegrable 0 u
+    simp only [Set.mem_Ioi] at hu
+    have h_factor : ∫ x₀ in Set.Ioo 0 u, x₀^N * (u - x₀)^N * Real.exp (-u^2 / (4 * s)) =
+        Real.exp (-u^2 / (4 * s)) * ∫ x₀ in Set.Ioo 0 u, x₀^N * (u - x₀)^N := by
+      simp_rw [show ∀ x₀ : ℝ, x₀^N * (u - x₀)^N * Real.exp (-u^2 / (4 * s)) =
+          Real.exp (-u^2 / (4 * s)) * (x₀^N * (u - x₀)^N) from fun x₀ => by ring]
+      rw [MeasureTheory.integral_const_mul]
+    rw [h_factor, mul_comm (u^(2*N+1)) (Real.exp (-u^2 / (4 * s)))]
+    exact mul_le_mul_of_nonneg_left (integral_pow_mul_sub_pow_le N u hu) (Real.exp_nonneg _)
+  have h_majorant_int : MeasureTheory.IntegrableOn
+      (fun u : ℝ => u^(2*N+1) * Real.exp (-u^2 / (4 * s))) (Set.Ioi 0) := by
+    have h0 := integrableOn_rpow_mul_exp_neg_mul_sq hb (s := ((2*N+1 : ℕ) : ℝ)) (by
+      have : (0 : ℝ) ≤ ((2*N+1 : ℕ) : ℝ) := Nat.cast_nonneg _
+      linarith)
+    simp_rw [Real.rpow_natCast] at h0
+    refine h0.congr_fun (fun x _ => ?_) measurableSet_Ioi
+    simp only []
+    rw [show -(1/(4*s)) * x^2 = -x^2/(4*s) by ring]
+  have h_double_le : ∫ u in Set.Ioi 0, ∫ x₀ in Set.Ioo 0 u,
+      x₀^N * (u - x₀)^N * Real.exp (-u^2 / (4 * s)) ≤
+      (N.factorial : ℝ) / 2 * (4*s)^(N+1) := by
+    rw [← integral_odd_pow_gaussian N s hs]
+    apply MeasureTheory.integral_mono_of_nonneg
+    · filter_upwards with u
+      apply MeasureTheory.setIntegral_nonneg measurableSet_Ioo
+      intro x hxm
+      exact mul_nonneg (mul_nonneg (pow_nonneg hxm.1.le N)
+        (pow_nonneg (by linarith [hxm.2] : (0:ℝ) ≤ u - x) N)) (Real.exp_nonneg _)
+    · exact h_majorant_int
+    · filter_upwards [MeasureTheory.ae_restrict_mem measurableSet_Ioi] with u hu
+      exact h_inner_le u hu
+  -- Step 4: combine, converting the s-powers to the rpow exponent N + 1/2
+  rw [h_pull, h_fubini]
+  have h_pow : s^(N+1) / Real.sqrt s = s^((N:ℝ) + 1/2) := by
+    rw [show s^(N+1) = s^(((N+1 : ℕ)) : ℝ) from (Real.rpow_natCast s (N+1)).symm,
+        Real.sqrt_eq_rpow, ← Real.rpow_sub hs]
+    congr 1
+    push_cast
+    ring
+  calc Real.sqrt (π / s) * ∫ u in Set.Ioi 0, ∫ x₀ in Set.Ioo 0 u,
+        x₀^N * (u - x₀)^N * Real.exp (-u^2 / (4 * s))
+      ≤ Real.sqrt (π / s) * ((N.factorial : ℝ) / 2 * (4*s)^(N+1)) :=
+        mul_le_mul_of_nonneg_left h_double_le (Real.sqrt_nonneg _)
+    _ = Real.sqrt π / Real.sqrt s * ((N.factorial : ℝ) / 2 * (4^(N+1) * s^(N+1))) := by
+        rw [Real.sqrt_div' π (le_of_lt hs), mul_pow]
+    _ = Real.sqrt π * (N.factorial : ℝ) * 4^(N+1) / 2 * (s^(N+1) / Real.sqrt s) := by ring
+    _ = Real.sqrt π * (N.factorial : ℝ) * 4^(N+1) / 2 * s^((N:ℝ) + 1/2) := by rw [h_pow]
 
-  -- Step 3c: The double integral via change of variables
-  -- ∫∫_{x₀,y₀>0} x₀ y₀ exp(-(x₀+y₀)²/(4s)) = ∫_{u>0} exp(-u²/(4s)) · [∫₀ᵘ x₀(u-x₀) dx₀] du
-  --                                         = ∫_{u>0} exp(-u²/(4s)) · (u³/6) du
-  --                                         = (1/6) · 8s²
-  have h_double_int : ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
-      x₀ * y₀ * Real.exp (-(x₀ + y₀)^2 / (4 * s)) = (1/6) * (8 * s^2) := by
-    -- The change of variables (x₀, y₀) ↦ (u, t) where u = x₀ + y₀, t = x₀
-    -- transforms the first quadrant to the triangular region {(u,t) : u > 0, 0 < t < u}
-    -- with Jacobian 1 (the inverse map (u,t) ↦ (t, u-t) has det = 1).
-    --
-    -- After change of variables:
-    -- ∫_{u>0} [∫_{0<t<u} t(u-t) dt] exp(-u²/(4s)) du
-    --   = ∫_{u>0} (u³/6) exp(-u²/(4s)) du   [by h_poly_int]
-    --   = (1/6) ∫_{u>0} u³ exp(-u²/(4s)) du
-    --   = (1/6) · 8s²                        [by h_u_int]
-    calc ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0, x₀ * y₀ * Real.exp (-(x₀ + y₀)^2 / (4 * s))
-        = ∫ u in Set.Ioi 0, Real.exp (-u^2 / (4 * s)) * (u^3 / 6) := by
-          -- **Change of variables: First quadrant to triangular region**
-          --
-          -- The key identity is the "triangular Fubini" swap:
-          -- ∫_{x>0} ∫_{y>0} f(x, x+y) dy dx = ∫_{u>0} ∫_{0<x<u} f(x, u) dx du
-          --
-          -- Here we have f(x, y) = x * y * exp(-(x+y)²/(4s)) and after the change
-          -- u = x + y, the integrand becomes x * (u-x) * exp(-u²/(4s)).
-          --
-          -- Step 1: Apply triangular Fubini (change u = x₀ + y₀)
-          -- Step 2: Factor out exp(-u²/(4s)) from inner integral
-          -- Step 3: Compute inner integral ∫₀ᵘ x(u-x) dx = u³/6 using h_poly_int
+/-- Helper lemma: tⁿ * exp(-b*t²) is integrable on (0, ∞) for b > 0. -/
+lemma gaussian_moment_integrableOn_Ioi (n : ℕ) {b : ℝ} (hb : 0 < b) :
+    MeasureTheory.IntegrableOn (fun t => t^n * Real.exp (-b * t^2)) (Set.Ioi 0) := by
+  have h0 := integrableOn_rpow_mul_exp_neg_mul_sq hb (s := (n : ℝ)) (by
+    have : (0 : ℝ) ≤ (n : ℝ) := Nat.cast_nonneg _
+    linarith)
+  simp_rw [Real.rpow_natCast] at h0
+  exact h0
 
-          -- Apply the triangular Fubini identity via `triangular_fubini_quadrant`
-          -- with g(x, u) = x * (u - x) * exp(-u²/(4s))
-          have h_fubini : ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
-              x₀ * y₀ * Real.exp (-(x₀ + y₀)^2 / (4 * s)) =
-              ∫ u in Set.Ioi 0, ∫ x₀ in Set.Ioo 0 u,
-                x₀ * (u - x₀) * Real.exp (-u^2 / (4 * s)) := by
-            -- Rewrite LHS: x₀ * y₀ = x₀ * ((x₀ + y₀) - x₀) when we set u = x₀ + y₀
-            -- This is exactly the triangular Fubini setup
-            have h_integrand : ∀ x₀ y₀ : ℝ, x₀ * y₀ * Real.exp (-(x₀ + y₀)^2 / (4 * s)) =
-                x₀ * ((x₀ + y₀) - x₀) * Real.exp (-(x₀ + y₀)^2 / (4 * s)) := by
-              intro x₀ y₀; ring_nf
-            simp_rw [h_integrand]
-            -- Apply triangular_fubini_quadrant with g(x, u) = x * (u - x) * exp(-u²/(4s))
-            -- The identity: ∫_{x>0} ∫_{y>0} g(x, x+y) dy = ∫_{u>0} ∫_{0<x<u} g(x, u) dx
-            have hf_nn : ∀ x y : ℝ, 0 ≤ x → 0 ≤ y →
-                0 ≤ (fun x u => x * (u - x) * Real.exp (-u^2 / (4 * s))) x (x + y) := by
-              intro x y hx hy
-              simp only
-              have h1 : x + y - x = y := by ring
-              rw [h1]
-              apply mul_nonneg
-              · exact mul_nonneg hx hy
-              · exact Real.exp_nonneg _
-            convert triangular_fubini_quadrant
-              (f := fun x u => x * (u - x) * Real.exp (-u^2 / (4 * s)))
-              (_hf_nn := hf_nn)
-              (hf_int := by
-                -- Need to show: (x, y) ↦ x·y·exp(-(x+y)²/(4s)) is integrable over (0,∞)²
-                -- Strategy: bound by |x|·exp(-x²/(4s)) · |y|·exp(-y²/(4s)) using
-                -- (x+y)² ≥ x² + y² for x,y > 0, then use Integrable.mul_prod
-                rw [MeasureTheory.integrable_indicator_iff (measurableSet_Ioi.prod measurableSet_Ioi)]
-                rw [MeasureTheory.IntegrableOn]
-                -- Key bound: for x, y > 0, (x+y)² = x² + 2xy + y² > x² + y² since 2xy > 0
-                -- So exp(-(x+y)²/(4s)) < exp(-(x²+y²)/(4s)) = exp(-x²/(4s))·exp(-y²/(4s))
-                -- Thus x·y·exp(-(x+y)²/(4s)) ≤ |x|·exp(-x²/(4s)) · |y|·exp(-y²/(4s))
-                have hb : 0 < 1 / (4 * s) := by positivity
-                have h_int_factor : MeasureTheory.Integrable
-                    (fun x => |x| * Real.exp (-(1/(4*s)) * x^2)) volume := by
-                  have := integrable_mul_exp_neg_mul_sq hb
-                  convert this.norm using 1
-                  ext x; rw [Real.norm_eq_abs, abs_mul, abs_of_pos (Real.exp_pos _)]
-                -- Product integrability on full space dominates restricted
-                have h_prod := MeasureTheory.Integrable.mul_prod h_int_factor h_int_factor
-                -- h_prod is Integrable (on volume.prod volume), goal needs μ.restrict on product
-                -- Since volume on ℝ × ℝ is volume.prod volume, h_prod.restrict gives integrability
-                -- on restricted measure, then use Integrable.mono with pointwise bound
-                have h_prod_restr : MeasureTheory.Integrable
-                    (fun z : ℝ × ℝ => |z.1| * Real.exp (-(1/(4*s)) * z.1^2) *
-                                      (|z.2| * Real.exp (-(1/(4*s)) * z.2^2)))
-                    (MeasureTheory.volume.restrict (Set.Ioi 0 ×ˢ Set.Ioi 0)) :=
-                  h_prod.restrict (s := Set.Ioi 0 ×ˢ Set.Ioi 0)
-                apply MeasureTheory.Integrable.mono h_prod_restr
-                · -- Measurability
-                  apply Measurable.aestronglyMeasurable
-                  apply Measurable.mul
-                  apply Measurable.mul
-                  · exact measurable_fst
-                  · -- fun a ↦ a.1 + a.2 - a.1 = fun a ↦ a.2
-                    exact (measurable_fst.add measurable_snd).sub measurable_fst
-                  · apply Measurable.exp
-                    apply Measurable.div_const
-                    apply Measurable.neg
-                    apply Measurable.pow_const
-                    exact measurable_add
-                · -- Pointwise bound on Ioi 0 × Ioi 0
-                  filter_upwards [MeasureTheory.ae_restrict_mem (measurableSet_Ioi.prod measurableSet_Ioi)] with ⟨x, y⟩ hxy
-                  simp only [Set.mem_prod, Set.mem_Ioi] at hxy
-                  obtain ⟨hx, hy⟩ := hxy
-                  simp only [norm_mul, Real.norm_eq_abs]
-                  -- Simplify abs values using x > 0, y > 0, exp > 0
-                  rw [abs_of_pos hx, abs_of_pos hy, abs_of_pos (Real.exp_pos _),
-                      abs_of_pos (Real.exp_pos _), abs_of_pos (Real.exp_pos _)]
-                  -- Now need to rewrite x + y - x to y
-                  have h_simp : x + y - x = y := by ring
-                  rw [h_simp, abs_of_pos hy]
-                  -- Goal: x * y * exp(-(x+y)²/(4s)) ≤ x * exp(-x²/(4s)) * (y * exp(-y²/(4s)))
-                  have h_exp_bound : Real.exp (-(x + y) ^ 2 / (4 * s)) ≤
-                      Real.exp (-x^2 / (4 * s)) * Real.exp (-y^2 / (4 * s)) := by
-                    rw [← Real.exp_add]
-                    apply Real.exp_le_exp.mpr
-                    have hxy_pos : 0 < x * y := mul_pos hx hy
-                    -- Need: -(x+y)²/(4s) ≤ -x²/(4s) - y²/(4s)
-                    -- i.e., -(x+y)²/(4s) ≤ -(x² + y²)/(4s)
-                    -- i.e., (x+y)² ≥ x² + y² (dividing by -1/(4s) reverses)
-                    -- (x+y)² = x² + 2xy + y² ≥ x² + y² since xy > 0
-                    have h1 : -(x + y)^2 / (4 * s) ≤ -(x^2 + y^2) / (4 * s) := by
-                      apply div_le_div_of_nonneg_right _ (le_of_lt (by linarith : 0 < 4 * s))
-                      apply neg_le_neg
-                      nlinarith [sq_nonneg x, sq_nonneg y]
-                    have h2 : -(x^2 + y^2) / (4 * s) = -x^2 / (4 * s) + -y^2 / (4 * s) := by ring
-                    linarith
-                  calc x * y * Real.exp (-(x + y) ^ 2 / (4 * s))
-                      ≤ x * y * (Real.exp (-x^2 / (4 * s)) * Real.exp (-y^2 / (4 * s))) := by
-                        apply mul_le_mul_of_nonneg_left h_exp_bound
-                        apply mul_nonneg (le_of_lt hx) (le_of_lt hy)
-                    _ = (x * Real.exp (-x^2 / (4 * s))) * (y * Real.exp (-y^2 / (4 * s))) := by ring
-                    _ = (x * Real.exp (-(1/(4*s)) * x^2)) * (y * Real.exp (-(1/(4*s)) * y^2)) := by
-                        congr 2 <;> (congr 1; ring)
-                    _ = (|x| * Real.exp (-(1/(4*s)) * x^2)) * (y * Real.exp (-(1/(4*s)) * y^2)) := by
-                        rw [abs_of_pos hx]) using 2
-
-          rw [h_fubini]
-
-          -- Now simplify: factor out exp(-u²/(4s)) and compute inner integral
-          apply MeasureTheory.setIntegral_congr_fun measurableSet_Ioi
-          intro u hu
-          simp only [Set.mem_Ioi] at hu
-
-          -- Goal: ∫_{x₀ ∈ Ioo 0 u} x₀ * (u - x₀) * exp(-u²/(4s)) dx₀ = exp(-u²/(4s)) * (u³/6)
-          -- Factor out the exponential (constant w.r.t. x₀)
-          have h_factor : ∫ x₀ in Set.Ioo 0 u, x₀ * (u - x₀) * Real.exp (-u^2 / (4 * s)) =
-              Real.exp (-u^2 / (4 * s)) * ∫ x₀ in Set.Ioo 0 u, x₀ * (u - x₀) := by
-            have h_exp_const : ∀ x₀ : ℝ, x₀ * (u - x₀) * Real.exp (-u^2 / (4 * s)) =
-                Real.exp (-u^2 / (4 * s)) * (x₀ * (u - x₀)) := fun x₀ => by ring
-            simp_rw [h_exp_const]
-            rw [MeasureTheory.integral_const_mul]
-
-          -- The inner integral is ∫_{x₀ ∈ Ioo 0 u} x₀ * (u - x₀) dx₀
-          -- Convert to interval integral and use h_poly_int
-          have h_inner : ∫ x₀ in Set.Ioo 0 u, x₀ * (u - x₀) = u^3 / 6 := by
-            -- ∫ over Ioo 0 u = ∫ over Ioc 0 u = ∫ in 0..u (for continuous functions)
-            rw [← MeasureTheory.integral_Ioc_eq_integral_Ioo]
-            rw [← intervalIntegral.integral_of_le (le_of_lt hu)]
-            exact h_poly_int u hu
-
-          simp only
-          rw [h_factor, h_inner]
-      _ = (1/6) * ∫ u in Set.Ioi 0, u^3 * Real.exp (-u^2 / (4 * s)) := by
-          conv_lhs => arg 2; ext u; rw [show Real.exp (-u^2 / (4 * s)) * (u^3 / 6) =
-              (1/6) * (u^3 * Real.exp (-u^2 / (4 * s))) by ring]
-          rw [MeasureTheory.integral_const_mul]
-      _ = (1/6) * (8 * s^2) := by rw [h_u_int]
-
-  -- Combine the pieces
-  calc ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
-         x₀ * y₀ * Real.sqrt (π / s) * Real.exp (-(x₀ + y₀)^2 / (4 * s))
-      = Real.sqrt (π / s) * ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
-          x₀ * y₀ * Real.exp (-(x₀ + y₀)^2 / (4 * s)) := h_pull_const
-    _ = Real.sqrt (π / s) * ((1/6) * (8 * s^2)) := by rw [h_double_int]
-    _ = Real.sqrt (π / s) * (1/6) * (8 * s^2) := by ring
-    _ = (4/3) * Real.sqrt π * s^(3/2 : ℝ) := h_algebra
-
-/-- **Bound version**: The double Gaussian moment integral is bounded by a constant times s^{3/2}.
-
-    This is a weaker form of `heat_kernel_moment_integral` that suffices for `F_norm_bound_via_linear_vanishing`.
-    The exact value is (4/3)√π · s^{3/2}, so we use 10 · s^{3/2} as a comfortable upper bound.
-
-    **Proof**: Uses `heat_kernel_moment_integral` and the bound (4/3)√π < 10. -/
-lemma heat_kernel_moment_integral_bound (s : ℝ) (hs : 0 < s) :
-    ∫ x₀ in Set.Ioi 0, ∫ y₀ in Set.Ioi 0,
-      x₀ * y₀ * Real.sqrt (π / s) * Real.exp (-(x₀ + y₀)^2 / (4 * s)) ≤
-    10 * s^(3/2 : ℝ) := by
-  -- Use the exact equality from heat_kernel_moment_integral
-  rw [heat_kernel_moment_integral s hs]
-  -- Now show: (4/3) * √π * s^{3/2} ≤ 10 * s^{3/2}
-  -- Since (4/3)√π ≈ 2.36 < 10
-  have hπ : (4/3 : ℝ) * Real.sqrt π < 10 := by
-    have hsqrt : Real.sqrt π < 2 := by
-      rw [Real.sqrt_lt' (by norm_num : (0:ℝ) < 2)]
-      calc π < 4 := pi_lt_four
-         _ = 2^2 := by norm_num
-    calc (4/3 : ℝ) * Real.sqrt π < (4/3) * 2 := by nlinarith [Real.sqrt_nonneg π]
-      _ = 8/3 := by ring
-      _ < 10 := by norm_num
-  have hs32 : 0 ≤ s^(3/2 : ℝ) := Real.rpow_nonneg (le_of_lt hs) _
-  nlinarith
-
-/-- Helper lemma: t * exp(-b*t²) is integrable on (0, ∞) for b > 0.
-    This follows from `integrable_mul_exp_neg_mul_sq` restricted to positive reals. -/
-lemma gaussian_moment_integrableOn_Ioi {b : ℝ} (hb : 0 < b) :
-    MeasureTheory.IntegrableOn (fun t => t * Real.exp (-b * t^2)) (Set.Ioi 0) := by
-  -- |t| * exp(-b*t²) is integrable on all of ℝ
-  have h_int : MeasureTheory.Integrable (fun t => |t| * Real.exp (-b * t^2)) volume := by
-    have := integrable_mul_exp_neg_mul_sq hb
-    convert this.norm using 1
-    ext t; rw [Real.norm_eq_abs, abs_mul, abs_of_pos (Real.exp_pos _)]
-  -- Restrict to Ioi 0 and use that t = |t| for t > 0
-  rw [MeasureTheory.IntegrableOn]
-  apply MeasureTheory.Integrable.mono (h_int.restrict)
-  · -- Measurability of t ↦ t * exp(-b*t²)
-    have h_meas : Measurable (fun t : ℝ => t * Real.exp (-b * t^2)) := by
-      apply Measurable.mul measurable_id
-      apply Real.measurable_exp.comp
-      have h1 : Measurable (fun t : ℝ => t^2) := measurable_id.pow_const 2
-      exact h1.const_mul (-b)
-    exact h_meas.aestronglyMeasurable
-  · filter_upwards [MeasureTheory.ae_restrict_mem measurableSet_Ioi] with t ht
-    simp only [Set.mem_Ioi] at ht
-    -- ‖t * exp(-b*t²)‖ = |t * exp(-b*t²)| = t * exp(-b*t²) (since t > 0 and exp > 0)
-    rw [Real.norm_eq_abs, abs_of_nonneg (mul_nonneg (le_of_lt ht) (Real.exp_nonneg _))]
-    -- ‖|t| * exp(-b*t²)‖ = |t| * exp(-b*t²) = t * exp(-b*t²) (since t > 0)
-    rw [Real.norm_eq_abs, abs_of_nonneg (mul_nonneg (abs_nonneg _) (Real.exp_nonneg _))]
-    rw [abs_of_pos ht]
-
-/-- Helper lemma: For s > 0 and any t₁ ≥ 0, the function t₂ ↦ t₂ * exp(-(t₁+t₂)²/(4s))
+/-- Helper lemma: For s > 0 and any t₁ ≥ 0, the function t₂ ↦ t₂ⁿ * exp(-(t₁+t₂)²/(4s))
     is integrable on (0, ∞). This is the key integrability fact for heat kernel moment bounds.
 
     **Proof**: For t₁, t₂ ≥ 0, we have (t₁+t₂)² ≥ t₂², so
     exp(-(t₁+t₂)²/(4s)) ≤ exp(-t₂²/(4s)), and the integrand is dominated by
-    t₂ * exp(-t₂²/(4s)) which is integrable by `gaussian_moment_integrableOn_Ioi`. -/
-lemma heat_kernel_inner_integrableOn {s t₁ : ℝ} (hs : 0 < s) (ht₁ : 0 ≤ t₁) :
+    t₂ⁿ * exp(-t₂²/(4s)) which is integrable by `gaussian_moment_integrableOn_Ioi`. -/
+lemma heat_kernel_inner_integrableOn (n : ℕ) {s t₁ : ℝ} (hs : 0 < s) (ht₁ : 0 ≤ t₁) :
     MeasureTheory.IntegrableOn
-      (fun t₂ => t₂ * Real.exp (-(t₁ + t₂)^2 / (4 * s))) (Set.Ioi 0) := by
+      (fun t₂ => t₂^n * Real.exp (-(t₁ + t₂)^2 / (4 * s))) (Set.Ioi 0) := by
   have hb : 0 < 1 / (4 * s) := by positivity
-  have h_dom := gaussian_moment_integrableOn_Ioi hb
+  have h_dom := gaussian_moment_integrableOn_Ioi n hb
   rw [MeasureTheory.IntegrableOn] at h_dom ⊢
-  -- Rewrite h_dom to match our goal form: t * exp(-(1/(4s))*t²) = t * exp(-t²/(4s))
+  -- Rewrite h_dom to match our goal form: tⁿ * exp(-(1/(4s))*t²) = tⁿ * exp(-t²/(4s))
   have h_dom' : MeasureTheory.Integrable
-      (fun t => t * Real.exp (-t^2 / (4 * s))) (MeasureTheory.volume.restrict (Set.Ioi 0)) := by
+      (fun t => t^n * Real.exp (-t^2 / (4 * s))) (MeasureTheory.volume.restrict (Set.Ioi 0)) := by
     convert h_dom using 2 with t
     congr 1
     have h4s : 4 * s ≠ 0 := by linarith
     field_simp
-  -- The integrand is dominated by t₂ * exp(-t₂²/(4s)) on Ioi 0
+  -- The integrand is dominated by t₂ⁿ * exp(-t₂²/(4s)) on Ioi 0
   apply MeasureTheory.Integrable.mono h_dom'
-  · -- Measurability of t₂ ↦ t₂ * exp(-(t₁+t₂)²/(4s))
-    have h_meas : Measurable (fun t₂ : ℝ => t₂ * Real.exp (-(t₁ + t₂)^2 / (4 * s))) := by
-      apply Measurable.mul measurable_id
+  · -- Measurability of t₂ ↦ t₂ⁿ * exp(-(t₁+t₂)²/(4s))
+    have h_meas : Measurable (fun t₂ : ℝ => t₂^n * Real.exp (-(t₁ + t₂)^2 / (4 * s))) := by
+      apply Measurable.mul (measurable_id.pow_const n)
       apply Real.measurable_exp.comp
       apply Measurable.div_const
       apply Measurable.neg
@@ -1680,42 +1606,45 @@ lemma heat_kernel_inner_integrableOn {s t₁ : ℝ} (hs : 0 < s) (ht₁ : 0 ≤ 
     exact h_meas.aestronglyMeasurable
   · filter_upwards [MeasureTheory.ae_restrict_mem measurableSet_Ioi] with t₂ ht₂
     simp only [Set.mem_Ioi] at ht₂
-    -- ‖t₂ * exp(-(t₁+t₂)²/(4s))‖ = t₂ * exp(-(t₁+t₂)²/(4s)) (nonneg for t₂ > 0)
-    rw [Real.norm_eq_abs, abs_of_nonneg (mul_nonneg (le_of_lt ht₂) (Real.exp_nonneg _))]
-    -- ‖t₂ * exp(-t₂²/(4s))‖ = t₂ * exp(-t₂²/(4s))
-    rw [Real.norm_eq_abs, abs_of_nonneg (mul_nonneg (le_of_lt ht₂) (Real.exp_nonneg _))]
-    -- Need: t₂ * exp(-(t₁+t₂)²/(4s)) ≤ t₂ * exp(-t₂²/(4s))
-    apply mul_le_mul_of_nonneg_left _ (le_of_lt ht₂)
+    rw [Real.norm_eq_abs,
+      abs_of_nonneg (mul_nonneg (pow_nonneg (le_of_lt ht₂) n) (Real.exp_nonneg _))]
+    rw [Real.norm_eq_abs,
+      abs_of_nonneg (mul_nonneg (pow_nonneg (le_of_lt ht₂) n) (Real.exp_nonneg _))]
+    -- Need: t₂ⁿ * exp(-(t₁+t₂)²/(4s)) ≤ t₂ⁿ * exp(-t₂²/(4s))
+    apply mul_le_mul_of_nonneg_left _ (pow_nonneg (le_of_lt ht₂) n)
     apply Real.exp_le_exp.mpr
     -- Need: -(t₁+t₂)²/(4s) ≤ -t₂²/(4s), i.e., (t₁+t₂)² ≥ t₂²
     apply div_le_div_of_nonneg_right _ (by linarith : 0 ≤ 4 * s)
     apply neg_le_neg
     nlinarith [sq_nonneg t₁]
 
-/-- The heat kernel moment integrand is integrable on the product quadrant (0,∞)².
-    This is the key integrability result extracted from heat_kernel_moment_integral. -/
-lemma heat_kernel_moment_integrableOn_quadrant (s : ℝ) (hs : 0 < s) :
+/-- The order-`n` heat kernel moment integrand is integrable on the product quadrant (0,∞)². -/
+lemma heat_kernel_moment_integrableOn_quadrant (n : ℕ) (s : ℝ) (hs : 0 < s) :
     MeasureTheory.IntegrableOn
-      (fun z : ℝ × ℝ => z.1 * z.2 * Real.sqrt (π/s) * Real.exp (-(z.1 + z.2)^2 / (4 * s)))
+      (fun z : ℝ × ℝ => z.1^n * z.2^n * Real.sqrt (π/s) * Real.exp (-(z.1 + z.2)^2 / (4 * s)))
       (Set.Ioi 0 ×ˢ Set.Ioi 0) (volume.prod volume) := by
   rw [MeasureTheory.IntegrableOn]
   have hb : 0 < 1 / (4 * s) := by positivity
   have h_int_factor : MeasureTheory.Integrable
-      (fun x => |x| * Real.exp (-(1/(4*s)) * x^2)) volume := by
-    have := integrable_mul_exp_neg_mul_sq hb
-    convert this.norm using 1
-    ext x; rw [Real.norm_eq_abs, abs_mul, abs_of_pos (Real.exp_pos _)]
+      (fun x => |x|^n * Real.exp (-(1/(4*s)) * x^2)) volume := by
+    have h0 := integrable_rpow_mul_exp_neg_mul_sq hb (s := (n : ℝ)) (by
+      have : (0 : ℝ) ≤ (n : ℝ) := Nat.cast_nonneg _
+      linarith)
+    simp_rw [Real.rpow_natCast] at h0
+    convert h0.norm using 1
+    ext x; rw [Real.norm_eq_abs, abs_mul, abs_pow, abs_of_pos (Real.exp_pos _)]
   have h_prod := MeasureTheory.Integrable.mul_prod h_int_factor h_int_factor
   have h_prod_restr : MeasureTheory.Integrable
-      (fun z : ℝ × ℝ => |z.1| * Real.exp (-(1/(4*s)) * z.1^2) *
-                        (|z.2| * Real.exp (-(1/(4*s)) * z.2^2)))
-      (volume.restrict (Set.Ioi 0 ×ˢ Set.Ioi 0)) :=
-    h_prod.restrict (s := Set.Ioi 0 ×ˢ Set.Ioi 0)
+      (fun z : ℝ × ℝ => |z.1|^n * Real.exp (-(1/(4*s)) * z.1^2) *
+                        (|z.2|^n * Real.exp (-(1/(4*s)) * z.2^2)))
+      (volume.restrict (Set.Ioi 0 ×ˢ Set.Ioi 0)) := by
+    rw [MeasureTheory.Measure.volume_eq_prod]
+    exact h_prod.restrict
   -- Dominate by √(π/s) * h_prod_restr
   apply MeasureTheory.Integrable.mono (h_prod_restr.const_mul (Real.sqrt (π/s)))
   · apply Measurable.aestronglyMeasurable
     apply Measurable.mul; apply Measurable.mul; apply Measurable.mul
-    exact measurable_fst; exact measurable_snd; exact measurable_const
+    exact measurable_fst.pow_const n; exact measurable_snd.pow_const n; exact measurable_const
     exact Real.measurable_exp.comp (Measurable.div_const (Measurable.neg
       (Measurable.pow_const (measurable_fst.add measurable_snd) 2)) (4 * s))
   · filter_upwards [MeasureTheory.ae_restrict_mem (measurableSet_Ioi.prod measurableSet_Ioi)]
@@ -1723,16 +1652,17 @@ lemma heat_kernel_moment_integrableOn_quadrant (s : ℝ) (hs : 0 < s) :
     simp only [Set.mem_prod, Set.mem_Ioi] at hxy
     obtain ⟨hx, hy⟩ := hxy
     rw [Real.norm_eq_abs, Real.norm_eq_abs]
-    have h_lhs_nonneg : 0 ≤ x * y * Real.sqrt (π / s) * Real.exp (-(x + y) ^ 2 / (4 * s)) := by
-      positivity
+    have h_lhs_nonneg : 0 ≤ x^n * y^n * Real.sqrt (π / s) * Real.exp (-(x + y) ^ 2 / (4 * s)) :=
+      mul_nonneg (mul_nonneg (mul_nonneg (pow_nonneg hx.le n) (pow_nonneg hy.le n))
+        (Real.sqrt_nonneg _)) (Real.exp_nonneg _)
     rw [abs_of_nonneg h_lhs_nonneg]
-    have h_rhs_inner_nonneg : 0 ≤ |x| * Real.exp (-(1/(4*s)) * x^2) *
-        (|y| * Real.exp (-(1/(4*s)) * y^2)) := by positivity
+    have h_rhs_inner_nonneg : 0 ≤ |x|^n * Real.exp (-(1/(4*s)) * x^2) *
+        (|y|^n * Real.exp (-(1/(4*s)) * y^2)) := by positivity
     rw [abs_mul, abs_of_nonneg (Real.sqrt_nonneg _), abs_of_nonneg h_rhs_inner_nonneg]
     rw [abs_of_nonneg (le_of_lt hx), abs_of_nonneg (le_of_lt hy)]
     have h_sqrt_nonneg : 0 ≤ Real.sqrt (π / s) := Real.sqrt_nonneg _
-    rw [show x * y * Real.sqrt (π / s) * Real.exp (-(x + y) ^ 2 / (4 * s)) =
-        Real.sqrt (π / s) * (x * y * Real.exp (-(x + y) ^ 2 / (4 * s))) by ring]
+    rw [show x^n * y^n * Real.sqrt (π / s) * Real.exp (-(x + y) ^ 2 / (4 * s)) =
+        Real.sqrt (π / s) * (x^n * y^n * Real.exp (-(x + y) ^ 2 / (4 * s))) by ring]
     apply mul_le_mul_of_nonneg_left _ h_sqrt_nonneg
     have hsum : (x + y)^2 ≥ x^2 + y^2 := by nlinarith [sq_nonneg x, sq_nonneg y, mul_pos hx hy]
     have hexp : Real.exp (-(x+y)^2/(4*s)) ≤ Real.exp (-(x^2 + y^2)/(4*s)) := by
@@ -1742,11 +1672,13 @@ lemma heat_kernel_moment_integrableOn_quadrant (s : ℝ) (hs : 0 < s) :
     have hexp_factor : Real.exp (-(x^2 + y^2)/(4*s)) =
         Real.exp (-(1/(4*s)) * x^2) * Real.exp (-(1/(4*s)) * y^2) := by
       rw [← Real.exp_add]; congr 1; field_simp; ring
-    calc x * y * Real.exp (-(x + y)^2 / (4 * s))
-        ≤ x * y * Real.exp (-(x^2 + y^2)/(4*s)) := by
-          nlinarith [Real.exp_nonneg (-(x^2 + y^2)/(4*s))]
-      _ = x * y * (Real.exp (-(1/(4*s)) * x^2) * Real.exp (-(1/(4*s)) * y^2)) := by rw [hexp_factor]
-      _ = x * Real.exp (-(1/(4*s)) * x^2) * (y * Real.exp (-(1/(4*s)) * y^2)) := by ring
+    calc x^n * y^n * Real.exp (-(x + y)^2 / (4 * s))
+        ≤ x^n * y^n * Real.exp (-(x^2 + y^2)/(4*s)) := by
+          apply mul_le_mul_of_nonneg_left hexp
+          exact mul_nonneg (pow_nonneg hx.le n) (pow_nonneg hy.le n)
+      _ = x^n * y^n * (Real.exp (-(1/(4*s)) * x^2) * Real.exp (-(1/(4*s)) * y^2)) := by
+          rw [hexp_factor]
+      _ = x^n * Real.exp (-(1/(4*s)) * x^2) * (y^n * Real.exp (-(1/(4*s)) * y^2)) := by ring
 
 /-! ### Heat Kernel Moment - Extended by Zero
 
@@ -1754,27 +1686,24 @@ The key technique for proving integrability of parametric set integrals is to ex
 the integrand to be zero outside the region of interest, then use global Fubini theorems.
 -/
 
-/-- Heat kernel moment integrand extended by zero outside (0,∞)².
-    F(t₁, t₂) = t₁ · t₂ · √(π/s) · exp(-(t₁+t₂)²/(4s)) for t₁, t₂ > 0, else 0. -/
-def heatKernelMomentExt (s : ℝ) : ℝ × ℝ → ℝ := fun p =>
+/-- Order-`n` heat kernel moment integrand extended by zero outside (0,∞)².
+    F(t₁, t₂) = t₁ⁿ · t₂ⁿ · √(π/s) · exp(-(t₁+t₂)²/(4s)) for t₁, t₂ > 0, else 0. -/
+def heatKernelMomentExt (n : ℕ) (s : ℝ) : ℝ × ℝ → ℝ := fun p =>
   if p.1 > 0 ∧ p.2 > 0 then
-    p.1 * p.2 * Real.sqrt (π / s) * Real.exp (-(p.1 + p.2)^2 / (4 * s))
+    p.1^n * p.2^n * Real.sqrt (π / s) * Real.exp (-(p.1 + p.2)^2 / (4 * s))
   else 0
 
 /-- The extended heat kernel moment function is integrable on ℝ².
 
-    **Proof**: The function is nonnegative and has finite integral
-    (equal to (π/2)·s^{3/2} by heat_kernel_moment_integral), hence integrable.
-
     Mathematical justification: For nonnegative measurable f, ∫ f < ∞ implies Integrable f
-    (Tonelli's theorem). Here f = heatKernelMomentExt and ∫ f = (π/2)·s^{3/2}.
+    (Tonelli's theorem).
 
     **Reference**: Rudin "Real and Complex Analysis" Ch.8 (Tonelli). -/
-lemma heatKernelMomentExt_integrable (s : ℝ) (hs : 0 < s) :
-    MeasureTheory.Integrable (heatKernelMomentExt s) (volume.prod volume) := by
+lemma heatKernelMomentExt_integrable (n : ℕ) (s : ℝ) (hs : 0 < s) :
+    MeasureTheory.Integrable (heatKernelMomentExt n s) (volume.prod volume) := by
   -- heatKernelMomentExt is the indicator of the heat kernel moment on (0,∞)²
-  have h_eq : heatKernelMomentExt s = (Set.Ioi 0 ×ˢ Set.Ioi 0).indicator
-      (fun z : ℝ × ℝ => z.1 * z.2 * Real.sqrt (π/s) * Real.exp (-(z.1 + z.2)^2 / (4 * s))) := by
+  have h_eq : heatKernelMomentExt n s = (Set.Ioi 0 ×ˢ Set.Ioi 0).indicator
+      (fun z : ℝ × ℝ => z.1^n * z.2^n * Real.sqrt (π/s) * Real.exp (-(z.1 + z.2)^2 / (4 * s))) := by
     ext ⟨t₁, t₂⟩
     unfold heatKernelMomentExt
     by_cases h : t₁ > 0 ∧ t₂ > 0
@@ -1783,22 +1712,22 @@ lemma heatKernelMomentExt_integrable (s : ℝ) (hs : 0 < s) :
   rw [h_eq]
   apply MeasureTheory.IntegrableOn.integrable_indicator _
       (measurableSet_Ioi.prod measurableSet_Ioi)
-  exact heat_kernel_moment_integrableOn_quadrant s hs
+  exact heat_kernel_moment_integrableOn_quadrant n s hs
 
 /-- Parametric integral of extended heat kernel moment is integrable on ℝ.
 
     This follows from Fubini's theorem: if f is integrable on the product,
     then t₁ ↦ ∫ t₂, f(t₁, t₂) is integrable. -/
-lemma heatKernelMomentExt_parametric_integrable (s : ℝ) (hs : 0 < s) :
-    MeasureTheory.Integrable (fun t₁ => ∫ t₂, heatKernelMomentExt s (t₁, t₂)) volume :=
-  (heatKernelMomentExt_integrable s hs).integral_prod_left
+lemma heatKernelMomentExt_parametric_integrable (n : ℕ) (s : ℝ) (hs : 0 < s) :
+    MeasureTheory.Integrable (fun t₁ => ∫ t₂, heatKernelMomentExt n s (t₁, t₂)) volume :=
+  (heatKernelMomentExt_integrable n s hs).integral_prod_left
 
 /-- The parametric integral of the extended function gives a set integral for t₁ > 0. -/
-lemma heatKernelMomentExt_parametric_eq_setIntegral (s : ℝ) (t₁ : ℝ) (ht₁ : 0 < t₁) :
-    ∫ t₂, heatKernelMomentExt s (t₁, t₂) =
-    ∫ t₂ in Set.Ioi 0, t₁ * t₂ * Real.sqrt (π / s) * Real.exp (-(t₁ + t₂)^2 / (4 * s)) := by
-  have h_eq : ∀ t₂, heatKernelMomentExt s (t₁, t₂) =
-      (Set.Ioi 0).indicator (fun t₂ => t₁ * t₂ * Real.sqrt (π / s) *
+lemma heatKernelMomentExt_parametric_eq_setIntegral (n : ℕ) (s : ℝ) (t₁ : ℝ) (ht₁ : 0 < t₁) :
+    ∫ t₂, heatKernelMomentExt n s (t₁, t₂) =
+    ∫ t₂ in Set.Ioi 0, t₁^n * t₂^n * Real.sqrt (π / s) * Real.exp (-(t₁ + t₂)^2 / (4 * s)) := by
+  have h_eq : ∀ t₂, heatKernelMomentExt n s (t₁, t₂) =
+      (Set.Ioi 0).indicator (fun t₂ => t₁^n * t₂^n * Real.sqrt (π / s) *
         Real.exp (-(t₁ + t₂)^2 / (4 * s))) t₂ := by
     intro t₂
     unfold heatKernelMomentExt
@@ -1811,75 +1740,78 @@ lemma heatKernelMomentExt_parametric_eq_setIntegral (s : ℝ) (t₁ : ℝ) (ht�
 
 /-- **Key lemma**: The parametric set integral of heat kernel moments is integrable on (0,∞).
 
-    For any constant c ≥ 0, the function t₁ ↦ ∫_{t₂ > 0} c·t₁·t₂·K(t₁,t₂) dt₂
+    For any constant c, the function t₁ ↦ ∫_{t₂ > 0} c·t₁ⁿ·t₂ⁿ·K(t₁,t₂) dt₂
     is integrable on (0,∞).
 
     **Proof sketch**:
-    1. heatKernelMomentExt is integrable on ℝ² (sorry - uses Tonelli + finite integral)
+    1. heatKernelMomentExt is integrable on ℝ² (Tonelli + finite integral)
     2. By Fubini, t₁ ↦ ∫ t₂, heatKernelMomentExt(t₁,t₂) is integrable on ℝ
     3. The set integral on (0,∞) equals the full integral (zero outside)
     4. Multiply by constant c preserves integrability -/
-lemma heatKernelMoment_setIntegral_integrableOn (s : ℝ) (hs : 0 < s) (c : ℝ) :
+lemma heatKernelMoment_setIntegral_integrableOn (n : ℕ) (s : ℝ) (hs : 0 < s) (c : ℝ) :
     MeasureTheory.IntegrableOn
       (fun t₁ => ∫ t₂ in Set.Ioi 0,
-        c * t₁ * t₂ * Real.sqrt (π / s) * Real.exp (-(t₁ + t₂)^2 / (4 * s)))
+        c * t₁^n * t₂^n * Real.sqrt (π / s) * Real.exp (-(t₁ + t₂)^2 / (4 * s)))
       (Set.Ioi 0) := by
   -- Rewrite the integrand in terms of heatKernelMomentExt
   have h_eq : ∀ t₁ ∈ Set.Ioi (0:ℝ),
-      (∫ t₂ in Set.Ioi 0, c * t₁ * t₂ * Real.sqrt (π / s) * Real.exp (-(t₁ + t₂)^2 / (4 * s))) =
-      c * (∫ t₂, heatKernelMomentExt s (t₁, t₂)) := by
+      (∫ t₂ in Set.Ioi 0,
+        c * t₁^n * t₂^n * Real.sqrt (π / s) * Real.exp (-(t₁ + t₂)^2 / (4 * s))) =
+      c * (∫ t₂, heatKernelMomentExt n s (t₁, t₂)) := by
     intro t₁ ht₁
-    rw [heatKernelMomentExt_parametric_eq_setIntegral s t₁ ht₁]
+    rw [heatKernelMomentExt_parametric_eq_setIntegral n s t₁ ht₁]
     -- Factor out c
     rw [← MeasureTheory.integral_const_mul]
     congr 1; ext t₂; ring
   -- The parametric integral of heatKernelMomentExt is integrable
-  have h_param := heatKernelMomentExt_parametric_integrable s hs
+  have h_param := heatKernelMomentExt_parametric_integrable n s hs
   -- Restrict to Ioi 0 and scale by c
   have h_intOn : MeasureTheory.IntegrableOn
-      (fun t₁ => ∫ t₂, heatKernelMomentExt s (t₁, t₂)) (Set.Ioi 0) :=
+      (fun t₁ => ∫ t₂, heatKernelMomentExt n s (t₁, t₂)) (Set.Ioi 0) :=
     h_param.integrableOn
   have h_scaled : MeasureTheory.IntegrableOn
-      (fun t₁ => c * (∫ t₂, heatKernelMomentExt s (t₁, t₂))) (Set.Ioi 0) :=
+      (fun t₁ => c * (∫ t₂, heatKernelMomentExt n s (t₁, t₂))) (Set.Ioi 0) :=
     h_intOn.const_mul c
   -- The goal function equals the scaled function on Ioi 0
   apply h_scaled.congr
   filter_upwards [MeasureTheory.self_mem_ae_restrict measurableSet_Ioi] with t₁ ht₁
   exact (h_eq t₁ ht₁).symm
 
-/-- Fubini factorization for Schwartz functions with linear vanishing.
+/-- Fubini factorization for Schwartz functions vanishing on the negative-time half-space.
 
-    For Schwartz f : SpaceTime → ℂ vanishing at t ≤ 0, the double integral with
-    heat kernel factor is bounded by K · s^{3/2} for some constant K > 0.
+    For Schwartz f : (SpaceTime d) → ℂ vanishing at t ≤ 0, the double integral with
+    heat kernel factor is bounded by K · s^{d+1/2} for some constant K > 0.
 
     **Proof strategy** (Tonelli factorization):
-    1. Use `spatialNormIntegral_linear_bound`: G(t) := ∫_{ℝ³} ‖f(t,x)‖ dx ≤ C_sp · t
-    2. Factor via Tonelli: ∫∫_{SpaceTime²} = ∫_{time²} G(t₁)·G(t₂) · √(π/s)·exp(...)
-    3. Bound: ≤ C_sp² · ∫_{time²} t₁·t₂ · √(π/s)·exp(-(t₁+t₂)²/(4s))
-    4. Apply `heat_kernel_moment_integral_bound`: ≤ C_sp² · 10 · s^{3/2}
+    1. Use `spatialNormIntegral_pow_bound` at order d:
+       G(t) := ∫_{ℝ^{d−1}} ‖f(t,x)‖ dx ≤ C_sp · t^d
+    2. Factor via Tonelli: ∫∫_{(SpaceTime d)²} = ∫_{time²} G(t₁)·G(t₂) · √(π/s)·exp(...)
+    3. Bound: ≤ C_sp² · ∫_{time²} t₁^d·t₂^d · √(π/s)·exp(-(t₁+t₂)²/(4s))
+    4. Apply `heat_kernel_moment_integral_pow_bound`: ≤ C_sp² · C_mom · s^{d+1/2}
 
     **Reference**: Rudin "Real and Complex Analysis" Ch.8 (Fubini);
                   Standard heat kernel estimates. -/
-lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
-    (hf_supp : ∀ x : SpaceTime, x 0 ≤ 0 → f x = 0) :
+lemma spacetime_fubini_vanishing_bound (f : (TestFunctionℂ d))
+    (hf_supp : ∀ x : (SpaceTime d), x 0 ≤ 0 → f x = 0) :
     ∃ K : ℝ, 0 < K ∧ ∀ (s : ℝ) (_hs : 0 < s),
-      ∫ x : SpaceTime, ∫ y : SpaceTime, ‖f x‖ * ‖f y‖ * Real.sqrt (π / s) *
-        Real.exp (-(x 0 + y 0)^2 / (4 * s)) ≤ K * s^(3/2 : ℝ) := by
-  -- Step 1: Get the spatial integral linear bound (independent of s)
-  obtain ⟨C_sp, hC_sp_pos, h_spatial⟩ := spatialNormIntegral_linear_bound f hf_supp
+      ∫ x : (SpaceTime d), ∫ y : (SpaceTime d), ‖f x‖ * ‖f y‖ * Real.sqrt (π / s) *
+        Real.exp (-(x 0 + y 0)^2 / (4 * s)) ≤ K * s^((d : ℝ) + 1/2) := by
+  -- Step 1: Get the order-d spatial integral bound and the order-d moment bound
+  obtain ⟨C_sp, hC_sp_pos, h_spatial⟩ := spatialNormIntegral_pow_bound d f hf_supp
+  obtain ⟨C_mom, hC_mom_pos, h_mom⟩ := heat_kernel_moment_integral_pow_bound d
 
-  use C_sp^2 * 10
+  use C_sp^2 * C_mom
   constructor
   · positivity
 
   -- Step 2: For any s > 0, prove the bound
   intro s hs
 
-  -- We have the spatial integral bound: G(t) := ∫_{ℝ³} ‖f(t,x_sp)‖ dx_sp ≤ C_sp · t for t > 0
-  -- (from h_spatial : spatialNormIntegral_linear_bound f hf_supp)
+  -- We have the spatial integral bound: G(t) := ∫ ‖f(t,x_sp)‖ dx_sp ≤ C_sp · t^d for t > 0
+  -- (from h_spatial : spatialNormIntegral_pow_bound d f hf_supp)
 
   -- The integrand is non-negative
-  have h_nn : ∀ x y : SpaceTime,
+  have h_nn : ∀ x y : (SpaceTime d),
       0 ≤ ‖f x‖ * ‖f y‖ * Real.sqrt (π / s) * Real.exp (-(x 0 + y 0)^2 / (4 * s)) := by
     intro x y
     apply mul_nonneg
@@ -1889,24 +1821,24 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
     · exact Real.exp_nonneg _
 
   -- The proof uses Tonelli factorization:
-  -- Step A: Decompose SpaceTime × SpaceTime ≃ₘ (ℝ × ℝ³) × (ℝ × ℝ³) ≃ₘ (ℝ × ℝ) × (ℝ³ × ℝ³)
+  -- Step A: Decompose (SpaceTime d)² ≃ₘ (ℝ × ℝ^{d−1})² ≃ₘ (ℝ × ℝ) × (ℝ^{d−1} × ℝ^{d−1})
   -- Step B: Apply Tonelli to swap to time-first: ∫_{time²} ∫_{space²}
   -- Step C: The spatial integrals factor: ∫_{space²} = G(t₁) · G(t₂)
-  -- Step D: Apply h_spatial: G(t) ≤ C_sp · t when t > 0, G(t) = 0 when t ≤ 0
-  -- Step E: Apply heat_kernel_moment_integral_bound
+  -- Step D: Apply h_spatial: G(t) ≤ C_sp · t^d when t > 0, G(t) = 0 when t ≤ 0
+  -- Step E: Apply heat_kernel_moment_integral_pow_bound
 
   -- Mathematical argument (with references):
-  -- ∫∫_{SpaceTime²} ‖f x‖·‖f y‖·√(π/s)·exp(-(t₁+t₂)²/(4s))
-  -- = ∫_{ℝ²} √(π/s)·exp(-(t₁+t₂)²/(4s)) · [∫_{ℝ³} ‖f(t₁,·)‖] · [∫_{ℝ³} ‖f(t₂,·)‖] dt  [Tonelli]
+  -- ∫∫_{(SpaceTime d)²} ‖f x‖·‖f y‖·√(π/s)·exp(-(t₁+t₂)²/(4s))
+  -- = ∫_{ℝ²} √(π/s)·exp(-(t₁+t₂)²/(4s)) · [∫ ‖f(t₁,·)‖] · [∫ ‖f(t₂,·)‖] dt  [Tonelli]
   -- = ∫_{ℝ²} √(π/s)·exp(-(t₁+t₂)²/(4s)) · G(t₁) · G(t₂) dt                            [definition]
   -- = ∫_{(0,∞)²} ... (since G(t) = 0 for t ≤ 0 by hf_supp)
-  -- ≤ C_sp² · ∫_{(0,∞)²} t₁·t₂·√(π/s)·exp(-(t₁+t₂)²/(4s)) dt                         [h_spatial]
-  -- ≤ C_sp² · 10 · s^{3/2}                                            [heat_kernel_moment_integral_bound]
+  -- ≤ C_sp² · ∫_{(0,∞)²} t₁^d·t₂^d·√(π/s)·exp(-(t₁+t₂)²/(4s)) dt                     [h_spatial]
+  -- ≤ C_sp² · C_mom · s^{d+1/2}                                 [heat_kernel_moment_integral_pow_bound]
 
   -- Step 1: Rewrite the double integral as iterated integral over time
-  -- We'll show: ∫∫ F(x,y) = ∫∫ G(t₁)·G(t₂)·kernel(t₁,t₂) dt₁ dt₂ ≤ C_sp² · 10 · s^{3/2}
+  -- We'll show: ∫∫ F(x,y) = ∫∫ G(t₁)·G(t₂)·kernel(t₁,t₂) dt₁ dt₂ ≤ C_sp² · C_mom · s^{d+1/2}
 
-  -- Key helper: G(t) = spatialNormIntegral f t satisfies G(t) ≤ C_sp * t for t > 0
+  -- Key helper: G(t) = spatialNormIntegral f t satisfies G(t) ≤ C_sp * t^d for t > 0
   let G := spatialNormIntegral f
 
   -- G(t) = 0 for t ≤ 0 (by support condition)
@@ -1921,28 +1853,25 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
   have hG_meas : Measurable G := by
     -- G t = ∫ x_sp, ‖f (spacetimeOfTimeSpace t x_sp)‖
     -- First prove spacetimeOfTimeSpace is continuous as a function of (t, x_sp)
-    have h_sts_cont : Continuous (Function.uncurry spacetimeOfTimeSpace) := by
-      -- spacetimeOfTimeSpace t x = EuclideanSpace.equiv ... |>.symm (Fin.cons t (fun i => x i))
-      -- This is a composition of continuous functions
-      unfold spacetimeOfTimeSpace Function.uncurry
-      apply (EuclideanSpace.equiv (Fin 4) ℝ).symm.continuous.comp
-      -- Need: Continuous (fun p : ℝ × SpatialCoords3 => Fin.cons p.1 (fun i => p.2 i))
-      apply continuous_pi
-      intro j
-      cases' j using Fin.cases with j
-      · -- j = 0: this is p.1
-        simp only [Fin.cons_zero]
-        exact continuous_fst
-      · -- j = succ j: this is p.2 j
-        simp only [Fin.cons_succ]
-        exact (PiLp.continuous_apply 2 _ j).comp continuous_snd
+    have h_sts_cont : Continuous (Function.uncurry (spacetimeOfTimeSpace (d := d))) := by
+      -- spacetimeOfTimeSpace t x = t • e₀ + spatialEmbedCLM x is affine, hence continuous
+      have h_eq : Function.uncurry (spacetimeOfTimeSpace (d := d)) =
+          fun p : ℝ × SpatialCoords d =>
+            p.1 • (EuclideanSpace.single (0 : Fin d) (1 : ℝ)) + spatialEmbedCLM p.2 := by
+        funext p
+        show spacetimeOfTimeSpace p.1 p.2 = _
+        rw [spacetimeOfTimeSpace_decompose p.1 p.2, spacetimeOfTimeSpace_eq_smul_single]
+        rfl
+      rw [h_eq]
+      exact (continuous_fst.smul continuous_const).add
+        (spatialEmbedCLM.continuous.comp continuous_snd)
     -- The joint function (t, x_sp) ↦ ‖f(spacetimeOfTimeSpace t x_sp)‖ is continuous
-    have h_joint_cont : Continuous (fun p : ℝ × EuclideanSpace ℝ (Fin 3) =>
+    have h_joint_cont : Continuous (fun p : ℝ × SpatialCoords d =>
         ‖f (spacetimeOfTimeSpace p.1 p.2)‖) := by
       apply Continuous.norm
       exact (SchwartzMap.continuous f).comp h_sts_cont
     -- Continuous implies strongly measurable
-    have h_joint_sm : MeasureTheory.StronglyMeasurable (fun p : ℝ × EuclideanSpace ℝ (Fin 3) =>
+    have h_joint_sm : MeasureTheory.StronglyMeasurable (fun p : ℝ × SpatialCoords d =>
         ‖f (spacetimeOfTimeSpace p.1 p.2)‖) := h_joint_cont.stronglyMeasurable
     -- Use StronglyMeasurable.integral_prod_right
     have h_sm : MeasureTheory.StronglyMeasurable (fun t => ∫ x_sp, ‖f (spacetimeOfTimeSpace t x_sp)‖) :=
@@ -1956,19 +1885,19 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
     mul_nonneg (Real.sqrt_nonneg _) (Real.exp_nonneg _)
 
   -- Step 2: The integrand factors as G(t₁) * G(t₂) * K(t₁, t₂) after Tonelli
-  -- This is the key Tonelli step: decompose SpaceTime × SpaceTime ≃ (ℝ × ℝ) × (ℝ³ × ℝ³)
+  -- This is the key Tonelli step: decompose (SpaceTime d)² ≃ (ℝ × ℝ) × (ℝ^{d−1} × ℝ^{d−1})
   -- and factor the spatial integrals.
   --
-  -- ∫∫_{SpaceTime²} ‖f x‖·‖f y‖·K(x₀,y₀) dx dy
-  -- = ∫∫_{ℝ²} K(t₁,t₂) · [∫_{ℝ³} ‖f(t₁,·)‖] · [∫_{ℝ³} ‖f(t₂,·)‖] dt₁ dt₂  [Tonelli]
+  -- ∫∫_{(SpaceTime d)²} ‖f x‖·‖f y‖·K(x₀,y₀) dx dy
+  -- = ∫∫_{ℝ²} K(t₁,t₂) · [∫ ‖f(t₁,·)‖] · [∫ ‖f(t₂,·)‖] dt₁ dt₂  [Tonelli]
   -- = ∫∫_{ℝ²} K(t₁,t₂) · G(t₁) · G(t₂) dt₁ dt₂
 
-  -- Step 3: Bound using G(t) ≤ C_sp * t for t > 0
+  -- Step 3: Bound using G(t) ≤ C_sp * t^d for t > 0
   -- Since G(t) = 0 for t ≤ 0, the integral restricts to (0,∞)²
   -- On (0,∞)², G(t₁) * G(t₂) ≤ C_sp² * t₁ * t₂
 
-  -- Step 4: Apply heat_kernel_moment_integral_bound
-  -- ∫∫_{(0,∞)²} t₁ * t₂ * K(t₁,t₂) dt₁ dt₂ ≤ 10 * s^{3/2}
+  -- Step 4: Apply heat_kernel_moment_integral_pow_bound
+  -- ∫∫_{(0,∞)²} t₁^d * t₂^d * K(t₁,t₂) dt₁ dt₂ ≤ C_mom * s^{d+1/2}
 
   -- The kernel K is measurable
   have hK_meas : Measurable (Function.uncurry K) := by
@@ -1981,7 +1910,7 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
       exact measurable_add
 
   -- Apply Tonelli factorization theorem (schwartz_tonelli_spacetime)
-  -- This gives: ∫∫_{SpaceTime²} ‖f x‖ · ‖f y‖ · K(x₀,y₀) = ∫∫_{ℝ²} K(t₁,t₂) · G(t₁) · G(t₂) dt
+  -- This gives: ∫∫_{(SpaceTime d)²} ‖f x‖ · ‖f y‖ · K(x₀,y₀) = ∫∫_{ℝ²} K(t₁,t₂) · G(t₁) · G(t₂) dt
   have hK_bdd : ∃ C : ℝ, ∀ t₁ t₂, K t₁ t₂ ≤ C := by
     use Real.sqrt (π / s)
     intro t₁ t₂
@@ -1996,7 +1925,7 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
   have h_tonelli := schwartz_tonelli_spacetime f f K hK_nonneg hK_meas hK_bdd
 
   -- G from h_tonelli matches spatialNormIntegral via the linking lemma
-  have hG_eq : (fun t => ∫ v : SpatialCoords, ‖f (spacetimeDecomp.symm (t, v))‖) = G := by
+  have hG_eq : (fun t => ∫ v : (SpatialCoords d), ‖f (spacetimeDecomp.symm (t, v))‖) = G := by
     ext t
     simp only [G, spatialNormIntegral]
     apply integral_congr_ae
@@ -2004,39 +1933,16 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
     rw [spacetimeDecomp_symm_eq_spacetimeOfTimeSpace]
 
   -- The integrand matches K(x 0, y 0)
-  have h_integrand : ∀ x y : SpaceTime,
+  have h_integrand : ∀ x y : (SpaceTime d),
       ‖f x‖ * ‖f y‖ * Real.sqrt (π / s) * Real.exp (-(x 0 + y 0)^2 / (4 * s)) =
       ‖f x‖ * ‖f y‖ * K (x 0) (y 0) := fun x y => by ring
 
-  -- Define the bounded version: H(t) = C_sp * max(t, 0)
-  -- G(t) ≤ H(t) for all t: when t > 0 by h_spatial, when t ≤ 0 because G = 0
-  have hG_bound : ∀ t, G t ≤ C_sp * max t 0 := by
-    intro t
-    by_cases ht : 0 < t
-    · have h1 : G t ≤ C_sp * t := h_spatial t ht
-      simp only [max_eq_left (le_of_lt ht)]
-      exact h1
-    · push Not at ht
-      have h1 : G t = 0 := hG_zero t ht
-      simp only [h1, max_eq_right ht, mul_zero, le_refl]
-
-  -- Bound: K * G(t₁) * G(t₂) ≤ K * C_sp² * max(t₁,0) * max(t₂,0)
-  have h_pointwise_bound : ∀ t₁ t₂,
-      K t₁ t₂ * G t₁ * G t₂ ≤ K t₁ t₂ * (C_sp * max t₁ 0) * (C_sp * max t₂ 0) := by
-    intro t₁ t₂
-    apply mul_le_mul
-    · apply mul_le_mul (le_refl _) (hG_bound t₁) (hG_nonneg t₁) (hK_nonneg t₁ t₂)
-    · exact hG_bound t₂
-    · exact hG_nonneg t₂
-    · apply mul_nonneg (hK_nonneg t₁ t₂)
-      exact mul_nonneg hC_sp_pos.le (le_max_right t₁ 0)
-
   -- The main bound using direct calculation on (0,∞)²
   -- Key idea: G(t) = 0 for t ≤ 0, so the ℝ² integral equals the (0,∞)² integral
-  -- On (0,∞)², we can use h_spatial: G(t) ≤ C_sp * t
-  calc ∫ x : SpaceTime, ∫ y : SpaceTime,
+  -- On (0,∞)², we can use h_spatial: G(t) ≤ C_sp * t^d
+  calc ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
           ‖f x‖ * ‖f y‖ * Real.sqrt (π / s) * Real.exp (-(x 0 + y 0)^2 / (4 * s))
-      = ∫ x : SpaceTime, ∫ y : SpaceTime, ‖f x‖ * ‖f y‖ * K (x 0) (y 0) := by
+      = ∫ x : (SpaceTime d), ∫ y : (SpaceTime d), ‖f x‖ * ‖f y‖ * K (x 0) (y 0) := by
         congr 1; ext x; congr 1; ext y; exact h_integrand x y
     _ = ∫ t₁ : ℝ, ∫ t₂ : ℝ, K t₁ t₂ * G t₁ * G t₂ := by
         have h := h_tonelli
@@ -2049,11 +1955,11 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
           · congr 1
             exact congr_fun hG_eq t₁
           · exact congr_fun hG_eq t₂)
-    _ ≤ C_sp^2 * (10 * s^(3/2 : ℝ)) := by
+    _ ≤ C_sp^2 * (C_mom * s^((d : ℝ) + 1/2)) := by
         -- The proof uses:
         -- (1) G(t) = 0 for t ≤ 0, so ∫_{ℝ²} = ∫_{(0,∞)²}
-        -- (2) On (0,∞)², G(t) ≤ C_sp * t
-        -- (3) heat_kernel_moment_integral_bound for the final bound
+        -- (2) On (0,∞)², G(t) ≤ C_sp * t^d
+        -- (3) heat_kernel_moment_integral_pow_bound for the final bound
         --
         -- Step 1: Rewrite ℝ² integral as (0,∞)² integral using support
         -- When t₁ ≤ 0 or t₂ ≤ 0, G(t₁) = 0 or G(t₂) = 0, so integrand = 0
@@ -2074,39 +1980,42 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
           simp only [hG_zero t₁ ht₁, mul_zero, zero_mul, MeasureTheory.integral_zero]
         simp_rw [h_supp_inner, h_supp_outer]
 
-        -- Step 2: On (0,∞)², bound G(t) ≤ C_sp * t
+        -- Step 2: On (0,∞)², bound G(t) ≤ C_sp * t^d
         have h_bound : ∀ t₁ ∈ Set.Ioi (0:ℝ), ∀ t₂ ∈ Set.Ioi (0:ℝ),
-            K t₁ t₂ * G t₁ * G t₂ ≤ K t₁ t₂ * (C_sp * t₁) * (C_sp * t₂) := by
+            K t₁ t₂ * G t₁ * G t₂ ≤ K t₁ t₂ * (C_sp * t₁^d) * (C_sp * t₂^d) := by
           intro t₁ ht₁ t₂ ht₂
           simp only [Set.mem_Ioi] at ht₁ ht₂
           apply mul_le_mul
           · apply mul_le_mul (le_refl _) (h_spatial t₁ ht₁) (hG_nonneg t₁) (hK_nonneg t₁ t₂)
           · exact h_spatial t₂ ht₂
           · exact hG_nonneg t₂
-          · apply mul_nonneg (hK_nonneg t₁ t₂); exact mul_nonneg hC_sp_pos.le (le_of_lt ht₁)
+          · apply mul_nonneg (hK_nonneg t₁ t₂)
+            exact mul_nonneg hC_sp_pos.le (pow_nonneg (le_of_lt ht₁) d)
 
         -- Step 3: Apply monotonicity on (0,∞)²
         -- Use the helper lemmas for integrability
 
         have h_mono_inner : ∀ t₁ ∈ Set.Ioi (0:ℝ),
             ∫ t₂ in Set.Ioi 0, K t₁ t₂ * G t₁ * G t₂ ≤
-            ∫ t₂ in Set.Ioi 0, K t₁ t₂ * (C_sp * t₁) * (C_sp * t₂) := by
+            ∫ t₂ in Set.Ioi 0, K t₁ t₂ * (C_sp * t₁^d) * (C_sp * t₂^d) := by
           intro t₁ ht₁
           simp only [Set.mem_Ioi] at ht₁
           apply MeasureTheory.setIntegral_mono_on
           · -- Integrability of K * G * G on Ioi 0
             -- The second IntegrableOn goal dominates this one, and we prove it below
-            -- Use the bound: K * G(t₁) * G(t₂) ≤ K * (C_sp * t₁) * (C_sp * t₂)
-            have h_inner := heat_kernel_inner_integrableOn hs (le_of_lt ht₁)
+            -- Use the bound: K * G(t₁) * G(t₂) ≤ K * (C_sp * t₁^d) * (C_sp * t₂^d)
+            have h_inner := heat_kernel_inner_integrableOn d hs (le_of_lt ht₁)
             rw [MeasureTheory.IntegrableOn]
-            -- The dominating function: K * (C_sp * t₁) * (C_sp * t₂) = const * t₂ * exp(...)
+            -- The dominating function: K * (C_sp * t₁^d) * (C_sp * t₂^d) = const * t₂^d * exp(...)
             have h_dom : MeasureTheory.Integrable
-                (fun t₂ => K t₁ t₂ * (C_sp * t₁) * (C_sp * t₂)) (volume.restrict (Set.Ioi 0)) := by
-              have h1 : (fun t₂ => K t₁ t₂ * (C_sp * t₁) * (C_sp * t₂)) =
-                  (fun t₂ => C_sp^2 * t₁ * Real.sqrt (π / s) * (t₂ * Real.exp (-(t₁ + t₂)^2 / (4 * s)))) := by
+                (fun t₂ => K t₁ t₂ * (C_sp * t₁^d) * (C_sp * t₂^d))
+                (volume.restrict (Set.Ioi 0)) := by
+              have h1 : (fun t₂ => K t₁ t₂ * (C_sp * t₁^d) * (C_sp * t₂^d)) =
+                  (fun t₂ => C_sp^2 * t₁^d * Real.sqrt (π / s) *
+                    (t₂^d * Real.exp (-(t₁ + t₂)^2 / (4 * s)))) := by
                 ext t₂; simp only [K]; ring
               rw [h1]
-              exact h_inner.const_mul (C_sp^2 * t₁ * Real.sqrt (π / s))
+              exact h_inner.const_mul (C_sp^2 * t₁^d * Real.sqrt (π / s))
             apply MeasureTheory.Integrable.mono h_dom
             · -- Measurability: the integrand is measurable
               apply Measurable.aestronglyMeasurable
@@ -2121,29 +2030,36 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
               rw [Real.norm_eq_abs, abs_of_nonneg (mul_nonneg (mul_nonneg (hK_nonneg t₁ t₂) (hG_nonneg t₁)) (hG_nonneg t₂))]
               rw [Real.norm_eq_abs]
               rw [abs_of_nonneg (mul_nonneg (mul_nonneg (mul_nonneg (Real.sqrt_nonneg _) (Real.exp_nonneg _))
-                (mul_nonneg hC_sp_pos.le (le_of_lt ht₁))) (mul_nonneg hC_sp_pos.le (le_of_lt ht₂)))]
+                (mul_nonneg hC_sp_pos.le (pow_nonneg (le_of_lt ht₁) d)))
+                (mul_nonneg hC_sp_pos.le (pow_nonneg (le_of_lt ht₂) d)))]
               exact h_bound t₁ (Set.mem_Ioi.mpr ht₁) t₂ (Set.mem_Ioi.mpr ht₂)
-          · -- Integrability of K * (C_sp * t₁) * (C_sp * t₂) on Ioi 0
-            have h_inner := heat_kernel_inner_integrableOn hs (le_of_lt ht₁)
+          · -- Integrability of K * (C_sp * t₁^d) * (C_sp * t₂^d) on Ioi 0
+            have h_inner := heat_kernel_inner_integrableOn d hs (le_of_lt ht₁)
             rw [MeasureTheory.IntegrableOn]
-            apply MeasureTheory.Integrable.mono (h_inner.const_mul (C_sp^2 * t₁ * Real.sqrt (π / s)))
+            apply MeasureTheory.Integrable.mono
+              (h_inner.const_mul (C_sp^2 * t₁^d * Real.sqrt (π / s)))
             · apply Measurable.aestronglyMeasurable
               refine Measurable.mul (Measurable.mul ?_ measurable_const) ?_
               · exact Measurable.of_uncurry_left hK_meas
-              · exact measurable_const_mul C_sp
+              · exact (measurable_id.pow_const d).const_mul C_sp
             · filter_upwards [MeasureTheory.ae_restrict_mem measurableSet_Ioi] with t₂ ht₂
               simp only [Set.mem_Ioi] at ht₂
               simp only [K]
               rw [Real.norm_eq_abs]
               rw [abs_of_nonneg (mul_nonneg (mul_nonneg (mul_nonneg (Real.sqrt_nonneg _) (Real.exp_nonneg _))
-                (mul_nonneg hC_sp_pos.le (le_of_lt ht₁))) (mul_nonneg hC_sp_pos.le (le_of_lt ht₂)))]
+                (mul_nonneg hC_sp_pos.le (pow_nonneg (le_of_lt ht₁) d)))
+                (mul_nonneg hC_sp_pos.le (pow_nonneg (le_of_lt ht₂) d)))]
               rw [Real.norm_eq_abs]
-              have hconst_nonneg : 0 ≤ C_sp^2 * t₁ * Real.sqrt (π / s) :=
-                mul_nonneg (mul_nonneg (sq_nonneg _) (le_of_lt ht₁)) (Real.sqrt_nonneg _)
-              rw [abs_of_nonneg (mul_nonneg hconst_nonneg (mul_nonneg (le_of_lt ht₂) (Real.exp_nonneg _)))]
+              have hconst_nonneg : 0 ≤ C_sp^2 * t₁^d * Real.sqrt (π / s) :=
+                mul_nonneg (mul_nonneg (sq_nonneg _) (pow_nonneg (le_of_lt ht₁) d))
+                  (Real.sqrt_nonneg _)
+              rw [abs_of_nonneg (mul_nonneg hconst_nonneg
+                (mul_nonneg (pow_nonneg (le_of_lt ht₂) d) (Real.exp_nonneg _)))]
               -- Goal: LHS ≤ RHS, where both sides are equal
-              have h_eq : Real.sqrt (π / s) * Real.exp (-(t₁ + t₂)^2 / (4 * s)) * (C_sp * t₁) * (C_sp * t₂)
-                  = C_sp^2 * t₁ * Real.sqrt (π / s) * (t₂ * Real.exp (-(t₁ + t₂)^2 / (4 * s))) := by ring
+              have h_eq : Real.sqrt (π / s) * Real.exp (-(t₁ + t₂)^2 / (4 * s)) *
+                    (C_sp * t₁^d) * (C_sp * t₂^d)
+                  = C_sp^2 * t₁^d * Real.sqrt (π / s) *
+                    (t₂^d * Real.exp (-(t₁ + t₂)^2 / (4 * s))) := by ring
               exact le_of_eq h_eq
           · exact measurableSet_Ioi
           · intro t₂ ht₂; exact h_bound t₁ ht₁ t₂ ht₂
@@ -2152,19 +2068,22 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
         -- Uses h_mono_inner which gives the pointwise bound
         have h_mono_outer :
             ∫ t₁ in Set.Ioi 0, ∫ t₂ in Set.Ioi 0, K t₁ t₂ * G t₁ * G t₂ ≤
-            ∫ t₁ in Set.Ioi 0, ∫ t₂ in Set.Ioi 0, K t₁ t₂ * (C_sp * t₁) * (C_sp * t₂) := by
+            ∫ t₁ in Set.Ioi 0, ∫ t₂ in Set.Ioi 0, K t₁ t₂ * (C_sp * t₁^d) * (C_sp * t₂^d) := by
           apply MeasureTheory.setIntegral_mono_on
           -- IntegrableOn for f (inner integral of K * G * G)
           -- Dominated by the "g" integrand via h_mono_inner, which is integrable below
           · -- Rewrite to match heatKernelMoment_setIntegral_integrableOn form
             have h_g_integrableOn : MeasureTheory.IntegrableOn
-                (fun t₁ => ∫ t₂ in Set.Ioi 0, K t₁ t₂ * (C_sp * t₁) * (C_sp * t₂)) (Set.Ioi 0) := by
-              -- K t₁ t₂ * (C_sp * t₁) * (C_sp * t₂) = C_sp² * t₁ * t₂ * √(π/s) * exp(-(t₁+t₂)²/(4s))
-              have h_eq : ∀ t₁ t₂ : ℝ, K t₁ t₂ * (C_sp * t₁) * (C_sp * t₂) =
-                  C_sp^2 * t₁ * t₂ * Real.sqrt (π / s) * Real.exp (-(t₁ + t₂)^2 / (4 * s)) := by
+                (fun t₁ => ∫ t₂ in Set.Ioi 0, K t₁ t₂ * (C_sp * t₁^d) * (C_sp * t₂^d))
+                (Set.Ioi 0) := by
+              -- K t₁ t₂ * (C_sp * t₁^d) * (C_sp * t₂^d)
+              --   = C_sp² * t₁^d * t₂^d * √(π/s) * exp(-(t₁+t₂)²/(4s))
+              have h_eq : ∀ t₁ t₂ : ℝ, K t₁ t₂ * (C_sp * t₁^d) * (C_sp * t₂^d) =
+                  C_sp^2 * t₁^d * t₂^d * Real.sqrt (π / s) *
+                    Real.exp (-(t₁ + t₂)^2 / (4 * s)) := by
                 intro t₁ t₂; simp only [K]; ring
               simp_rw [h_eq]
-              exact heatKernelMoment_setIntegral_integrableOn s hs (C_sp^2)
+              exact heatKernelMoment_setIntegral_integrableOn d s hs (C_sp^2)
             -- The f integrand is bounded by g integrand (by h_mono_inner), so f is integrable
             rw [MeasureTheory.IntegrableOn] at h_g_integrableOn ⊢
             apply MeasureTheory.Integrable.mono h_g_integrableOn
@@ -2188,58 +2107,59 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
               · apply MeasureTheory.setIntegral_nonneg measurableSet_Ioi
                 intro t₂ ht₂; simp only [Set.mem_Ioi] at ht₂
                 apply mul_nonneg; apply mul_nonneg (hK_nonneg t₁ t₂)
-                exact mul_nonneg hC_sp_pos.le (le_of_lt ht₁)
-                exact mul_nonneg hC_sp_pos.le (le_of_lt ht₂)
+                exact mul_nonneg hC_sp_pos.le (pow_nonneg (le_of_lt ht₁) d)
+                exact mul_nonneg hC_sp_pos.le (pow_nonneg (le_of_lt ht₂) d)
               · apply MeasureTheory.setIntegral_nonneg measurableSet_Ioi
                 intro t₂ ht₂
                 apply mul_nonneg; apply mul_nonneg (hK_nonneg t₁ t₂) (hG_nonneg t₁); exact hG_nonneg t₂
-          -- IntegrableOn for g (inner integral of K * (C_sp * t₁) * (C_sp * t₂))
+          -- IntegrableOn for g (inner integral of K * (C_sp * t₁^d) * (C_sp * t₂^d))
           -- Uses heatKernelMoment_setIntegral_integrableOn
-          · have h_eq : ∀ t₁ t₂ : ℝ, K t₁ t₂ * (C_sp * t₁) * (C_sp * t₂) =
-                C_sp^2 * t₁ * t₂ * Real.sqrt (π / s) * Real.exp (-(t₁ + t₂)^2 / (4 * s)) := by
+          · have h_eq : ∀ t₁ t₂ : ℝ, K t₁ t₂ * (C_sp * t₁^d) * (C_sp * t₂^d) =
+                C_sp^2 * t₁^d * t₂^d * Real.sqrt (π / s) *
+                  Real.exp (-(t₁ + t₂)^2 / (4 * s)) := by
               intro t₁ t₂; simp only [K]; ring
             simp_rw [h_eq]
-            exact heatKernelMoment_setIntegral_integrableOn s hs (C_sp^2)
+            exact heatKernelMoment_setIntegral_integrableOn d s hs (C_sp^2)
           · exact measurableSet_Ioi
           · intro t₁ ht₁; exact h_mono_inner t₁ ht₁
 
-        -- Step 4: Factor out C_sp² and apply heat_kernel_moment_integral_bound
-        have h_factor : ∀ t₁ t₂, K t₁ t₂ * (C_sp * t₁) * (C_sp * t₂) =
-            C_sp^2 * (t₁ * t₂ * K t₁ t₂) := fun t₁ t₂ => by ring
-
+        -- Step 4: Factor out C_sp² and apply heat_kernel_moment_integral_pow_bound
         have h_final :
-            ∫ t₁ in Set.Ioi 0, ∫ t₂ in Set.Ioi 0, K t₁ t₂ * (C_sp * t₁) * (C_sp * t₂) =
+            ∫ t₁ in Set.Ioi 0, ∫ t₂ in Set.Ioi 0, K t₁ t₂ * (C_sp * t₁^d) * (C_sp * t₂^d) =
             C_sp^2 * ∫ t₁ in Set.Ioi 0, ∫ t₂ in Set.Ioi 0,
-              t₁ * t₂ * Real.sqrt (π / s) * Real.exp (-(t₁ + t₂)^2 / (4 * s)) := by
-          -- K t₁ t₂ * (C_sp * t₁) * (C_sp * t₂) = C_sp² * t₁ * t₂ * K t₁ t₂
+              t₁^d * t₂^d * Real.sqrt (π / s) * Real.exp (-(t₁ + t₂)^2 / (4 * s)) := by
+          -- K t₁ t₂ * (C_sp * t₁^d) * (C_sp * t₂^d) = C_sp² * (t₁^d * t₂^d * K t₁ t₂)
           -- K t₁ t₂ = √(π/s) * exp(...)
           -- Factor out C_sp² from both integrals
-          have h_eq : ∀ t₁ t₂ : ℝ, K t₁ t₂ * (C_sp * t₁) * (C_sp * t₂) =
-              C_sp^2 * (t₁ * t₂ * Real.sqrt (π / s) * Real.exp (-(t₁ + t₂)^2 / (4 * s))) := by
+          have h_eq : ∀ t₁ t₂ : ℝ, K t₁ t₂ * (C_sp * t₁^d) * (C_sp * t₂^d) =
+              C_sp^2 * (t₁^d * t₂^d * Real.sqrt (π / s) *
+                Real.exp (-(t₁ + t₂)^2 / (4 * s))) := by
             intro t₁ t₂; simp only [K]; ring
           -- First rewrite the integrand using h_eq
-          have h_lhs : ∫ t₁ in Set.Ioi 0, ∫ t₂ in Set.Ioi 0, K t₁ t₂ * (C_sp * t₁) * (C_sp * t₂) =
+          have h_lhs : ∫ t₁ in Set.Ioi 0, ∫ t₂ in Set.Ioi 0,
+                K t₁ t₂ * (C_sp * t₁^d) * (C_sp * t₂^d) =
               ∫ t₁ in Set.Ioi 0, ∫ t₂ in Set.Ioi 0,
-                C_sp^2 * (t₁ * t₂ * Real.sqrt (π / s) * Real.exp (-(t₁ + t₂)^2 / (4 * s))) := by
+                C_sp^2 * (t₁^d * t₂^d * Real.sqrt (π / s) *
+                  Real.exp (-(t₁ + t₂)^2 / (4 * s))) := by
             congr 1; ext t₁; congr 1; ext t₂; exact h_eq t₁ t₂
           rw [h_lhs]
           -- Now factor C_sp² out of both integrals using MeasureTheory.integral_const_mul
           simp_rw [MeasureTheory.integral_const_mul]
 
         calc ∫ t₁ in Set.Ioi 0, ∫ t₂ in Set.Ioi 0, K t₁ t₂ * G t₁ * G t₂
-            ≤ ∫ t₁ in Set.Ioi 0, ∫ t₂ in Set.Ioi 0, K t₁ t₂ * (C_sp * t₁) * (C_sp * t₂) :=
+            ≤ ∫ t₁ in Set.Ioi 0, ∫ t₂ in Set.Ioi 0, K t₁ t₂ * (C_sp * t₁^d) * (C_sp * t₂^d) :=
               h_mono_outer
           _ = C_sp^2 * ∫ t₁ in Set.Ioi 0, ∫ t₂ in Set.Ioi 0,
-                t₁ * t₂ * Real.sqrt (π / s) * Real.exp (-(t₁ + t₂)^2 / (4 * s)) :=
+                t₁^d * t₂^d * Real.sqrt (π / s) * Real.exp (-(t₁ + t₂)^2 / (4 * s)) :=
               h_final
-          _ ≤ C_sp^2 * (10 * s^(3/2 : ℝ)) := by
-              apply mul_le_mul_of_nonneg_left (heat_kernel_moment_integral_bound s hs)
+          _ ≤ C_sp^2 * (C_mom * s^((d : ℝ) + 1/2)) := by
+              apply mul_le_mul_of_nonneg_left (h_mom s hs)
               positivity
-    _ = C_sp^2 * 10 * s^(3/2 : ℝ) := by ring
+    _ = C_sp^2 * C_mom * s^((d : ℝ) + 1/2) := by ring
 
 /-- **Schwartz norm–Gaussian product measurability.**
 
-    For Schwartz f : SpaceTime → ℂ, constants c₁, c₂ ∈ ℝ, s > 0, and fixed x : SpaceTime,
+    For Schwartz f : (SpaceTime d) → ℂ, constants c₁, c₂ ∈ ℝ, s > 0, and fixed x : (SpaceTime d),
     the function a ↦ ‖f x‖ * ‖f a‖ * c₁ * exp(-(x₀ + a₀)²/(4s)) * c₂ is AEStronglyMeasurable.
 
     **Mathematical content:**
@@ -2249,84 +2169,85 @@ lemma spacetime_fubini_linear_vanishing_bound (f : TestFunctionℂ)
 
     **Reference**: Rudin "Real and Complex Analysis" Ch.1 (measurable functions);
                   Folland "Real Analysis" Ch.2. -/
-lemma schwartz_heat_product_aestronglymeasurable (f : TestFunctionℂ)
-    (x : SpaceTime) (c₁ c₂ : ℝ) (s : ℝ) (_hs : 0 < s) :
-    AEStronglyMeasurable (fun a : SpaceTime =>
+lemma schwartz_heat_product_aestronglymeasurable (f : (TestFunctionℂ d))
+    (x : (SpaceTime d)) (c₁ c₂ : ℝ) (s : ℝ) (_hs : 0 < s) :
+    AEStronglyMeasurable (fun a : (SpaceTime d) =>
       ‖f x‖ * ‖f a‖ * c₁ * Real.exp (-(x 0 + a 0)^2 / (4 * s)) * c₂) volume := by
-  have h_fx : AEStronglyMeasurable (fun _ : SpaceTime => ‖f x‖) volume :=
+  have h_fx : AEStronglyMeasurable (fun _ : (SpaceTime d) => ‖f x‖) volume :=
     aestronglyMeasurable_const
-  have h_fa : AEStronglyMeasurable (fun a : SpaceTime => ‖f a‖) volume := by
+  have h_fa : AEStronglyMeasurable (fun a : (SpaceTime d) => ‖f a‖) volume := by
     exact (SchwartzMap.continuous f).aestronglyMeasurable.norm
-  have h_c1 : AEStronglyMeasurable (fun _ : SpaceTime => c₁) volume :=
+  have h_c1 : AEStronglyMeasurable (fun _ : (SpaceTime d) => c₁) volume :=
     aestronglyMeasurable_const
-  have h_c2 : AEStronglyMeasurable (fun _ : SpaceTime => c₂) volume :=
+  have h_c2 : AEStronglyMeasurable (fun _ : (SpaceTime d) => c₂) volume :=
     aestronglyMeasurable_const
   have h_exp : AEStronglyMeasurable
-      (fun a : SpaceTime => Real.exp (-(x 0 + a 0)^2 / (4 * s))) volume := by
-    have h0 : Continuous (fun a : SpaceTime => a 0) := by
-      simpa using (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) (0 : Fin STDimension))
-    have h1 : Continuous (fun a : SpaceTime => x 0 + a 0) := continuous_const.add h0
-    have h2 : Continuous (fun a : SpaceTime => (x 0 + a 0)^2) := h1.pow 2
-    have h3 : Continuous (fun a : SpaceTime => -(x 0 + a 0)^2) := h2.neg
-    have h4 : Continuous (fun a : SpaceTime => -(x 0 + a 0)^2 * (1 / (4 * s))) :=
+      (fun a : (SpaceTime d) => Real.exp (-(x 0 + a 0)^2 / (4 * s))) volume := by
+    have h0 : Continuous (fun a : (SpaceTime d) => a 0) := by
+      simpa using (PiLp.continuous_apply 2 (fun _ : Fin d => ℝ) (0 : Fin d))
+    have h1 : Continuous (fun a : (SpaceTime d) => x 0 + a 0) := continuous_const.add h0
+    have h2 : Continuous (fun a : (SpaceTime d) => (x 0 + a 0)^2) := h1.pow 2
+    have h3 : Continuous (fun a : (SpaceTime d) => -(x 0 + a 0)^2) := h2.neg
+    have h4 : Continuous (fun a : (SpaceTime d) => -(x 0 + a 0)^2 * (1 / (4 * s))) :=
       h3.mul continuous_const
-    have h5 : Continuous (fun a : SpaceTime => Real.exp (-(x 0 + a 0)^2 * (1 / (4 * s)))) :=
+    have h5 : Continuous (fun a : (SpaceTime d) => Real.exp (-(x 0 + a 0)^2 * (1 / (4 * s)))) :=
       (Real.continuous_exp.comp h4)
     simpa [div_eq_mul_inv, mul_comm, mul_left_comm, mul_assoc] using h5.aestronglyMeasurable
   exact ((((h_fx.mul h_fa).mul h_c1).mul h_exp).mul h_c2)
 
 /-- **Iterated integral integrability for Schwartz-bounded functions.**
 
-    For Schwartz f : SpaceTime → ℂ and bounded factors (√(π/s), exp(-sω²)),
+    For Schwartz f : (SpaceTime d) → ℂ and bounded factors (√(π/s), exp(-sω²)),
     the function x ↦ ∫_y ‖f x‖ · ‖f y‖ · √(π/s) · exp(-(x₀+y₀)²/(4s)) · exp(-sω²) is integrable.
 
     **Mathematical content:**
     By Fubini/Tonelli, if ∫∫ |F(x,y)| < ∞, then ∫_y |F(x,y)| is integrable in x.
     Here F(x,y) = ‖f x‖ · ‖f y‖ · (bounded factors), and the double integral is finite
-    by spacetime_fubini_linear_vanishing_bound (using linear vanishing) or by
+    by spacetime_fubini_vanishing_bound (using linear vanishing) or by
     direct Schwartz decay estimates.
 
     **Reference**: Rudin "Real and Complex Analysis" Ch.8 (Fubini);
                   Folland "Real Analysis" Ch.2 (Tonelli). -/
-lemma schwartz_iterated_integral_integrable (f : TestFunctionℂ)
+lemma schwartz_iterated_integral_integrable (f : (TestFunctionℂ d))
     (hf_int_norm : Integrable (fun x => ‖f x‖) volume)
     (c₁ c₂ : ℝ) (s : ℝ) (hs : 0 < s) :
-    Integrable (fun x : SpaceTime => ∫ y : SpaceTime,
+    Integrable (fun x : (SpaceTime d) => ∫ y : (SpaceTime d),
       ‖f x‖ * ‖f y‖ * c₁ * Real.exp (-(x 0 + y 0)^2 / (4 * s)) * c₂) volume := by
   -- Work on the product space and use Fubini/Tonelli via Integrable.integral_prod_left.
-  let G : SpaceTime × SpaceTime → ℝ := fun p =>
+  let G : (SpaceTime d) × (SpaceTime d) → ℝ := fun p =>
     ‖f p.1‖ * ‖f p.2‖ * c₁ * Real.exp (-(p.1 0 + p.2 0)^2 / (4 * s)) * c₂
 
   have hG_meas : AEStronglyMeasurable G (volume.prod volume) := by
-    have h_f1 : AEStronglyMeasurable (fun p : SpaceTime × SpaceTime => ‖f p.1‖)
+    have h_f1 : AEStronglyMeasurable (fun p : (SpaceTime d) × (SpaceTime d) => ‖f p.1‖)
         (volume.prod volume) :=
       (SchwartzMap.continuous f).comp continuous_fst |>.aestronglyMeasurable.norm
-    have h_f2 : AEStronglyMeasurable (fun p : SpaceTime × SpaceTime => ‖f p.2‖)
+    have h_f2 : AEStronglyMeasurable (fun p : (SpaceTime d) × (SpaceTime d) => ‖f p.2‖)
         (volume.prod volume) :=
       (SchwartzMap.continuous f).comp continuous_snd |>.aestronglyMeasurable.norm
-    have h_c1 : AEStronglyMeasurable (fun _ : SpaceTime × SpaceTime => c₁)
+    have h_c1 : AEStronglyMeasurable (fun _ : (SpaceTime d) × (SpaceTime d) => c₁)
         (volume.prod volume) := aestronglyMeasurable_const
-    have h_c2 : AEStronglyMeasurable (fun _ : SpaceTime × SpaceTime => c₂)
+    have h_c2 : AEStronglyMeasurable (fun _ : (SpaceTime d) × (SpaceTime d) => c₂)
         (volume.prod volume) := aestronglyMeasurable_const
     have h_exp : AEStronglyMeasurable
-        (fun p : SpaceTime × SpaceTime => Real.exp (-(p.1 0 + p.2 0)^2 / (4 * s)))
+        (fun p : (SpaceTime d) × (SpaceTime d) => Real.exp (-(p.1 0 + p.2 0)^2 / (4 * s)))
         (volume.prod volume) := by
-      have h0 : Continuous (fun p : SpaceTime × SpaceTime => p.1 0 + p.2 0) := by
-        have h1 : Continuous (fun p : SpaceTime × SpaceTime => (p.1) 0) :=
-          (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) (0 : Fin STDimension)).comp
+      have h0 : Continuous (fun p : (SpaceTime d) × (SpaceTime d) => p.1 0 + p.2 0) := by
+        have h1 : Continuous (fun p : (SpaceTime d) × (SpaceTime d) => (p.1) 0) :=
+          (PiLp.continuous_apply 2 (fun _ : Fin d => ℝ) (0 : Fin d)).comp
             continuous_fst
-        have h2 : Continuous (fun p : SpaceTime × SpaceTime => (p.2) 0) :=
-          (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) (0 : Fin STDimension)).comp
+        have h2 : Continuous (fun p : (SpaceTime d) × (SpaceTime d) => (p.2) 0) :=
+          (PiLp.continuous_apply 2 (fun _ : Fin d => ℝ) (0 : Fin d)).comp
             continuous_snd
         exact h1.add h2
-      have h1 : Continuous (fun p : SpaceTime × SpaceTime => (p.1 0 + p.2 0)^2) := h0.pow 2
-      have h2 : Continuous (fun p : SpaceTime × SpaceTime => -(p.1 0 + p.2 0)^2) := h1.neg
-      have h3 : Continuous (fun p : SpaceTime × SpaceTime => -(p.1 0 + p.2 0)^2 * (1 / (4 * s))) :=
+      have h1 : Continuous (fun p : (SpaceTime d) × (SpaceTime d) => (p.1 0 + p.2 0)^2) := h0.pow 2
+      have h2 : Continuous (fun p : (SpaceTime d) × (SpaceTime d) => -(p.1 0 + p.2 0)^2) := h1.neg
+      have h3 : Continuous (fun p : (SpaceTime d) × (SpaceTime d) => -(p.1 0 + p.2 0)^2 * (1 / (4 * s))) :=
         h2.mul continuous_const
-      have h4 : Continuous (fun p : SpaceTime × SpaceTime => Real.exp (-(p.1 0 + p.2 0)^2 * (1 / (4 * s)))) :=
+      have h4 : Continuous (fun p : (SpaceTime d) × (SpaceTime d) => Real.exp (-(p.1 0 + p.2 0)^2 * (1 / (4 * s)))) :=
         (Real.continuous_exp.comp h3)
       simpa [div_eq_mul_inv, mul_comm, mul_left_comm, mul_assoc] using h4.aestronglyMeasurable
-    exact ((((h_f1.mul h_f2).mul h_c1).mul h_exp).mul h_c2)
+    simpa [G, Pi.mul_def, mul_assoc, mul_left_comm, mul_comm] using
+      ((((h_f1.mul h_f2).mul h_c1).mul h_exp).mul h_c2)
 
   have hG_int : Integrable G (volume.prod volume) := by
     -- Bound by |c₁ c₂| * ‖f p.1‖ * ‖f p.2‖ using exp ≤ 1.
@@ -2371,53 +2292,47 @@ lemma schwartz_iterated_integral_integrable (f : TestFunctionℂ)
         simpa [mul_assoc] using (h2'.trans_eq h2'')
       simpa [hnorm, mul_assoc] using h2_final
 
-    have h_bound_int : Integrable (fun p : SpaceTime × SpaceTime =>
+    have h_bound_int : Integrable (fun p : (SpaceTime d) × (SpaceTime d) =>
         (|c₁| * |c₂|) * (‖f p.1‖ * ‖f p.2‖)) (volume.prod volume) := by
-      have h_prod : Integrable (fun p : SpaceTime × SpaceTime => ‖f p.1‖ * ‖f p.2‖)
+      have h_prod : Integrable (fun p : (SpaceTime d) × (SpaceTime d) => ‖f p.1‖ * ‖f p.2‖)
           (volume.prod volume) := hf_int_norm.mul_prod hf_int_norm
       simpa [mul_assoc] using h_prod.const_mul (|c₁| * |c₂|)
 
     exact Integrable.mono' h_bound_int hG_meas (Eventually.of_forall h_bound)
 
   -- Conclude by integrating out the second variable.
-  have h_int_left : Integrable (fun x : SpaceTime => ∫ y : SpaceTime, G (x, y)) volume :=
+  have h_int_left : Integrable (fun x : (SpaceTime d) => ∫ y : (SpaceTime d), G (x, y)) volume :=
     hG_int.integral_prod_left
   simpa [G, mul_assoc, mul_left_comm, mul_comm] using h_int_left
 
-/-- Bound on F(s, k_sp) using linear vanishing of f.
+/-- Bound on F(s, k_sp) using order-d vanishing of f at the time boundary.
 
-    For f vanishing at t ≤ 0 with |f(x)| ≤ C·x₀, we have:
-    |F(s, k_sp)| ≤ C² · (4/3)√π · s^{3/2} · exp(-s(‖k_sp‖² + m²))
-
-    The constant 100 in dominate_G provides ample room for the (4/3)√π ≈ 2.36 factor.
+    For f vanishing at t ≤ 0, we have:
+    |F(s, k_sp)| ≤ C_bound · s^{d+1/2} · exp(-s(‖k_sp‖² + m²))
 
     **Proof sketch:**
-    1. From `schwartz_vanishing_linear_bound`: |f(x)| ≤ C·x₀ for x₀ > 0
+    1. From `schwartz_vanishing_pow_bound` at order d: |f(x)| ≤ C·x₀^d for x₀ > 0
     2. Triangle inequality: |F| ≤ ∫∫ |f(x)||f(y)| · √(π/s) · |exp(...)| dx dy
-    3. Key: |exp(-i·...)| = 1, and |f(x)||f(y)| ≤ C²·x₀·y₀
-    4. Heat kernel moment integral: ∫∫ x₀·y₀·√(π/s)·exp(-(x₀+y₀)²/(4s)) = (4/3)√π·s^{3/2}
-    5. Combine: ≤ C² · (4/3)√π · s^{3/2} · exp(-s(‖k‖²+m²)) < 100 · f_L1² · s^{3/2} · exp(...)
+    3. Key: |exp(-i·...)| = 1, and |f(x)||f(y)| ≤ C²·x₀^d·y₀^d
+    4. Heat kernel moment bound:
+       ∫∫ x₀^d·y₀^d·√(π/s)·exp(-(x₀+y₀)²/(4s)) ≤ C_mom·s^{d+1/2}
+    5. Combine: ≤ C_bound · s^{d+1/2} · exp(-s(‖k‖²+m²))
 
-    The detailed calculation is mathematically standard but technically involved.
-    See `heat_kernel_moment_integral` for the key integral evaluation.
-
-    **Mathematical justification:**
-    The bound uses the linear vanishing property |f(x)| ≤ C·x₀ for x₀ > 0, which combined
-    with heat_kernel_moment_integral gives |F| ≤ C² · (4/3)√π · s^{3/2} · exp(-sω²).
-    The constant C comes from schwartz_vanishing_linear_bound (derivative bound via MVT). -/
-lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ)
-    (hf_supp : ∀ x : SpaceTime, x 0 ≤ 0 → f x = 0) :
-    ∃ C_bound : ℝ, 0 < C_bound ∧ ∀ (s : ℝ) (_hs : 0 < s) (k_sp : SpatialCoords),
-      let F_val := ∫ x : SpaceTime, ∫ y : SpaceTime,
+    The heavy lifting (steps 2–4 through the time/space Tonelli factorization) is
+    `spacetime_fubini_vanishing_bound`. -/
+lemma F_norm_bound_via_vanishing (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d))
+    (hf_supp : ∀ x : (SpaceTime d), x 0 ≤ 0 → f x = 0) :
+    ∃ C_bound : ℝ, 0 < C_bound ∧ ∀ (s : ℝ) (_hs : 0 < s) (k_sp : (SpatialCoords d)),
+      let F_val := ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
           (starRingEnd ℂ (f x)) * f y *
             (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
             Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
             Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y))
-      ‖F_val‖ ≤ C_bound * s^(3/2 : ℝ) * Real.exp (-s * (‖k_sp‖^2 + m^2)) := by
-  -- Step 1: Get the Fubini bound constant (uses linear vanishing internally)
-  obtain ⟨K_fubini, hK_fubini_pos, h_fubini_forall⟩ := spacetime_fubini_linear_vanishing_bound f hf_supp
-  -- Also get the linear bound for intermediate steps
-  obtain ⟨C_lin, hC_lin_pos, h_lin_bound⟩ := schwartz_vanishing_linear_bound f hf_supp
+      ‖F_val‖ ≤ C_bound * s^((d : ℝ) + 1/2) * Real.exp (-s * (‖k_sp‖^2 + m^2)) := by
+  -- Step 1: Get the Fubini bound constant (uses order-d vanishing internally)
+  obtain ⟨K_fubini, hK_fubini_pos, h_fubini_forall⟩ := spacetime_fubini_vanishing_bound f hf_supp
+  -- Also get the order-d pointwise bound for intermediate steps
+  obtain ⟨C_lin, hC_lin_pos, h_lin_bound⟩ := schwartz_vanishing_pow_bound d f hf_supp
   -- Use the Fubini constant as C_bound
   use K_fubini
   constructor
@@ -2440,17 +2355,15 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFuncti
   -- ∫∫ |f(x)||f(y)| · √(π/s) · exp(-t²/(4s))
   -- (using |exp(-i·phase)| = 1 and |exp(-t²/(4s))| ≤ 1)
 
-  -- Step C: Use linear vanishing: |f(x)| ≤ C_lin · x₀ when x₀ > 0, and f = 0 when x₀ ≤ 0
-  -- So |f(x)||f(y)| ≤ C_lin² · x₀ · y₀ · 𝟙_{x₀>0,y₀>0}
+  -- Step C: Use order-d vanishing: |f(x)| ≤ C_lin · x₀^d when x₀ > 0, and f = 0 when x₀ ≤ 0
+  -- So |f(x)||f(y)| ≤ C_lin² · x₀^d · y₀^d · 𝟙_{x₀>0,y₀>0}
 
   -- Step D: Bound the heat kernel integral
-  -- ∫∫ C_lin² · x₀ · y₀ · √(π/s) · exp(-(x₀+y₀)²/(4s)) dx₀ dy₀
-  -- = C_lin² · (4/3)√π · s^{3/2}  (by heat_kernel_moment_integral)
-  -- < C_lin² · 5 · s^{3/2}  (since (4/3)√π ≈ 2.36 < 5)
+  -- ∫∫ C_lin² · x₀^d · y₀^d · √(π/s) · exp(-(x₀+y₀)²/(4s)) dx₀ dy₀
+  -- ≤ C_lin² · C_mom · s^{d+1/2}  (by heat_kernel_moment_integral_pow_bound)
 
-  -- The full proof follows this outline. The technical challenge is that SpaceTime = ℝ⁴
-  -- while heat_kernel_moment_integral is stated for time coordinates only.
-  -- We need to integrate out the spatial coordinates (which are bounded by Schwartz decay).
+  -- The full proof follows this outline via the time/space Tonelli factorization
+  -- (the spatial coordinates are integrated out using Schwartz decay).
 
   -- First, let's establish some preliminary bounds
   have hexp_bound : Real.exp (-s * ω_sq) ≤ 1 := by
@@ -2459,7 +2372,7 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFuncti
 
   -- The spatial integrals are finite due to Schwartz decay
   have hf_int : Integrable f volume := f.integrable
-  have hf_prod_int : Integrable (fun p : SpaceTime × SpaceTime => f p.1 * f p.2) (volume.prod volume) :=
+  have hf_prod_int : Integrable (fun p : (SpaceTime d) × (SpaceTime d) => f p.1 * f p.2) (volume.prod volume) :=
     hf_int.mul_prod hf_int
 
   -- Main estimate: We use that on the support (where x₀, y₀ > 0),
@@ -2469,18 +2382,17 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFuncti
   -- For the formal proof, we would:
   -- 1. Apply norm_integral_le_integral_norm twice
   -- 2. Factor out exp(-s·ω²)
-  -- 3. Bound |f(x)||f(y)| ≤ C_lin² · max(x₀,0) · max(y₀,0)
-  -- 4. Use Tonelli to separate SpaceTime = time × space
+  -- 3. Bound |f(x)||f(y)| ≤ C_lin² · max(x₀,0)^d · max(y₀,0)^d
+  -- 4. Use Tonelli to separate (SpaceTime d) = time × space
   -- 5. The spatial integrals factor out (bounded by Schwartz L¹ norms)
-  -- 6. The time integrals give heat_kernel_moment_integral
-  -- 7. Combine with the (4/3)√π < 5 bound
+  -- 6. The time integrals give heat_kernel_moment_integral_pow_bound
 
   -- This is mathematically sound but technically involved.
-  -- The key insight (linear vanishing regularizes the singularity) is captured
-  -- by schwartz_vanishing_linear_bound and heat_kernel_moment_integral.
+  -- The key insight (boundary vanishing regularizes the singularity) is captured
+  -- by schwartz_vanishing_pow_bound and heat_kernel_moment_integral_pow_bound.
 
   -- Step 1: Triangle inequality for outer integral
-  have h1 : ‖F_val‖ ≤ ∫ x : SpaceTime, ‖∫ y : SpaceTime,
+  have h1 : ‖F_val‖ ≤ ∫ x : (SpaceTime d), ‖∫ y : (SpaceTime d),
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
         Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
@@ -2510,15 +2422,13 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFuncti
   -- Step 3: Using linear vanishing on the support
   -- On supp(f), f(x) = 0 when x₀ ≤ 0, so the integrand vanishes there.
   -- When x₀ > 0 and y₀ > 0:
-  --   ‖f x‖ ≤ C_lin · x₀  (by h_lin_bound)
-  --   ‖f y‖ ≤ C_lin · y₀  (by h_lin_bound)
-  -- So: ‖f x‖ · ‖f y‖ ≤ C_lin² · x₀ · y₀
+  --   ‖f x‖ ≤ C_lin · x₀^d  (by h_lin_bound)
+  --   ‖f y‖ ≤ C_lin · y₀^d  (by h_lin_bound)
+  -- So: ‖f x‖ · ‖f y‖ ≤ C_lin² · x₀^d · y₀^d
 
-  -- Step 4: Time integral evaluation
-  -- The integral ∫∫_{x₀,y₀>0} x₀·y₀·√(π/s)·exp(-(x₀+y₀)²/(4s)) dx₀ dy₀
-  -- equals (4/3)√π·s^{3/2} by heat_kernel_moment_integral.
-  -- Since (4/3)√π ≈ 2.36 < 5, we have:
-  --   ∫∫ C_lin² · x₀ · y₀ · √(π/s) ≤ C_lin² · 5 · s^{3/2}
+  -- Step 4: Time integral bound
+  -- ∫∫_{x₀,y₀>0} x₀^d·y₀^d·√(π/s)·exp(-(x₀+y₀)²/(4s)) dx₀ dy₀ ≤ C_mom·s^{d+1/2}
+  -- by heat_kernel_moment_integral_pow_bound.
 
   -- Step 5: Final bound
   -- ‖F_val‖ ≤ C_lin² · 5 · s^{3/2} · exp(-s·ω²)
@@ -2538,7 +2448,7 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFuncti
     simp only [h_im, h_re, mul_zero, sub_zero]
 
   -- The key pointwise bound on integrand norm:
-  have h_pointwise : ∀ x y : SpaceTime,
+  have h_pointwise : ∀ x y : (SpaceTime d),
       ‖(starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
         Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
@@ -2575,33 +2485,31 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFuncti
   -- The CORRECT argument uses:
   -- 1. Linear vanishing (h_lin_bound): On supp(f), ‖f x‖ ≤ C_lin · x₀
   -- 2. Support condition (hf_supp): f x = 0 when x₀ ≤ 0
-  -- 3. Heat kernel moment integral: gives the s^{3/2} factor
+  -- 3. Heat kernel moment bound: gives the s^{d+1/2} factor
   --
   -- The full argument:
   -- ‖F_val‖ ≤ ∫∫ ‖f x‖·‖f y‖·√(π/s)·exp(-(x₀+y₀)²/(4s))·exp(-s·ω²)  [triangle ineq]
-  --         ≤ C_lin² · ∫∫_{x₀,y₀>0} x₀·y₀·√(π/s)·exp(-(x₀+y₀)²/(4s))·exp(-s·ω²) [linear vanishing]
-  --         = C_lin² · exp(-s·ω²) · ∫∫_{x₀,y₀>0} x₀·y₀·√(π/s)·exp(-(x₀+y₀)²/(4s)) [factor out]
-  --         = C_lin² · exp(-s·ω²) · (4/3)√π·s^{3/2}  [heat_kernel_moment_integral]
-  --         < C_lin² · 5 · s^{3/2} · exp(-s·ω²)  [since (4/3)√π ≈ 2.36 < 5]
+  --         ≤ C_lin² · ∫∫_{x₀,y₀>0} x₀^d·y₀^d·√(π/s)·exp(-(x₀+y₀)²/(4s))·exp(-s·ω²) [vanishing]
+  --         = C_lin² · exp(-s·ω²) · ∫∫_{x₀,y₀>0} x₀^d·y₀^d·√(π/s)·exp(-(x₀+y₀)²/(4s)) [factor out]
+  --         ≤ C_lin² · C_mom · s^{d+1/2} · exp(-s·ω²)  [heat_kernel_moment_integral_pow_bound]
   --
   -- The formalization requires:
   -- (a) A refined pointwise bound keeping the heat kernel factor
-  -- (b) Decomposing SpaceTime = ℝ × ℝ³ via Fubini
+  -- (b) Decomposing (SpaceTime d) = ℝ × ℝ^{d−1} via Fubini
   -- (c) Showing spatial integrals are bounded (Schwartz decay)
-  -- (d) Applying heat_kernel_moment_integral to time integrals
+  -- (d) Applying heat_kernel_moment_integral_pow_bound to time integrals
   --
   -- Key lemmas available:
   -- - h1: Triangle inequality for outer integral
   -- - h_pointwise: Pointwise norm bound (bounds heat kernel by 1 - TOO WEAK)
-  -- - h_lin_bound: Linear vanishing from schwartz_vanishing_linear_bound
-  -- - heat_kernel_moment_integral: Time integral evaluates to (4/3)√π·s^{3/2}
-  -- - heat_kernel_moment_integral_bound: ≤ 10·s^{3/2}
+  -- - h_lin_bound: order-d vanishing from schwartz_vanishing_pow_bound
+  -- - heat_kernel_moment_integral_pow_bound: time double moment ≤ C_mom·s^{d+1/2}
 
   -- KEY INSIGHT: h_pointwise bounds exp(-(x₀+y₀)²/(4s)) ≤ 1, losing the s^{3/2} factor.
   -- We need a REFINED bound that keeps the heat kernel factor.
 
   -- NEW pointwise bound keeping heat kernel factor (crucial for s^{3/2}):
-  have h_pointwise_with_heat : ∀ x y : SpaceTime,
+  have h_pointwise_with_heat : ∀ x y : (SpaceTime d),
       ‖(starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
         Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
@@ -2619,34 +2527,26 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFuncti
                mul_one, le_refl]
 
   -- Support vanishing: when x₀ ≤ 0 or y₀ ≤ 0, integrand vanishes
-  have h_supp_zero : ∀ x y : SpaceTime, x 0 ≤ 0 ∨ y 0 ≤ 0 → ‖f x‖ * ‖f y‖ = 0 := by
+  have h_supp_zero : ∀ x y : (SpaceTime d), x 0 ≤ 0 ∨ y 0 ≤ 0 → ‖f x‖ * ‖f y‖ = 0 := by
     intro x y hxy
     cases hxy with
     | inl hx => simp [hf_supp x hx]
     | inr hy => simp [hf_supp y hy]
 
-  -- Linear vanishing product bound on positive quadrant
-  have h_prod_bound : ∀ x y : SpaceTime, 0 < x 0 → 0 < y 0 →
-      ‖f x‖ * ‖f y‖ ≤ C_lin^2 * (x 0) * (y 0) := by
+  -- Order-d vanishing product bound on positive quadrant
+  have h_prod_bound : ∀ x y : (SpaceTime d), 0 < x 0 → 0 < y 0 →
+      ‖f x‖ * ‖f y‖ ≤ C_lin^2 * (x 0)^d * (y 0)^d := by
     intro x y hx hy
     have hfx := h_lin_bound x hx
     have hfy := h_lin_bound y hy
-    calc ‖f x‖ * ‖f y‖ ≤ (C_lin * x 0) * (C_lin * y 0) := by
+    calc ‖f x‖ * ‖f y‖ ≤ (C_lin * (x 0)^d) * (C_lin * (y 0)^d) := by
            apply mul_le_mul hfx hfy (norm_nonneg _)
-           exact mul_nonneg (le_of_lt hC_lin_pos) (le_of_lt hx)
-      _ = C_lin^2 * (x 0) * (y 0) := by ring
+           exact mul_nonneg (le_of_lt hC_lin_pos) (pow_nonneg (le_of_lt hx) d)
+      _ = C_lin^2 * (x 0)^d * (y 0)^d := by ring
 
-  -- The constant bound (4/3)√π < 5
-  have h_const : (4/3 : ℝ) * Real.sqrt π < 5 := by
-    have hsqrt : Real.sqrt π < 2 := by
-      rw [Real.sqrt_lt' (by norm_num : (0:ℝ) < 2)]
-      calc π < 4 := pi_lt_four
-         _ = 2^2 := by norm_num
-    nlinarith [Real.sqrt_nonneg π]
+  -- MAIN BOUND using spacetime_fubini_vanishing_bound
 
-  -- MAIN BOUND using spacetime_fubini_linear_vanishing_bound
-
-  -- The key estimate from spacetime_fubini_linear_vanishing_bound (using K_fubini from earlier)
+  -- The key estimate from spacetime_fubini_vanishing_bound (using K_fubini from earlier)
   have h_fubini_bound := h_fubini_forall s hs
 
   -- Abbreviate the exponential factor
@@ -2654,7 +2554,7 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFuncti
   have hexp_nonneg : 0 ≤ exp_factor := Real.exp_nonneg _
 
   -- Step 1: Triangle inequality for outer integral
-  have step1 : ‖F_val‖ ≤ ∫ x : SpaceTime, ‖∫ y : SpaceTime,
+  have step1 : ‖F_val‖ ≤ ∫ x : (SpaceTime d), ‖∫ y : (SpaceTime d),
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
         Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
@@ -2662,12 +2562,12 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFuncti
     MeasureTheory.norm_integral_le_integral_norm _
 
   -- Step 2: For each x, apply triangle inequality to inner integral
-  have step2 : ∀ x : SpaceTime, ‖∫ y : SpaceTime,
+  have step2 : ∀ x : (SpaceTime d), ‖∫ y : (SpaceTime d),
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
         Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
         Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y))‖ ≤
-      ∫ y : SpaceTime, ‖f x‖ * ‖f y‖ * Real.sqrt (π / s) * Real.exp (-(x 0 + y 0)^2 / (4 * s)) *
+      ∫ y : (SpaceTime d), ‖f x‖ * ‖f y‖ * Real.sqrt (π / s) * Real.exp (-(x 0 + y 0)^2 / (4 * s)) *
         exp_factor := by
     intro x
     refine le_trans (MeasureTheory.norm_integral_le_integral_norm _) ?_
@@ -2696,7 +2596,7 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFuncti
     · exact Filter.Eventually.of_forall (fun y => h_pointwise_with_heat x y)
 
   -- Step 3: Combine steps 1 and 2 to get double integral bound
-  have step3 : ‖F_val‖ ≤ ∫ x : SpaceTime, ∫ y : SpaceTime,
+  have step3 : ‖F_val‖ ≤ ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
       ‖f x‖ * ‖f y‖ * Real.sqrt (π / s) * Real.exp (-(x 0 + y 0)^2 / (4 * s)) * exp_factor := by
     refine le_trans step1 ?_
     apply MeasureTheory.integral_mono_of_nonneg
@@ -2706,9 +2606,9 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFuncti
     · exact Filter.Eventually.of_forall step2
 
   -- Step 4: Factor out exp_factor using integral_mul_const
-  have step4 : ∫ x : SpaceTime, ∫ y : SpaceTime,
+  have step4 : ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
       ‖f x‖ * ‖f y‖ * Real.sqrt (π / s) * Real.exp (-(x 0 + y 0)^2 / (4 * s)) * exp_factor =
-      (∫ x : SpaceTime, ∫ y : SpaceTime,
+      (∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
         ‖f x‖ * ‖f y‖ * Real.sqrt (π / s) * Real.exp (-(x 0 + y 0)^2 / (4 * s))) * exp_factor := by
     conv_lhs =>
       arg 2; ext x
@@ -2716,18 +2616,18 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFuncti
     rw [MeasureTheory.integral_mul_const]
 
   -- Step 5: Apply h_fubini_bound and rearrange
-  calc ‖F_val‖ ≤ ∫ x : SpaceTime, ∫ y : SpaceTime,
+  calc ‖F_val‖ ≤ ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
         ‖f x‖ * ‖f y‖ * Real.sqrt (π / s) * Real.exp (-(x 0 + y 0)^2 / (4 * s)) * exp_factor := step3
-    _ = (∫ x : SpaceTime, ∫ y : SpaceTime,
+    _ = (∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
           ‖f x‖ * ‖f y‖ * Real.sqrt (π / s) * Real.exp (-(x 0 + y 0)^2 / (4 * s))) * exp_factor := step4
-    _ ≤ (K_fubini * s^(3/2 : ℝ)) * exp_factor := by
+    _ ≤ (K_fubini * s^((d : ℝ) + 1/2)) * exp_factor := by
         apply mul_le_mul_of_nonneg_right h_fubini_bound hexp_nonneg
-    _ = K_fubini * s^(3/2 : ℝ) * Real.exp (-s * (‖k_sp‖^2 + m^2)) := by ring
+    _ = K_fubini * s^((d : ℝ) + 1/2) * Real.exp (-s * (‖k_sp‖^2 + m^2)) := by ring
 
 /-- **Fubini swap for s ↔ p̄ integrals.**
 
     Swaps integration order:
-    ∫₀^∞ ds ∫_ℝ³ d³p̄ F(s, p̄) = ∫_ℝ³ d³p̄ ∫₀^∞ ds F(s, p̄)
+    ∫₀^∞ ds ∫ dp̄ F(s, p̄) = ∫ dp̄ ∫₀^∞ ds F(s, p̄)
 
     where the integrand contains:
     - √(π/s) · exp(-t²/(4s)) from the k₀ Gaussian integral
@@ -2737,7 +2637,7 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFuncti
     **Justification:** Fubini applies because:
     1. The p̄-dependence is Schwartz (Fourier transform of Schwartz test functions)
     2. The s-integrand decays as exp(-s·ω²) where ω² = |p̄|² + m² > 0
-    3. Combined integrability on ℝ³ × (0,∞) follows from `Integrable.prod_mul`
+    3. Combined integrability on (0,∞) × ℝ^{d−1} follows from `Integrable.prod_mul`
 
     **Note:** This is the most delicate step. Requires splitting the region into
     "small s" (UV, controlling 1/r² singularity) and "large s" (IR, using mass m).
@@ -2747,27 +2647,27 @@ lemma F_norm_bound_via_linear_vanishing (m : ℝ) [Fact (0 < m)] (f : TestFuncti
 
     **Key integrability lemma:** Uses `integrable_s_inv_sq_exp_neg_inv_s` to
     handle the s^{-1/2} * exp(-t²/(4s)) term via substitution z = 1/s. -/
-theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ)
+theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d))
     (hf_supp : ∀ x, x 0 ≤ 0 → f x = 0) :
-    ∫ s in Set.Ioi 0, ∫ k_sp : SpatialCoords, ∫ x : SpaceTime, ∫ y : SpaceTime,
+    ∫ s in Set.Ioi 0, ∫ k_sp : (SpatialCoords d), ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
         Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
         Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y)) =
-    ∫ k_sp : SpatialCoords, ∫ s in Set.Ioi 0, ∫ x : SpaceTime, ∫ y : SpaceTime,
+    ∫ k_sp : (SpatialCoords d), ∫ s in Set.Ioi 0, ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
         Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
         Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y)) := by
   -- Define the uncurried integrand
-  let F : ℝ × SpatialCoords → ℂ := fun ⟨s, k_sp⟩ =>
-    ∫ x : SpaceTime, ∫ y : SpaceTime,
+  let F : ℝ × (SpatialCoords d) → ℂ := fun ⟨s, k_sp⟩ =>
+    ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
         Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
         Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y))
 
-  -- The key integrability: F is integrable on (0,∞) × ℝ³
+  -- The key integrability: F is integrable on (0,∞) × ℝ^{d−1}
   have hm : 0 < m := Fact.out
   have hm2 : 0 < m^2 := sq_pos_of_pos hm
 
@@ -2782,7 +2682,7 @@ theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ)
 
   have h_int : Integrable F ((volume.restrict (Set.Ioi 0)).prod volume) := by
     /-
-    **Integrability of F on (0,∞) × ℝ³:**
+    **Integrability of F on (0,∞) × ℝ^{d−1}:**
 
     The integrand F(s, k_sp) involves:
     - Heat kernel factor: √(π/s) · exp(-(x₀+y₀)²/(4s))
@@ -2807,7 +2707,7 @@ theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ)
     - s-integral: ∫₀^∞ s^{-1/2} · exp(-t_min²/(4s)) · exp(-s·m²) ds
       This converges at s→0 due to exp(-t_min²/(4s)) → 0 faster than any polynomial,
       and at s→∞ due to exp(-s·m²).
-    - k_sp-integral: ∫_{ℝ³} exp(-s·‖k_sp‖²) dk_sp = (π/s)^{3/2}
+    - k_sp-integral: ∫ exp(-s·‖k_sp‖²) dk_sp = (π/s)^{(d−1)/2}
       Combined with s^{-1/2} gives s^{-2}, still regularized by exp(-t_min²/(4s)).
     -/
 
@@ -2816,10 +2716,10 @@ theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ)
     -- By compactness of Schwartz "effective support", there exists t_min > 0.
     -- (This is the atomic fact about Schwartz functions vanishing at t=0)
 
-    -- Step 2: Define the dominating function using the constant from F_norm_bound_via_linear_vanishing
+    -- Step 2: Define the dominating function using the constant from F_norm_bound_via_vanishing
     -- Get the constant C_bound from the linear vanishing bound
-    obtain ⟨C_bound, hC_pos, h_F_bound⟩ := F_norm_bound_via_linear_vanishing m f hf_supp
-    let G := dominate_G C_bound m
+    obtain ⟨C_bound, hC_pos, h_F_bound⟩ := F_norm_bound_via_vanishing m f hf_supp
+    let G := dominate_G (d := d) C_bound m
     -- Note: We omit exp(-t_min²/(4s)) for simplicity; the mass term suffices for large s,
     -- and the full argument needs the UV regulator for small s.
 
@@ -2838,9 +2738,9 @@ theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ)
         apply Eventually.of_forall
         intro k_sp
         have hs' : 0 < s := hs
-        -- Apply F_norm_bound_via_linear_vanishing with the obtained constant
+        -- Apply F_norm_bound_via_vanishing with the obtained constant
         have h_bound := h_F_bound s hs' k_sp
-        -- dominate_G equals C * s^(3/2) * exp(-s*(‖k‖² + m²)) for s > 0
+        -- dominate_G equals C * s^(d+1/2) * exp(-s*(‖k‖² + m²)) for s > 0
         simp only [G, dominate_G, hs', ↓reduceIte]
         exact h_bound
       · -- Measurability: {p | ‖F p‖ ≤ G p} is measurable
@@ -2873,30 +2773,33 @@ theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ)
   rw [MeasureTheory.integral_integral_swap h_int]
 
 
+omit [Fact (2 ≤ d)] in
 /-- Schwartz function norm is integrable. -/
-lemma schwartz_norm_integrable (f : TestFunctionℂ) :
-    MeasureTheory.Integrable (fun x : SpaceTime => ‖f x‖) := by
+lemma schwartz_norm_integrable (f : (TestFunctionℂ d)) :
+    MeasureTheory.Integrable (fun x : (SpaceTime d) => ‖f x‖) := by
   exact (SchwartzMap.integrable f).norm
 
-/-- Product of Schwartz norms is integrable on SpaceTime × SpaceTime. -/
-lemma schwartz_norm_prod_integrable (f : TestFunctionℂ) :
+omit [Fact (2 ≤ d)] in
+/-- Product of Schwartz norms is integrable on (SpaceTime d) × (SpaceTime d). -/
+lemma schwartz_norm_prod_integrable (f : (TestFunctionℂ d)) :
     MeasureTheory.Integrable
-      (fun p : SpaceTime × SpaceTime => ‖f p.1‖ * ‖f p.2‖)
+      (fun p : (SpaceTime d) × (SpaceTime d) => ‖f p.1‖ * ‖f p.2‖)
       (MeasureTheory.volume.prod MeasureTheory.volume) := by
-  have hf1 : MeasureTheory.Integrable (fun x : SpaceTime => ‖f x‖) := schwartz_norm_integrable f
-  have hf2 : MeasureTheory.Integrable (fun y : SpaceTime => ‖f y‖) := schwartz_norm_integrable f
+  have hf1 : MeasureTheory.Integrable (fun x : (SpaceTime d) => ‖f x‖) := schwartz_norm_integrable f
+  have hf2 : MeasureTheory.Integrable (fun y : (SpaceTime d) => ‖f y‖) := schwartz_norm_integrable f
   -- Product of L¹ functions is L¹ on product space
   exact hf1.mul_prod hf2
 
 /-- Bound function for s_xy_swap. -/
-def s_xy_swap_bound (f : TestFunctionℂ) (m : ℝ) (p : ℝ × SpaceTime × SpaceTime) : ℝ :=
+def s_xy_swap_bound (f : (TestFunctionℂ d)) (m : ℝ) (p : ℝ × (SpaceTime d) × (SpaceTime d)) : ℝ :=
   Real.sqrt (π / p.1) * ‖f p.2.1‖ * ‖f p.2.2‖ * Real.exp (-p.1 * m^2)
 
-lemma s_xy_swap_bound_integrable (f : TestFunctionℂ) (m : ℝ) [Fact (0 < m)] :
+omit [Fact (2 ≤ d)] in
+lemma s_xy_swap_bound_integrable (f : (TestFunctionℂ d)) (m : ℝ) [Fact (0 < m)] :
     Integrable (s_xy_swap_bound f m)
       ((volume.restrict (Set.Ioi 0)).prod (volume.prod volume)) := by
   let g_s : ℝ → ℝ := fun s => Real.sqrt π * s ^ (-(1:ℝ)/2) * Real.exp (-m^2 * s)
-  let g_xy : SpaceTime × SpaceTime → ℝ := fun p => ‖f p.1‖ * ‖f p.2‖
+  let g_xy : (SpaceTime d) × (SpaceTime d) → ℝ := fun p => ‖f p.1‖ * ‖f p.2‖
 
   -- 1. Integrability of g_s on (0, ∞): ∫₀^∞ √π * s^{-1/2} * exp(-m²s) ds < ∞
   -- This is a Gamma-type integral: Γ(1/2) * (m²)^{-1/2} = √(π/m²)
@@ -2961,21 +2864,21 @@ lemma s_xy_swap_bound_integrable (f : TestFunctionℂ) (m : ℝ) [Fact (0 < m)] 
     ∫₀^∞ ds ∫_x ∫_y F(s,x,y) = ∫_x ∫_y ∫₀^∞ ds F(s,x,y)
 
     **Proof:** Uses `MeasureTheory.integral_integral_swap` with
-    integrability on `(Set.Ioi 0) × SpaceTime × SpaceTime`.
+    integrability on `(Set.Ioi 0) × (SpaceTime d) × (SpaceTime d)`.
     The bound function is `s^{-1/2} * exp(-s*m^2) * |f(x)| * |f(y)|`. -/
-theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) (k_sp : SpatialCoords) :
-    ∫ s in Set.Ioi 0, ∫ x : SpaceTime, ∫ y : SpaceTime,
+theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d)) (k_sp : (SpatialCoords d)) :
+    ∫ s in Set.Ioi 0, ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
         Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
         Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y)) =
-    ∫ x : SpaceTime, ∫ y : SpaceTime, ∫ s in Set.Ioi 0,
+    ∫ x : (SpaceTime d), ∫ y : (SpaceTime d), ∫ s in Set.Ioi 0,
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
         Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
         Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y)) := by
   -- Define the full integrand
-  let F : ℝ × SpaceTime × SpaceTime → ℂ := fun ⟨s, x, y⟩ =>
+  let F : ℝ × (SpaceTime d) × (SpaceTime d) → ℂ := fun ⟨s, x, y⟩ =>
     (starRingEnd ℂ (f x)) * f y *
       (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
       Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
@@ -2990,26 +2893,26 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) (k_sp : 
       -- The integrand is built from continuous Schwartz functions and exponentials
       -- Rewrite the product measure as a restriction to show continuity on the support
       have h_measure : ((volume : Measure ℝ).restrict (Set.Ioi (0 : ℝ))).prod
-          ((volume : Measure SpaceTime).prod (volume : Measure SpaceTime)) =
-          ((volume : Measure ℝ).prod ((volume : Measure SpaceTime).prod (volume : Measure SpaceTime))).restrict
+          ((volume : Measure (SpaceTime d)).prod (volume : Measure (SpaceTime d))) =
+          ((volume : Measure ℝ).prod ((volume : Measure (SpaceTime d)).prod (volume : Measure (SpaceTime d)))).restrict
             ((Set.Ioi (0 : ℝ)) ×ˢ Set.univ) := Measure.restrict_prod_eq_prod_univ (Set.Ioi (0 : ℝ))
       rw [h_measure]
       have hf_cont : Continuous f := SchwartzMap.continuous f
-      have h1 : ContinuousOn (fun (p : ℝ × SpaceTime × SpaceTime) => (starRingEnd ℂ) (f p.2.1))
+      have h1 : ContinuousOn (fun (p : ℝ × (SpaceTime d) × (SpaceTime d)) => (starRingEnd ℂ) (f p.2.1))
           (Set.Ioi 0 ×ˢ Set.univ) := (continuous_star.comp (hf_cont.comp continuous_snd.fst)).continuousOn
-      have h2 : ContinuousOn (fun (p : ℝ × SpaceTime × SpaceTime) => f p.2.2)
+      have h2 : ContinuousOn (fun (p : ℝ × (SpaceTime d) × (SpaceTime d)) => f p.2.2)
           (Set.Ioi 0 ×ˢ Set.univ) := (hf_cont.comp continuous_snd.snd).continuousOn
-      have h3 : ContinuousOn (fun (p : ℝ × SpaceTime × SpaceTime) => (Real.sqrt (π / p.1) : ℂ))
+      have h3 : ContinuousOn (fun (p : ℝ × (SpaceTime d) × (SpaceTime d)) => (Real.sqrt (π / p.1) : ℂ))
           (Set.Ioi 0 ×ˢ Set.univ) := by
         apply ContinuousOn.comp continuous_ofReal.continuousOn _ (Set.mapsTo_univ _ _)
         apply ContinuousOn.sqrt
         apply ContinuousOn.div continuousOn_const continuousOn_fst
         intro ⟨s, _⟩ ⟨hs, _⟩; exact ne_of_gt hs
-      have hcoord0_1 : Continuous (fun (p : ℝ × SpaceTime × SpaceTime) => p.2.1 0) :=
-        (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp continuous_snd.fst
-      have hcoord0_2 : Continuous (fun (p : ℝ × SpaceTime × SpaceTime) => p.2.2 0) :=
-        (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp continuous_snd.snd
-      have h4 : ContinuousOn (fun (p : ℝ × SpaceTime × SpaceTime) =>
+      have hcoord0_1 : Continuous (fun (p : ℝ × (SpaceTime d) × (SpaceTime d)) => p.2.1 0) :=
+        (PiLp.continuous_apply 2 (fun _ : Fin d => ℝ) 0).comp continuous_snd.fst
+      have hcoord0_2 : Continuous (fun (p : ℝ × (SpaceTime d) × (SpaceTime d)) => p.2.2 0) :=
+        (PiLp.continuous_apply 2 (fun _ : Fin d => ℝ) 0).comp continuous_snd.snd
+      have h4 : ContinuousOn (fun (p : ℝ × (SpaceTime d) × (SpaceTime d)) =>
           Complex.exp (-((-(p.2.1 0) - p.2.2 0)^2 / (4 * p.1) : ℝ))) (Set.Ioi 0 ×ˢ Set.univ) := by
         apply Complex.continuous_exp.comp_continuousOn
         apply ContinuousOn.neg
@@ -3018,13 +2921,13 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) (k_sp : 
         · exact ((hcoord0_1.neg.sub hcoord0_2).pow 2).continuousOn
         · exact (continuous_const.mul continuous_fst).continuousOn
         · intro ⟨s, _⟩ ⟨hs, _⟩; simp; exact ne_of_gt hs
-      have h5 : ContinuousOn (fun (p : ℝ × SpaceTime × SpaceTime) =>
+      have h5 : ContinuousOn (fun (p : ℝ × (SpaceTime d) × (SpaceTime d)) =>
           Complex.exp (-(p.1 : ℂ) * (‖k_sp‖^2 + m^2))) (Set.Ioi 0 ×ˢ Set.univ) := by
         apply Complex.continuous_exp.comp_continuousOn
         apply ContinuousOn.mul
         · exact (continuous_ofReal.comp continuous_fst).neg.continuousOn
         · exact continuousOn_const
-      have h6 : ContinuousOn (fun (p : ℝ × SpaceTime × SpaceTime) =>
+      have h6 : ContinuousOn (fun (p : ℝ × (SpaceTime d) × (SpaceTime d)) =>
           Complex.exp (-Complex.I * spatialDot k_sp (spatialPart p.2.1 - spatialPart p.2.2)))
           (Set.Ioi 0 ×ˢ Set.univ) := by
         apply Complex.continuous_exp.comp_continuousOn
@@ -3032,43 +2935,43 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) (k_sp : 
         apply ContinuousOn.comp continuous_ofReal.continuousOn _ (Set.mapsTo_univ _ _)
         unfold spatialDot
         -- spatialPart is continuous (projection followed by continuous linear equiv)
-        have h_spatialPart_cont : Continuous spatialPart := by
+        have h_spatialPart_cont : Continuous (spatialPart : (SpaceTime d) → (SpatialCoords d)) := by
           unfold spatialPart
-          apply (EuclideanSpace.equiv (Fin (STDimension - 1)) ℝ).symm.continuous.comp
+          apply (EuclideanSpace.equiv (Fin (d - 1)) ℝ).symm.continuous.comp
           apply continuous_pi
           intro i
-          have h : i.val + 1 < STDimension := by simp [STDimension]; omega
-          exact PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) (⟨i.val + 1, h⟩ : Fin STDimension)
-        have h_sum : Continuous (fun p : ℝ × SpaceTime × SpaceTime =>
+          have h : i.val + 1 < d := by have := i.isLt; omega
+          exact PiLp.continuous_apply 2 (fun _ : Fin d => ℝ) (⟨i.val + 1, h⟩ : Fin d)
+        have h_sum : Continuous (fun p : ℝ × (SpaceTime d) × (SpaceTime d) =>
             ∑ i, k_sp i * (spatialPart p.2.1 - spatialPart p.2.2) i) := by
           apply continuous_finsetSum
           intro i _
-          have hv_i : Continuous (fun (p : ℝ × SpaceTime × SpaceTime) =>
+          have hv_i : Continuous (fun (p : ℝ × (SpaceTime d) × (SpaceTime d)) =>
               (spatialPart p.2.1 - spatialPart p.2.2) i) :=
-            (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp
+            (PiLp.continuous_apply 2 (fun _ : Fin (d - 1) => ℝ) i).comp
               ((h_spatialPart_cont.comp continuous_snd.fst).sub
                (h_spatialPart_cont.comp continuous_snd.snd))
           exact continuous_const.mul hv_i
         exact h_sum.continuousOn
       have h_cont := ((((h1.mul h2).mul h3).mul h4).mul h5).mul h6
-      have h_meas : MeasurableSet (Set.Ioi (0 : ℝ) ×ˢ (Set.univ : Set (SpaceTime × SpaceTime))) :=
+      have h_meas : MeasurableSet (Set.Ioi (0 : ℝ) ×ˢ (Set.univ : Set ((SpaceTime d) × (SpaceTime d)))) :=
         measurableSet_Ioi.prod MeasurableSet.univ
       exact h_cont.aestronglyMeasurable h_meas
     · -- Norm bound: |F(s,x,y)| ≤ s_xy_swap_bound f m (s,x,y) a.e. on restricted measure
-      -- On the product measure (Ioi 0) × SpaceTime × SpaceTime, s > 0 a.e.
+      -- On the product measure (Ioi 0) × (SpaceTime d) × (SpaceTime d), s > 0 a.e.
       -- The first marginal is restricted to Ioi 0, so s > 0 holds a.e.
-      have h_ae : ∀ᵐ p : ℝ × SpaceTime × SpaceTime ∂(volume.restrict (Set.Ioi 0)).prod (volume.prod volume),
+      have h_ae : ∀ᵐ p : ℝ × (SpaceTime d) × (SpaceTime d) ∂(volume.restrict (Set.Ioi 0)).prod (volume.prod volume),
           0 < p.1 := by
         -- The first marginal is the restricted measure on (0, ∞)
         -- The set {p | p.1 > 0} has full measure because its complement has measure 0
         rw [Filter.eventually_iff, MeasureTheory.mem_ae_iff]
         -- Need: μ({p | 0 < p.1}ᶜ) = 0, i.e., μ({p | p.1 ≤ 0}) = 0
-        have h_compl : ({p : ℝ × SpaceTime × SpaceTime | 0 < p.1})ᶜ =
+        have h_compl : ({p : ℝ × (SpaceTime d) × (SpaceTime d) | 0 < p.1})ᶜ =
             Prod.fst ⁻¹' Set.Iic 0 := by
           ext p; simp only [Set.mem_compl_iff, Set.mem_setOf_eq, not_lt, Set.mem_preimage, Set.mem_Iic]
         rw [h_compl]
         -- Prod.fst ⁻¹' Iic 0 = Iic 0 ×ˢ univ
-        have h_prod : (Prod.fst ⁻¹' Set.Iic (0 : ℝ) : Set (ℝ × SpaceTime × SpaceTime)) =
+        have h_prod : (Prod.fst ⁻¹' Set.Iic (0 : ℝ) : Set (ℝ × (SpaceTime d) × (SpaceTime d))) =
             Set.Iic 0 ×ˢ Set.univ := by
           ext ⟨s, xy⟩
           simp only [Set.mem_preimage, Set.mem_Iic, Set.mem_prod, Set.mem_univ, and_true]
@@ -3116,7 +3019,7 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) (k_sp : 
         _ = Real.sqrt (π / s) * ‖f x‖ * ‖f y‖ * Real.exp (-s * m^2) := by ring
 
   -- The goal is to swap s with (x, y).
-  -- h_int gives integrability on the product (Ioi 0) × (SpaceTime × SpaceTime)
+  -- h_int gives integrability on the product (Ioi 0) × ((SpaceTime d) × (SpaceTime d))
 
   -- Step 1: Rewrite LHS and RHS to use product integrals
   -- LHS: ∫_s (∫_x (∫_y F)) = ∫_s (∫_{xy} F) by integral_prod on inner
@@ -3135,18 +3038,18 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) (k_sp : 
   -- By Fubini on (s, (x,y)):  ∫_s ∫_{(x,y)} F = ∫_{(x,y)} ∫_s F
   -- The nested ∫_x ∫_y equals ∫_{(x,y)} by integral_prod
 
-  calc ∫ s in Set.Ioi 0, ∫ x : SpaceTime, ∫ y : SpaceTime, F (s, x, y)
-      = ∫ s in Set.Ioi 0, ∫ xy : SpaceTime × SpaceTime, F (s, xy.1, xy.2) := by
+  calc ∫ s in Set.Ioi 0, ∫ x : (SpaceTime d), ∫ y : (SpaceTime d), F (s, x, y)
+      = ∫ s in Set.Ioi 0, ∫ xy : (SpaceTime d) × (SpaceTime d), F (s, xy.1, xy.2) := by
           congr 1 with s
           -- ∫_x ∫_y g(x,y) = ∫_{xy} g(xy.1, xy.2) by integral_prod
           symm
-          have h_int_s : Integrable (fun xy : SpaceTime × SpaceTime => F (s, xy.1, xy.2))
+          have h_int_s : Integrable (fun xy : (SpaceTime d) × (SpaceTime d) => F (s, xy.1, xy.2))
               (volume.prod volume) := by
             -- For fixed s, F(s,x,y) is bounded by C(s) * |f(x)| * |f(y)|
             -- where C(s) = √(π/s) * exp(-s*m²) (assuming s > 0)
             by_cases hs : 0 < s
             · -- When s > 0, the integrand is a product of bounded terms × Schwartz
-              have h_bound : Integrable (fun xy : SpaceTime × SpaceTime =>
+              have h_bound : Integrable (fun xy : (SpaceTime d) × (SpaceTime d) =>
                   Real.sqrt (π / s) * ‖f xy.1‖ * ‖f xy.2‖ * Real.exp (-s * m^2))
                   (volume.prod volume) := by
                 have h_prod := schwartz_norm_prod_integrable f
@@ -3156,33 +3059,33 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) (k_sp : 
               apply h_bound.mono'
               · -- AEStronglyMeasurable of F(s, ·, ·)
                 have hf_cont : Continuous f := SchwartzMap.continuous f
-                have h_spatialPart_cont : Continuous spatialPart := by
+                have h_spatialPart_cont : Continuous (spatialPart : (SpaceTime d) → (SpatialCoords d)) := by
                   unfold spatialPart
-                  apply (EuclideanSpace.equiv (Fin (STDimension - 1)) ℝ).symm.continuous.comp
+                  apply (EuclideanSpace.equiv (Fin (d - 1)) ℝ).symm.continuous.comp
                   apply continuous_pi
                   intro i
-                  have h : i.val + 1 < STDimension := by simp [STDimension]; omega
-                  exact PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) (⟨i.val + 1, h⟩)
-                have h1 : Continuous (fun (xy : SpaceTime × SpaceTime) => (starRingEnd ℂ) (f xy.1)) :=
+                  have h : i.val + 1 < d := by have := i.isLt; omega
+                  exact PiLp.continuous_apply 2 (fun _ : Fin d => ℝ) (⟨i.val + 1, h⟩)
+                have h1 : Continuous (fun (xy : (SpaceTime d) × (SpaceTime d)) => (starRingEnd ℂ) (f xy.1)) :=
                   continuous_star.comp (hf_cont.comp continuous_fst)
-                have h2 : Continuous (fun (xy : SpaceTime × SpaceTime) => f xy.2) :=
+                have h2 : Continuous (fun (xy : (SpaceTime d) × (SpaceTime d)) => f xy.2) :=
                   hf_cont.comp continuous_snd
-                have h3 : Continuous (fun (_ : SpaceTime × SpaceTime) => (Real.sqrt (π / s) : ℂ)) :=
+                have h3 : Continuous (fun (_ : (SpaceTime d) × (SpaceTime d)) => (Real.sqrt (π / s) : ℂ)) :=
                   continuous_const
-                have hcoord0_1 : Continuous (fun (xy : SpaceTime × SpaceTime) => xy.1 0) :=
-                  (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp continuous_fst
-                have hcoord0_2 : Continuous (fun (xy : SpaceTime × SpaceTime) => xy.2 0) :=
-                  (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp continuous_snd
-                have h4 : Continuous (fun (xy : SpaceTime × SpaceTime) =>
+                have hcoord0_1 : Continuous (fun (xy : (SpaceTime d) × (SpaceTime d)) => xy.1 0) :=
+                  (PiLp.continuous_apply 2 (fun _ : Fin d => ℝ) 0).comp continuous_fst
+                have hcoord0_2 : Continuous (fun (xy : (SpaceTime d) × (SpaceTime d)) => xy.2 0) :=
+                  (PiLp.continuous_apply 2 (fun _ : Fin d => ℝ) 0).comp continuous_snd
+                have h4 : Continuous (fun (xy : (SpaceTime d) × (SpaceTime d)) =>
                     Complex.exp (-((-(xy.1 0) - xy.2 0)^2 / (4 * s) : ℝ))) := by
                   apply Complex.continuous_exp.comp
                   apply Continuous.neg
                   apply continuous_ofReal.comp
                   apply Continuous.div_const
                   exact (hcoord0_1.neg.sub hcoord0_2).pow 2
-                have h5 : Continuous (fun (_ : SpaceTime × SpaceTime) =>
+                have h5 : Continuous (fun (_ : (SpaceTime d) × (SpaceTime d)) =>
                     Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2))) := continuous_const
-                have h6 : Continuous (fun (xy : SpaceTime × SpaceTime) =>
+                have h6 : Continuous (fun (xy : (SpaceTime d) × (SpaceTime d)) =>
                     Complex.exp (-Complex.I * spatialDot k_sp (spatialPart xy.1 - spatialPart xy.2))) := by
                   apply Complex.continuous_exp.comp
                   apply Continuous.mul continuous_const
@@ -3190,9 +3093,9 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) (k_sp : 
                   unfold spatialDot
                   apply continuous_finsetSum
                   intro i _
-                  have hv_i : Continuous (fun (xy : SpaceTime × SpaceTime) =>
+                  have hv_i : Continuous (fun (xy : (SpaceTime d) × (SpaceTime d)) =>
                       (spatialPart xy.1 - spatialPart xy.2) i) :=
-                    (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp
+                    (PiLp.continuous_apply 2 (fun _ : Fin (d - 1) => ℝ) i).comp
                       ((h_spatialPart_cont.comp continuous_fst).sub
                        (h_spatialPart_cont.comp continuous_snd))
                   exact continuous_const.mul hv_i
@@ -3235,17 +3138,17 @@ theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) (k_sp : 
               have h_sqrt_zero : Real.sqrt (π / s) = 0 := by
                 apply Real.sqrt_eq_zero'.mpr
                 exact div_nonpos_of_nonneg_of_nonpos Real.pi_nonneg hs
-              have h_F_zero : ∀ xy : SpaceTime × SpaceTime, F (s, xy.1, xy.2) = 0 := by
+              have h_F_zero : ∀ xy : (SpaceTime d) × (SpaceTime d), F (s, xy.1, xy.2) = 0 := by
                 intro ⟨x, y⟩
                 simp only [F, h_sqrt_zero, Complex.ofReal_zero, mul_zero, zero_mul]
               simp_rw [h_F_zero]
-              exact integrable_zero (SpaceTime × SpaceTime) ℂ (volume.prod volume)
+              exact integrable_zero ((SpaceTime d) × (SpaceTime d)) ℂ (volume.prod volume)
           exact MeasureTheory.integral_prod _ h_int_s
-    _ = ∫ xy : SpaceTime × SpaceTime, ∫ s in Set.Ioi 0, F (s, xy.1, xy.2) := by
+    _ = ∫ xy : (SpaceTime d) × (SpaceTime d), ∫ s in Set.Ioi 0, F (s, xy.1, xy.2) := by
           exact MeasureTheory.integral_integral_swap h_int
-    _ = ∫ x : SpaceTime, ∫ y : SpaceTime, ∫ s in Set.Ioi 0, F (s, x, y) := by
+    _ = ∫ x : (SpaceTime d), ∫ y : (SpaceTime d), ∫ s in Set.Ioi 0, F (s, x, y) := by
           -- ∫_{xy} g(xy) = ∫_x ∫_y g(x,y) by integral_prod
-          have h_int_xy : Integrable (fun xy : SpaceTime × SpaceTime =>
+          have h_int_xy : Integrable (fun xy : (SpaceTime d) × (SpaceTime d) =>
               ∫ s in Set.Ioi 0, F (s, xy.1, xy.2)) (volume.prod volume) := by
             -- From h_int : Integrable F ((volume.restrict (Ioi 0)).prod (volume.prod volume))
             -- Integrable.integral_prod_right gives integrability of ∫ (second) ... on (first)
@@ -3266,17 +3169,18 @@ The common bound for all Fubini swaps is:
   |integrand| ≤ |f(x)| |f(y)| × C(s) × exp(-s‖k_sp‖²)
 which factors and is therefore integrable on the product space. -/
 
-/-- The Gaussian exp(-s‖k‖²) is integrable over SpatialCoords for s > 0. -/
+omit [Fact (2 ≤ d)] in
+/-- The Gaussian exp(-s‖k‖²) is integrable over (SpatialCoords d) for s > 0. -/
 lemma gaussian_integrable_spatialCoords (s : ℝ) (hs : 0 < s) :
-    MeasureTheory.Integrable (fun k_sp : SpatialCoords => Real.exp (-s * ‖k_sp‖^2)) := by
+    MeasureTheory.Integrable (fun k_sp : (SpatialCoords d) => Real.exp (-s * ‖k_sp‖^2)) := by
   have hs' : 0 < (s : ℂ).re := by simp [hs]
   -- Use Mathlib's Gaussian integrability (with c=0, w=0)
-  have h := GaussianFourier.integrable_cexp_neg_mul_sq_norm_add (V := SpatialCoords) hs' 0 0
+  have h := GaussianFourier.integrable_cexp_neg_mul_sq_norm_add (V := (SpatialCoords d)) hs' 0 0
   -- Simplify the function: exp(-s‖k‖² + 0 * inner 0 k) = exp(-s‖k‖²)
   simp only [zero_mul, add_zero, inner_zero_left, Complex.ofReal_zero] at h
   -- Now h : Integrable (fun v => exp(-(s:ℂ) * ‖v‖²))
   -- Convert complex exponential to real: exp(-(s:ℂ) * ‖v‖²) for real s is real
-  have h_eq : (fun k_sp : SpatialCoords => Complex.exp (-(s : ℂ) * ‖k_sp‖^2)) =
+  have h_eq : (fun k_sp : (SpatialCoords d) => Complex.exp (-(s : ℂ) * ‖k_sp‖^2)) =
       (fun k_sp => (Real.exp (-s * ‖k_sp‖^2) : ℂ)) := by
     ext k_sp
     -- Use Complex.ofReal_exp: (Real.exp x : ℂ) = Complex.exp (x : ℂ)
@@ -3288,32 +3192,34 @@ lemma gaussian_integrable_spatialCoords (s : ℝ) (hs : 0 < s) :
   -- Integrable (ofReal ∘ g) implies Integrable g via .re since re(ofReal x) = x
   exact h.re
 
+omit [Fact (2 ≤ d)] in
 /-- spatialPart is continuous (projection followed by continuous linear equiv). -/
-lemma continuous_spatialPart : Continuous spatialPart := by
+lemma continuous_spatialPart : Continuous (spatialPart : (SpaceTime d) → (SpatialCoords d)) := by
   unfold spatialPart
-  apply (EuclideanSpace.equiv (Fin (STDimension - 1)) ℝ).symm.continuous.comp
+  apply (EuclideanSpace.equiv (Fin (d - 1)) ℝ).symm.continuous.comp
   apply continuous_pi
   intro i
-  have h : i.val + 1 < STDimension := by simp [STDimension]; omega
-  exact PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) (⟨i.val + 1, h⟩ : Fin STDimension)
+  have h : i.val + 1 < d := by have := i.isLt; omega
+  exact PiLp.continuous_apply 2 (fun _ : Fin d => ℝ) (⟨i.val + 1, h⟩ : Fin d)
 
+omit [Fact (2 ≤ d)] in
 /-- **Key Lemma**: The integrand for fubini_ksp_xy_swap is absolutely integrable.
 
     The bound |f(x)| |f(y)| exp(-s‖k_sp‖²) is integrable on
-    SpatialCoords × SpaceTime × SpaceTime because:
+    (SpatialCoords d) × (SpaceTime d) × (SpaceTime d) because:
     1. ∫_{k_sp} exp(-s‖k_sp‖²) dk_sp = (π/s)^{3/2} < ∞
     2. ∫∫_{x,y} |f(x)| |f(y)| dx dy = ‖f‖₁² < ∞
     3. The product factorizes on independent spaces -/
-lemma fubini_ksp_xy_integrand_integrable (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ) :
+lemma fubini_ksp_xy_integrand_integrable (s : ℝ) (hs : 0 < s) (f : (TestFunctionℂ d)) :
     MeasureTheory.Integrable
-      (fun p : SpatialCoords × SpaceTime × SpaceTime =>
+      (fun p : (SpatialCoords d) × (SpaceTime d) × (SpaceTime d) =>
         ‖f p.2.1‖ * ‖f p.2.2‖ * Real.exp (-s * ‖p.1‖^2))
       (MeasureTheory.volume.prod (MeasureTheory.volume.prod MeasureTheory.volume)) := by
   -- Factor the integrand
   have h_gauss : MeasureTheory.Integrable
-      (fun k_sp : SpatialCoords => Real.exp (-s * ‖k_sp‖^2)) := gaussian_integrable_spatialCoords s hs
+      (fun k_sp : (SpatialCoords d) => Real.exp (-s * ‖k_sp‖^2)) := gaussian_integrable_spatialCoords s hs
   have h_schwartz : MeasureTheory.Integrable
-      (fun p : SpaceTime × SpaceTime => ‖f p.1‖ * ‖f p.2‖)
+      (fun p : (SpaceTime d) × (SpaceTime d) => ‖f p.1‖ * ‖f p.2‖)
       (MeasureTheory.volume.prod MeasureTheory.volume) := schwartz_norm_prod_integrable f
   -- Combine using Integrable.mul_prod
   have h_prod := h_gauss.mul_prod h_schwartz
@@ -3322,7 +3228,7 @@ lemma fubini_ksp_xy_integrand_integrable (s : ℝ) (hs : 0 < s) (f : TestFunctio
   ext ⟨k_sp, x, y⟩
   ring
 
-/-- The full Fubini integrand is absolutely integrable on SpatialCoords × SpaceTime × SpaceTime.
+/-- The full Fubini integrand is absolutely integrable on (SpatialCoords d) × (SpaceTime d) × (SpaceTime d).
 
     The integrand is:
       f̄(x) · f(y) · √(π/s) · exp(-t²/4s) · exp(-s‖k_sp‖²) · exp(-ik·r)
@@ -3339,9 +3245,9 @@ lemma fubini_ksp_xy_integrand_integrable (s : ℝ) (hs : 0 < s) (f : TestFunctio
     - |ofReal (√(π/s))| = √(π/s) (non-negative)
     - |exp(negative real)| ≤ 1
     - |exp(pure imaginary)| = 1 -/
-lemma fubini_ksp_xy_full_integrand_integrable (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ) :
+lemma fubini_ksp_xy_full_integrand_integrable (s : ℝ) (hs : 0 < s) (f : (TestFunctionℂ d)) :
     MeasureTheory.Integrable
-      (fun p : SpatialCoords × SpaceTime × SpaceTime =>
+      (fun p : (SpatialCoords d) × (SpaceTime d) × (SpaceTime d) =>
         (starRingEnd ℂ (f p.2.1)) * f p.2.2 *
           (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(p.2.1 0) - p.2.2 0)^2 / (4 * s) : ℝ)) *
           Complex.exp (-(s : ℂ) * ‖p.1‖^2) *
@@ -3355,18 +3261,18 @@ lemma fubini_ksp_xy_full_integrand_integrable (s : ℝ) (hs : 0 < s) (f : TestFu
     -- The integrand is Schwartz × const × exp(real) × exp(real) × exp(pure imaginary)
     -- Each factor is continuous, hence the whole product is continuous
     have hf_cont : Continuous f := SchwartzMap.continuous f
-    have h1 : Continuous (fun (p : SpatialCoords × SpaceTime × SpaceTime) => (starRingEnd ℂ) (f p.2.1)) :=
+    have h1 : Continuous (fun (p : (SpatialCoords d) × (SpaceTime d) × (SpaceTime d)) => (starRingEnd ℂ) (f p.2.1)) :=
       continuous_star.comp (hf_cont.comp continuous_snd.fst)
-    have h2 : Continuous (fun (p : SpatialCoords × SpaceTime × SpaceTime) => f p.2.2) :=
+    have h2 : Continuous (fun (p : (SpatialCoords d) × (SpaceTime d) × (SpaceTime d)) => f p.2.2) :=
       hf_cont.comp continuous_snd.snd
-    have h3 : Continuous (fun (_ : SpatialCoords × SpaceTime × SpaceTime) => (Real.sqrt (π / s) : ℂ)) :=
+    have h3 : Continuous (fun (_ : (SpatialCoords d) × (SpaceTime d) × (SpaceTime d)) => (Real.sqrt (π / s) : ℂ)) :=
       continuous_const
     -- Continuous coordinate access for EuclideanSpace (which is PiLp 2)
-    have hcoord0_1 : Continuous (fun (p : SpatialCoords × SpaceTime × SpaceTime) => p.2.1 0) :=
-      (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp continuous_snd.fst
-    have hcoord0_2 : Continuous (fun (p : SpatialCoords × SpaceTime × SpaceTime) => p.2.2 0) :=
-      (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp continuous_snd.snd
-    have h4 : Continuous (fun (p : SpatialCoords × SpaceTime × SpaceTime) =>
+    have hcoord0_1 : Continuous (fun (p : (SpatialCoords d) × (SpaceTime d) × (SpaceTime d)) => p.2.1 0) :=
+      (PiLp.continuous_apply 2 (fun _ : Fin d => ℝ) 0).comp continuous_snd.fst
+    have hcoord0_2 : Continuous (fun (p : (SpatialCoords d) × (SpaceTime d) × (SpaceTime d)) => p.2.2 0) :=
+      (PiLp.continuous_apply 2 (fun _ : Fin d => ℝ) 0).comp continuous_snd.snd
+    have h4 : Continuous (fun (p : (SpatialCoords d) × (SpaceTime d) × (SpaceTime d)) =>
         Complex.exp (-((-(p.2.1 0) - p.2.2 0)^2 / (4 * s) : ℝ))) := by
       apply Complex.continuous_exp.comp
       apply Continuous.neg
@@ -3374,13 +3280,13 @@ lemma fubini_ksp_xy_full_integrand_integrable (s : ℝ) (hs : 0 < s) (f : TestFu
       apply Continuous.div_const
       apply Continuous.pow
       exact hcoord0_1.neg.sub hcoord0_2
-    have h5 : Continuous (fun (p : SpatialCoords × SpaceTime × SpaceTime) =>
+    have h5 : Continuous (fun (p : (SpatialCoords d) × (SpaceTime d) × (SpaceTime d)) =>
         Complex.exp (-(s : ℂ) * ‖p.1‖^2)) := by
       apply Complex.continuous_exp.comp
       apply Continuous.mul continuous_const
       apply Continuous.pow
       exact continuous_ofReal.comp (continuous_norm.comp continuous_fst)
-    have h6 : Continuous (fun (p : SpatialCoords × SpaceTime × SpaceTime) =>
+    have h6 : Continuous (fun (p : (SpatialCoords d) × (SpaceTime d) × (SpaceTime d)) =>
         Complex.exp (-Complex.I * spatialDot p.1 (spatialPart p.2.1 - spatialPart p.2.2))) := by
       apply Complex.continuous_exp.comp
       apply Continuous.mul continuous_const
@@ -3389,11 +3295,11 @@ lemma fubini_ksp_xy_full_integrand_integrable (s : ℝ) (hs : 0 < s) (f : TestFu
       unfold spatialDot
       apply continuous_finsetSum
       intro i _
-      have hk_i : Continuous (fun (p : SpatialCoords × SpaceTime × SpaceTime) => p.1 i) :=
-        (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp continuous_fst
-      have hv_i : Continuous (fun (p : SpatialCoords × SpaceTime × SpaceTime) =>
+      have hk_i : Continuous (fun (p : (SpatialCoords d) × (SpaceTime d) × (SpaceTime d)) => p.1 i) :=
+        (PiLp.continuous_apply 2 (fun _ : Fin (d - 1) => ℝ) i).comp continuous_fst
+      have hv_i : Continuous (fun (p : (SpatialCoords d) × (SpaceTime d) × (SpaceTime d)) =>
           (spatialPart p.2.1 - spatialPart p.2.2) i) :=
-        (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp
+        (PiLp.continuous_apply 2 (fun _ : Fin (d - 1) => ℝ) i).comp
           (continuous_spatialPart.comp continuous_snd.fst |>.sub
            (continuous_spatialPart.comp continuous_snd.snd))
       exact hk_i.mul hv_i
@@ -3446,14 +3352,14 @@ lemma fubini_ksp_xy_full_integrand_integrable (s : ℝ) (hs : 0 < s) (f : TestFu
     **Proof:** Two steps:
     1. Pull the k_sp integral out: A(x,y) * ∫_{k_sp} B = ∫_{k_sp} A(x,y) * B
     2. Apply Fubini (integral_integral_swap) to swap x,y,k_sp to k_sp,x,y -/
-theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ) :
-    ∫ x : SpaceTime, ∫ y : SpaceTime,
+theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : (TestFunctionℂ d)) :
+    ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
-        ∫ k_sp : SpatialCoords,
+        ∫ k_sp : (SpatialCoords d),
           Complex.exp (-(s : ℂ) * ‖k_sp‖^2) *
           Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y)) =
-    ∫ k_sp : SpatialCoords, ∫ x : SpaceTime, ∫ y : SpaceTime,
+    ∫ k_sp : (SpatialCoords d), ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
         Complex.exp (-(s : ℂ) * ‖k_sp‖^2) *
@@ -3461,19 +3367,19 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ) :
   -- Step 1: Pull the k_sp integral out of the product
   -- A(x,y) * ∫ B(k_sp, x, y) = ∫ A(x,y) * B(k_sp, x, y) by integral_const_mul (reversed)
   -- where A(x,y) = conj(f x) * f y * √(π/s) * exp(-t²/4s) is k_sp-independent
-  have h_pull : ∀ x y : SpaceTime,
+  have h_pull : ∀ x y : (SpaceTime d),
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
-        ∫ k_sp : SpatialCoords,
+        ∫ k_sp : (SpatialCoords d),
           Complex.exp (-(s : ℂ) * ‖k_sp‖^2) *
           Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y)) =
-      ∫ k_sp : SpatialCoords,
+      ∫ k_sp : (SpatialCoords d),
         (starRingEnd ℂ (f x)) * f y *
           (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
           Complex.exp (-(s : ℂ) * ‖k_sp‖^2) *
           Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x - spatialPart y)) := by
     intro x y
-    have : ∀ r : ℂ, ∀ g : SpatialCoords → ℂ,
+    have : ∀ r : ℂ, ∀ g : (SpatialCoords d) → ℂ,
         r * ∫ a, g a = ∫ a, r * g a :=
       fun r g => (MeasureTheory.integral_const_mul r g).symm
     rw [this]
@@ -3491,8 +3397,8 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ) :
   -- The integrability required for Fubini follows from fubini_ksp_xy_full_integrand_integrable.
   have h_full := fubini_ksp_xy_full_integrand_integrable s hs f
   -- Step 1: Swap inner (y, k_sp) for each fixed x
-  have h_inner : ∀ x : SpaceTime, MeasureTheory.Integrable
-      (fun p : SpaceTime × SpatialCoords =>
+  have h_inner : ∀ x : (SpaceTime d), MeasureTheory.Integrable
+      (fun p : (SpaceTime d) × (SpatialCoords d) =>
         (starRingEnd ℂ (f x)) * f p.1 *
           (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - p.1 0)^2 / (4 * s) : ℝ)) *
           Complex.exp (-(s : ℂ) * ‖p.2‖^2) *
@@ -3503,10 +3409,10 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ) :
     -- Bound: |F| ≤ |C| * |f(y)| * 1 * exp(-s‖k‖²) * 1
     -- This is integrable as (const * Schwartz) × Gaussian
     have h_bound : MeasureTheory.Integrable
-        (fun p : SpaceTime × SpatialCoords => ‖f x‖ * Real.sqrt (π / s) * ‖f p.1‖ * Real.exp (-s * ‖p.2‖^2))
+        (fun p : (SpaceTime d) × (SpatialCoords d) => ‖f x‖ * Real.sqrt (π / s) * ‖f p.1‖ * Real.exp (-s * ‖p.2‖^2))
         (MeasureTheory.volume.prod MeasureTheory.volume) := by
-      have h1 : MeasureTheory.Integrable (fun y : SpaceTime => ‖f y‖) := schwartz_norm_integrable f
-      have h2 : MeasureTheory.Integrable (fun k : SpatialCoords => Real.exp (-s * ‖k‖^2)) :=
+      have h1 : MeasureTheory.Integrable (fun y : (SpaceTime d) => ‖f y‖) := schwartz_norm_integrable f
+      have h2 : MeasureTheory.Integrable (fun k : (SpatialCoords d) => Real.exp (-s * ‖k‖^2)) :=
         gaussian_integrable_spatialCoords s hs
       convert (h1.mul_prod h2).const_mul (‖f x‖ * Real.sqrt (π / s)) using 1
       ext ⟨y, k⟩
@@ -3514,9 +3420,9 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ) :
     apply MeasureTheory.Integrable.mono' h_bound
     · -- AEStronglyMeasurable: continuous function
       have hf_cont : Continuous f := SchwartzMap.continuous f
-      have hcoord : Continuous (fun (p : SpaceTime × SpatialCoords) => p.1 0) :=
-        (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp continuous_fst
-      have h_cont : Continuous (fun p : SpaceTime × SpatialCoords =>
+      have hcoord : Continuous (fun (p : (SpaceTime d) × (SpatialCoords d)) => p.1 0) :=
+        (PiLp.continuous_apply 2 (fun _ : Fin d => ℝ) 0).comp continuous_fst
+      have h_cont : Continuous (fun p : (SpaceTime d) × (SpatialCoords d) =>
           (starRingEnd ℂ (f x)) * f p.1 *
             (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - p.1 0)^2 / (4 * s) : ℝ)) *
             Complex.exp (-(s : ℂ) * ‖p.2‖^2) *
@@ -3543,10 +3449,10 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ) :
           unfold spatialDot
           apply continuous_finsetSum
           intro i _
-          have hk_i : Continuous (fun (p : SpaceTime × SpatialCoords) => p.2 i) :=
-            (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp continuous_snd
-          have hv_i : Continuous (fun (p : SpaceTime × SpatialCoords) => (spatialPart x - spatialPart p.1) i) :=
-            (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp
+          have hk_i : Continuous (fun (p : (SpaceTime d) × (SpatialCoords d)) => p.2 i) :=
+            (PiLp.continuous_apply 2 (fun _ : Fin (d - 1) => ℝ) i).comp continuous_snd
+          have hv_i : Continuous (fun (p : (SpaceTime d) × (SpatialCoords d)) => (spatialPart x - spatialPart p.1) i) :=
+            (PiLp.continuous_apply 2 (fun _ : Fin (d - 1) => ℝ) i).comp
               (continuous_const.sub (continuous_spatialPart.comp continuous_fst))
           exact hk_i.mul hv_i
       exact h_cont.aestronglyMeasurable
@@ -3595,7 +3501,7 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ) :
   conv_lhs => arg 2; ext x; rw [h1 x]
   -- Step 2: Swap (x, k_sp)
   -- Define the full integrand on ((x, k), y)
-  let F : (SpaceTime × SpatialCoords) × SpaceTime → ℂ := fun ⟨⟨x, k⟩, y⟩ =>
+  let F : ((SpaceTime d) × (SpatialCoords d)) × (SpaceTime d) → ℂ := fun ⟨⟨x, k⟩, y⟩ =>
     (starRingEnd ℂ (f x)) * f y *
       (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
       Complex.exp (-(s : ℂ) * ‖k‖^2) *
@@ -3605,17 +3511,17 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ) :
       ((MeasureTheory.volume.prod MeasureTheory.volume).prod MeasureTheory.volume) := by
     -- Bound: |F((x,k),y)| ≤ √(π/s) * ‖f(x)‖ * ‖f(y)‖ * exp(-s‖k‖²)
     have h_bound : MeasureTheory.Integrable
-        (fun (p : (SpaceTime × SpatialCoords) × SpaceTime) =>
+        (fun (p : ((SpaceTime d) × (SpatialCoords d)) × (SpaceTime d)) =>
           Real.sqrt (π / s) * ‖f p.1.1‖ * ‖f p.2‖ * Real.exp (-s * ‖p.1.2‖^2))
         ((MeasureTheory.volume.prod MeasureTheory.volume).prod MeasureTheory.volume) := by
-      have h1 : MeasureTheory.Integrable (fun x : SpaceTime => ‖f x‖) := schwartz_norm_integrable f
-      have h2 : MeasureTheory.Integrable (fun k : SpatialCoords => Real.exp (-s * ‖k‖^2)) :=
+      have h1 : MeasureTheory.Integrable (fun x : (SpaceTime d) => ‖f x‖) := schwartz_norm_integrable f
+      have h2 : MeasureTheory.Integrable (fun k : (SpatialCoords d) => Real.exp (-s * ‖k‖^2)) :=
         gaussian_integrable_spatialCoords s hs
       -- The bound is √(π/s) * ‖f(x)‖ * exp(-s‖k‖²) * ‖f(y)‖
       -- = (√(π/s) * ‖f(x)‖ * exp(-s‖k‖²)) * ‖f(y)‖
       -- Integrable on (x,k) × y
       have h_xk : MeasureTheory.Integrable
-          (fun p : SpaceTime × SpatialCoords => Real.sqrt (π / s) * ‖f p.1‖ * Real.exp (-s * ‖p.2‖^2))
+          (fun p : (SpaceTime d) × (SpatialCoords d) => Real.sqrt (π / s) * ‖f p.1‖ * Real.exp (-s * ‖p.2‖^2))
           (MeasureTheory.volume.prod MeasureTheory.volume) := by
         convert ((h1.mul_prod h2).const_mul (Real.sqrt (π / s))) using 1
         ext ⟨x, k⟩; ring
@@ -3626,16 +3532,16 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ) :
       -- Show the explicit form of F via simp only
       simp only [F]
       have hf_cont : Continuous f := SchwartzMap.continuous f
-      have h_cont : Continuous (fun p : (SpaceTime × SpatialCoords) × SpaceTime =>
+      have h_cont : Continuous (fun p : ((SpaceTime d) × (SpatialCoords d)) × (SpaceTime d) =>
           (starRingEnd ℂ (f p.1.1)) * f p.2 *
             (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(p.1.1 0) - p.2 0)^2 / (4 * s) : ℝ)) *
             Complex.exp (-(s : ℂ) * ‖p.1.2‖^2) *
             Complex.exp (-Complex.I * spatialDot p.1.2 (spatialPart p.1.1 - spatialPart p.2))) := by
-        have hx0 : Continuous (fun p : (SpaceTime × SpatialCoords) × SpaceTime => p.1.1 0) :=
-          (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp
+        have hx0 : Continuous (fun p : ((SpaceTime d) × (SpatialCoords d)) × (SpaceTime d) => p.1.1 0) :=
+          (PiLp.continuous_apply 2 (fun _ : Fin d => ℝ) 0).comp
             (continuous_fst.comp continuous_fst)
-        have hy0 : Continuous (fun p : (SpaceTime × SpatialCoords) × SpaceTime => p.2 0) :=
-          (PiLp.continuous_apply 2 (fun _ : Fin STDimension => ℝ) 0).comp continuous_snd
+        have hy0 : Continuous (fun p : ((SpaceTime d) × (SpatialCoords d)) × (SpaceTime d) => p.2 0) :=
+          (PiLp.continuous_apply 2 (fun _ : Fin d => ℝ) 0).comp continuous_snd
         apply Continuous.mul
         · apply Continuous.mul
           · apply Continuous.mul
@@ -3660,12 +3566,12 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ) :
           unfold spatialDot
           apply continuous_finsetSum
           intro i _
-          have hk_i : Continuous (fun p : (SpaceTime × SpatialCoords) × SpaceTime => p.1.2 i) :=
-            (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp
+          have hk_i : Continuous (fun p : ((SpaceTime d) × (SpatialCoords d)) × (SpaceTime d) => p.1.2 i) :=
+            (PiLp.continuous_apply 2 (fun _ : Fin (d - 1) => ℝ) i).comp
               (continuous_snd.comp continuous_fst)
-          have hv_i : Continuous (fun p : (SpaceTime × SpatialCoords) × SpaceTime =>
+          have hv_i : Continuous (fun p : ((SpaceTime d) × (SpatialCoords d)) × (SpaceTime d) =>
               (spatialPart p.1.1 - spatialPart p.2) i) :=
-            (PiLp.continuous_apply 2 (fun _ : Fin (STDimension - 1) => ℝ) i).comp
+            (PiLp.continuous_apply 2 (fun _ : Fin (d - 1) => ℝ) i).comp
               ((continuous_spatialPart.comp (continuous_fst.comp continuous_fst)).sub
                 (continuous_spatialPart.comp continuous_snd))
           exact hk_i.mul hv_i
@@ -3704,7 +3610,7 @@ theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : TestFunctionℂ) :
         _ = Real.sqrt (π / s) * ‖f x‖ * ‖f y‖ * Real.exp (-s * ‖k_sp‖^2) := by ring
   -- Apply Integrable.integral_prod_left to get integrability on (x, k)
   have h_outer : MeasureTheory.Integrable
-      (fun p : SpaceTime × SpatialCoords => ∫ y : SpaceTime,
+      (fun p : (SpaceTime d) × (SpatialCoords d) => ∫ y : (SpaceTime d),
         (starRingEnd ℂ (f p.1)) * f y *
           (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(p.1 0) - y 0)^2 / (4 * s) : ℝ)) *
           Complex.exp (-(s : ℂ) * ‖p.2‖^2) *

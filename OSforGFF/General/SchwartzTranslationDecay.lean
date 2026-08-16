@@ -464,10 +464,8 @@ theorem schwartz_bilinear_prod_integrable
         right_inv := fun p => by simp [add_sub_cancel_right]
         measurable_toFun := Measurable.prodMk (measurable_fst.sub measurable_snd) measurable_snd
         measurable_invFun := Measurable.prodMk (measurable_fst.add measurable_snd) measurable_snd }
-    have he_preserves : MeasurePreserving e (volume.prod volume) (volume.prod volume) := by
-      have := measurePreserving_sub_prod (G := E) volume volume
-      convert this using 1
-      rfl
+    have he_preserves : MeasurePreserving e (volume.prod volume) (volume.prod volume) :=
+      measurePreserving_sub_prod (G := E) volume volume
     have h_Ks_shifted : Integrable (fun p : E × E => (K_sing (p.1 - p.2) : ℂ) * g (p.2 - a))
         (volume.prod volume) := by
       have heq : (fun p : E × E => (K_sing (p.1 - p.2) : ℂ) * g (p.2 - a)) =

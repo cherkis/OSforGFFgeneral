@@ -1,7 +1,8 @@
 /-
 Copyright (c) 2025 Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim. All rights reserved.
+Copyright (c) 2026 Sergey A. Cherkis. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
+Authors: Sergey A. Cherkis, Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 
 import Mathlib.Tactic
@@ -21,8 +22,8 @@ import Mathlib.Topology.Constructions
 
 import OSforGFF.Spacetime.Basic
 import OSforGFF.OS.Axioms
-import OSforGFF.Covariance.Position
-import OSforGFF.Covariance.Momentum
+import OSforGFF.Covariance.ParsevalGeneric
+import OSforGFF.General.FunctionalAnalysis
 import OSforGFF.Covariance.RealForm
 import OSforGFF.Measure.Construct
 import OSforGFF.Measure.IsGaussian
@@ -35,76 +36,64 @@ Proves |Z[f]| ≤ exp(c · ‖f‖²_{L²}) with p = 2 and c = 1/(2m²). The arg
 1. |Z[f]| = exp(−½ Re⟨f, Cf⟩_ℂ)
 2. Decompose f = f_re + i·f_im, then Re⟨f, Cf⟩ = ⟨f_re, Cf_re⟩ − ⟨f_im, Cf_im⟩
 3. Since C is positive semidefinite, −Re⟨f, Cf⟩ ≤ ⟨f_im, Cf_im⟩
-4. In momentum space: ⟨g, Cg⟩ = ∫ |ĝ(k)|²/(|k|²+m²) dk ≤ ‖g‖²_{L²}/m²
-   (Plancherel + bound 1/(|k|²+m²) ≤ 1/m²)
+4. In momentum space: ⟨g, Cg⟩ = ∫ |ĝ(k)|²/((2π)²|k|²+m²) dk ≤ ‖g‖²_{L²}/m²
+   (Plancherel + bound 1/((2π)²|k|²+m²) ≤ 1/m²)
 5. Combine: |Z[f]| ≤ exp(‖f‖²_{L²}/(2m²))
 
-Local integrability of the two-point function C(x,0) ∼ 1/(4π²|x|²) follows from
-the Bessel K₁ asymptotics: (m/4π²|x|)K₁(m|x|) is locally integrable in 4D.
+Local integrability of the two-point function `x ↦ C(0, x)` follows from global
+integrability of the radial covariance profile (`GFFPropagator.integrable`).
 
 ## Main result
 
 - `gaussianFreeField_satisfies_OS1_revised`
 -/
 
-open MeasureTheory Complex BigOperators SchwartzMap Real QFT
+open MeasureTheory Complex BigOperators SchwartzMap Real QFT OSforGFF
 open scoped MeasureTheory ENNReal
+
+variable {d : ℕ} [Fact (2 ≤ d)]
 
 /-! ## Preliminaries -/
 
+omit [Fact (2 ≤ d)] in
 /-- Plancherel (Schwartz): L² norm preservation for the Fourier transform.
     This follows directly from Mathlib's `SchwartzMap.integral_norm_sq_fourier`.
     Mathlib's Fourier transform is unitary-normalized, so no multiplicative constant is needed. -/
-theorem fourier_plancherel_schwartz (g : TestFunctionℂ) :
+theorem fourier_plancherel_schwartz (g : TestFunctionℂ d) :
     ∫ k, ‖(SchwartzMap.fourierTransformCLM ℂ g) k‖^2 ∂volume =
       ∫ x, ‖g x‖^2 ∂volume :=
   SchwartzMap.integral_norm_sq_fourier g
 
-/-- **Two-point Schwinger function equals the free covariance kernel.**
+/-- **Two-point Schwinger function of the GFF**: the centered position-space covariance
+    kernel `K(x) = C(0, x)`.
 
-    This is the fundamental connection between the abstract
-    limit-based definition and the concrete position-space propagator.
+    Mathematically: ⟨φ(x)φ(0)⟩_μ = C(0, x) for the Gaussian measure with covariance C.
+    The abstract `SchwingerTwoPointFunction` is defined as a mollified limit; for the GFF
+    it agrees with this kernel away from the origin (`schwingerTwoPointFunction_eq_GFF`,
+    via `double_mollifier_convergence`). -/
+noncomputable def SchwingerTwoPointFunction_GFF (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
+    (x : SpaceTime d) : ℝ :=
+  freeCovarianceKernel d m x
 
-    Mathematically: ⟨φ(x)φ(0)⟩_μ = C(x, 0) for the Gaussian measure with covariance C.
+/-- The GFF two-point function equals the centered covariance kernel by definition. -/
+theorem schwingerTwoPoint_eq_freeCovariance (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
+    (x : SpaceTime d) :
+  SchwingerTwoPointFunction_GFF m x = freeCovarianceKernel d m x := rfl
 
-    **Justification:**
-    This follows from the double mollifier convergence theorem. The two-point function
-    S₂(x) is defined as the limit of smeared correlations:
-      S₂(x) = lim_{ε→0} ∫∫ φ_ε(u-x) ⟨φ(u)φ(v)⟩ φ_ε(v) du dv
-            = lim_{ε→0} (φ_ε ⋆ (φ_ε ⋆ C))(x)
-            = C(x)   for x ≠ 0
-
-    See `double_mollifier_convergence` in FunctionalAnalysis.lean for the general result.
-
-    Note: The abstract `SchwingerTwoPointFunction` in OS_Axioms.lean is now defined as
-    a limit (using `limUnder`), properly avoiding DiracDelta. For the GFF specifically,
-    we use this direct definition for computational convenience. -/
-noncomputable def SchwingerTwoPointFunction_GFF (m : ℝ) [Fact (0 < m)] (x : SpaceTime) : ℝ :=
-  freeCovarianceKernel m x
-
-/-- The GFF two-point function equals the free covariance kernel by definition. -/
-theorem schwingerTwoPoint_eq_freeCovarianceKernel (m : ℝ) [Fact (0 < m)] (x : SpaceTime) :
-  SchwingerTwoPointFunction_GFF m x = freeCovarianceKernel m x := rfl
-
-/-- Compatibility: The abstract SchwingerTwoPointFunction agrees with the concrete
-    definition for the GFF. This uses the limit-based definition of SchwingerTwoPointFunction
-    and the double mollifier convergence theorem via `schwingerTwoPointFunction_eq_kernel`.
-
-    The proof requires:
-    1. Continuity of freeCovarianceKernel away from 0
-    2. SchwingerFunction₂ for the GFF computes ∫∫ f(u) C(u-v) g(v) du dv
-
-    Both are standard properties of the GFF; the sorries encode these standard facts. -/
-theorem schwingerTwoPointFunction_eq_GFF (m : ℝ) [Fact (0 < m)] (x : SpaceTime) (hx : x ≠ 0) :
-  SchwingerTwoPointFunction (gaussianFreeField_free m) x = SchwingerTwoPointFunction_GFF m x := by
-  -- Use schwingerTwoPointFunction_eq_kernel
-  have h_cont : ContinuousOn (freeCovarianceKernel m) {y : SpaceTime | y ≠ 0} :=
-    freeCovarianceKernel_continuousOn m (Fact.elim ‹Fact (0 < m)›)
-  have h_S₂ : ∀ (f g : TestFunction),
-      SchwingerFunction₂ (gaussianFreeField_free m) f g =
-      ∫ u, ∫ v, f u * freeCovarianceKernel m (u - v) * g v := by
+/-- The abstract two-point Schwinger function of the GFF equals the concrete covariance
+    kernel away from the origin: the mollified limit defining `SchwingerTwoPointFunction`
+    evaluates to the continuous kernel via `schwingerTwoPointFunction_eq_kernel`. -/
+theorem schwingerTwoPointFunction_eq_GFF (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
+    (x : SpaceTime d) (hx : x ≠ 0) :
+  SchwingerTwoPointFunction (gaussianFreeField_free (d := d) m) x
+    = SchwingerTwoPointFunction_GFF m x := by
+  have h_cont : ContinuousOn (freeCovarianceKernel d m)
+      {y : SpaceTime d | y ≠ 0} := freeCovarianceKernel_continuousOn
+  have h_S₂ : ∀ (f g : TestFunction d),
+      SchwingerFunction₂ (gaussianFreeField_free (d := d) m) f g =
+      ∫ u, ∫ v, f u * freeCovarianceKernel d m (u - v) * g v := by
     -- Chain: S₂(f,g) = ∫ω (ωf)(ωg) dμ = freeCovarianceFormR m f g = ∫∫ f(u) C(u,v) g(v)
-    -- where C(u,v) = freeCovarianceKernel m (u-v) by translation invariance
+    -- where C(u,v) = K(u-v) by translation invariance
     intro f g
     -- Step 1: S₂ = ∫ω (ωf)(ωg) via schwinger_eq_covariance
     rw [schwinger_eq_covariance]
@@ -114,98 +103,41 @@ theorem schwingerTwoPointFunction_eq_GFF (m : ℝ) [Fact (0 < m)] (x : SpaceTime
     rw [GFFIsGaussian.schwinger_eq_covariance_real m f g]
     -- Step 3: freeCovarianceFormR = ∫∫ f(u) * freeCovariance(u,v) * g(v)
     unfold freeCovarianceFormR
-    -- Step 4: freeCovariance(x,y) = freeCovarianceKernel(x-y) by translation invariance
+    -- Step 4: freeCovariance(u,v) = K(u-v) by translation invariance
     congr 1
     ext u
     congr 1
     ext v
-    -- The kernel is translation invariant
-    have h_transl : freeCovariance m u v = freeCovarianceKernel m (u - v) := by
-      simp only [freeCovarianceKernel, freeCovariance, freeCovarianceBessel, zero_sub, norm_neg]
-    rw [h_transl]
+    rw [freeCovariance_eq_kernel u v]
   -- Apply the general kernel theorem
-  rw [schwingerTwoPointFunction_eq_kernel (gaussianFreeField_free m) x hx
-        (freeCovarianceKernel m) h_cont h_S₂]
+  rw [schwingerTwoPointFunction_eq_kernel (gaussianFreeField_free (d := d) m) x hx
+        (freeCovarianceKernel d m) h_cont h_S₂]
   -- By definition of SchwingerTwoPointFunction_GFF
   rfl
 
-/-- The abstract SchwingerTwoPointFunction equals freeCovarianceKernel for the GFF.
-    This is the version needed for downstream proofs using TwoPointIntegrable.
+/-- The abstract SchwingerTwoPointFunction equals the covariance kernel for the GFF.
     Note: Only holds for x ≠ 0 since the covariance is undefined at coincident points. -/
-theorem schwingerTwoPointFunction_eq_freeCovarianceKernel (m : ℝ) [Fact (0 < m)] (x : SpaceTime)
-    (hx : x ≠ 0) :
-  SchwingerTwoPointFunction (gaussianFreeField_free m) x = freeCovarianceKernel m x := by
-  rw [schwingerTwoPointFunction_eq_GFF m x hx, schwingerTwoPoint_eq_freeCovarianceKernel]
+theorem schwingerTwoPointFunction_eq_freeCovariance (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
+    (x : SpaceTime d) (hx : x ≠ 0) :
+  SchwingerTwoPointFunction (gaussianFreeField_free (d := d) m) x = freeCovarianceKernel d m x := by
+  rw [schwingerTwoPointFunction_eq_GFF m x hx, schwingerTwoPoint_eq_freeCovariance]
 
-/-- The GFF two-point Schwinger function satisfies a polynomial decay bound.
-    For the free field, this follows from the Bessel function asymptotics:
-    - Near origin: K₁(mr) ~ 1/(mr), giving decay like 1/r²
-    - Far from origin: K₁(mr) ~ exp(-mr), which is even faster decay -/
-theorem schwinger_two_point_decay_bound_GFF (m : ℝ) [Fact (0 < m)] :
-  ∃ C : ℝ, C > 0 ∧
-    ∀ x y : SpaceTime,
-      ‖SchwingerTwoPointFunction_GFF m (x - y)‖ ≤
-        C * ‖x - y‖ ^ (-2 : ℝ) := by
-  obtain ⟨C, hC_pos, hC_bound⟩ := freeCovarianceKernel_decay_bound m (Fact.out)
-  refine ⟨C, hC_pos, fun x y => ?_⟩
-  -- SchwingerTwoPointFunction_GFF is definitionally equal to freeCovarianceKernel
-  rw [schwingerTwoPoint_eq_freeCovarianceKernel]
-  -- The norm of a real number is its absolute value
-  rw [Real.norm_eq_abs]
-  exact hC_bound (x - y)
-
-/-- The abstract two-point Schwinger function satisfies a polynomial decay bound.
-    Uses the bridge lemma to connect to the concrete GFF definition.
-    Note: At x = y (coincident points), the bound still holds since the abstract
-    definition regularizes S(0) = 0 and 0^(-2) = 0 by Mathlib convention. -/
-theorem schwinger_two_point_decay_bound (m : ℝ) [Fact (0 < m)] :
-  ∃ C : ℝ, C > 0 ∧
-    ∀ x y : SpaceTime,
-      ‖SchwingerTwoPointFunction (gaussianFreeField_free m) (x - y)‖ ≤
-        C * ‖x - y‖ ^ (-2 : ℝ) := by
-  obtain ⟨C, hC_pos, hC_bound⟩ := schwinger_two_point_decay_bound_GFF m
-  refine ⟨C, hC_pos, fun x y => ?_⟩
-  by_cases h : x - y = 0
-  · -- At coincident points x = y, both sides are 0
-    simp only [h]
-    -- By definition, SchwingerTwoPointFunction _ 0 = 0
-    rw [schwingerTwoPointFunction_zero]
-    -- By mathlib convention, 0^(-2) = 0, so RHS = C * 0 = 0
-    have h_rhs : C * (0 : ℝ) ^ (-2 : ℝ) = 0 := by
-      rw [Real.zero_rpow (by norm_num : (-2 : ℝ) ≠ 0)]
-      ring
-    simp only [norm_zero, h_rhs, le_refl]
-  · -- Non-coincident points: use the bridge lemma
-    rw [schwingerTwoPointFunction_eq_freeCovarianceKernel m (x - y) h]
-    rw [Real.norm_eq_abs]
-    have := hC_bound x y
-    rw [schwingerTwoPoint_eq_freeCovarianceKernel, Real.norm_eq_abs] at this
-    exact this
-
-/-- The abstract two-point Schwinger function is measurable.
-    This uses the bridge lemma to connect to the concrete GFF definition.
-    The functions agree on the complement of {0}, which has full measure. -/
-theorem schwingerTwoPoint_measurable (m : ℝ) [Fact (0 < m)] :
-    AEStronglyMeasurable (fun x => SchwingerTwoPointFunction (gaussianFreeField_free m) x) volume := by
-  -- Use that the abstract and concrete definitions agree except possibly at 0
-  -- Since {0} is a null set in Lebesgue measure, AE strong measurability follows from
-  -- the measurability of freeCovarianceKernel and the fact that the functions differ
-  -- only on a null set
-  have h_kernel_meas := (freeCovarianceKernel_integrable m (Fact.out)).aestronglyMeasurable
-  -- The abstract definition agrees with the kernel on {x ≠ 0}
-  have h_ae_eq : (fun x => SchwingerTwoPointFunction (gaussianFreeField_free m) x) =ᶠ[ae volume]
-                 freeCovarianceKernel m := by
-    -- {0} has measure zero in Lebesgue measure
-    have h_singleton_null : (volume : Measure SpaceTime) {(0 : SpaceTime)} = 0 :=
-      MeasureTheory.measure_singleton (0 : SpaceTime)
-    -- The complement of {0} has full measure, so {x ≠ 0} ∈ ae volume
-    have h_mem : {x : SpaceTime | x ≠ 0} ∈ ae volume := by
-      rw [MeasureTheory.mem_ae_iff]
-      simp only [ne_eq, Set.compl_setOf, not_not]
-      exact h_singleton_null
-    -- The functions agree on this set
-    exact Filter.eventuallyEq_of_mem h_mem (fun x hx => schwingerTwoPointFunction_eq_freeCovarianceKernel m x hx)
-  exact AEStronglyMeasurable.congr h_kernel_meas h_ae_eq.symm
+/-- The abstract two-point Schwinger function agrees a.e. with the covariance kernel:
+    the two functions agree away from the origin, and `{0}` is Lebesgue-null. -/
+lemma schwingerTwoPoint_ae_eq_kernel (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
+    (fun x => SchwingerTwoPointFunction (gaussianFreeField_free (d := d) m) x)
+      =ᶠ[ae (volume : Measure (SpaceTime d))] freeCovarianceKernel d m := by
+  have hd : 0 < d := by have := (Fact.out : 2 ≤ d); omega
+  have : Nonempty (Fin d) := ⟨⟨0, hd⟩⟩
+  have : Nontrivial (SpaceTime d) := inferInstance
+  -- The complement of {0} has full measure, so {x ≠ 0} ∈ ae volume
+  have h_mem : {x : SpaceTime d | x ≠ 0} ∈ ae volume := by
+    rw [MeasureTheory.mem_ae_iff]
+    simp only [ne_eq, Set.compl_setOf, not_not]
+    exact MeasureTheory.measure_singleton (0 : SpaceTime d)
+  -- The functions agree on this set
+  exact Filter.eventuallyEq_of_mem h_mem
+    (fun x hx => schwingerTwoPointFunction_eq_freeCovariance m x hx)
 
 /-! ## GFF Exponential Bound
 
@@ -215,8 +147,8 @@ Elementary bound on the GFF generating function using complex exponential proper
 /-- The norm of the GFF generating function equals the exponential of minus one-half
     the real part of the covariance. This is an elementary property of complex exponentials:
     |exp(z)| = exp(Re z). -/
-lemma gff_generating_norm_eq (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) :
-  ‖GJGeneratingFunctionalℂ (gaussianFreeField_free m) f‖ =
+lemma gff_generating_norm_eq (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : TestFunctionℂ d) :
+  ‖GJGeneratingFunctionalℂ (gaussianFreeField_free (d := d) m) f‖ =
     Real.exp (-(1/2) * (freeCovarianceℂ_bilinear m f f).re) := by
   rw [gff_complex_generating, gff_two_point_equals_covarianceℂ_free, Complex.norm_exp]
   simp only [Complex.neg_re, Complex.mul_re]
@@ -225,10 +157,11 @@ lemma gff_generating_norm_eq (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) :
 /-- Using bilinearity and the real/imaginary decomposition, the real part of C(f,f)
     satisfies Re C(f,f) = C(Re f, Re f) - C(Im f, Im f). Combined with monotonicity
     of exp, this gives the bound exp(-1/2 Re C(f,f)) ≤ exp(1/2 C(Im f, Im f)). -/
-lemma gff_generating_bound_by_imaginary (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) :
+lemma gff_generating_bound_by_imaginary (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
+    (f : TestFunctionℂ d) :
   Real.exp (-(1/2) * (freeCovarianceℂ_bilinear m f f).re) ≤
     Real.exp ((1/2) * (freeCovarianceℂ_bilinear m (toComplex (complex_testfunction_decompose f).2)
-                                                     (toComplex (complex_testfunction_decompose f).2)).re) := by
+                                                    (toComplex (complex_testfunction_decompose f).2)).re) := by
   -- Apply monotonicity of exp: it suffices to show -(1/2) Re C(f,f) ≤ (1/2) C(Im f, Im f)
   apply Real.exp_le_exp.mpr
   -- Abbreviate the imaginary and real parts
@@ -292,17 +225,18 @@ lemma gff_generating_bound_by_imaginary (m : ℝ) [Fact (0 < m)] (f : TestFuncti
     -- For real test functions frC = toComplex fRe, the complex conjugate is the identity
     -- so freeCovarianceℂ_bilinear agrees with freeCovarianceℂ
     rw [← freeCovarianceℂ_eq_bilinear_on_reals m]
-    exact freeCovarianceℂ_positive m frC
+    exact freeCovarianceℂ_positive (m := m) frC
   linarith
 
 /-
 The covariance of the imaginary part is bounded by (1/m²) times the L² norm squared.
-This uses the momentum space representation and the bound 1/(‖k‖² + m²) ≤ 1/m²,
+This uses the momentum space representation and the bound 1/((2π)²‖k‖² + m²) ≤ 1/m²,
 plus Plancherel and the pointwise bound |Im f| ≤ |f|.
 -/
-lemma covariance_imaginary_L2_bound (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) :
+lemma covariance_imaginary_L2_bound (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
+    (f : TestFunctionℂ d) :
   (freeCovarianceℂ_bilinear m (toComplex (complex_testfunction_decompose f).2)
-                               (toComplex (complex_testfunction_decompose f).2)).re ≤
+                              (toComplex (complex_testfunction_decompose f).2)).re ≤
     (1 / m^2) * ∫ x, ‖f x‖^2 ∂volume := by
   -- Abbreviations
   set fIm := (complex_testfunction_decompose f).2
@@ -311,8 +245,8 @@ lemma covariance_imaginary_L2_bound (m : ℝ) [Fact (0 < m)] (f : TestFunction�
   -- Parseval: real part of the covariance equals the momentum-space integral
   have h_parsevalC :
       (freeCovarianceℂ m (toComplex fIm) (toComplex fIm)).re
-        = ∫ k, ‖(SchwartzMap.fourierTransformCLM ℂ (toComplex fIm)) k‖^2 * freePropagatorMomentum_mathlib m k ∂volume :=
-    parseval_covariance_schwartz_bessel m (toComplex fIm)
+        = ∫ k, ‖(SchwartzMap.fourierTransformCLM ℂ (toComplex fIm)) k‖^2 * freePropagatorMom d m k ∂volume :=
+    parseval_covariance_schwartz (toComplex fIm)
 
   -- For real test functions, complex covariance equals the complex bilinear form
   have h_eq_bilin :
@@ -322,14 +256,14 @@ lemma covariance_imaginary_L2_bound (m : ℝ) [Fact (0 < m)] (f : TestFunction�
 
   have h_re_eq :
       (freeCovarianceℂ_bilinear m (toComplex fIm) (toComplex fIm)).re
-        = ∫ k, ‖F k‖^2 * freePropagatorMomentum_mathlib m k ∂volume := by
+        = ∫ k, ‖F k‖^2 * freePropagatorMom d m k ∂volume := by
     simpa [h_eq_bilin, F]
       using h_parsevalC
 
   -- Bound the propagator: 1/((2π)²‖k‖² + m²) ≤ 1/m²
-  have h_bound : ∀ k, freePropagatorMomentum_mathlib m k ≤ 1 / m^2 := by
+  have h_bound : ∀ k, freePropagatorMom d m k ≤ 1 / m^2 := by
     intro k
-    unfold freePropagatorMomentum_mathlib
+    unfold OSforGFF.freePropagatorMom
     have hmpos : 0 < m := Fact.out
     have hm2pos : 0 < m^2 := sq_pos_of_pos hmpos
     have hden : m^2 ≤ (2 * Real.pi)^2 * ‖k‖^2 + m^2 := by
@@ -345,43 +279,36 @@ lemma covariance_imaginary_L2_bound (m : ℝ) [Fact (0 < m)] (f : TestFunction�
   have hF_sq_int : Integrable (fun k => ‖F k‖^2) volume :=
     (memLp_two_iff_integrable_sq_norm hF_meas).1 hF_memLp
 
-  -- The weighted integrand measurability (not strictly needed for the monotonicity helper)
-  have h_prop_cont : Continuous fun k => freePropagatorMomentum_mathlib m k :=
-    continuous_freePropagatorMomentum_mathlib m
-
-  have h_prop_meas : AEStronglyMeasurable (fun k => freePropagatorMomentum_mathlib m k) volume :=
-    h_prop_cont.aestronglyMeasurable
-
   -- Pull out the (1/m²) bound from the integral using a real integral monotonicity helper
   have h_dom_int : Integrable (fun k => (1 / m^2) * ‖F k‖^2) volume :=
     Integrable.const_mul hF_sq_int (1 / m^2)
 
-  have h_nonneg : ∀ k, 0 ≤ ‖F k‖^2 * freePropagatorMomentum_mathlib m k := by
-    intro k; exact mul_nonneg (by positivity) (by unfold freePropagatorMomentum_mathlib; positivity)
+  have h_nonneg : ∀ k, 0 ≤ ‖F k‖^2 * freePropagatorMom d m k := by
+    intro k; exact mul_nonneg (by positivity) (freePropagatorMom_nonneg m k)
 
-  have h_le_pt : ∀ k, ‖F k‖^2 * freePropagatorMomentum_mathlib m k ≤ (1 / m^2) * ‖F k‖^2 := by
+  have h_le_pt : ∀ k, ‖F k‖^2 * freePropagatorMom d m k ≤ (1 / m^2) * ‖F k‖^2 := by
     intro k
     have := mul_le_mul_of_nonneg_left (h_bound k) (by positivity : 0 ≤ ‖F k‖^2)
     simpa [mul_comm] using this
 
   have h_int_le :
-      ∫ k, ‖F k‖^2 * freePropagatorMomentum_mathlib m k ∂volume
+      ∫ k, ‖F k‖^2 * freePropagatorMom d m k ∂volume
         ≤ ∫ k, (1 / m^2) * ‖F k‖^2 ∂volume := by
     exact real_integral_mono_of_le (μ := volume)
-      (f := fun k => ‖F k‖^2 * freePropagatorMomentum_mathlib m k)
+      (f := fun k => ‖F k‖^2 * freePropagatorMom d m k)
       (g := fun k => (1 / m^2) * ‖F k‖^2)
       h_dom_int h_nonneg h_le_pt
 
   -- Convert the right integral to pull out the constant
   have h_weight_pull :
-      ∫ k, ‖F k‖^2 * freePropagatorMomentum_mathlib m k ∂volume ≤
+      ∫ k, ‖F k‖^2 * freePropagatorMom d m k ∂volume ≤
         (1 / m^2) * ∫ k, ‖F k‖^2 ∂volume := by
     have h_const_pull : ∫ k, (1 / m^2) * ‖F k‖^2 ∂volume
         = (1 / m^2) * ∫ k, ‖F k‖^2 ∂volume :=
       integral_const_mul_eq (μ := volume) (c := (1 / m^2))
         (f := fun k => ‖F k‖^2) hF_sq_int
     calc
-      ∫ k, ‖F k‖^2 * freePropagatorMomentum_mathlib m k ∂volume
+      ∫ k, ‖F k‖^2 * freePropagatorMom d m k ∂volume
           ≤ ∫ k, (1 / m^2) * ‖F k‖^2 ∂volume := h_int_le
       _ = (1 / m^2) * ∫ k, ‖F k‖^2 ∂volume := h_const_pull
 
@@ -408,7 +335,7 @@ lemma covariance_imaginary_L2_bound (m : ℝ) [Fact (0 < m)] (f : TestFunction�
     have hnorm_sq : ‖f x‖ ^ 2 = (f x).re ^ 2 + (f x).im ^ 2 := by
       simpa [Complex.normSq_apply, pow_two] using (Complex.sq_norm (f x))
     have hsq : |(f x).im| ^ 2 ≤ ‖f x‖ ^ 2 := by simpa [habs_sq, hnorm_sq] using hineq
-    rw [hL]; simpa using hsq
+    simpa [hL, fIm] using hsq
 
   -- Show integrability of both sides to apply integral monotonicity
   have hIm_memLp : MemLp (toComplex fIm) 2 volume := (toComplex fIm).memLp 2 volume
@@ -438,11 +365,11 @@ lemma covariance_imaginary_L2_bound (m : ℝ) [Fact (0 < m)] (f : TestFunction�
 /-- The GFF generating functional satisfies the exponential bound
     |Z[f]| ≤ exp((1/2m²)||f||²_{L²}). This combines the norm equality,
     the bound by imaginary part, and the L² bound to give the final OS1 estimate. -/
-lemma gff_generating_L2_bound (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) :
-  ‖GJGeneratingFunctionalℂ (gaussianFreeField_free m) f‖ ≤
+lemma gff_generating_L2_bound (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : TestFunctionℂ d) :
+  ‖GJGeneratingFunctionalℂ (gaussianFreeField_free (d := d) m) f‖ ≤
     Real.exp ((1 / (2 * m^2)) * ∫ x, ‖f x‖^2 ∂volume) := by
   set fIm := (complex_testfunction_decompose f).2
-  calc ‖GJGeneratingFunctionalℂ (gaussianFreeField_free m) f‖
+  calc ‖GJGeneratingFunctionalℂ (gaussianFreeField_free (d := d) m) f‖
     _ = Real.exp (-(1/2) * (freeCovarianceℂ_bilinear m f f).re) := gff_generating_norm_eq m f
     _ ≤ Real.exp ((1/2) * (freeCovarianceℂ_bilinear m (toComplex fIm) (toComplex fIm)).re) :=
         gff_generating_bound_by_imaginary m f
@@ -451,37 +378,16 @@ lemma gff_generating_L2_bound (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ) :
         exact mul_le_mul_of_nonneg_left (covariance_imaginary_L2_bound m f) (by norm_num)
     _ = Real.exp ((1 / (2 * m^2)) * ∫ x, ‖f x‖^2 ∂volume) := by ring_nf
 
-/-! ## Two-Point Function Local Integrability
+/-! ## Two-Point Function Local Integrability -/
 
-Using the axioms above, we establish local integrability of the Schwinger function.
--/
-
-/-- The two-point Schwinger function is locally integrable.
-    This follows from the polynomial decay bound |S_2(x)| ≤ C|x|^{-2}.
-    In d=4 spacetime dimensions, |x|^{-2} is locally integrable since 2 < 4. -/
-lemma gff_two_point_locally_integrable (m : ℝ) [Fact (0 < m)] :
-  TwoPointIntegrable (gaussianFreeField_free m) := by
+/-- The two-point Schwinger function is locally integrable: it agrees a.e. with the
+    covariance kernel `x ↦ C(x, 0)`, which is globally integrable
+    (`GFFPropagator.integrable`). -/
+lemma gff_two_point_locally_integrable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
+  TwoPointIntegrable (gaussianFreeField_free (d := d) m) := by
   unfold TwoPointIntegrable
-  -- Obtain the decay bound
-  obtain ⟨C, hC_pos, h_decay⟩ := schwinger_two_point_decay_bound m
-  -- Apply real version of the decay bound
-  refine locallyIntegrable_of_rpow_decay_real (d := STDimension) (C := C) (α := 2)
-    ?hd ?hC ?hα ?h_decay ?h_meas
-  · -- hd: STDimension = 4 ≥ 3
-    norm_num [STDimension]
-  · -- hC: C > 0
-    exact hC_pos
-  · -- hα: 2 < STDimension (2 < 4)
-    norm_num [STDimension]
-  · -- h_decay: Decay bound holds: convert two-argument decay to single-argument
-    intro x
-    -- We have h_decay: ‖S(x-y)‖ ≤ C * ‖x-y‖^{-2}, and need |S(x)| ≤ C * ‖x‖^{-2}
-    -- Setting y = 0 gives ‖S(x-0)‖ = ‖S(x)‖ ≤ C * ‖x-0‖^{-2} = C * ‖x‖^{-2}
-    have := h_decay x 0
-    simp only [Real.norm_eq_abs, sub_zero] at this
-    exact this
-  · -- h_meas: Measurability (follows from Schwartz theory)
-    exact schwingerTwoPoint_measurable m
+  exact ((freeCovarianceKernel_integrable (d := d) (m := m)).congr
+    (schwingerTwoPoint_ae_eq_kernel m).symm).locallyIntegrable
 
 /-! ## OS1 Verification for the GFF
 
@@ -498,8 +404,8 @@ open MeasureTheory
 
     Note: Named `_revised` because the alternative OS0 proof in `GaussianFreeField.lean`
     uses the same module; both are valid, and `OS.Master` uses this one. -/
-theorem gaussianFreeField_satisfies_OS1_revised (m : ℝ) [Fact (0 < m)] :
-  OS1_Regularity (gaussianFreeField_free m) := by
+theorem gaussianFreeField_satisfies_OS1_revised (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
+  OS1_Regularity (gaussianFreeField_free (d := d) m) := by
   -- Choose parameters p = 2 and c = 1/(2 m^2)
   refine ⟨(2 : ℝ), (1 / (2 * m^2)), by norm_num, by norm_num, ?cpos, ?bound, ?tpInt⟩
   · -- c > 0
@@ -510,7 +416,7 @@ theorem gaussianFreeField_satisfies_OS1_revised (m : ℝ) [Fact (0 < m)] :
   · -- Exponential bound: |Z[f]| ≤ exp(c(∫|f| + ∫|f|^2))
     intro f
     -- Start from the established L² bound
-    have hL2_nat : ‖GJGeneratingFunctionalℂ (gaussianFreeField_free m) f‖ ≤
+    have hL2_nat : ‖GJGeneratingFunctionalℂ (gaussianFreeField_free (d := d) m) f‖ ≤
         Real.exp ((1 / (2 * m^2)) * ∫ x, ‖f x‖^(2:ℕ) ∂volume) :=
       gff_generating_L2_bound m f
     -- Convert the exponent from ℕ to ℝ
@@ -518,7 +424,7 @@ theorem gaussianFreeField_satisfies_OS1_revised (m : ℝ) [Fact (0 < m)] :
       congr 1
       funext x
       norm_num
-    have hL2 : ‖GJGeneratingFunctionalℂ (gaussianFreeField_free m) f‖ ≤
+    have hL2 : ‖GJGeneratingFunctionalℂ (gaussianFreeField_free (d := d) m) f‖ ≤
         Real.exp ((1 / (2 * m^2)) * ∫ x, ‖f x‖^(2:ℝ) ∂volume) := by
       rw [← heq]
       exact hL2_nat
@@ -541,7 +447,7 @@ theorem gaussianFreeField_satisfies_OS1_revised (m : ℝ) [Fact (0 < m)] :
         _ = (1 / (2 * m^2)) * (∫ x, ‖f x‖ ∂volume + ∫ x, ‖f x‖^(2:ℝ) ∂volume) := by
             rw [mul_add, add_comm]
     -- Apply monotonicity of the exponential function to close the proof
-    calc ‖GJGeneratingFunctionalℂ (gaussianFreeField_free m) f‖
+    calc ‖GJGeneratingFunctionalℂ (gaussianFreeField_free (d := d) m) f‖
         ≤ Real.exp ((1 / (2 * m^2)) * ∫ x, ‖f x‖^(2:ℝ) ∂volume) := hL2
       _ ≤ Real.exp ((1 / (2 * m^2)) * (∫ x, ‖f x‖ ∂volume + ∫ x, ‖f x‖^(2:ℝ) ∂volume)) :=
           Real.exp_le_exp.mpr hmono

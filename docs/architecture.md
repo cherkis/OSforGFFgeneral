@@ -1,13 +1,30 @@
 # Architecture
 
-How the 47 files fit together. For proof details see the paper (§4).
+How the 54 on-graph files fit together (plus 2 off-graph `Legacy/` files — see below).
+For proof details see the paper (§4); for the dimension-generic design (the `GFFPropagator`
+typeclass and where the dimension enters each axiom) see `dimension_generic.md`.
 
 ## Dependency layers
 
 ```
 General ──→ Spacetime ──→ Covariance ──→ Schwinger ──→ Measure ──→ OS
-  (12)        (9)           (4)           (3)           (6)       (12)
+  (14)        (9)           (3)           (3)           (6)       (13)
+                               ↑
+                          Instances (5): the per-dimension closed forms
+                          (d = 2, 3, 4, 5), consumed by the per-dimension
+                          headline theorems and OS/NonTrivial's UV statement
 ```
+
+All proof files are parameterized by the spacetime dimension `d` and consume the
+covariance only through the `GFFPropagator d m` typeclass
+(`Covariance/Propagator.lean`). The genuine per-`d` input is a single closed-form kernel
+identified with the generic proper-time integral; the modified Bessel function of arbitrary
+order and the master Schwinger identity live in `General/BesselK.lean`.
+
+The `Legacy/` directory (off the root import graph, not built by `lake build`) preserves the
+original four-dimensional Bessel/momentum development — the regulated-covariance program and the
+K₁ analytic lemmas — that the dimension-generic machinery superseded. Each Legacy file carries a
+supersession map and is verified in isolation with `lake env lean`.
 
 Imports flow left to right with one cross-cutting edge:
 
@@ -18,16 +35,13 @@ This is not circular: OS0 depends on `Measure/Construct` (the measure must
 exist before we can prove analyticity), and `IsGaussian` feeds back into
 the later OS proofs (OS1–OS4 need S₂ = C).
 
-## Three assumed axioms
+## No assumed axioms
 
-| Axiom | Why needed | Difficulty to prove |
-|-------|-----------|-------------------|
-| `schwartz_nuclear` | Minlos requires a nuclear source space | Hard — needs the full Hilbert–Schmidt embedding theory for Schwartz seminorms |
-| `minlos_theorem` | Existence + uniqueness of the GFF measure | Hard — Gel'fand–Vilenkin proof uses projective limits of finite-dim Gaussians |
-| `differentiable_analyticAt_finDim` | Hartogs' theorem for OS0 | Medium — needs Cauchy integral formula in several variables; partially in Mathlib |
-
-Everything else is proved. The `#print axioms` output for the master theorem
-shows exactly these three plus the standard Lean/Mathlib axioms (propext, Quot.sound, Classical.choice).
+Everything is proved: `#print axioms` for the master theorem — the dimension-generic form, the
+all-dimensions corollary (`d ≥ 2`), and each concrete instance (`d = 2, 3, 4, 5`) — shows
+exactly Lean's three foundational axioms: `propext`, `Classical.choice`, `Quot.sound`.
+`Guardrails.lean` freezes this footprint and the exact statement of all six headline theorems into
+the build, so any regression fails `lake build`.
 
 ## OS3: the longest proof chain
 
@@ -36,8 +50,9 @@ OS3 (reflection positivity) is the most technically involved axiom, spanning
 
 1. **MixedRepInfra** (~3800 lines): Schwinger parametrization makes all
    integrals absolutely convergent (the naive momentum-space approach fails
-   because 1/√(k²+m²) is not L¹ in 3D). Proves ~36 Fubini exchange and
-   integrability lemmas.
+   because 1/√(k²+m²) is not L¹ in the spatial momentum space). Proves ~36
+   Fubini exchange and integrability lemmas, with the dominating function built
+   from order-`d` boundary vanishing (see `dimension_generic.md`).
 
 2. **MixedRep** (~1900 lines): Chains the exchanges to reach the mixed
    representation ⟨Θf, Cf⟩ = ∫ (1/ω)|F_ω(k̄)|² dk̄, going through
@@ -69,15 +84,16 @@ OS3 (reflection positivity) is the most technically involved axiom, spanning
 
 1. **Clustering** (OS4_Clustering): Gaussian factorization reduces the
    clustering bound to estimating S₂(f, T_{−s}g), which decays as
-   (1+|s|)^{−α} by Schwartz convolution decay with the exponential kernel
-   e^{−m|x|}.
+   (1+|s|)^{−α} by Schwartz convolution decay with the exponentially decaying
+   kernel |C(z)| ≤ A e^{−(m/2)|z|} for |z| ≥ 1 (the mass gap, from the
+   proper-time representation).
 
 2. **Ergodicity** (OS4_Ergodicity): Polynomial clustering with α = 6 feeds
    into an L² time-average bound: ‖(1/t)∫₀ᵗ A(T_s φ) ds − 𝔼[A]‖² ≤ C/t → 0.
 
 ## Key design choices
 
-- **Schwartz over D**: We use S(ℝ⁴) rather than D(ℝ⁴) because Mathlib has
+- **Schwartz over D**: We use S(ℝ^d) rather than D(ℝ^d) because Mathlib has
   SchwartzSpace but not test function spaces with compact support. Since
   D ⊂ S and S' ⊂ D', our axioms imply the Glimm–Jaffe versions.
 
@@ -86,10 +102,18 @@ OS3 (reflection positivity) is the most technically involved axiom, spanning
   C = ∫₀^∞ e^{−sm²} H_s ds introduces the heat kernel as a regularizer,
   making all integrals absolutely convergent.
 
-- **Gaussian regulator for Parseval**: A factor e^{−α|k|²} is introduced
-  in the Parseval identity and removed as α → 0⁺, avoiding convergence
-  issues with the bare propagator 1/(|k|²+m²) in L¹.
+- **Proper-time kernel for Parseval**: The Parseval identity
+  ⟨f, C f̄⟩ = ∫ ‖𝓕f‖²/((2π)²‖k‖²+m²) is derived against the proper-time
+  covariance (which is L¹ with an explicit Fourier transform), avoiding
+  convergence issues with the bare propagator — no regulator needed
+  (`Covariance/ParsevalGeneric.lean`).
 
-- **Bessel K₁ for position-space covariance**: Rather than Fourier-transforming
-  the propagator directly (conditionally convergent), we define C(x,y) via
-  the closed-form (m/4π²r)K₁(mr) and prove it equals the Schwinger integral.
+- **Closed form behind a typeclass**: Rather than Fourier-transforming the
+  propagator directly (conditionally convergent), C(x,y) is the radial profile
+  `Cprofile |x−y|` of a `GFFPropagator d m` instance, identified with the
+  Schwinger integral by the instance's one obligation `schwinger_eq`. The
+  instances supply the closed forms — (1/2π)K₀(mr) at d=2, e^{−mr}/(4πr) at d=3,
+  (m/4π²r)K₁(mr) at d=4, (1+mr)e^{−mr}/(8π²r³) at d=5 — each the order ν=1−d/2
+  case of the master identity in `General/BesselK.lean`. `ofProperTime`
+  (`Covariance/Propagator.lean`) additionally discharges the class in every
+  dimension `d ≥ 2` with no closed form, giving the all-dimensions corollary.

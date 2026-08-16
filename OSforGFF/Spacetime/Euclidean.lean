@@ -1,7 +1,8 @@
 /-
 Copyright (c) 2025 Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim. All rights reserved.
+Copyright (c) 2026 Sergey A. Cherkis. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
+Authors: Sergey A. Cherkis, Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 
 import Mathlib.Analysis.InnerProductSpace.PiL2
@@ -24,12 +25,12 @@ import Mathlib.MeasureTheory.Function.LpSpace.ContinuousCompMeasurePreserving
 import OSforGFF.Spacetime.Basic
 
 /-!
-# Euclidean Group E(4) and Its Actions
+# Euclidean Group (E d) and Its Actions
 
-Defines the Euclidean group E(4) = ℝ⁴ ⋊ O(4) with action g • x = R(x) + t
+Defines the Euclidean group `(E d) = ℝ^d ⋊ O(d)` with action g • x = R(x) + t
 on spacetime, and its induced actions on test functions (g • f)(x) = f(g⁻¹ • x).
 
-Key properties: measure preservation (d⁴(E⁻¹x) = d⁴x), temperate growth of
+Key properties: measure preservation (Lebesgue measure is invariant under `(E d)`), temperate growth of
 pullbacks (needed for Schwartz space), and continuity of all actions.
 Foundation for the OS2 axiom.
 -/
@@ -46,32 +47,34 @@ open scoped Real InnerProductSpace SchwartzMap
 
 namespace QFT
 
-/-- Orthogonal linear isometries of ℝ⁴ (the group O(4)).
-LinearIsometry is an orthogonal linear map, ie an element of O(4)-/
-abbrev O4 : Type :=
-  LinearIsometry (RingHom.id ℝ) SpaceTime SpaceTime
+variable {d : ℕ}
+
+/-- Orthogonal linear isometries of `ℝ^d`: the group `O(d)`.
+LinearIsometry is an orthogonal linear map, ie an element of `O(d)`. -/
+abbrev O4 (d : ℕ) : Type :=
+  LinearIsometry (RingHom.id ℝ) (SpaceTime d) (SpaceTime d)
 
 /-!  Euclidean group -/
-/-- Euclidean motion = rotation / reflection + translation. E= R^4 x O(4)-/
-structure E where
-  R : O4
-  t : SpaceTime
+/-- Euclidean motion = rotation / reflection + translation. `(E d) = ℝ^d ⋊ O(d)`. -/
+structure E (d : ℕ) where
+  R : (O4 d)
+  t : (SpaceTime d)
 
-/-- Action of g : E on a spacetime point x.
+/-- Action of g : (E d) on a spacetime point x.
 Impliments the pullback map x to Rx+ t -/
-def act (g : E) (x : SpaceTime) : SpaceTime := g.R x + g.t
+def act (g : (E d)) (x : (SpaceTime d)) : (SpaceTime d) := g.R x + g.t
 
 /-act_one, act_mul and act_inv lemmas prove
 identity, composition and inverse. They are needed to say Euclidean sym
 form a group. This mirrors OS-2's S_j= S_{EJ} -/
-@[simp] lemma act_one   (x : SpaceTime) : act ⟨1,0⟩ x = x := by
+@[simp] lemma act_one   (x : (SpaceTime d)) : act ⟨1,0⟩ x = x := by
   simp [act]
 
-@[simp] lemma act_mul   (g h : E) (x : SpaceTime) :
+@[simp] lemma act_mul   (g h : (E d)) (x : (SpaceTime d)) :
     act ⟨g.R.comp h.R, g.R h.t + g.t⟩ x = g.R (h.R x + h.t) + g.t := by
   simp [act, add_comm, add_left_comm]
 
-@[simp] lemma act_inv (g : E) (x : SpaceTime) :
+@[simp] lemma act_inv (g : (E d)) (x : (SpaceTime d)) :
     act ⟨g.R, -g.R g.t⟩ x = g.R (x - g.t) := by
   -- unfold the two sides and use linearity of g.R
   simp [act, sub_eq_add_neg, map_add, map_neg]
@@ -83,78 +86,78 @@ open LinearIsometryEquiv
 namespace LinearIsometry
 /-- Inverse of a linear isometry : we turn the canonical equivalence
     (available in finite dimension) back into a `LinearIsometry`. -/
-noncomputable def inv (g : O4) : O4 :=
+noncomputable def inv (g : (O4 d)) : (O4 d) :=
   ((g.toLinearIsometryEquiv rfl).symm).toLinearIsometry
 
-@[simp] lemma comp_apply (g h : O4) (x : SpaceTime) :
+@[simp] lemma comp_apply (g h : (O4 d)) (x : (SpaceTime d)) :
     (g.comp h) x = g (h x) := rfl
 
-@[simp] lemma inv_apply (g : O4) (x : SpaceTime) :
+@[simp] lemma inv_apply (g : (O4 d)) (x : (SpaceTime d)) :
     (LinearIsometry.inv g) (g x) = x := by
   -- unfold `inv`, then use the standard `symm_apply_apply` lemma
   dsimp [LinearIsometry.inv]
   simpa using
     (LinearIsometryEquiv.symm_apply_apply (g.toLinearIsometryEquiv rfl) x)
-@[simp] lemma one_apply (x : SpaceTime) : (1 : O4) x = x := rfl
+@[simp] lemma one_apply (x : (SpaceTime d)) : (1 : (O4 d)) x = x := rfl
 
-@[simp] lemma one_comp (R : O4) : (1 : O4).comp R = R := by
+@[simp] lemma one_comp (R : (O4 d)) : (1 : (O4 d)).comp R = R := by
   ext x; simp [comp_apply, one_apply]
 
-@[simp] lemma comp_one (R : O4) : R.comp (1 : O4) = R := by
+@[simp] lemma comp_one (R : (O4 d)) : R.comp (1 : (O4 d)) = R := by
   ext x; simp [comp_apply, one_apply]
 
-@[simp] lemma inv_comp (R : O4) :
+@[simp] lemma inv_comp (R : (O4 d)) :
     (LinearIsometry.inv R).comp R = 1 := by
   ext x i
   simp [comp_apply, inv_apply, one_apply]
-@[simp] lemma comp_inv (R : O4) :
+@[simp] lemma comp_inv (R : (O4 d)) :
     R.comp (LinearIsometry.inv R) = 1 := by
   -- equality of linear-isometries, proved coordinate-wise
   ext x i
   have h : (R.toLinearIsometryEquiv rfl) ((LinearIsometry.inv R) x) = x :=
     LinearIsometryEquiv.apply_symm_apply (R.toLinearIsometryEquiv rfl) x
-  simpa [comp_apply, inv_apply, one_apply] using congrArg (fun v : SpaceTime => v i) h
+  simpa [comp_apply, inv_apply, one_apply] using congrArg (fun v : (SpaceTime d) => v i) h
 
 end LinearIsometry
 
 /-(extentionality) Allows Lean to prove equality of Euclidean motions by checking the R and t
 components separately—hugely convenient for the group-law proofs. -/
-@[ext] lemma E.ext {g h : E} (hR : g.R = h.R) (ht : g.t = h.t) : g = h := by
+@[ext] lemma E.ext {g h : (E d)} (hR : g.R = h.R) (ht : g.t = h.t) : g = h := by
   cases g; cases h; cases hR; cases ht; rfl
 
-/-!  ##  Group structure on `E`  ----------------------------------------- -/
+/-!  ##  Group structure on `(E d)`  ----------------------------------------- -/
 
 /- 1.  Primitive instances of group operations
 Implements the semidirect-product multiplication in OS-2:
 first rotate, then translate the second translation by the first rotation. -/
-instance : Mul E where
+instance : Mul (E d) where
   mul g h := ⟨g.R.comp h.R, g.R h.t + g.t⟩
 
-instance : One E where
+instance : One (E d) where
   one := ⟨1, 0⟩
 
-instance : Inv E where
+instance : Inv (E d) where
   inv g := ⟨LinearIsometry.inv g.R, -(LinearIsometry.inv g.R) g.t⟩
 
 /-- We need a `Div` instance because `Group` extends `DivInvMonoid`. -/
-instance : Div E where
+instance : Div (E d) where
   div g h := g * h⁻¹
 
 /- helper lemmas mirroring (g. h)_R= g_R dot h_r, and
 (g.h)_t= g_R h_t+ g_t)-
 -/
-@[simp] lemma mul_R (g h : E) : (g * h).R = g.R.comp h.R := rfl
-@[simp] lemma mul_t (g h : E) : (g * h).t = g.R h.t + g.t := rfl
-@[simp] lemma one_R : (1 : E).R = 1 := rfl
-@[simp] lemma one_t : (1 : E).t = 0 := rfl
-@[simp] lemma inv_R (g : E) : (g⁻¹).R = LinearIsometry.inv g.R := rfl
-@[simp] lemma inv_t (g : E) : (g⁻¹).t = -(LinearIsometry.inv g.R) g.t := rfl
+@[simp] lemma mul_R (g h : (E d)) : (g * h).R = g.R.comp h.R := rfl
+@[simp] lemma mul_t (g h : (E d)) : (g * h).t = g.R h.t + g.t := rfl
+@[simp] lemma one_R : (1 : (E d)).R = 1 := rfl
+@[simp] lemma one_t : (1 : (E d)).t = 0 := rfl
+@[simp] lemma inv_R (g : (E d)) : (g⁻¹).R = LinearIsometry.inv g.R := rfl
+@[simp] lemma inv_t (g : (E d)) : (g⁻¹).t = -(LinearIsometry.inv g.R) g.t := rfl
 
 /-Provides the formal group demanded by OS-2's statement
 “Euclidean transformations define a group.”-/
-instance : Group E where
+instance : Group (E d) where
   mul := (· * ·)
-  one := (1 : E)
+  one := (1 : (E d))
   inv := Inv.inv
 
   -- associativity
@@ -181,22 +184,22 @@ instance : Group E where
 
 /-theorem ---------------------------------------------
 
-     For all Euclidean motions g,h and every point x ∈ ℝ⁴ we have
+     For all Euclidean motions g,h and every point x ∈ ℝ^d we have
          act (g * h) x  =  act g (act h x).
-     In words: the `act` map is a group action of E on spacetime.
+     In words: the `act` map is a group action of (E d) on spacetime.
 
      We also prove the inverse law
          act g⁻¹ (act g x) = x.
 -/
 
-/-for all Euclidean motions g and h and any point x ∈ ℝ⁴, pulling x forward by the product g*h equals pulling by h first and then by g.
+/-for all Euclidean motions g and h and any point x ∈ ℝ^d, pulling x forward by the product g*h equals pulling by h first and then by g.
 This is precisely the group-action law(𝑔ℎ)⁣⋅𝑥=𝑔.(ℎ. 𝑥)(gh)⋅x=g⋅(h⋅x).-/
 
-@[simp] lemma act_mul_general (g h : E) (x : SpaceTime) :
+@[simp] lemma act_mul_general (g h : (E d)) (x : (SpaceTime d)) :
     act (g * h) x = act g (act h x) := by
   -- destructure g and h so Lean can see their components
 /-cases on g/h: expands each motion into its components
-gR : O4 the rotation, gt : ℝ⁴ the translation.
+gR : (O4 d) the rotation, gt : ℝ^d the translation.
 hR, ht likewise. That lets Lean see the literal structure of g*h.-/
   cases g with
   | mk gR gt =>
@@ -216,9 +219,9 @@ t into the desired form.
 
 /-Statement: applying g to x and then applying the inverse motion g⁻¹ returns you to x.
 This is the inverse law of a group action.-/
-/-Result: we’ve established that act : E → (ℝ⁴ → ℝ⁴) is a homomorphism into the function-composition monoid—exactly what OS-2 needs for its pull-back action on fields.-/
+/-Result: we’ve established that act : (E d) → (ℝ^d → ℝ^d) is a homomorphism into the function-composition monoid—exactly what OS-2 needs for its pull-back action on fields.-/
 
-@[simp] lemma act_inv_general (g : E) (x : SpaceTime) :
+@[simp] lemma act_inv_general (g : (E d)) (x : (SpaceTime d)) :
     act g⁻¹ (act g x) = x := by
   cases g with
   | mk gR gt =>
@@ -232,34 +235,34 @@ This is the inverse law of a group action.-/
 open MeasureTheory
 open MeasureTheory
 
-/-- For every rigid motion `g : E`, the push‑forward of Lebesgue measure `μ`
+/-- For every rigid motion `g : (E d)`, the push‑forward of Lebesgue measure `μ`
     by the map `x ↦ g • x` is again `μ`.  Equivalently, `act g` is
     measure‑preserving. -/
-lemma measurePreserving_act (g : E) :
-    MeasurePreserving (fun x : SpaceTime => act g x) μ μ := by
-  have rot : MeasurePreserving (fun x : SpaceTime => g.R x) μ μ := by
+lemma measurePreserving_act (g : (E d)) :
+    MeasurePreserving (fun x : (SpaceTime d) => act g x) (volume : Measure (SpaceTime d)) volume := by
+  have rot : MeasurePreserving (fun x : (SpaceTime d) => g.R x) (volume : Measure (SpaceTime d)) volume := by
     simpa using (g.R.toLinearIsometryEquiv rfl).measurePreserving
-  have trans : MeasurePreserving (fun x : SpaceTime => x + g.t) μ μ := by
+  have trans : MeasurePreserving (fun x : (SpaceTime d) => x + g.t) (volume : Measure (SpaceTime d)) volume := by
     refine ⟨(continuous_id.add continuous_const).measurable, ?_⟩
-    simpa using map_add_right_eq_self μ g.t
+    simpa using map_add_right_eq_self (volume : Measure (SpaceTime d)) g.t
   simpa [act, Function.comp_def] using trans.comp rot
 
 -- Helper functions for temperate growth (adapted from OS2.lean)
 open Function
 
-private lemma contDiff_act_inv (g : E) :
+private lemma contDiff_act_inv (g : (E d)) :
     ContDiff ℝ ⊤ (act g⁻¹) := by
-  have h₁ : ContDiff ℝ ⊤ (fun x : SpaceTime => g⁻¹.R x) := g⁻¹.R.contDiff
-  have h₂ : ContDiff ℝ ⊤ (fun _ : SpaceTime => g⁻¹.t) := contDiff_const
-  show ContDiff ℝ ⊤ (fun x => g⁻¹.R x + g⁻¹.t)
+  have h₁ : ContDiff ℝ ⊤ (fun x : (SpaceTime d) => g⁻¹.R x) := g⁻¹.R.contDiff
+  have h₂ : ContDiff ℝ ⊤ (fun _ : (SpaceTime d) => g⁻¹.t) := contDiff_const
+  unfold act
   exact h₁.add h₂
 
-private lemma fderiv_linear_add_const (L : SpaceTime →L[ℝ] SpaceTime) (c : SpaceTime) (x : SpaceTime) :
+private lemma fderiv_linear_add_const (L : (SpaceTime d) →L[ℝ] (SpaceTime d)) (c : (SpaceTime d)) (x : (SpaceTime d)) :
     fderiv ℝ (fun y => L y + c) x = fderiv ℝ L x := by
   apply fderiv_add_const
 
 set_option linter.unusedVariables false in
-private theorem fderiv_act_inv_eq_linear (g : E) :
+private theorem fderiv_act_inv_eq_linear (g : (E d)) :
   (fun x => fderiv ℝ (act g⁻¹) x) = fun x => g⁻¹.R.toContinuousLinearMap := by
   ext x v i
   let L := g⁻¹.R.toContinuousLinearMap
@@ -269,13 +272,13 @@ private theorem fderiv_act_inv_eq_linear (g : E) :
       _ = ((fderiv ℝ L x) v) i := by rw [fderiv_linear_add_const]
       _ = (L v) i := by rw [ContinuousLinearMap.fderiv]
 
-private theorem fderiv_has_temperate_growth (g : E) :
+private theorem fderiv_has_temperate_growth (g : (E d)) :
     Function.HasTemperateGrowth (fun x => fderiv ℝ (act g⁻¹) x) := by
   rw [fderiv_act_inv_eq_linear g]
   exact Function.HasTemperateGrowth.const _
 
-private theorem act_inv_poly_bound (g : E) :
-    ∃ k : ℕ, ∃ C : ℝ, ∀ x : SpaceTime, ‖act g⁻¹ x‖ ≤ C * (1 + ‖x‖) ^ k := by
+private theorem act_inv_poly_bound (g : (E d)) :
+    ∃ k : ℕ, ∃ C : ℝ, ∀ x : (SpaceTime d), ‖act g⁻¹ x‖ ≤ C * (1 + ‖x‖) ^ k := by
   use 1, (1 + ‖g⁻¹.t‖)
   intro x
   have : act g⁻¹ x = g⁻¹.R x + g⁻¹.t := by simp [act]
@@ -311,10 +314,10 @@ private theorem act_inv_poly_bound (g : E) :
 /-- The fundamental pullback map for Euclidean actions.
     This is the geometric transformation x ↦ g⁻¹ • x that underlies
     all Euclidean actions on function spaces. -/
-noncomputable def euclidean_pullback (g : E) : SpaceTime → SpaceTime := act g⁻¹
+noncomputable def euclidean_pullback (g : (E d)) : (SpaceTime d) → (SpaceTime d) := act g⁻¹
 
 /-- The Euclidean pullback map has temperate growth (needed for Schwartz space actions). -/
-lemma euclidean_pullback_temperate_growth (g : E) :
+lemma euclidean_pullback_temperate_growth (g : (E d)) :
     Function.HasTemperateGrowth (euclidean_pullback g) := by
   -- The map x ↦ g⁻¹.R x + g⁻¹.t is affine (linear isometry + translation)
   -- Use the complete implementation from OS2.lean's helper_htg
@@ -326,8 +329,8 @@ lemma euclidean_pullback_temperate_growth (g : E) :
     hbound
 
 /-- The Euclidean pullback map satisfies polynomial growth bounds. -/
-lemma euclidean_pullback_polynomial_bounds (g : E) :
-    ∃ (k : ℕ) (C : ℝ), ∀ (x : SpaceTime), ‖x‖ ≤ C * (1 + ‖euclidean_pullback g x‖) ^ k := by
+lemma euclidean_pullback_polynomial_bounds (g : (E d)) :
+    ∃ (k : ℕ) (C : ℝ), ∀ (x : (SpaceTime d)), ‖x‖ ≤ C * (1 + ‖euclidean_pullback g x‖) ^ k := by
   -- Since euclidean_pullback g x = g⁻¹.R x + g⁻¹.t and g⁻¹.R is an isometry:
   -- This follows the pattern from hg_up_nat in OS2.lean
   use 1, (1 + ‖g⁻¹.t‖)
@@ -345,60 +348,47 @@ lemma euclidean_pullback_polynomial_bounds (g : E) :
         linarith [mul_nonneg h2 h1]
 
 /-- Action of Euclidean group on test functions via pullback.
-    For g ∈ E and f ∈ TestFunctionℂ, define (g • f)(x) = f(g⁻¹ • x).
+    For g ∈ (E d) and f ∈ (TestFunctionℂ d), define (g • f)(x) = f(g⁻¹ • x).
     This is the standard pullback action: to evaluate the transformed function
     at x, we evaluate the original function at the inverse-transformed point. -/
-noncomputable def euclidean_action (g : E) (f : TestFunctionℂ) : TestFunctionℂ :=
+noncomputable def euclidean_action (g : (E d)) (f : (TestFunctionℂ d)) : (TestFunctionℂ d) :=
   SchwartzMap.compCLM (𝕜 := ℂ)
     (hg := euclidean_pullback_temperate_growth g)
     (hg_upper := euclidean_pullback_polynomial_bounds g) f
 
 /-- Action of Euclidean group on real test functions via pullback.
-    For g ∈ E and f ∈ TestFunction, define (g • f)(x) = f(g⁻¹ • x).
-    This is the real version of euclidean_action for TestFunction = SchwartzMap SpaceTime ℝ. -/
-noncomputable def euclidean_action_real (g : E) (f : TestFunction) : TestFunction :=
+    For g ∈ (E d) and f ∈ (TestFunction d), define (g • f)(x) = f(g⁻¹ • x).
+    This is the real version of euclidean_action for (TestFunction d) = SchwartzMap (SpaceTime d) ℝ. -/
+noncomputable def euclidean_action_real (g : (E d)) (f : (TestFunction d)) : (TestFunction d) :=
   SchwartzMap.compCLM (𝕜 := ℝ)
     (hg := euclidean_pullback_temperate_growth g)
     (hg_upper := euclidean_pullback_polynomial_bounds g) f
 
 /-- The measure preservation result enables both test function and L² actions.
     This is the key unifying lemma that works specifically for the spacetime measure μ. -/
-lemma euclidean_action_unified_basis (g : E) :
-    MeasurePreserving (euclidean_pullback g) (μ : Measure SpaceTime) μ := by
+lemma euclidean_action_unified_basis (g : (E d)) :
+    MeasurePreserving (euclidean_pullback g) (volume : Measure (SpaceTime d)) volume := by
   -- This is just measurePreserving_act applied to g⁻¹
   unfold euclidean_pullback
   exact measurePreserving_act g⁻¹
 
 /-- Action of Euclidean group on L² functions via pullback.
-    For g ∈ E and f ∈ Lp ℂ 2 μ, define (g • f)(x) = f(g⁻¹ • x).
+    For g ∈ (E d) and f ∈ Lp ℂ 2 (volume : Measure (SpaceTime d)), define (g • f)(x) = f(g⁻¹ • x).
     This uses the same fundamental pullback transformation as the test function action,
     but leverages measure preservation instead of temperate growth bounds.
-    Specialized for SpaceTime with Lebesgue measure. -/
-noncomputable def euclidean_action_L2 (g : E)
-    (f : Lp ℂ 2 (μ : Measure SpaceTime)) : Lp ℂ 2 μ :=
+    Specialized for (SpaceTime d) with Lebesgue measure. -/
+noncomputable def euclidean_action_L2 (g : (E d))
+    (f : Lp ℂ 2 (volume : Measure (SpaceTime d))) : Lp ℂ 2 (volume : Measure (SpaceTime d)) :=
   -- Use Lp.compMeasurePreserving for measure-preserving transformations
-  have h_meas_pres : MeasurePreserving (euclidean_pullback g) μ μ :=
+  have h_meas_pres : MeasurePreserving (euclidean_pullback g) (volume : Measure (SpaceTime d)) volume :=
     euclidean_action_unified_basis g
   Lp.compMeasurePreserving (p := 2) (euclidean_pullback g) h_meas_pres f
 
 /-- The Euclidean action as a continuous linear map on test functions.
     This leverages the Schwartz space structure and temperate growth bounds. -/
-noncomputable def euclidean_action_CLM (g : E) : TestFunctionℂ →L[ℂ] TestFunctionℂ :=
+noncomputable def euclidean_action_CLM (g : (E d)) : (TestFunctionℂ d) →L[ℂ] (TestFunctionℂ d) :=
   SchwartzMap.compCLM (𝕜 := ℂ)
     (hg := euclidean_pullback_temperate_growth g)
     (hg_upper := euclidean_pullback_polynomial_bounds g)
 
-/-- Both actions are instances of the same abstract pattern. -/
-lemma euclidean_actions_unified (g : E) :
-    (∃ (T_test : TestFunctionℂ →L[ℂ] TestFunctionℂ),
-       ∀ f, euclidean_action g f = T_test f) ∧
-    (∃ (T_L2 : Lp ℂ 2 μ → Lp ℂ 2 μ),
-       ∀ f, euclidean_action_L2 g f = T_L2 f) := by
-  constructor
-  · use euclidean_action_CLM g
-    intro f
-    rfl  -- by definition of euclidean_action
-  · use euclidean_action_L2 g
-    intro f
-    rfl  -- by definition of euclidean_action_L2
 

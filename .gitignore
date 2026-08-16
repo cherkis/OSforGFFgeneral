@@ -1,5 +1,6 @@
 .lake/
 .claude/
-scripts/
+scripts/*
+!scripts/check-guardrails.sh
 docbuild/.lake/
 .DS_Store

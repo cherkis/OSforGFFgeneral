@@ -1,7 +1,8 @@
 /-
 Copyright (c) 2025 Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim. All rights reserved.
+Copyright (c) 2026 Sergey A. Cherkis. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
+Authors: Sergey A. Cherkis, Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 
 import OSforGFF.Spacetime.Basic
@@ -11,13 +12,13 @@ import Mathlib.Analysis.SpecialFunctions.JapaneseBracket
 /-!
 # Schwartz Tonelli Factorization
 
-This file proves the Tonelli factorization theorem for Schwartz functions on SpaceTime,
-which states that double integrals over SpaceTime can be factorized when the kernel
+This file proves the Tonelli factorization theorem for Schwartz functions on (SpaceTime d),
+which states that double integrals over (SpaceTime d) can be factorized when the kernel
 depends only on the time coordinates.
 
 ## Main Results
 
-* `schwartz_tonelli_spacetime` - Tonelli factorization for Schwartz functions on SpaceTime
+* `schwartz_tonelli_spacetime` - Tonelli factorization for Schwartz functions on (SpaceTime d)
 
 ## References
 
@@ -27,16 +28,21 @@ depends only on the time coordinates.
 
 open MeasureTheory MeasureSpace FiniteDimensional Real
 
+variable {d : ℕ} [Fact (2 ≤ d)]
+
 /-! ### Auxiliary Lemmas -/
 
 /-- Norm bound: ‖spacetimeDecomp.symm (t, v)‖ ≥ ‖v‖.
     This follows from: ‖x‖² = t² + ‖v‖² ≥ ‖v‖². -/
-lemma spacetimeDecomp_symm_norm_ge (t : ℝ) (v : SpatialCoords) :
+lemma spacetimeDecomp_symm_norm_ge (t : ℝ) (v : (SpatialCoords d)) :
     ‖spacetimeDecomp.symm (t, v)‖ ≥ ‖v‖ := by
+  have h_pair : spacetimeDecomp (spacetimeDecomp.symm (t, v)) = (t, v) :=
+    spacetimeDecomp.apply_symm_apply (t, v)
+  rw [spacetimeDecomp_apply] at h_pair
   have h_spatial : spatialPart (spacetimeDecomp.symm (t, v)) = v :=
-    congr_arg Prod.snd (spacetimeDecomp.apply_symm_apply (t, v))
+    congr_arg Prod.snd h_pair
   have h_time : (spacetimeDecomp.symm (t, v)) 0 = t :=
-    congr_arg Prod.fst (spacetimeDecomp.apply_symm_apply (t, v))
+    congr_arg Prod.fst h_pair
   have h_decomp := spacetime_norm_sq_decompose (spacetimeDecomp.symm (t, v))
   rw [h_time, h_spatial] at h_decomp
   have h_sq_ge : ‖spacetimeDecomp.symm (t, v)‖^2 ≥ ‖v‖^2 := by
@@ -44,54 +50,59 @@ lemma spacetimeDecomp_symm_norm_ge (t : ℝ) (v : SpatialCoords) :
   have h_norm_nonneg : 0 ≤ ‖spacetimeDecomp.symm (t, v)‖ := norm_nonneg _
   exact le_of_sq_le_sq h_sq_ge h_norm_nonneg
 
-/-- Slice integrability: for fixed t, the slice is integrable over SpatialCoords. -/
-lemma schwartz_slice_integrable (f : SchwartzMap SpaceTime ℂ) (t : ℝ) :
-    Integrable (fun v : SpatialCoords => ‖f (spacetimeDecomp.symm (t, v))‖) volume := by
-  have hST_dim : Module.finrank ℝ SpaceTime < 5 := by
-    simp only [SpaceTime, finrank_euclideanSpace, Fintype.card_fin]; norm_num
-  obtain ⟨C, hC_pos, hf_decay⟩ := schwartz_integrable_decay f 5 hST_dim
-  have h_dom_integrable : Integrable (fun v : SpatialCoords => C / (1 + ‖v‖)^5) volume := by
-    have h_dim : (Module.finrank ℝ SpatialCoords : ℝ) < 5 := by
-      simp only [SpatialCoords, finrank_euclideanSpace, Fintype.card_fin]; norm_num
-    have h_int := integrable_one_add_norm (E := SpatialCoords) (μ := volume) (r := 5) h_dim
-    have h_eq : ∀ v : SpatialCoords, C / (1 + ‖v‖) ^ 5 = C * (1 + ‖v‖) ^ (-(5 : ℝ)) := by
+/-- Slice integrability: for fixed t, the slice is integrable over (SpatialCoords d). -/
+lemma schwartz_slice_integrable (f : SchwartzMap (SpaceTime d) ℂ) (t : ℝ) :
+    Integrable (fun v : (SpatialCoords d) => ‖f (spacetimeDecomp.symm (t, v))‖) volume := by
+  have hST_dim : Module.finrank ℝ (SpaceTime d) < d + 1 := by
+    simp only [SpaceTime, finrank_euclideanSpace, Fintype.card_fin]; omega
+  obtain ⟨C, hC_pos, hf_decay⟩ := schwartz_integrable_decay f (d + 1) hST_dim
+  have h_dom_integrable :
+      Integrable (fun v : (SpatialCoords d) => C / (1 + ‖v‖) ^ (d + 1)) volume := by
+    have h_dim : (Module.finrank ℝ (SpatialCoords d) : ℝ) < ((d + 1 : ℕ) : ℝ) := by
+      simp only [SpatialCoords, finrank_euclideanSpace, Fintype.card_fin]
+      exact_mod_cast (by omega : d - 1 < d + 1)
+    have h_int := integrable_one_add_norm (E := (SpatialCoords d)) (μ := volume)
+      (r := ((d + 1 : ℕ) : ℝ)) h_dim
+    have h_eq : ∀ v : (SpatialCoords d),
+        C / (1 + ‖v‖) ^ (d + 1) = C * (1 + ‖v‖) ^ (-((d + 1 : ℕ) : ℝ)) := by
       intro v
       have h_pos : 0 < 1 + ‖v‖ := by linarith [norm_nonneg v]
-      have h1 : ((1 + ‖v‖) ^ 5)⁻¹ = (1 + ‖v‖) ^ (-(5 : ℝ)) := by
-        rw [← Real.rpow_natCast (1 + ‖v‖) 5, ← Real.rpow_neg (le_of_lt h_pos)]; simp
+      have h1 : ((1 + ‖v‖) ^ (d + 1))⁻¹ = (1 + ‖v‖) ^ (-((d + 1 : ℕ) : ℝ)) := by
+        rw [← Real.rpow_natCast (1 + ‖v‖) (d + 1), ← Real.rpow_neg (le_of_lt h_pos)]
       rw [div_eq_mul_inv, h1]
     simp_rw [h_eq]
     exact h_int.const_mul C
-  have h_bound : ∀ v : SpatialCoords, ‖f (spacetimeDecomp.symm (t, v))‖ ≤ C / (1 + ‖v‖)^5 := by
+  have h_bound : ∀ v : (SpatialCoords d),
+      ‖f (spacetimeDecomp.symm (t, v))‖ ≤ C / (1 + ‖v‖) ^ (d + 1) := by
     intro v
     have h1 := hf_decay (spacetimeDecomp.symm (t, v))
     have h_norm_ge := spacetimeDecomp_symm_norm_ge t v
     have h_bracket_ge : 1 + ‖spacetimeDecomp.symm (t, v)‖ ≥ 1 + ‖v‖ := by linarith
     have h_bracket_pos : 0 < 1 + ‖v‖ := by linarith [norm_nonneg v]
-    have h_pow_le : (1 + ‖v‖)^5 ≤ (1 + ‖spacetimeDecomp.symm (t, v)‖)^5 := by
+    have h_pow_le : (1 + ‖v‖) ^ (d + 1) ≤ (1 + ‖spacetimeDecomp.symm (t, v)‖) ^ (d + 1) := by
       apply pow_le_pow_left₀ (by linarith [norm_nonneg v]) h_bracket_ge
     calc ‖f (spacetimeDecomp.symm (t, v))‖
-        ≤ C / (1 + ‖spacetimeDecomp.symm (t, v)‖)^5 := h1
-      _ ≤ C / (1 + ‖v‖)^5 := by
+        ≤ C / (1 + ‖spacetimeDecomp.symm (t, v)‖) ^ (d + 1) := h1
+      _ ≤ C / (1 + ‖v‖) ^ (d + 1) := by
           apply div_le_div_of_nonneg_left (le_of_lt hC_pos) (by positivity) h_pow_le
   apply Integrable.mono h_dom_integrable
-  · have h1 : Measurable (fun v : SpatialCoords => ((t, v) : ℝ × SpatialCoords)) :=
+  · have h1 : Measurable (fun v : (SpatialCoords d) => ((t, v) : ℝ × (SpatialCoords d))) :=
       Measurable.prodMk measurable_const measurable_id
-    have h2 : Measurable spacetimeDecomp.symm := spacetimeDecomp.symm.measurable
+    have h2 : Measurable (spacetimeDecomp (d := d)).symm := spacetimeDecomp.symm.measurable
     have h3 : Continuous f := f.continuous
-    have h4 : Continuous (fun x : SpaceTime => ‖f x‖) := h3.norm
+    have h4 : Continuous (fun x : (SpaceTime d) => ‖f x‖) := h3.norm
     exact (h4.measurable.comp (h2.comp h1)).aestronglyMeasurable
   · filter_upwards with v
     simp only [Real.norm_of_nonneg (norm_nonneg _)]
-    rw [Real.norm_of_nonneg (by positivity : 0 ≤ C / (1 + ‖v‖)^5)]
+    rw [Real.norm_of_nonneg (by positivity : 0 ≤ C / (1 + ‖v‖) ^ (d + 1))]
     exact h_bound v
 
 /-- Schwartz composed with spacetimeDecomp.symm is integrable on the product. -/
-lemma schwartz_integrable_on_prod' (f : SchwartzMap SpaceTime ℂ) :
-    Integrable (fun p : ℝ × SpatialCoords => ‖f (spacetimeDecomp.symm p)‖) := by
-  have h_mp : MeasurePreserving spacetimeDecomp (volume : Measure SpaceTime) volume :=
+lemma schwartz_integrable_on_prod' (f : SchwartzMap (SpaceTime d) ℂ) :
+    Integrable (fun p : ℝ × (SpatialCoords d) => ‖f (spacetimeDecomp.symm p)‖) := by
+  have h_mp : MeasurePreserving spacetimeDecomp (volume : Measure (SpaceTime d)) volume :=
     spacetimeDecomp_measurePreserving
-  have h_int : Integrable (fun x : SpaceTime => ‖f x‖) := f.integrable.norm
+  have h_int : Integrable (fun x : (SpaceTime d) => ‖f x‖) := f.integrable.norm
   rw [← h_mp.integrable_comp_emb spacetimeDecomp.measurableEmbedding]
   convert h_int using 1
   ext x
@@ -99,9 +110,9 @@ lemma schwartz_integrable_on_prod' (f : SchwartzMap SpaceTime ℂ) :
 
 /-! ### Main Theorem -/
 
-/-- **Tonelli factorization for SpaceTime**.
+/-- **Tonelli factorization for (SpaceTime d)**.
 
-For Schwartz functions f, g on SpaceTime and a bounded non-negative measurable kernel K
+For Schwartz functions f, g on (SpaceTime d) and a bounded non-negative measurable kernel K
 depending only on time coordinates, the double integral factors:
 
   ∫∫ ‖f x‖ · ‖g y‖ · K(x₀, y₀) dx dy = ∫∫ K(t₁, t₂) · G_f(t₁) · G_g(t₂) dt₁ dt₂
@@ -110,32 +121,32 @@ where G_f(t) = ∫ ‖f(t, v)‖ dv is the spatial integral at time t.
 
 This is a key tool for establishing reflection positivity (OS3) bounds. -/
 theorem schwartz_tonelli_spacetime
-    (f g : SchwartzMap SpaceTime ℂ)
+    (f g : SchwartzMap (SpaceTime d) ℂ)
     (K : ℝ → ℝ → ℝ)
     (hK_nn : ∀ t₁ t₂, 0 ≤ K t₁ t₂)
     (hK_meas : Measurable (Function.uncurry K))
     (hK_bdd : ∃ C : ℝ, ∀ t₁ t₂, K t₁ t₂ ≤ C) :
-    let G_f := fun t => ∫ (v : SpatialCoords), ‖f (spacetimeDecomp.symm (t, v))‖
-    let G_g := fun t => ∫ (v : SpatialCoords), ‖g (spacetimeDecomp.symm (t, v))‖
-    (∫ x : SpaceTime, ∫ y : SpaceTime, ‖f x‖ * ‖g y‖ * K (x 0) (y 0)) =
+    let G_f := fun t => ∫ (v : (SpatialCoords d)), ‖f (spacetimeDecomp.symm (t, v))‖
+    let G_g := fun t => ∫ (v : (SpatialCoords d)), ‖g (spacetimeDecomp.symm (t, v))‖
+    (∫ x : (SpaceTime d), ∫ y : (SpaceTime d), ‖f x‖ * ‖g y‖ * K (x 0) (y 0)) =
     (∫ t₁ : ℝ, ∫ t₂ : ℝ, K t₁ t₂ * G_f t₁ * G_g t₂) := by
   intro G_f G_g
 
   -- Step 1: Rewrite x 0 as (spacetimeDecomp x).1
-  have h_time : ∀ x : SpaceTime, x 0 = (spacetimeDecomp x).1 := by
+  have h_time : ∀ x : (SpaceTime d), x 0 = (spacetimeDecomp x).1 := by
     intro x; simp only [spacetimeDecomp_apply]
   simp_rw [h_time]
 
   -- Step 2: Get measure preservation
-  have h_mp : MeasurePreserving spacetimeDecomp (volume : Measure SpaceTime) volume :=
+  have h_mp : MeasurePreserving spacetimeDecomp (volume : Measure (SpaceTime d)) volume :=
     spacetimeDecomp_measurePreserving
 
   -- Step 3: Change variables using spacetimeDecomp
-  have h_comp_symm : ∀ G : SpaceTime → ℝ,
-      ∫ x : SpaceTime, G x = ∫ p : ℝ × SpatialCoords, G (spacetimeDecomp.symm p) := by
+  have h_comp_symm : ∀ G : (SpaceTime d) → ℝ,
+      ∫ x : (SpaceTime d), G x = ∫ p : ℝ × (SpatialCoords d), G (spacetimeDecomp.symm p) := by
     intro G
-    have h_comp : ∀ F : ℝ × SpatialCoords → ℝ,
-        ∫ x : SpaceTime, F (spacetimeDecomp x) = ∫ p : ℝ × SpatialCoords, F p :=
+    have h_comp : ∀ F : ℝ × (SpatialCoords d) → ℝ,
+        ∫ x : (SpaceTime d), F (spacetimeDecomp x) = ∫ p : ℝ × (SpatialCoords d), F p :=
       fun F => h_mp.integral_comp spacetimeDecomp.measurableEmbedding F
     have : G = (G ∘ spacetimeDecomp.symm) ∘ spacetimeDecomp := by
       ext x; simp [Function.comp, MeasurableEquiv.symm_apply_apply]
@@ -147,46 +158,46 @@ theorem schwartz_tonelli_spacetime
   simp only [MeasurableEquiv.apply_symm_apply]
 
   -- Integrability facts
-  have hf_int : Integrable (fun p : ℝ × SpatialCoords => ‖f (spacetimeDecomp.symm p)‖) :=
+  have hf_int : Integrable (fun p : ℝ × (SpatialCoords d) => ‖f (spacetimeDecomp.symm p)‖) :=
     schwartz_integrable_on_prod' f
-  have hg_int : Integrable (fun p : ℝ × SpatialCoords => ‖g (spacetimeDecomp.symm p)‖) :=
+  have hg_int : Integrable (fun p : ℝ × (SpatialCoords d) => ‖g (spacetimeDecomp.symm p)‖) :=
     schwartz_integrable_on_prod' g
 
   -- Step 4: Split each pair (t, v) and apply Fubini
-  have h_split : ∀ F : ℝ × SpatialCoords → ℝ, Integrable F →
-    ∫ p : ℝ × SpatialCoords, F p = ∫ t : ℝ, ∫ v : SpatialCoords, F (t, v) := by
+  have h_split : ∀ F : ℝ × (SpatialCoords d) → ℝ, Integrable F →
+    ∫ p : ℝ × (SpatialCoords d), F p = ∫ t : ℝ, ∫ v : (SpatialCoords d), F (t, v) := by
     intro F hF
-    have h_eq : (volume : Measure (ℝ × SpatialCoords)) =
-        (volume : Measure ℝ).prod (volume : Measure SpatialCoords) := rfl
+    have h_eq : (volume : Measure (ℝ × (SpatialCoords d))) =
+        (volume : Measure ℝ).prod (volume : Measure (SpatialCoords d)) := rfl
     rw [h_eq, MeasureTheory.integral_prod _ hF]
 
   -- The outer integrand as a function of p₁
-  have h_outer_int : Integrable (fun p₁ : ℝ × SpatialCoords =>
-      ∫ p₂ : ℝ × SpatialCoords,
+  have h_outer_int : Integrable (fun p₁ : ℝ × (SpatialCoords d) =>
+      ∫ p₂ : ℝ × (SpatialCoords d),
         ‖f (spacetimeDecomp.symm p₁)‖ * ‖g (spacetimeDecomp.symm p₂)‖ * K p₁.1 p₂.1) := by
     obtain ⟨C, hC⟩ := hK_bdd
     have hC_pos : 0 ≤ C := le_trans (hK_nn 0 0) (hC 0 0)
-    have h_prod_int : Integrable (fun p : (ℝ × SpatialCoords) × (ℝ × SpatialCoords) =>
+    have h_prod_int : Integrable (fun p : (ℝ × (SpatialCoords d)) × (ℝ × (SpatialCoords d)) =>
         ‖f (spacetimeDecomp.symm p.1)‖ * ‖g (spacetimeDecomp.symm p.2)‖)
-        ((volume : Measure (ℝ × SpatialCoords)).prod volume) :=
+        ((volume : Measure (ℝ × (SpatialCoords d))).prod volume) :=
       hf_int.mul_prod hg_int
-    have h_bound_int : Integrable (fun p : (ℝ × SpatialCoords) × (ℝ × SpatialCoords) =>
+    have h_bound_int : Integrable (fun p : (ℝ × (SpatialCoords d)) × (ℝ × (SpatialCoords d)) =>
         C * (‖f (spacetimeDecomp.symm p.1)‖ * ‖g (spacetimeDecomp.symm p.2)‖))
-        ((volume : Measure (ℝ × SpatialCoords)).prod volume) :=
+        ((volume : Measure (ℝ × (SpatialCoords d))).prod volume) :=
       h_prod_int.const_mul C
-    have h_meas : AEStronglyMeasurable (fun p : (ℝ × SpatialCoords) × (ℝ × SpatialCoords) =>
+    have h_meas : AEStronglyMeasurable (fun p : (ℝ × (SpatialCoords d)) × (ℝ × (SpatialCoords d)) =>
         ‖f (spacetimeDecomp.symm p.1)‖ * ‖g (spacetimeDecomp.symm p.2)‖ * K p.1.1 p.2.1)
-        ((volume : Measure (ℝ × SpatialCoords)).prod volume) := by
+        ((volume : Measure (ℝ × (SpatialCoords d))).prod volume) := by
       have h1 := h_prod_int.aestronglyMeasurable
-      have h2 : AEStronglyMeasurable (fun p : (ℝ × SpatialCoords) × (ℝ × SpatialCoords) => K p.1.1 p.2.1)
-          ((volume : Measure (ℝ × SpatialCoords)).prod volume) := by
-        have hK_comp : Measurable (fun p : (ℝ × SpatialCoords) × (ℝ × SpatialCoords) => (p.1.1, p.2.1)) :=
+      have h2 : AEStronglyMeasurable (fun p : (ℝ × (SpatialCoords d)) × (ℝ × (SpatialCoords d)) => K p.1.1 p.2.1)
+          ((volume : Measure (ℝ × (SpatialCoords d))).prod volume) := by
+        have hK_comp : Measurable (fun p : (ℝ × (SpatialCoords d)) × (ℝ × (SpatialCoords d)) => (p.1.1, p.2.1)) :=
           Measurable.prodMk (measurable_fst.comp measurable_fst) (measurable_fst.comp measurable_snd)
         exact (hK_meas.comp hK_comp).aestronglyMeasurable
       exact h1.mul h2
-    have h_int_product : Integrable (fun p : (ℝ × SpatialCoords) × (ℝ × SpatialCoords) =>
+    have h_int_product : Integrable (fun p : (ℝ × (SpatialCoords d)) × (ℝ × (SpatialCoords d)) =>
         ‖f (spacetimeDecomp.symm p.1)‖ * ‖g (spacetimeDecomp.symm p.2)‖ * K p.1.1 p.2.1)
-        ((volume : Measure (ℝ × SpatialCoords)).prod volume) := by
+        ((volume : Measure (ℝ × (SpatialCoords d))).prod volume) := by
       apply Integrable.mono' h_bound_int h_meas
       filter_upwards with p
       simp only [norm_mul, Real.norm_eq_abs, abs_of_nonneg (norm_nonneg _)]
@@ -203,21 +214,21 @@ theorem schwartz_tonelli_spacetime
   rw [h_split _ h_outer_int]
 
   -- For the inner integral split
-  have h_inner_int : ∀ t₁ v₁, Integrable (fun p₂ : ℝ × SpatialCoords =>
+  have h_inner_int : ∀ t₁ v₁, Integrable (fun p₂ : ℝ × (SpatialCoords d) =>
       ‖f (spacetimeDecomp.symm (t₁, v₁))‖ * ‖g (spacetimeDecomp.symm p₂)‖ * K t₁ p₂.1) := by
     intro t₁ v₁
-    have hg_K_int : Integrable (fun p₂ : ℝ × SpatialCoords =>
+    have hg_K_int : Integrable (fun p₂ : ℝ × (SpatialCoords d) =>
         ‖g (spacetimeDecomp.symm p₂)‖ * K t₁ p₂.1) := by
       obtain ⟨C, hC⟩ := hK_bdd
       have hC_pos : 0 ≤ C := le_trans (hK_nn t₁ 0) (hC t₁ 0)
       have h_bound_int : Integrable (fun p₂ => C * ‖g (spacetimeDecomp.symm p₂)‖) := by
         exact hg_int.const_mul C
-      have h_meas : AEStronglyMeasurable (fun p₂ : ℝ × SpatialCoords =>
+      have h_meas : AEStronglyMeasurable (fun p₂ : ℝ × (SpatialCoords d) =>
           ‖g (spacetimeDecomp.symm p₂)‖ * K t₁ p₂.1) volume := by
         have h1 : AEStronglyMeasurable (fun p₂ => ‖g (spacetimeDecomp.symm p₂)‖) volume :=
           hg_int.aestronglyMeasurable
-        have h2 : AEStronglyMeasurable (fun p₂ : ℝ × SpatialCoords => K t₁ p₂.1) volume := by
-          have h : Measurable (fun p₂ : ℝ × SpatialCoords => (t₁, p₂.1)) :=
+        have h2 : AEStronglyMeasurable (fun p₂ : ℝ × (SpatialCoords d) => K t₁ p₂.1) volume := by
+          have h : Measurable (fun p₂ : ℝ × (SpatialCoords d) => (t₁, p₂.1)) :=
             Measurable.prodMk measurable_const measurable_fst
           exact (hK_meas.comp h).aestronglyMeasurable
         exact h1.mul h2
@@ -242,9 +253,9 @@ theorem schwartz_tonelli_spacetime
 
   -- Step 5: Swap ∫ v₁ with ∫ t₂
   have h_swap : ∀ t₁ : ℝ,
-    ∫ v₁ : SpatialCoords, ∫ t₂ : ℝ, ∫ v₂ : SpatialCoords,
+    ∫ v₁ : (SpatialCoords d), ∫ t₂ : ℝ, ∫ v₂ : (SpatialCoords d),
       ‖f (spacetimeDecomp.symm (t₁, v₁))‖ * ‖g (spacetimeDecomp.symm (t₂, v₂))‖ * K t₁ t₂ =
-    ∫ t₂ : ℝ, ∫ v₁ : SpatialCoords, ∫ v₂ : SpatialCoords,
+    ∫ t₂ : ℝ, ∫ v₁ : (SpatialCoords d), ∫ v₂ : (SpatialCoords d),
       ‖f (spacetimeDecomp.symm (t₁, v₁))‖ * ‖g (spacetimeDecomp.symm (t₂, v₂))‖ * K t₁ t₂ := by
     intro t₁
     rw [integral_integral_swap]
@@ -252,10 +263,10 @@ theorem schwartz_tonelli_spacetime
       schwartz_slice_integrable f t₁
 
     have hGg_int : Integrable G_g := by
-      have h_prod : Integrable (fun p : ℝ × SpatialCoords => ‖g (spacetimeDecomp.symm p)‖) :=
+      have h_prod : Integrable (fun p : ℝ × (SpatialCoords d) => ‖g (spacetimeDecomp.symm p)‖) :=
         schwartz_integrable_on_prod' g
-      have h_vol_eq : (volume : Measure (ℝ × SpatialCoords)) =
-          (volume : Measure ℝ).prod (volume : Measure SpatialCoords) := rfl
+      have h_vol_eq : (volume : Measure (ℝ × (SpatialCoords d))) =
+          (volume : Measure ℝ).prod (volume : Measure (SpatialCoords d)) := rfl
       rw [h_vol_eq] at h_prod
       exact h_prod.integral_prod_left
 
@@ -290,8 +301,8 @@ theorem schwartz_tonelli_spacetime
   apply integral_congr_ae
   filter_upwards with t₂
 
-  let a := fun v₁ : SpatialCoords => ‖f (spacetimeDecomp.symm (t₁, v₁))‖
-  let b := fun v₂ : SpatialCoords => ‖g (spacetimeDecomp.symm (t₂, v₂))‖
+  let a := fun v₁ : (SpatialCoords d) => ‖f (spacetimeDecomp.symm (t₁, v₁))‖
+  let b := fun v₂ : (SpatialCoords d) => ‖g (spacetimeDecomp.symm (t₂, v₂))‖
 
   have ha_int : Integrable a := schwartz_slice_integrable f t₁
   have hb_int : Integrable b := schwartz_slice_integrable g t₂

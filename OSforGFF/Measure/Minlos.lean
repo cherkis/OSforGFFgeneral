@@ -40,7 +40,6 @@ the proven Minlos theorem.
 ## Main declarations
 
 - `minlos_gaussian_construction`: Minlos + Gaussian CF → probability measure
-- `gaussian_measure_symmetry`: covariance-preserving maps induce measure symmetries
 -/
 
 open Complex MeasureTheory Matrix TopologicalSpace
@@ -101,7 +100,7 @@ hermiticity follows from Q(-f,-f) = Q(f,f) (which must be supplied). -/
 
 /-- Promote GFF4D's nonneg-only PD to bochner's hermitian+nonneg PD,
     given an explicit symmetry proof φ(-x) = conj(φ(x)). -/
-theorem gff4d_to_bochner_pd {α : Type*} [AddGroup α] {φ : α → ℂ}
+def gff4d_to_bochner_pd {α : Type*} [AddGroup α] {φ : α → ℂ}
     (h_nonneg : GFF4D.IsPositiveDefinite φ)
     (h_symm : ∀ x, φ (-x) = starRingEnd ℂ (φ x)) :
     IsPositiveDefinite φ where
@@ -113,19 +112,6 @@ private lemma conj_cexp_real (z : ℂ) (h : z.im = 0) :
     starRingEnd ℂ (Complex.exp z) = Complex.exp z := by
   have hz : z = (z.re : ℂ) := Complex.ext rfl (by simp [h])
   rw [hz, ← Complex.ofReal_exp]; exact Complex.conj_ofReal _
-
-/-- The Gaussian CF argument -(1/2)*r is real for real r. -/
-private lemma gaussian_cf_im_zero (r : ℝ) :
-    (-(1/2 : ℂ) * (r : ℂ)).im = 0 := by
-  simp [Complex.mul_im, Complex.neg_im, Complex.ofReal_im]
-
-/-- The Gaussian RBF kernel is positive definite in the bochner sense.
-    The hermitian condition follows from ‖-h‖ = ‖h‖. -/
-theorem gaussian_rbf_pd_bochner
-    {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℝ H] :
-    IsPositiveDefinite (fun h : H => Complex.exp (-(1/2 : ℂ) * (‖h‖^2 : ℝ))) :=
-  gff4d_to_bochner_pd gaussian_rbf_pd_innerProduct_proof (fun h => by
-    simp only [norm_neg]; exact (conj_cexp_real _ (gaussian_cf_im_zero _)).symm)
 
 /-- Gaussian CF via embedding is PD in the bochner sense, given Q(-f,-f) = Q(f,f). -/
 lemma gaussian_positive_definite_bochner
@@ -210,31 +196,5 @@ theorem minlos_gaussian_uniqueness
   (h₂ : ∀ f : E, ∫ ω, Complex.exp (I * (ω f)) ∂μ₂.toMeasure = Φ f) :
   μ₁ = μ₂ :=
   minlos_uniqueness hΦ_cont hΦ_pd hΦ_norm h₁ h₂
-
-/-! ## Symmetry Transfer from Characteristic Functional to Measure -/
-
-/-- Corollary for Gaussian measures: if the covariance form is invariant under g,
-    then the Gaussian measure is invariant under the dual action of g. -/
-theorem gaussian_measure_symmetry
-  [IsHilbertNuclear E] [SeparableSpace E] [Nonempty E]
-  (covariance_form : E → E → ℝ)
-  (h_cf_cont : Continuous (gaussian_characteristic_functional covariance_form))
-  (h_cf_pd : IsPositiveDefinite (gaussian_characteristic_functional covariance_form))
-  (h_cf_norm : gaussian_characteristic_functional covariance_form 0 = 1)
-  (μ : ProbabilityMeasure (WeakDual ℝ E))
-  (h_char : ∀ f : E, ∫ ω, Complex.exp (I * (ω f)) ∂μ.toMeasure =
-                     gaussian_characteristic_functional covariance_form f)
-  (g : E →L[ℝ] E)
-  (h_covar_symm : ∀ f : E, covariance_form (g f) (g f) = covariance_form f f)
-  (μ_push : ProbabilityMeasure (WeakDual ℝ E))
-  (h_push_char : ∀ f : E, ∫ ω, Complex.exp (I * (ω f)) ∂μ_push.toMeasure =
-                          ∫ ω, Complex.exp (I * (ω (g f))) ∂μ.toMeasure)
-  : μ_push = μ := by
-  have h_Φ_symm : ∀ f, gaussian_characteristic_functional covariance_form (g f) =
-                       gaussian_characteristic_functional covariance_form f := by
-    intro f
-    simp only [gaussian_characteristic_functional, h_covar_symm]
-  exact minlos_uniqueness h_cf_cont h_cf_pd h_cf_norm
-    (fun f => by rw [h_push_char, h_char (g f), h_Φ_symm]) h_char
 
 end

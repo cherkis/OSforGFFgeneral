@@ -55,9 +55,7 @@ lemma continuous_entrywiseExp (ι : Type u) [Fintype ι] [DecidableEq ι] :
   -- Coordinate map R ↦ R i j is continuous; compose with exp
   have hcoord : Continuous (fun R : Matrix ι ι ℝ => R i j) :=
     (continuous_apply j).comp (continuous_apply i)
-  have : Continuous (fun R : Matrix ι ι ℝ => Real.exp (R i j)) :=
-    Real.continuous_exp.comp hcoord
-  simpa [entrywiseExp] using this
+  simpa [entrywiseExp, Function.comp_def] using (Real.continuous_exp.comp hcoord)
 
 /-- Over `ℝ`, entrywise exponential preserves Hermitian symmetry. -/
 private lemma isHermitian_entrywiseExp_real (R : Matrix ι ι ℝ)
@@ -98,10 +96,6 @@ lemma hadamardPow_apply (R : Matrix ι ι ℝ) (n : ℕ) (i j : ι) :
   induction n with
   | zero => simp [hadamardPow, hadamardOne]
   | succ n ih => simp [Matrix.hadamard, ih, pow_succ]
-
-/-- One term of the Hadamard-series for the entrywise exponential. -/
-noncomputable def entrywiseExpSeriesTerm (R : Matrix ι ι ℝ) (n : ℕ) : Matrix ι ι ℝ :=
-  (1 / (Nat.factorial n : ℝ)) • hadamardPow R n
 
 /-- Series definition of the entrywise exponential using Hadamard powers (entrywise `tsum`). -/
 noncomputable def entrywiseExp_hadamardSeries (R : Matrix ι ι ℝ) : Matrix ι ι ℝ :=

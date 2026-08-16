@@ -1,5 +1,9 @@
 # Dimension Dependence
 
+> **Note.** This document analyzes the *pre-unification* four-dimensional
+> code. The library is now dimension-generic; see `dimension_generic.md` for
+> the current architecture. Kept for reference.
+
 This document inventories where the spacetime dimension $d = 4$ (and spatial dimension $d-1 = 3$) enters the proofs. The project defines `STDimension := 4` in `Spacetime/Basic.lean`  changing this value would require updates to every file listed below as **essential** or **spatial**.
 
 ## Classification
@@ -85,7 +89,6 @@ These files reference `STDimension` or `SpaceTime` but work for any $d \ge 2$.
 | `General/LaplaceIntegral.lean` | Laplace/Glasser integrals |
 | `General/HadamardExp.lean` | Hadamard exponential |
 | `General/SchurProduct.lean` | Schur product theorem |
-| `General/FrobeniusPositivity.lean` | Frobenius inner product positivity |
 | `General/PositiveDefinite.lean` | Positive-definite function theory |
 | `General/GaussianRBF.lean` | Gaussian RBF positive definiteness |
 | `General/QuantitativeDecay.lean` | Polynomial decay estimates |

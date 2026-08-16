@@ -1,7 +1,8 @@
 /-
 Copyright (c) 2025 Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim. All rights reserved.
+Copyright (c) 2026 Sergey A. Cherkis. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
+Authors: Sergey A. Cherkis, Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 
 import Mathlib.Tactic  -- gives `ext` and `simp` power
@@ -55,23 +56,12 @@ open MeasureTheory
 
 namespace QFT
 
-abbrev timeReflection (x : SpaceTime) : SpaceTime :=
+variable {d : ℕ} [Fact (2 ≤ d)]
+
+abbrev timeReflection (x : (SpaceTime d)) : (SpaceTime d) :=
   (WithLp.equiv 2 _).symm (Function.update x.ofLp 0 (-x.ofLp 0))
 
-def timeReflectionMatrix : Matrix (Fin STDimension) (Fin STDimension) ℝ :=
-  Matrix.diagonal (fun i => if i = 0 then -1 else 1)
-
-lemma timeReflectionMatrix_is_orthogonal :
-   timeReflectionMatrix ∈ Matrix.orthogonalGroup (Fin STDimension) ℝ := by
-      simp [Matrix.mem_orthogonalGroup_iff, timeReflectionMatrix, Matrix.diagonal_transpose, Matrix.diagonal_mul_diagonal]
-      ext i
-      simp
-      split_ifs <;> norm_num
-
-def timeReflectionIsometry  : Matrix.orthogonalGroup (Fin STDimension) ℝ :=
-  ⟨timeReflectionMatrix, timeReflectionMatrix_is_orthogonal⟩
-
-def timeReflectionLinear : SpaceTime →ₗ[ℝ] SpaceTime :=
+def timeReflectionLinear : (SpaceTime d) →ₗ[ℝ] (SpaceTime d) :=
 { toFun := timeReflection
   map_add' := by
     intro x y
@@ -93,13 +83,13 @@ def timeReflectionLinear : SpaceTime →ₗ[ℝ] SpaceTime :=
       simp [Function.update_self]
     · simp [Function.update_of_ne h] }
 
-noncomputable def timeReflectionCLM : SpaceTime →L[ℝ] SpaceTime :=
-timeReflectionLinear.toContinuousLinearMap (E := SpaceTime) (F' := SpaceTime)
+noncomputable def timeReflectionCLM : (SpaceTime d) →L[ℝ] (SpaceTime d) :=
+timeReflectionLinear.toContinuousLinearMap (E := (SpaceTime d)) (F' := (SpaceTime d))
 
 open InnerProductSpace
 
 /-- Time reflection preserves inner products -/
-lemma timeReflection_inner_map (x y : SpaceTime) :
+lemma timeReflection_inner_map (x y : (SpaceTime d)) :
     ⟪timeReflection x, timeReflection y⟫_ℝ = ⟪x, y⟫_ℝ := by
   -- Direct proof using fintype inner product
   simp only [inner]
@@ -111,7 +101,7 @@ lemma timeReflection_inner_map (x y : SpaceTime) :
   · simp [h]
 
 /-- Time reflection as a linear isometry equivalence -/
-@[simp] lemma timeReflection_involutive (x : SpaceTime) :
+@[simp] lemma timeReflection_involutive (x : (SpaceTime d)) :
     timeReflection (timeReflection x) = x := by
   apply PiLp.ext
   intro i
@@ -121,7 +111,7 @@ lemma timeReflection_inner_map (x y : SpaceTime) :
     simp [Function.update_self]
   · simp [Function.update_of_ne h]
 
-def timeReflectionLE : SpaceTime ≃ₗᵢ[ℝ] SpaceTime :=
+def timeReflectionLE : (SpaceTime d) ≃ₗᵢ[ℝ] (SpaceTime d) :=
 { toFun := timeReflection
   invFun := timeReflection  -- Time reflection is self-inverse
   left_inv := timeReflection_involutive
@@ -145,13 +135,13 @@ def timeReflectionLE : SpaceTime ≃ₗᵢ[ℝ] SpaceTime :=
 
 /-- Time reflection preserves Lebesgue measure. -/
 lemma timeReflection_measurePreserving :
-    MeasurePreserving timeReflection volume volume := by
+    MeasurePreserving (timeReflection (d := d)) volume volume := by
   -- Any linear isometry equivalence preserves the volume measure.
   exact (timeReflectionLE).measurePreserving
 
-example (x : SpaceTime) :
+example (x : (SpaceTime d)) :
     timeReflectionCLM x =
-      Function.update x (0 : Fin STDimension) (-x 0) := rfl
+      Function.update x (0 : Fin d) (-x 0) := rfl
 
 /-- Composition with time reflection as a continuous linear map on **complex-valued**
     test functions. This maps a test function `f` to the function `x ↦ f(timeReflection(x))`,
@@ -159,7 +149,7 @@ example (x : SpaceTime) :
     preserving spatial coordinates. This version acts on complex test functions and
     is used to formulate the Osterwalder-Schrader star operation. -/
 private lemma timeReflection_hg_upper :
-    ∃ (k : ℕ) (C : ℝ), ∀ (x : SpaceTime), ‖x‖ ≤ C * (1 + ‖timeReflectionCLM x‖) ^ k := by
+    ∃ (k : ℕ) (C : ℝ), ∀ (x : (SpaceTime d)), ‖x‖ ≤ C * (1 + ‖timeReflectionCLM x‖) ^ k := by
   use 1, 1
   intro x
   have h_iso : ‖timeReflectionCLM x‖ = ‖x‖ := by
@@ -172,7 +162,7 @@ private lemma timeReflection_hg_upper :
     ‖x‖ ≤ 1 + ‖x‖ := hx
     _ = 1 * (1 + ‖x‖) ^ (1 : ℕ) := by simp [pow_one]
 
-noncomputable def compTimeReflection : TestFunctionℂ →L[ℝ] TestFunctionℂ :=
+noncomputable def compTimeReflection : (TestFunctionℂ d) →L[ℝ] (TestFunctionℂ d) :=
   SchwartzMap.compCLM (𝕜 := ℝ)
     (hg := timeReflectionCLM.hasTemperateGrowth)
     (hg_upper := timeReflection_hg_upper)
@@ -181,13 +171,13 @@ noncomputable def compTimeReflection : TestFunctionℂ →L[ℝ] TestFunctionℂ
     test functions. This version will be used when working with positive-time
     subspaces defined over ℝ, so that reflection positivity can be formulated
     without passing through complex scalars. -/
-noncomputable def compTimeReflectionReal : TestFunction →L[ℝ] TestFunction := by
+noncomputable def compTimeReflectionReal : (TestFunction d) →L[ℝ] (TestFunction d) := by
   exact SchwartzMap.compCLM (𝕜 := ℝ)
     (hg := timeReflectionCLM.hasTemperateGrowth)
     (hg_upper := timeReflection_hg_upper)
 
 /-- Time reflection is linear on real test functions. -/
-lemma compTimeReflectionReal_linear_combination {n : ℕ} (f : Fin n → TestFunction) (c : Fin n → ℝ) :
+lemma compTimeReflectionReal_linear_combination {n : ℕ} (f : Fin n → (TestFunction d)) (c : Fin n → ℝ) :
     compTimeReflectionReal (∑ i, c i • f i) = ∑ i, c i • compTimeReflectionReal (f i) := by
   -- This follows directly from the linearity of the continuous linear map compTimeReflectionReal
   simp only [map_sum, map_smul]

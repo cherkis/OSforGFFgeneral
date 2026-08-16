@@ -1,7 +1,8 @@
 /-
 Copyright (c) 2025 Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim. All rights reserved.
+Copyright (c) 2026 Sergey A. Cherkis. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
+Authors: Sergey A. Cherkis, Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 -/
 
 import Mathlib.Data.Complex.Basic
@@ -37,6 +38,8 @@ and other quantum field theory constructions.
 
 open Complex MeasureTheory
 
+variable {d : ℕ}
+
 /-! ## Main definitions
 
 - `toComplex`: Embed real Schwartz functions into complex Schwartz functions
@@ -63,7 +66,7 @@ private lemma im_of_complex_combination (a b : ℂ) (u v : ℂ) :
     complex linear combinations. This follows from ℝ-linearity of ω and pointwise
     behavior of complex operations on Schwartz functions. -/
 lemma ω_re_decompose_linear
-  (ω : FieldConfiguration) (f g : TestFunctionℂ) (t s : ℂ) :
+  (ω : (FieldConfiguration d)) (f g : (TestFunctionℂ d)) (t s : ℂ) :
   ω ((complex_testfunction_decompose (t • f + s • g)).1)
     = t.re * ω ((complex_testfunction_decompose f).1)
       - t.im * ω ((complex_testfunction_decompose f).2)
@@ -89,7 +92,7 @@ lemma ω_re_decompose_linear
           + s.re * Complex.re (g x) - s.im * Complex.im (g x)
     simpa using re_of_complex_combination t s (f x) (g x)
   -- Apply ω (a real-linear functional) to both sides
-  have := congrArg (fun (φ : TestFunction) => ω φ) h_sum_re_eq
+  have := congrArg (fun (φ : (TestFunction d)) => ω φ) h_sum_re_eq
   -- Simplify using linearity of ω over ℝ
   simpa [map_add, map_sub, map_smul]
     using this
@@ -97,7 +100,7 @@ lemma ω_re_decompose_linear
 /-- ω-linearity of the imaginary component of the complex test-function decomposition under
     complex linear combinations. -/
 lemma ω_im_decompose_linear
-  (ω : FieldConfiguration) (f g : TestFunctionℂ) (t s : ℂ) :
+  (ω : (FieldConfiguration d)) (f g : (TestFunctionℂ d)) (t s : ℂ) :
   ω ((complex_testfunction_decompose (t • f + s • g)).2)
     = t.re * ω ((complex_testfunction_decompose f).2)
       + t.im * ω ((complex_testfunction_decompose f).1)
@@ -123,14 +126,14 @@ lemma ω_im_decompose_linear
           + s.re * Complex.im (g x) + s.im * Complex.re (g x)
     simpa using im_of_complex_combination t s (f x) (g x)
   -- Apply ω (a real-linear functional) to both sides
-  have := congrArg (fun (φ : TestFunction) => ω φ) h_sum_im_eq
+  have := congrArg (fun (φ : (TestFunction d)) => ω φ) h_sum_im_eq
   -- Simplify using linearity of ω over ℝ
   simpa [map_add, map_smul]
     using this
 
 /-- Linearity of the complex pairing in the test-function argument. -/
 lemma pairing_linear_combo
-  (ω : FieldConfiguration) (f g : TestFunctionℂ) (t s : ℂ) :
+  (ω : (FieldConfiguration d)) (f g : (TestFunctionℂ d)) (t s : ℂ) :
   distributionPairingℂ_real ω (t • f + s • g)
     = t * distributionPairingℂ_real ω f + s * distributionPairingℂ_real ω g := by
   classical
@@ -204,7 +207,7 @@ lemma norm_compContinuousMultilinearMap_ofReal {n : ℕ} {E : Fin n → Type*}
     real→complex embedding equals the norm of the n-th iterated derivative of the
     original Schwartz function. This follows from the chain rule and the fact that
     the embedding is an isometry. -/
-lemma iteratedFDeriv_ofReal_norm_eq (f : TestFunction) (n : ℕ) (x : SpaceTime) :
+lemma iteratedFDeriv_ofReal_norm_eq (f : (TestFunction d)) (n : ℕ) (x : (SpaceTime d)) :
     ‖iteratedFDeriv ℝ n (fun x ↦ (f x : ℂ)) x‖ = ‖iteratedFDeriv ℝ n f.toFun x‖ := by
   have h_comp : (fun x => (f x : ℂ)) = Complex.ofRealCLM ∘ f.toFun := rfl
   rw [h_comp]
@@ -215,7 +218,7 @@ lemma iteratedFDeriv_ofReal_norm_eq (f : TestFunction) (n : ℕ) (x : SpaceTime)
   exact norm_compContinuousMultilinearMap_ofReal (iteratedFDeriv ℝ n f.toFun x)
 
 /-- Embed a real test function as a complex-valued test function by coercing values via ℝ → ℂ. -/
-def toComplex (f : TestFunction) : TestFunctionℂ :=
+def toComplex (f : (TestFunction d)) : (TestFunctionℂ d) :=
   SchwartzMap.mk (fun x => (f x : ℂ)) (by
     -- ℝ → ℂ coercion is smooth
     exact ContDiff.comp Complex.ofRealCLM.contDiff f.smooth'
@@ -231,30 +234,30 @@ def toComplex (f : TestFunction) : TestFunctionℂ :=
     exact hC x
   )
 
-@[simp] lemma toComplex_apply (f : TestFunction) (x : SpaceTime) :
+@[simp] lemma toComplex_apply (f : (TestFunction d)) (x : (SpaceTime d)) :
   toComplex f x = (f x : ℂ) := by
   -- Follows from definition of toComplex
   rfl
 
-@[simp] lemma complex_testfunction_decompose_toComplex_fst (f : TestFunction) :
+@[simp] lemma complex_testfunction_decompose_toComplex_fst (f : (TestFunction d)) :
   (complex_testfunction_decompose (toComplex f)).1 = f := by
   ext x
   simp [complex_testfunction_decompose, toComplex_apply]
 
-@[simp] lemma complex_testfunction_decompose_toComplex_snd (f : TestFunction) :
+@[simp] lemma complex_testfunction_decompose_toComplex_snd (f : (TestFunction d)) :
   (complex_testfunction_decompose (toComplex f)).2 = 0 := by
   ext x
   simp [complex_testfunction_decompose, toComplex_apply]
 
-@[simp] lemma toComplex_add (f g : TestFunction) :
+@[simp] lemma toComplex_add (f g : (TestFunction d)) :
   toComplex (f + g) = toComplex f + toComplex g := by
   ext x
   simp [toComplex_apply]
 
-@[simp] lemma toComplex_smul (c : ℝ) (f : TestFunction) :
+@[simp] lemma toComplex_smul (c : ℝ) (f : (TestFunction d)) :
   toComplex (c • f) = (c : ℂ) • toComplex f := by
   ext x
-  simp only [toComplex_apply, smul_apply, smul_eq_mul, Complex.ofReal_mul]
+  simp only [toComplex_apply, _root_.smul_apply, smul_eq_mul, Complex.ofReal_mul]
 
 /-- The embedding of real Schwartz functions into complex Schwartz functions is a continuous
     ℝ-linear map. This follows from `SchwartzMap.mkCLM` since:
@@ -262,11 +265,11 @@ def toComplex (f : TestFunction) : TestFunctionℂ :=
     2. The composition with ofRealCLM is smooth
     3. Derivative norms are preserved (iteratedFDeriv_ofReal_norm_eq)
     so the Schwartz seminorm bounds are satisfied. -/
-noncomputable def toComplexCLM : TestFunction →L[ℝ] TestFunctionℂ :=
+noncomputable def toComplexCLM : (TestFunction d) →L[ℝ] (TestFunctionℂ d) :=
   SchwartzMap.mkCLM (𝕜 := ℝ) (𝕜' := ℝ) (G := ℂ) (σ := RingHom.id ℝ) (fun f x => (f x : ℂ))
-    (fun f g x => by simp only [add_apply]; exact Complex.ofReal_add _ _)
+    (fun f g x => by simp only [_root_.add_apply]; exact Complex.ofReal_add _ _)
     (fun c f x => by
-      simp only [smul_apply, RingHom.id_apply]
+      simp only [_root_.smul_apply, RingHom.id_apply]
       show (((c • f x : ℝ) : ℂ)) = c • ((f x : ℝ) : ℂ)
       rw [smul_eq_mul, Complex.ofReal_mul, ← Complex.real_smul])
     (fun f => ContDiff.comp Complex.ofRealCLM.contDiff f.smooth')
@@ -278,20 +281,20 @@ noncomputable def toComplexCLM : TestFunction →L[ℝ] TestFunctionℂ :=
       rw [iteratedFDeriv_ofReal_norm_eq]
       exact SchwartzMap.le_seminorm ℝ k n f x)
 
-@[simp] lemma toComplexCLM_apply (f : TestFunction) :
+@[simp] lemma toComplexCLM_apply (f : (TestFunction d)) :
     toComplexCLM f = toComplex f := by
   ext x
   rfl
 
 @[simp] lemma distributionPairingℂ_real_toComplex
-  (ω : FieldConfiguration) (f : TestFunction) :
+  (ω : (FieldConfiguration d)) (f : (TestFunction d)) :
   distributionPairingℂ_real ω (toComplex f) = distributionPairing ω f := by
   simp [distributionPairingℂ_real, distributionPairing]
 
-variable (dμ_config : ProbabilityMeasure FieldConfiguration)
+variable (dμ_config : ProbabilityMeasure (FieldConfiguration d))
 
 @[simp] lemma GJGeneratingFunctionalℂ_toComplex
-  (f : TestFunction) :
+  (f : (TestFunction d)) :
   GJGeneratingFunctionalℂ dμ_config (toComplex f) = GJGeneratingFunctional dμ_config f := by
   unfold GJGeneratingFunctionalℂ GJGeneratingFunctional
   simp [distributionPairingℂ_real_toComplex]
@@ -358,7 +361,7 @@ noncomputable def conjSchwartz {E : Type*} [NormedAddCommGroup E] [NormedSpace �
     - conj(⟨ω, f⟩) = ⟨ω, f_re⟩ - i⟨ω, f_im⟩
     - ⟨ω, conj(f)⟩ = ⟨ω, conj(f)_re⟩ + i⟨ω, conj(f)_im⟩
     - conj(f)_re = f_re and conj(f)_im = -f_im -/
-lemma distributionPairingℂ_real_conj (ω : FieldConfiguration) (f : TestFunctionℂ) :
+lemma distributionPairingℂ_real_conj (ω : (FieldConfiguration d)) (f : (TestFunctionℂ d)) :
     starRingEnd ℂ (distributionPairingℂ_real ω f) = distributionPairingℂ_real ω (conjSchwartz f) := by
   -- Expand distributionPairingℂ_real in terms of real and imaginary parts
   simp only [distributionPairingℂ_real]
@@ -372,7 +375,7 @@ lemma distributionPairingℂ_real_conj (ω : FieldConfiguration) (f : TestFuncti
   have h_conj_im : (complex_testfunction_decompose (conjSchwartz f)).2 =
       -(complex_testfunction_decompose f).2 := by
     ext x
-    simp only [complex_testfunction_decompose_snd_apply, neg_apply]
+    simp only [complex_testfunction_decompose_snd_apply, SchwartzMap.neg_apply]
     change (starRingEnd ℂ (f x)).im = -(f x).im
     exact Complex.conj_im (f x)
   rw [h_conj_re, h_conj_im]
