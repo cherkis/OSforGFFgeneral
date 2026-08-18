@@ -177,14 +177,32 @@ same real defect — the original silently `exit 0`s when its baseline tag is mi
 reported success without checking anything. The two approaches are complementary and should
 be merged deliberately rather than one overwriting the other:
 
-- Sergey's adds a **scan-mode fallback** when the tag is absent, plus checks specific to the
-  Challenge/Solution pair (Challenge must carry exactly one `sorry`, Solution none).
-- #8's makes the check **absolute** — it scans the current tree rather than a diff, so it
-  cannot lose its reference point — and strips comments first, so prose naming `axiom` or
-  `sorry` is not a false positive.
+- Sergey's keeps the diff-vs-baseline behaviour when the tag is present and adds a
+  **scan-mode fallback** when it is absent, so the check works in a clone fetched without
+  tags.
+- #8's makes the check **absolute** — it always scans the current tree, so there is no
+  reference point to lose — and additionally strips comments before scanning, excludes the
+  off-graph `Legacy/` tree, reports `file:line`, and exits 2 rather than 0 when pointed at
+  the wrong directory. #8 keeps the baseline diff as an opt-in attribution report via
+  `GUARDRAIL_BASE=<rev>`.
 
-The pair-specific checks from #9 are not in #8 and should be kept. `AXIOM_AUDIT.md` from #9
-is uncontroversial and should land.
+**On inspection the script halves do not need merging: #8 is a superset.** Everything #9's
+script does, #8's does, plus the comment-stripping (which fixes a real false positive — the
+module docstring of `Guardrails.lean` names both `axiom` and `sorry` in prose) and the
+`Legacy/` exclusion. Sergey diagnosed the same defect correctly and independently; the two
+fixes simply landed twice and #8 merged first.
+
+So the resolution is: **take `AXIOM_AUDIT.md` from #9, drop its script change.** The audit
+document is wanted by project convention and its claims check out against current `main` —
+zero `axiom` declarations in the build graph, all six headline theorems present. One line in
+it describes the script as checking "against the `pre-unfreeze-baseline` tag when present, or
+over the full tree in a clone without tags"; that describes #9's version and should be
+updated to match the one on `main`.
+
+(A *later* version of Sergey's script, on his `palomar` branch, does add checks specific to
+the Challenge/Solution pair — Challenge must carry exactly one `sorry`, Solution none. Those
+are genuinely not in #8 and are worth keeping when that branch is reconciled. They are not
+part of PR #9.)
 
 **Two `formalization.yaml` violations.** Sergey closed the maintainer, relationship and
 classification gaps Kim listed. Remaining:
