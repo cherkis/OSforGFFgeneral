@@ -65,8 +65,6 @@ def PositiveTimeTestFunctions.submodule : Submodule ℝ (SchwartzTestFunction d)
 abbrev PositiveTimeTestFunction (d : ℕ) [Fact (2 ≤ d)] : Type :=
   PositiveTimeTestFunctions.submodule (d := d)
 
-instance : AddCommMonoid (PositiveTimeTestFunction d) := by infer_instance
-instance : AddCommGroup (PositiveTimeTestFunction d) := by infer_instance
 
 /-- Linear combinations of positive-time test functions are positive-time test functions. -/
 lemma PositiveTimeTestFunction.sum_smul_mem
@@ -97,8 +95,6 @@ def PositiveTimeTestFunctionsℂ.submodule : Submodule ℂ (SchwartzTestFunction
 abbrev PositiveTimeTestFunctionℂ (d : ℕ) [Fact (2 ≤ d)] : Type :=
   PositiveTimeTestFunctionsℂ.submodule (d := d)
 
-instance : AddCommMonoid (PositiveTimeTestFunctionℂ d) := by infer_instance
-instance : AddCommGroup (PositiveTimeTestFunctionℂ d) := by infer_instance
 
 lemma PositiveTimeTestFunctionℂ.zero_on_nonpositive
     (f : (PositiveTimeTestFunctionℂ d)) {x : (SpaceTime d)}
