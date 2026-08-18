@@ -159,7 +159,9 @@ import-graph change from breaking us, and we were one import edge away from exac
 | **#8** | CI: `lake build` + guardrails + `leanchecker` on every push and PR | **merged** |
 | **#10** | `TestFunction` → `SchwartzTestFunction` (570 sites, 50 files; no mathematical change) | **merged** |
 | **#11** | delete 5 redundant instances; `NeZero` named and given `priority := low` | **open, CI green** — retarget to `main`, then merge |
-| **#9** | Sergey's guardrail-script repair + `AXIOM_AUDIT.md` | **open, conflicting** — see §6 |
+| **#9** | Sergey's guardrail-script repair + `AXIOM_AUDIT.md` | **open, conflicting** — superseded, see §6 |
+| **#13** | `AXIOM_AUDIT.md` taken from #9, authored to Sergey | **open** |
+| **#12** | this document | **open** |
 | — | naming the 3 anonymous instances in `Challenge.lean`/`Solution.lean` | on branch `palomar-passing` |
 
 `main` now also requires a PR with both CI checks green; branch protection no longer demands
@@ -172,10 +174,11 @@ Branch **`palomar-passing`** is the exact configuration in which Comparator pass
 
 ## 6. What is left
 
-**Resolve PR #9.** It conflicts with #8: both rewrite `scripts/check-guardrails.sh` to fix the
-same real defect — the original silently `exit 0`s when its baseline tag is missing, so it
-reported success without checking anything. The two approaches are complementary and should
-be merged deliberately rather than one overwriting the other:
+**PR #9 — resolved, pending Sergey's call.** Sergey opened it against the two follow-ups from
+the #7 review: a repair to `scripts/check-guardrails.sh`, and `AXIOM_AUDIT.md`. It now
+conflicts, because #8 fixed the same script defect and merged first. Both diagnosed the same
+real bug — the original silently `exit 0`s when its baseline tag is missing, so it reported
+success without checking anything. The two fixes:
 
 - Sergey's keeps the diff-vs-baseline behaviour when the tag is present and adds a
   **scan-mode fallback** when it is absent, so the check works in a clone fetched without
@@ -186,18 +189,19 @@ be merged deliberately rather than one overwriting the other:
   the wrong directory. #8 keeps the baseline diff as an opt-in attribution report via
   `GUARDRAIL_BASE=<rev>`.
 
-**On inspection the script halves do not need merging: #8 is a superset.** Everything #9's
-script does, #8's does, plus the comment-stripping (which fixes a real false positive — the
-module docstring of `Guardrails.lean` names both `axiom` and `sorry` in prose) and the
-`Legacy/` exclusion. Sergey diagnosed the same defect correctly and independently; the two
-fixes simply landed twice and #8 merged first.
+**The script halves do not need reconciling: #8 is a superset.** Everything #9's script does,
+#8's does, plus the comment-stripping (a real false positive — the module docstring of
+`Guardrails.lean` names both `axiom` and `sorry` in prose) and the `Legacy/` exclusion.
 
-So the resolution is: **take `AXIOM_AUDIT.md` from #9, drop its script change.** The audit
-document is wanted by project convention and its claims check out against current `main` —
-zero `axiom` declarations in the build graph, all six headline theorems present. One line in
-it describes the script as checking "against the `pre-unfreeze-baseline` tag when present, or
-over the full tree in a clone without tags"; that describes #9's version and should be
-updated to match the one on `main`.
+The duplication went both ways: #8 was already open when #9 was opened. The avoidable mistake
+was merging #8 without first checking whether an open PR touched the same file.
+
+Resolution: **take `AXIOM_AUDIT.md` from #9, drop its script change.** The audit document is
+wanted by project convention and its claims check out against current `main` — zero `axiom`
+declarations in the build graph, all six headline theorems present. Done in **#13**, with
+authorship kept to Sergey; the one paragraph there describing the source-level check has been
+updated to match the script now on `main`. #9 is left open for Sergey to close in favour of
+#13, or to rebase and land himself if he prefers.
 
 (A *later* version of Sergey's script, on his `palomar` branch, does add checks specific to
 the Challenge/Solution pair — Challenge must carry exactly one `sorry`, Solution none. Those
