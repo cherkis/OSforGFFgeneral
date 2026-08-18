@@ -44,6 +44,8 @@ instances (Bessel K₁, Yukawa, K₀, K_{3/2}) of the first; the corollary
 canonical proper-time propagator: the OS3 proper-time Fubini domination runs at
 boundary-vanishing order `d`, so no upper bound on the dimension is needed.
 
+[![CI](https://github.com/mrdouglasny/OSforGFF/actions/workflows/ci.yml/badge.svg)](https://github.com/mrdouglasny/OSforGFF/actions/workflows/ci.yml)
+
 **Status:** Version 3.2 (general dimension `d ≥ 2`), August 2026. 0 sorries, 0 axioms, ~31,500 lines of Lean across 54 files. Instances for `d = 2, 3, 4, 5`; the axiom footprint and statement type of every headline theorem (generic, all-dimensions `d ≥ 2`, `d = 4`, `d = 3`, `d = 2`, `d = 5`) are build-frozen in `OSforGFF/Guardrails.lean`.
 
 All results are fully proved — no assumed axioms. Nuclear space structure and the Minlos theorem
@@ -246,10 +248,27 @@ lake build
 
 Requires Lean 4 and Mathlib (pinned via `lake-manifest.json`). The build also compiles
 [`OSforGFF/Guardrails.lean`](OSforGFF/Guardrails.lean), whose `#guard_msgs` blocks freeze the
-axiom footprint and statement type of the generic, `d = 4`, `d = 3`, and `d = 2` master theorems — so
-`lake build` fails if any change introduces a new axiom, leaks a `sorry`, or alters a headline
-statement. A companion `scripts/check-guardrails.sh` performs a source-level diff against the
-baseline (blocking new `axiom`/escape-hatch declarations).
+axiom footprint and statement type of all six headline theorems (generic, all-dimensions
+`d ≥ 2`, and `d = 4, 3, 2, 5`) — so `lake build` fails if any change introduces a new axiom,
+leaks a `sorry`, or alters a headline statement.
+
+A companion `scripts/check-guardrails.sh` checks the same invariant at the source level, without
+needing a build:
+
+```bash
+./scripts/check-guardrails.sh          # exit 0 = clean, exit 2 = violation
+```
+
+It scans every module reachable from `OSforGFF.lean` for `axiom` declarations, `sorry`/`admit`,
+and kernel escape hatches (`native_decide`, `unsafe`, `implemented_by`, `extern`), stripping
+comments first so prose that merely names them is not a false positive. The check is absolute
+rather than relative to a baseline revision, so it cannot silently pass by losing its reference
+point; set `GUARDRAIL_BASE=<rev>` to additionally report which violations a given range
+introduced. `OSforGFF/Legacy/` is exempt — it is deliberately off the import graph and never
+compiled.
+
+Both checks run in CI on every push and pull request ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)),
+which also replays the built environment through an external kernel check (`leanchecker`).
 
 ## Related Work
 
