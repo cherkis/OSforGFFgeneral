@@ -91,7 +91,7 @@ Test functions, symmetries, and integration infrastructure.
 
 | File | Contents |
 |------|----------|
-| [Basic](OSforGFF/Spacetime/Basic.lean) | [SpaceTime (ℝ^d), TestFunction, FieldConfiguration, distribution pairing](summary/OSforGFF/Spacetime/Basic.md) |
+| [Basic](OSforGFF/Spacetime/Basic.lean) | [SpaceTime (ℝ^d), SchwartzTestFunction, FieldConfiguration, distribution pairing](summary/OSforGFF/Spacetime/Basic.md) |
 | [Euclidean](OSforGFF/Spacetime/Euclidean.lean) | [Euclidean group E(d) = ℝ^d ⋊ O(d) and its action on test functions](summary/OSforGFF/Spacetime/Euclidean.md) |
 | [DiscreteSymmetry](OSforGFF/Spacetime/DiscreteSymmetry.lean) | [Time reflection Θ: (t,x̄) ↦ (−t,x̄)](summary/OSforGFF/Spacetime/DiscreteSymmetry.md) |
 | [Decomposition](OSforGFF/Spacetime/Decomposition.lean) | [Measure-preserving SpaceTime ≃ ℝ × ℝ^{d−1} decomposition](summary/OSforGFF/Spacetime/Decomposition.md) |

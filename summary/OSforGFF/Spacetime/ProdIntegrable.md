@@ -174,7 +174,7 @@ noncomputable def timeOrigin (t : ℝ) : SpaceTime d
 
 **Lean signature**
 ```lean
-noncomputable def spatialNormIntegral (f : TestFunctionℂ d) (t : ℝ) : ℝ
+noncomputable def spatialNormIntegral (f : SchwartzTestFunctionℂ d) (t : ℝ) : ℝ
 ```
 **Informal**: The spatial norm integral $G(t) = \int_{\mathbb{R}^{d-1}} \lVert f(t, x)\rVert\,dx$.
 

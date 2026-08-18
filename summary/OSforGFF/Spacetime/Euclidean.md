@@ -351,7 +351,7 @@ using the isometry property of $g^{-1}_R$.
 
 **Lean signature**
 ```lean
-noncomputable def euclidean_action (g : (E d)) (f : (TestFunctionℂ d)) : (TestFunctionℂ d) :=
+noncomputable def euclidean_action (g : (E d)) (f : (SchwartzTestFunctionℂ d)) : (SchwartzTestFunctionℂ d) :=
   SchwartzMap.compCLM (𝕜 := ℂ)
     (hg := euclidean_pullback_temperate_growth g)
     (hg_upper := euclidean_pullback_polynomial_bounds g) f
@@ -366,13 +366,13 @@ $(g \bullet f)(x) = f(g^{-1} \cdot x)$.
 
 **Lean signature**
 ```lean
-noncomputable def euclidean_action_real (g : (E d)) (f : (TestFunction d)) : (TestFunction d) :=
+noncomputable def euclidean_action_real (g : (E d)) (f : (SchwartzTestFunction d)) : (SchwartzTestFunction d) :=
   SchwartzMap.compCLM (𝕜 := ℝ)
     (hg := euclidean_pullback_temperate_growth g)
     (hg_upper := euclidean_pullback_polynomial_bounds g) f
 ```
 
-**Informal**: The real-valued version of `euclidean_action` on `TestFunction d`.
+**Informal**: The real-valued version of `euclidean_action` on `SchwartzTestFunction d`.
 
 ---
 
@@ -402,7 +402,7 @@ preservation (`Lp.compMeasurePreserving`) instead of temperate-growth bounds.
 
 **Lean signature**
 ```lean
-noncomputable def euclidean_action_CLM (g : (E d)) : (TestFunctionℂ d) →L[ℂ] (TestFunctionℂ d) :=
+noncomputable def euclidean_action_CLM (g : (E d)) : (SchwartzTestFunctionℂ d) →L[ℂ] (SchwartzTestFunctionℂ d) :=
   SchwartzMap.compCLM (𝕜 := ℂ)
     (hg := euclidean_pullback_temperate_growth g)
     (hg_upper := euclidean_pullback_polynomial_bounds g)

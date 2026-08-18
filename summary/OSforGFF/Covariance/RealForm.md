@@ -41,7 +41,7 @@ None — file is sorry-free.
 **Lean signature**
 ```lean
 noncomputable def freeCovarianceFormR (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f g : TestFunction d) : ℝ :=
+    (f g : SchwartzTestFunction d) : ℝ :=
   ∫ x, ∫ y, (f x) * (freeCovariance d m x y) * (g y) ∂volume ∂volume
 ```
 
@@ -96,7 +96,7 @@ multiplication agrees with complex scalar multiplication: $c \cdot g = (c : \mat
 **Lean signature**
 ```lean
 noncomputable def fourierTransformCLM_real :
-    TestFunctionℂ d →L[ℝ] TestFunctionℂ d
+    SchwartzTestFunctionℂ d →L[ℝ] SchwartzTestFunctionℂ d
 ```
 
 **Informal**: The $\mathbb{R}$-linear view of the complex Fourier transform on Schwartz space, built
@@ -110,7 +110,7 @@ mathlib v4.29.
 **Lean signature**
 ```lean
 noncomputable def schwartzToL2CLM_real (_m : ℝ) :
-    TestFunctionℂ d →L[ℝ] Lp ℂ 2 (volume : Measure (SpaceTime d))
+    SchwartzTestFunctionℂ d →L[ℝ] Lp ℂ 2 (volume : Measure (SpaceTime d))
 ```
 
 **Informal**: The $\mathbb{R}$-linear view of the Schwartz-to-$L^2$ embedding.
@@ -123,7 +123,7 @@ noncomputable def schwartzToL2CLM_real (_m : ℝ) :
 
 **Lean signature**
 ```lean
-noncomputable def sqrtPropagatorMap (m : ℝ) (f : TestFunction d) : SpaceTime d → ℂ :=
+noncomputable def sqrtPropagatorMap (m : ℝ) (f : SchwartzTestFunction d) : SpaceTime d → ℂ :=
   fun k =>
     (SchwartzMap.fourierTransformCLM ℂ (toComplex f)) k
       * freePropagatorMomSqrt d m k
@@ -158,7 +158,7 @@ $(1/m)^2\, \lVert \hat{f}(k)\rVert^2$ since $\sqrt{P_d}(k) \le 1/m$.
 
 **Lean signature**
 ```lean
-noncomputable def sqrtPropagatorMap_norm_sq (m : ℝ) (f : TestFunction d) : ℝ :=
+noncomputable def sqrtPropagatorMap_norm_sq (m : ℝ) (f : SchwartzTestFunction d) : ℝ :=
   ∫ k, ‖sqrtPropagatorMap m f k‖ ^ 2 ∂volume
 ```
 
@@ -233,7 +233,7 @@ abbrev TargetHilbertSpace (d : ℕ) (_m : ℝ) : Type :=
 **Lean signature**
 ```lean
 noncomputable def embeddingMap (m : ℝ) [Fact (0 < m)] :
-    TestFunction d →ₗ[ℝ] TargetHilbertSpace d m
+    SchwartzTestFunction d →ₗ[ℝ] TargetHilbertSpace d m
 ```
 
 **Informal**: The $\mathbb{R}$-linear embedding $T$ sending a test function $f$ to the $L^2$ class of
@@ -261,7 +261,7 @@ private noncomputable def freePropagatorMomSqrt_mul_CLM_real (m : ℝ) [Fact (0 
 **Lean signature**
 ```lean
 noncomputable def embeddingMapCLM (m : ℝ) [Fact (0 < m)] :
-    TestFunction d →L[ℝ] Lp ℂ 2 (volume : Measure (SpaceTime d))
+    SchwartzTestFunction d →L[ℝ] Lp ℂ 2 (volume : Measure (SpaceTime d))
 ```
 
 **Informal**: A *continuous* $\mathbb{R}$-linear realization of $T$, assembled by composing the

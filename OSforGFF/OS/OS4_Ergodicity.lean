@@ -81,7 +81,7 @@ We define intermediate formulations of OS4 that are easier to prove directly.
     lim_{t→∞} (1/t) ∫₀ᵗ e^{⟨T_s φ, f⟩} ds → 𝔼_μ[e^{⟨φ,f⟩}] in L²(μ_GFF)
 -/
 def OS4'_Ergodicity_generating (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] : Prop :=
-  ∀ (f : (TestFunctionℂ d)),
+  ∀ (f : (SchwartzTestFunctionℂ d)),
     let μ := (gaussianFreeField_free m).toMeasure
     Filter.Tendsto
       (fun T : ℝ =>
@@ -99,7 +99,7 @@ def OS4''_Clustering (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] : Prop :=
 /-! ## GFF Integrability Lemmas -/
 
 /-- The GFF exponential is integrable with respect to the GFF measure. -/
-lemma gff_exp_pairing_integrable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunctionℂ d)) :
+lemma gff_exp_pairing_integrable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (SchwartzTestFunctionℂ d)) :
     Integrable (fun ω => Complex.exp (distributionPairingℂ_real ω f))
       (gaussianFreeField_free m).toMeasure := by
   -- |exp(z)| = exp(Re z), so bound by exp(|Re z|)
@@ -123,7 +123,7 @@ lemma gff_exp_pairing_integrable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f
 /-- Time-translated complex exponential is in L² under the GFF measure.
     This follows from |exp(z)|² = exp(2 Re z) ≤ exp(2|Re z|) which is integrable.
     (Copied from OS4Ron.lean - needed for integrability proofs) -/
-lemma gff_exp_time_translated_memLp_two (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (s : ℝ) (f : (TestFunctionℂ d)) :
+lemma gff_exp_time_translated_memLp_two (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (s : ℝ) (f : (SchwartzTestFunctionℂ d)) :
     MemLp (fun ω : (FieldConfiguration d) =>
         Complex.exp (distributionPairingℂ_real (timeTranslationDistribution s ω) f))
       2 (gaussianFreeField_free m).toMeasure := by
@@ -177,7 +177,7 @@ lemma gff_exp_time_translated_memLp_two (m : ℝ) [Fact (0 < m)] [GFFPropagator 
 
 omit [Fact (2 ≤ d)] in
 /-- Time translation commutes with pointwise conjugation. -/
-lemma timeTranslationSchwartzℂ_conj_comm (t : ℝ) (f : (TestFunctionℂ d)) :
+lemma timeTranslationSchwartzℂ_conj_comm (t : ℝ) (f : (SchwartzTestFunctionℂ d)) :
     timeTranslationSchwartzℂ t (conjSchwartz f) = conjSchwartz (timeTranslationSchwartzℂ t f) := by
   ext x
   simp only [timeTranslationSchwartzℂ_apply]
@@ -185,7 +185,7 @@ lemma timeTranslationSchwartzℂ_conj_comm (t : ℝ) (f : (TestFunctionℂ d)) :
 
 /-- The product exp(⟨ω, T_t g₁⟩) · conj(exp(⟨ω, T_t g₂⟩)) integral is time-shift invariant.
     This follows from the GFF characteristic function and covariance time-translation invariance. -/
-lemma gff_exp_product_time_shift_invariant (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (g₁ g₂ : (TestFunctionℂ d)) (t : ℝ) :
+lemma gff_exp_product_time_shift_invariant (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (g₁ g₂ : (SchwartzTestFunctionℂ d)) (t : ℝ) :
     let μ := (gaussianFreeField_free m).toMeasure
     ∫ ω, Complex.exp (distributionPairingℂ_real ω (timeTranslationSchwartzℂ t g₁)) *
          starRingEnd ℂ (Complex.exp (distributionPairingℂ_real ω (timeTranslationSchwartzℂ t g₂))) ∂μ =
@@ -200,7 +200,7 @@ lemma gff_exp_product_time_shift_invariant (m : ℝ) [Fact (0 < m)] [GFFPropagat
   -- Time translation commutes with conjugation: rewrite RHS direction
   simp_rw [← timeTranslationSchwartzℂ_conj_comm t]
   -- ⟨ω, f⟩ + ⟨ω, g⟩ = ⟨ω, f + g⟩ by linearity
-  have h_add : ∀ ω (f g : (TestFunctionℂ d)),
+  have h_add : ∀ ω (f g : (SchwartzTestFunctionℂ d)),
       distributionPairingℂ_real ω f + distributionPairingℂ_real ω g =
       distributionPairingℂ_real ω (f + g) := fun ω f g => by
     have := pairing_linear_combo ω f g 1 1
@@ -208,18 +208,18 @@ lemma gff_exp_product_time_shift_invariant (m : ℝ) [Fact (0 < m)] [GFFPropagat
     exact this.symm
   simp_rw [h_add]
   -- T_t f + T_t g = T_t(f + g)
-  have h_T_add : ∀ (f g : (TestFunctionℂ d)),
+  have h_T_add : ∀ (f g : (SchwartzTestFunctionℂ d)),
       timeTranslationSchwartzℂ t f + timeTranslationSchwartzℂ t g =
       timeTranslationSchwartzℂ t (f + g) := fun f g => by
     ext x; simp [timeTranslationSchwartzℂ_apply]
   simp_rw [h_T_add]
   -- Now both are ∫ exp(⟨ω, T_t h⟩) and ∫ exp(⟨ω, h⟩) for h = g₁ + conjSchwartz g₂
   exact gff_generating_time_invariant m t
-    (Add.add g₁ (conjSchwartz g₂) : (TestFunctionℂ d))
+    (Add.add g₁ (conjSchwartz g₂) : (SchwartzTestFunctionℂ d))
 
 /-- The L² norm of A_s is constant in s by stationarity.
     Proof: Uses OS2 → gff_exp_product_time_shift_invariant → this result. -/
-lemma gff_exp_L2_norm_constant (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunctionℂ d)) (s : ℝ) :
+lemma gff_exp_L2_norm_constant (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (SchwartzTestFunctionℂ d)) (s : ℝ) :
     ∫ ω, ‖Complex.exp (distributionPairingℂ_real (timeTranslationDistribution s ω) f)‖^2
       ∂(gaussianFreeField_free m).toMeasure =
     ∫ ω, ‖Complex.exp (distributionPairingℂ_real ω f)‖^2
@@ -249,7 +249,7 @@ lemma gff_exp_L2_norm_constant (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f :
   rw [h_lhs_eq]
 
   -- Convert: ∫ ‖exp(⟨ω, g⟩)‖² = (∫ exp * conj(exp)).re
-  have h_int_re_eq : ∀ g : (TestFunctionℂ d),
+  have h_int_re_eq : ∀ g : (SchwartzTestFunctionℂ d),
       ∫ ω, ‖Complex.exp (distributionPairingℂ_real ω g)‖^2 ∂μ =
       (∫ ω, Complex.exp (distributionPairingℂ_real ω g) *
             starRingEnd ℂ (Complex.exp (distributionPairingℂ_real ω g)) ∂μ).re := by
@@ -267,7 +267,7 @@ lemma gff_exp_L2_norm_constant (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f :
   rw [h_int_re_eq (timeTranslationSchwartzℂ (-s) f), h_int_re_eq f, h_product_eq]
 
 /-- The time average (1/T)∫A_s ds is in L²(μ). -/
-lemma time_average_memLp_two (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunctionℂ d)) (T : ℝ) (hT : T > 0) :
+lemma time_average_memLp_two (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (SchwartzTestFunctionℂ d)) (T : ℝ) (hT : T > 0) :
     MemLp (fun ω => (1/T : ℂ) * ∫ s in Set.Icc (0 : ℝ) T,
         Complex.exp (distributionPairingℂ_real (timeTranslationDistribution s ω) f))
       2 (gaussianFreeField_free m).toMeasure := by
@@ -313,7 +313,7 @@ lemma time_average_memLp_two (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (
   exact OSforGFF.time_average_memLp_two μ A T hT h_As_L2 h_uniform h_joint_meas h_avg_meas
 
 /-- The error term squared is integrable (for T > 0). -/
-lemma gff_err_sq_integrable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (T : ℝ) (hT : T > 0) (f : (TestFunctionℂ d)) :
+lemma gff_err_sq_integrable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (T : ℝ) (hT : T > 0) (f : (SchwartzTestFunctionℂ d)) :
     Integrable (fun ω =>
       ‖((1 : ℝ) / T) • (∫ s in Set.Icc (0 : ℝ) T,
           Complex.exp (distributionPairingℂ_real (timeTranslationDistribution s ω) f))
@@ -376,7 +376,7 @@ lemma double_integral_decay_bound :
     _ ≤ 2 * T * C₀ := by nlinarith
 
 /-- Product expectation stationarity. -/
-lemma gff_product_expectation_stationarity (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunctionℂ d))
+lemma gff_product_expectation_stationarity (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (SchwartzTestFunctionℂ d))
     (s u : ℝ) :
     let μ := (gaussianFreeField_free m).toMeasure
     let A := fun t ω => Complex.exp (distributionPairingℂ_real (timeTranslationDistribution t ω) f)
@@ -417,7 +417,7 @@ lemma gff_product_expectation_stationarity (m : ℝ) [Fact (0 < m)] [GFFPropagat
     s ↦ C(T_s f, g) is continuous.
     (Proved via dominated convergence, copied from GFFCovarianceContinuity.) -/
 lemma gff_covariance_timeTranslation_continuous (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f g : (TestFunctionℂ d)) :
+    (f g : (SchwartzTestFunctionℂ d)) :
     Continuous (fun s => SchwingerFunctionℂ₂ (gaussianFreeField_free m)
       (timeTranslationSchwartzℂ s f) g) := by
   -- Step 1: S₂ = freeCovarianceℂ_bilinear for the GFF
@@ -500,7 +500,7 @@ lemma gff_covariance_timeTranslation_continuous (m : ℝ) [Fact (0 < m)] [GFFPro
     2. By Gaussian MGF formula, g(t) = EA·conj(EA)·(exp(C(T_{-t}f, conj(f))) - 1)
     3. C(T_s f, g) is continuous in s by dominated convergence
     4. Compose with exp and subtraction -/
-lemma gff_covariance_continuous (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunctionℂ d)) :
+lemma gff_covariance_continuous (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (SchwartzTestFunctionℂ d)) :
     let μ := (gaussianFreeField_free m).toMeasure
     let A := fun t ω => Complex.exp (distributionPairingℂ_real (timeTranslationDistribution t ω) f)
     let EA := ∫ ω, Complex.exp (distributionPairingℂ_real ω f) ∂μ
@@ -580,7 +580,7 @@ lemma gff_covariance_continuous (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f 
 
     This combines the integral bound (which gives ‖∫∫ Cov‖) with triangle inequality
     to get the bound in terms of ∫∫ ‖Cov‖ which is what we need for decay estimates. -/
-lemma L2_time_average_variance_bound (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunctionℂ d)) (T : ℝ) (hT : T > 0) :
+lemma L2_time_average_variance_bound (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (SchwartzTestFunctionℂ d)) (T : ℝ) (hT : T > 0) :
     let μ := (gaussianFreeField_free m).toMeasure
     let A := fun s ω => Complex.exp (distributionPairingℂ_real (timeTranslationDistribution s ω) f)
     let EA := ∫ ω, Complex.exp (distributionPairingℂ_real ω f) ∂μ
@@ -724,7 +724,7 @@ lemma L2_time_average_variance_bound (m : ℝ) [Fact (0 < m)] [GFFPropagator d m
 /-! ## Clustering Implies Covariance Decay -/
 
 /-- OS4'' clustering implies covariance decay with exponent -3. -/
-lemma clustering_implies_covariance_decay (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunctionℂ d))
+lemma clustering_implies_covariance_decay (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (SchwartzTestFunctionℂ d))
     (h_cluster : OS4''_Clustering (d := d) m) :
     ∃ (c : ℝ), c ≥ 0 ∧ ∀ s u : ℝ, s ≥ 0 → u ≥ 0 →
       let μ := (gaussianFreeField_free m).toMeasure
@@ -876,7 +876,7 @@ lemma clustering_implies_covariance_decay (m : ℝ) [Fact (0 < m)] [GFFPropagato
 
 /-- The norm of the GFF covariance is integrable on [0,T] for each fixed first argument.
     Uses gff_covariance_norm_integrableOn_slice_proved to avoid expensive type unification. -/
-lemma gff_covariance_norm_integrableOn_slice (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunctionℂ d))
+lemma gff_covariance_norm_integrableOn_slice (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (SchwartzTestFunctionℂ d))
     (s : ℝ) (T : ℝ) :
     let μ := (gaussianFreeField_free m).toMeasure
     let A := fun t ω => Complex.exp (distributionPairingℂ_real (timeTranslationDistribution t ω) f)
@@ -892,7 +892,7 @@ lemma gff_covariance_norm_integrableOn_slice (m : ℝ) [Fact (0 < m)] [GFFPropag
 /-! ## Variance Decay from Clustering -/
 
 /-- Covariance decay implies variance tends to zero. -/
-lemma variance_decay_from_clustering (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunctionℂ d))
+lemma variance_decay_from_clustering (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (SchwartzTestFunctionℂ d))
     (c : ℝ) (hc : c ≥ 0)
     (h_cov_decay : ∀ s u : ℝ, s ≥ 0 → u ≥ 0 →
       let μ := (gaussianFreeField_free m).toMeasure

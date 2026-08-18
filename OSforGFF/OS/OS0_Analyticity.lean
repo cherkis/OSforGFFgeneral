@@ -84,7 +84,7 @@ variable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
 omit [Fact (2 ≤ d)] in
 /-- The complex pairing is measurable in ω (cylinder σ-algebra version).
     This follows from the measurability of the evaluation map on WeakDual. -/
-lemma distributionPairingℂ_real_measurable (f : TestFunctionℂ d) :
+lemma distributionPairingℂ_real_measurable (f : SchwartzTestFunctionℂ d) :
     Measurable (fun ω : FieldConfiguration d => distributionPairingℂ_real ω f) := by
   simp only [distributionPairingℂ_real, complex_testfunction_decompose]
   exact (continuous_ofReal.measurable.comp (WeakDual.eval_measurable _)).add
@@ -92,7 +92,7 @@ lemma distributionPairingℂ_real_measurable (f : TestFunctionℂ d) :
 
 /-- The GFF integrand for the generating functional is measurable in ω for each z. -/
 theorem gff_integrand_measurable
-    (n : ℕ) (J : Fin n → TestFunctionℂ d) (z : Fin n → ℂ) :
+    (n : ℕ) (J : Fin n → SchwartzTestFunctionℂ d) (z : Fin n → ℂ) :
     AEStronglyMeasurable
       (fun ω : FieldConfiguration d =>
         Complex.exp (Complex.I * distributionPairingℂ_real ω (∑ i, z i • J i)))
@@ -109,7 +109,7 @@ omit [Fact (2 ≤ d)] in
     - I * distributionPairingℂ_real ω f = I * (ω f_re) - (ω f_im)
     - Re(I * distributionPairingℂ_real ω f) = -(ω f_im)
     - ‖exp(z)‖ = exp(Re(z)), so ‖exp(I * ...)‖ = exp(-(ω f_im)) -/
-lemma norm_exp_I_distributionPairingℂ_real (f : TestFunctionℂ d) (ω : FieldConfiguration d) :
+lemma norm_exp_I_distributionPairingℂ_real (f : SchwartzTestFunctionℂ d) (ω : FieldConfiguration d) :
     ‖Complex.exp (Complex.I * distributionPairingℂ_real ω f)‖ =
       Real.exp (-(ω (complex_testfunction_decompose f).2)) := by
   -- Use Complex.norm_exp: ‖exp(z)‖ = exp(z.re)
@@ -127,7 +127,7 @@ lemma norm_exp_I_distributionPairingℂ_real (f : TestFunctionℂ d) (ω : Field
 /-- Integrability of exp(-ω f) for a real test function f under the GFF measure.
     This follows from the Gaussian nature: for centered Gaussian X with variance σ²,
     E[exp(-X)] = exp(σ²/2). -/
-lemma gff_exp_neg_pairing_integrable (f : TestFunction d) :
+lemma gff_exp_neg_pairing_integrable (f : SchwartzTestFunction d) :
     Integrable (fun ω : FieldConfiguration d => Real.exp (-(ω f)))
       (gaussianFreeField_free (d := d) m).toMeasure := by
   -- Use exponential square integrability (Fernique)
@@ -168,7 +168,7 @@ lemma gff_exp_neg_pairing_integrable (f : TestFunction d) :
 /-- exp(|ω f|) is in L^2 (and in fact all L^p) under the GFF measure.
     This follows from Fernique's theorem: if exp(α x²) is integrable, then exp(|x|)^p is integrable
     for all p < ∞ because |x|^p ≤ C_p * exp(ε x²) for small ε. -/
-lemma gff_exp_abs_pairing_memLp (f : TestFunction d) (p : ENNReal) (hp : p ≠ ⊤) :
+lemma gff_exp_abs_pairing_memLp (f : SchwartzTestFunction d) (p : ENNReal) (hp : p ≠ ⊤) :
     MemLp (fun ω : FieldConfiguration d => Real.exp |ω f|) p (gaussianFreeField_free (d := d) m).toMeasure := by
   -- By Fernique, ∃ α > 0 such that exp(α x²) is integrable
   obtain ⟨α, hα_pos, h_fernique⟩ := gaussianFreeField_pairing_expSq_integrable m f
@@ -301,13 +301,13 @@ lemma gff_exp_abs_pairing_memLp (f : TestFunction d) (p : ENNReal) (hp : p ≠ �
 
 /-- Integrability of exp(|ω f|) under the GFF measure.
     This is the L¹ special case of gff_exp_abs_pairing_memLp. -/
-lemma gff_exp_abs_pairing_integrable (f : TestFunction d) :
+lemma gff_exp_abs_pairing_integrable (f : SchwartzTestFunction d) :
     Integrable (fun ω : FieldConfiguration d => Real.exp |ω f|) (gaussianFreeField_free (d := d) m).toMeasure :=
   memLp_one_iff_integrable.mp (gff_exp_abs_pairing_memLp m f 1 ENNReal.one_ne_top)
 
 /-- The integral of ‖exp(I * distributionPairingℂ_real ω f)‖ is finite for any complex test function.
     This follows from the Gaussian exponential integrability applied to the imaginary part. -/
-lemma gff_integrand_norm_integrable (f : TestFunctionℂ d) :
+lemma gff_integrand_norm_integrable (f : SchwartzTestFunctionℂ d) :
     Integrable (fun ω : FieldConfiguration d =>
         ‖Complex.exp (Complex.I * distributionPairingℂ_real ω f)‖)
       (gaussianFreeField_free (d := d) m).toMeasure := by
@@ -335,7 +335,7 @@ which equals exp(-½ C_ℂ(f,f)). -/
     entire in t; the modulus is bounded by exp(|Im(t)| · |⟨ω,f_im⟩|), which is
     integrable by Fernique's theorem (gaussianFreeField_pairing_memLp).
     Standard parameter-dependent holomorphy then gives analyticity of the integral. -/
-lemma gff_cf_slice_entire (f_re f_im : TestFunction d) :
+lemma gff_cf_slice_entire (f_re f_im : SchwartzTestFunction d) :
     AnalyticOnNhd ℂ (fun t : ℂ =>
       GJGeneratingFunctionalℂ (gaussianFreeField_free (d := d) m) (toComplex f_re + t • toComplex f_im))
       Set.univ := by
@@ -503,7 +503,7 @@ lemma gff_cf_slice_entire (f_re f_im : TestFunction d) :
     Proved by 1-parameter analytic continuation: decompose f = f_re + I·f_im,
     show the generating functional and Gaussian formula agree on ℝ (from
     `gff_real_characteristic`), extend to ℂ via the identity theorem. -/
-theorem gff_complex_CF_covariance (f : TestFunctionℂ d) :
+theorem gff_complex_CF_covariance (f : SchwartzTestFunctionℂ d) :
     GJGeneratingFunctionalℂ (gaussianFreeField_free (d := d) m) f =
     cexp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear m f f) := by
   -- Decompose f = toComplex f_re + I • toComplex f_im
@@ -600,20 +600,20 @@ Using the ℂ-bilinearity of `freeCovarianceℂ_bilinear`, we expand
 C_ℂ(∑ᵢ zᵢ Jᵢ, ∑ⱼ zⱼ Jⱼ) = ∑ᵢ ∑ⱼ zᵢ zⱼ C_ℂ(Jᵢ, Jⱼ). -/
 
 /-- C_ℂ(f, 0) = 0, derived from smul_right with c = 0. -/
-private lemma freeCovarianceℂ_bilinear_zero_right (f : TestFunctionℂ d) :
+private lemma freeCovarianceℂ_bilinear_zero_right (f : SchwartzTestFunctionℂ d) :
     freeCovarianceℂ_bilinear m f 0 = 0 := by
-  have h := freeCovarianceℂ_bilinear_smul_right m (0 : ℂ) f (0 : TestFunctionℂ d)
+  have h := freeCovarianceℂ_bilinear_smul_right m (0 : ℂ) f (0 : SchwartzTestFunctionℂ d)
   simp at h; exact h
 
 /-- C_ℂ(0, g) = 0, derived from smul_left with c = 0. -/
-private lemma freeCovarianceℂ_bilinear_zero_left (g : TestFunctionℂ d) :
+private lemma freeCovarianceℂ_bilinear_zero_left (g : SchwartzTestFunctionℂ d) :
     freeCovarianceℂ_bilinear m 0 g = 0 := by
-  have h := freeCovarianceℂ_bilinear_smul_left m (0 : ℂ) (0 : TestFunctionℂ d) g
+  have h := freeCovarianceℂ_bilinear_smul_left m (0 : ℂ) (0 : SchwartzTestFunctionℂ d) g
   simp at h; exact h
 
 /-- Right linearity over finite sums for the complexified covariance. -/
-private lemma freeCovarianceℂ_sum_right (f : TestFunctionℂ d)
-    (s : Finset (Fin n)) (z : Fin n → ℂ) (J : Fin n → TestFunctionℂ d) :
+private lemma freeCovarianceℂ_sum_right (f : SchwartzTestFunctionℂ d)
+    (s : Finset (Fin n)) (z : Fin n → ℂ) (J : Fin n → SchwartzTestFunctionℂ d) :
     freeCovarianceℂ_bilinear m f (∑ i ∈ s, z i • J i) =
     ∑ i ∈ s, z i * freeCovarianceℂ_bilinear m f (J i) := by
   induction s using Finset.cons_induction with
@@ -624,8 +624,8 @@ private lemma freeCovarianceℂ_sum_right (f : TestFunctionℂ d)
 
 /-- Left linearity over finite sums for the complexified covariance. -/
 private lemma freeCovarianceℂ_sum_left
-    (s : Finset (Fin n)) (z : Fin n → ℂ) (J : Fin n → TestFunctionℂ d)
-    (g : TestFunctionℂ d) :
+    (s : Finset (Fin n)) (z : Fin n → ℂ) (J : Fin n → SchwartzTestFunctionℂ d)
+    (g : SchwartzTestFunctionℂ d) :
     freeCovarianceℂ_bilinear m (∑ i ∈ s, z i • J i) g =
     ∑ i ∈ s, z i * freeCovarianceℂ_bilinear m (J i) g := by
   induction s using Finset.cons_induction with
@@ -636,7 +636,7 @@ private lemma freeCovarianceℂ_sum_left
 
 /-- Full bilinear expansion of C_ℂ(∑ zᵢ Jᵢ, ∑ zⱼ Jⱼ) as a finite double sum. -/
 theorem freeCovarianceℂ_bilinear_sum_expansion {n : ℕ}
-    (J : Fin n → TestFunctionℂ d) (z : Fin n → ℂ) :
+    (J : Fin n → SchwartzTestFunctionℂ d) (z : Fin n → ℂ) :
     freeCovarianceℂ_bilinear m (∑ i, z i • J i) (∑ j, z j • J j) =
     ∑ i : Fin n, ∑ j : Fin n,
       z i * z j * freeCovarianceℂ_bilinear m (J i) (J j) := by
@@ -647,7 +647,7 @@ theorem freeCovarianceℂ_bilinear_sum_expansion {n : ℕ}
 
 /-- The generating functional for ∑ᵢ zᵢ Jᵢ equals exp of a finite quadratic form. -/
 theorem gff_generating_eq_exp_quadratic {n : ℕ}
-    (J : Fin n → TestFunctionℂ d) (z : Fin n → ℂ) :
+    (J : Fin n → SchwartzTestFunctionℂ d) (z : Fin n → ℂ) :
     GJGeneratingFunctionalℂ (gaussianFreeField_free (d := d) m) (∑ i, z i • J i) =
     cexp (-(1/2 : ℂ) * ∑ i : Fin n, ∑ j : Fin n,
       z i * z j * freeCovarianceℂ_bilinear m (J i) (J j)) := by

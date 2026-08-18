@@ -122,7 +122,7 @@ def timeReflectionLE : SpaceTime d ≃ₗᵢ[ℝ] SpaceTime d
 
 **Lean signature**
 ```lean
-noncomputable def compTimeReflection : TestFunctionℂ d →L[ℝ] TestFunctionℂ d
+noncomputable def compTimeReflection : SchwartzTestFunctionℂ d →L[ℝ] SchwartzTestFunctionℂ d
 ```
 **Informal**: The pullback by time reflection on complex Schwartz test functions: $f \mapsto (x \mapsto f(\Theta x))$, as a continuous $\mathbb{R}$-linear map, using `SchwartzMap.compCLM` with temperate-growth bounds.
 
@@ -132,7 +132,7 @@ noncomputable def compTimeReflection : TestFunctionℂ d →L[ℝ] TestFunction�
 
 **Lean signature**
 ```lean
-noncomputable def compTimeReflectionReal : TestFunction d →L[ℝ] TestFunction d
+noncomputable def compTimeReflectionReal : SchwartzTestFunction d →L[ℝ] SchwartzTestFunction d
 ```
 **Informal**: The pullback by time reflection on real Schwartz test functions: $f \mapsto (x \mapsto f(\Theta x))$, as a continuous $\mathbb{R}$-linear map; used to formulate OS3 reflection positivity over $\mathbb{R}$.
 

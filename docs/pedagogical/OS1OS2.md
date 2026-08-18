@@ -58,7 +58,7 @@ The precise Lean statement, for anchoring only:
 
 ```lean
 def OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
-  ∀ (g : QFT.E d) (f : TestFunctionℂ d),
+  ∀ (g : QFT.E d) (f : SchwartzTestFunctionℂ d),
     GJGeneratingFunctionalℂ dμ_config f =
     GJGeneratingFunctionalℂ dμ_config (QFT.euclidean_action g f)
 ```
@@ -111,7 +111,7 @@ statement, for anchoring:
 ```lean
 def OS1_Regularity (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
   ∃ (p : ℝ) (c : ℝ), 1 ≤ p ∧ p ≤ 2 ∧ c > 0 ∧
-    (∀ (f : TestFunctionℂ d),
+    (∀ (f : SchwartzTestFunctionℂ d),
       ‖GJGeneratingFunctionalℂ dμ_config f‖ ≤
         Real.exp (c * (∫ x, ‖f x‖ ∂volume + ∫ x, ‖f x‖^p ∂volume))) ∧
     (p = 2 → TwoPointIntegrable dμ_config)

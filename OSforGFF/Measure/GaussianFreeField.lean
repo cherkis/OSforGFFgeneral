@@ -55,13 +55,13 @@ differences of spacetime points.
 
 /-- Assumption: The covariance is invariant under Euclidean transformations -/
 def CovarianceEuclideanInvariant (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
-  ∀ (g : QFT.E d) (f h : TestFunction d),
+  ∀ (g : QFT.E d) (f h : SchwartzTestFunction d),
     SchwingerFunction₂ dμ_config (QFT.euclidean_action_real g f) (QFT.euclidean_action_real g h) =
     SchwingerFunction₂ dμ_config f h
 
 /-- Assumption: The complex covariance is invariant under Euclidean transformations -/
 def CovarianceEuclideanInvariantℂ (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
-  ∀ (g : QFT.E d) (f h : TestFunctionℂ d),
+  ∀ (g : QFT.E d) (f h : SchwartzTestFunctionℂ d),
     SchwingerFunctionℂ₂ dμ_config (QFT.euclidean_action g f) (QFT.euclidean_action g h) =
     SchwingerFunctionℂ₂ dμ_config f h
 

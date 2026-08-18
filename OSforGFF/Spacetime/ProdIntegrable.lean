@@ -167,7 +167,7 @@ lemma polynomial_decay_integrable_spatial :
 /-- A Schwartz function restricted to a fixed time slice is integrable over the spatial slice.
     Uses decay transfer: d-dimensional Schwartz decay implies (d-1)-dimensional integrability
     via norm comparison. -/
-lemma schwartz_time_slice_integrable (f : TestFunctionℂ d) (t : ℝ) :
+lemma schwartz_time_slice_integrable (f : SchwartzTestFunctionℂ d) (t : ℝ) :
     Integrable (fun x : SpatialCoords d => f (spacetimeOfTimeSpace t x)) volume := by
   -- Strategy: Show the function has rapid decay and use integrability of decay functions
   --
@@ -222,11 +222,11 @@ lemma schwartz_time_slice_integrable (f : TestFunctionℂ d) (t : ℝ) :
   exact h_bound x
 
 /-- The spatial integral G(t) = ∫ ‖f(t, x)‖ dx over the spatial slice. -/
-noncomputable def spatialNormIntegral (f : TestFunctionℂ d) (t : ℝ) : ℝ :=
+noncomputable def spatialNormIntegral (f : SchwartzTestFunctionℂ d) (t : ℝ) : ℝ :=
   ∫ x : SpatialCoords d, ‖f (spacetimeOfTimeSpace t x)‖
 
 /-- G(t) = 0 for t ≤ 0 when f vanishes on {t ≤ 0}. -/
-lemma spatialNormIntegral_zero_of_neg (f : TestFunctionℂ d)
+lemma spatialNormIntegral_zero_of_neg (f : SchwartzTestFunctionℂ d)
     (hf_supp : ∀ x : SpaceTime d, x 0 ≤ 0 → f x = 0) (t : ℝ) (ht : t ≤ 0) :
     spatialNormIntegral f t = 0 := by
   simp only [spatialNormIntegral]
@@ -238,7 +238,7 @@ lemma spatialNormIntegral_zero_of_neg (f : TestFunctionℂ d)
   simp [h_zero]
 
 /-- G(t) is nonnegative. -/
-lemma spatialNormIntegral_nonneg (f : TestFunctionℂ d) (t : ℝ) :
+lemma spatialNormIntegral_nonneg (f : SchwartzTestFunctionℂ d) (t : ℝ) :
     0 ≤ spatialNormIntegral f t :=
   integral_nonneg (fun _ => norm_nonneg _)
 
@@ -253,7 +253,7 @@ decay `(1 + ‖x̄‖)⁻ᵈ`.
 
 omit [Fact (2 ≤ d)] in
 /-- Pointwise polynomial decay of a Schwartz function: `‖f y‖ ≤ C / (1 + ‖y‖)^d`. -/
-lemma schwartz_pointwise_decay_bound (f : TestFunctionℂ d) :
+lemma schwartz_pointwise_decay_bound (f : SchwartzTestFunctionℂ d) :
     ∃ C : ℝ, 0 < C ∧ ∀ y : SpaceTime d, ‖f y‖ ≤ C / (1 + ‖y‖) ^ d := by
   obtain ⟨S, hS⟩ : ∃ S : ℝ, ∀ y : SpaceTime d, (1 + ‖y‖) ^ d * ‖f y‖ ≤ S :=
     ⟨_, fun y => by
@@ -282,7 +282,7 @@ lemma spacetimeOfTimeSpace_spatialPart (x : SpaceTime d) :
     derivative `x ↦ (fderiv ℝ f x) e₀`: along the time line through such a point the function
     is identically zero for nonpositive times, so the (unique) derivative within that ray
     vanishes. -/
-lemma schwartz_vanishing_fderiv_time (f : TestFunctionℂ d)
+lemma schwartz_vanishing_fderiv_time (f : SchwartzTestFunctionℂ d)
     (hf_supp : ∀ x : SpaceTime d, x 0 ≤ 0 → f x = 0)
     (x : SpaceTime d) (hx : x 0 ≤ 0) :
     fderiv ℝ f x (EuclideanSpace.single (0 : Fin d) (1 : ℝ)) = 0 := by
@@ -310,7 +310,7 @@ lemma schwartz_vanishing_fderiv_time (f : TestFunctionℂ d)
     The case `N = 1` is the fundamental-theorem estimate; the general case follows by
     induction, applying the inductive bound to the time derivative of `f` (again a Schwartz
     function vanishing on the half-space) and integrating along the time direction. -/
-theorem schwartz_vanishing_pow_decay (N : ℕ) (f : TestFunctionℂ d)
+theorem schwartz_vanishing_pow_decay (N : ℕ) (f : SchwartzTestFunctionℂ d)
     (hf_supp : ∀ x : SpaceTime d, x 0 ≤ 0 → f x = 0) :
     ∃ C : ℝ, 0 < C ∧ ∀ (t : ℝ) (_ : 0 < t) (x_sp : SpatialCoords d),
       ‖f (spacetimeOfTimeSpace t x_sp)‖ ≤ C * t ^ N / (1 + ‖x_sp‖) ^ d := by
@@ -329,7 +329,7 @@ theorem schwartz_vanishing_pow_decay (N : ℕ) (f : TestFunctionℂ d)
         _ = C * t ^ 0 / (1 + ‖x_sp‖) ^ d := by rw [pow_zero, mul_one]
   | succ N ih =>
       set e₀ : SpaceTime d := EuclideanSpace.single (0 : Fin d) (1 : ℝ) with he₀
-      set g : TestFunctionℂ d := LineDeriv.lineDerivOp e₀ f with hg_def
+      set g : SchwartzTestFunctionℂ d := LineDeriv.lineDerivOp e₀ f with hg_def
       have hg_apply : ∀ y : SpaceTime d, g y = fderiv ℝ f y e₀ := fun y => rfl
       have hg_supp : ∀ x : SpaceTime d, x 0 ≤ 0 → g x = 0 := fun x hx => by
         rw [hg_apply x, he₀]
@@ -394,7 +394,7 @@ theorem schwartz_vanishing_pow_decay (N : ℕ) (f : TestFunctionℂ d)
 
 /-- **Order-`N` boundary-vanishing bound (global form).**  A Schwartz function vanishing on
     the half-space `{x₀ ≤ 0}` satisfies `‖f x‖ ≤ C · x₀ᴺ` for `x₀ > 0`. -/
-theorem schwartz_vanishing_pow_bound (N : ℕ) (f : TestFunctionℂ d)
+theorem schwartz_vanishing_pow_bound (N : ℕ) (f : SchwartzTestFunctionℂ d)
     (hf_supp : ∀ x : SpaceTime d, x 0 ≤ 0 → f x = 0) :
     ∃ C : ℝ, 0 < C ∧ ∀ x : SpaceTime d, 0 < x 0 → ‖f x‖ ≤ C * (x 0) ^ N := by
   obtain ⟨C, hC_pos, hC⟩ := schwartz_vanishing_pow_decay N f hf_supp
@@ -411,7 +411,7 @@ theorem schwartz_vanishing_pow_bound (N : ℕ) (f : TestFunctionℂ d)
 /-- **Order-`N` spatial-integral bound**: for a Schwartz function vanishing on `{x₀ ≤ 0}`,
     `∫_{ℝ^{d-1}} ‖f(t, x̄)‖ dx̄ ≤ C · tᴺ` for `t > 0`.  Integrates the pointwise order-`N`
     bound against the integrable spatial decay `(1 + ‖x̄‖)⁻ᵈ`. -/
-theorem spatialNormIntegral_pow_bound (N : ℕ) (f : TestFunctionℂ d)
+theorem spatialNormIntegral_pow_bound (N : ℕ) (f : SchwartzTestFunctionℂ d)
     (hf_supp : ∀ x : SpaceTime d, x 0 ≤ 0 → f x = 0) :
     ∃ C : ℝ, 0 < C ∧ ∀ t : ℝ, 0 < t → spatialNormIntegral f t ≤ C * t ^ N := by
   obtain ⟨C_pt, hC_pt_pos, h_pt_bound⟩ := schwartz_vanishing_pow_decay N f hf_supp

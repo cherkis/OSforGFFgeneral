@@ -205,7 +205,7 @@ lemma freeCovarianceFormR_reflection_matrix_posSemidef
 
 /-- Quadratic expansion identity for reflected arguments. -/
 lemma freeCovarianceFormR_reflection_expansion
-    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : (TestFunction d)) :
+    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : (SchwartzTestFunction d)) :
     freeCovarianceFormR m
         (f - QFT.compTimeReflectionReal g)
         (f - QFT.compTimeReflectionReal g)
@@ -218,12 +218,12 @@ lemma freeCovarianceFormR_reflection_expansion
   set Cf : ℝ := freeCovarianceFormR m f f
   set Cg : ℝ := freeCovarianceFormR m g g
   set Cfg : ℝ := freeCovarianceFormR m θf g
-  have h_neg_left : ∀ u v : (TestFunction d),
+  have h_neg_left : ∀ u v : (SchwartzTestFunction d),
       freeCovarianceFormR m (-u) v = -freeCovarianceFormR m u v := by
     intro u v
     simpa using
       (freeCovarianceFormR_smul_left (m := m) (c := (-1 : ℝ)) (f := u) (g := v))
-  have h_neg_right : ∀ u v : (TestFunction d),
+  have h_neg_right : ∀ u v : (SchwartzTestFunction d),
       freeCovarianceFormR m u (-v) = -freeCovarianceFormR m u v := by
     intro u v
     calc
@@ -319,7 +319,7 @@ lemma freeCovarianceFormR_reflection_expansion
 
 /-- Evaluate the real generating functional of the free field on a real test function. -/
 lemma gaussianFreeField_real_generating_re
-    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (h : (TestFunction d)) :
+    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (h : (SchwartzTestFunction d)) :
     (GJGeneratingFunctional (gaussianFreeField_free m) h).re
       = Real.exp (-(1 / 2 : ℝ) * freeCovarianceFormR m h h) := by
   classical
@@ -513,7 +513,7 @@ variable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
 /-- Bilinear expansion: `C(f − g, f − g) = C(f,f) − C(f,g) − C(g,f) + C(g,g)`.
     Proved from `freeCovarianceℂ_bilinear_add_left/right` and `_smul_left/right`. -/
 private lemma freeCovarianceℂ_bilinear_sub_sub
-    (f g : (TestFunctionℂ d)) :
+    (f g : (SchwartzTestFunctionℂ d)) :
     freeCovarianceℂ_bilinear m (f - g) (f - g) =
       freeCovarianceℂ_bilinear m f f
       - freeCovarianceℂ_bilinear m f g
@@ -532,7 +532,7 @@ private lemma freeCovarianceℂ_bilinear_sub_sub
     Change variables `x → Θx`, `y → Θy` (measure-preserving, `|Θx−Θy| = |x−y|`):
     `= ∫∫ conj(f(x)) K(x−y) conj(g(y)) dx dy = conj(∫∫ f(x) K(x−y) g(y) dx dy)`. -/
 private lemma freeCovarianceℂ_bilinear_star_star_conj
-    (f g : (TestFunctionℂ d)) :
+    (f g : (SchwartzTestFunctionℂ d)) :
     freeCovarianceℂ_bilinear m (star f) (star g) =
       starRingEnd ℂ (freeCovarianceℂ_bilinear m f g) := by
   unfold freeCovarianceℂ_bilinear
@@ -572,7 +572,7 @@ private lemma freeCovarianceℂ_bilinear_star_star_conj
   -- Need integrability of (x,y) ↦ G(x,y) = conj(f(x)) · K(x,y) · conj(g(y)).
   -- This follows from freeCovarianceℂ_bilinear_integrable applied to star f, star g,
   -- which are test functions. But we need it for the "unstarred conj" versions.
-  -- star f is already a (TestFunctionℂ d), so we can use its integrability directly.
+  -- star f is already a (SchwartzTestFunctionℂ d), so we can use its integrability directly.
   have h_int : Integrable (fun p : (SpaceTime d) × (SpaceTime d) =>
       starRingEnd ℂ (f p.1) * (freeCovariance d m p.1 p.2 : ℂ) * starRingEnd ℂ (g p.2))
       (MeasureTheory.volume.prod MeasureTheory.volume) := by
@@ -583,7 +583,7 @@ private lemma freeCovarianceℂ_bilinear_star_star_conj
     -- Key insight: the integrand is just the integrand for freeCovarianceℂ_bilinear
     -- applied to the Schwartz functions x ↦ conj(f(x)) and x ↦ conj(g(x)).
     -- These are test functions (since conj is a smooth linear isometry).
-    let f_conj : (TestFunctionℂ d) :=
+    let f_conj : (SchwartzTestFunctionℂ d) :=
       ⟨fun x => starRingEnd ℂ (f x), by
         apply ContDiff.comp
         · exact ContinuousLinearMap.contDiff Complex.conjLIE.toContinuousLinearMap
@@ -595,7 +595,7 @@ private lemma freeCovarianceℂ_bilinear_star_star_conj
             = ‖x‖ ^ k * ‖iteratedFDeriv ℝ n f x‖ := by
               rw [starRingEnd_iteratedFDeriv_norm_eq]
           _ ≤ C := hC x⟩
-    let g_conj : (TestFunctionℂ d) :=
+    let g_conj : (SchwartzTestFunctionℂ d) :=
       ⟨fun x => starRingEnd ℂ (g x), by
         apply ContDiff.comp
         · exact ContinuousLinearMap.contDiff Complex.conjLIE.toContinuousLinearMap
@@ -621,8 +621,8 @@ private def IsRePSD {n : ℕ} (M : Fin n → Fin n → ℂ) : Prop :=
 private def IsHermitianMatrix {n : ℕ} (M : Fin n → Fin n → ℂ) : Prop :=
   ∀ i j, M j i = starRingEnd ℂ (M i j)
 
-/-- Star is involutive on `(TestFunctionℂ d)`: `star (star f) = f`. -/
-private lemma star_star_testFunctionℂ (f : (TestFunctionℂ d)) : star (star f) = f := by
+/-- Star is involutive on `(SchwartzTestFunctionℂ d)`: `star (star f) = f`. -/
+private lemma star_star_testFunctionℂ (f : (SchwartzTestFunctionℂ d)) : star (star f) = f := by
   ext x
   change starRingEnd ℂ (starRingEnd ℂ (f (QFT.timeReflection (QFT.timeReflection x)))) = f x
   rw [QFT.timeReflection_involutive, RCLike.conj_conj]
@@ -825,7 +825,7 @@ private lemma entrywiseExp_IsRePSD
 /-- Entry factorization for the GFF:
     `Z[fᵢ − star fⱼ] = Aᵢ · conj(Aⱼ) · exp(Rᵢⱼ)`
     where `Aᵢ = exp(−½ C(fᵢ,fᵢ))` and `Rᵢⱼ = C(fᵢ, star fⱼ)`. -/
-private lemma gff_complexZ_entry_factor (fi fj : (TestFunctionℂ d)) :
+private lemma gff_complexZ_entry_factor (fi fj : (SchwartzTestFunctionℂ d)) :
     Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear m (fi - star fj) (fi - star fj)) =
     Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear m fi fi) *
     starRingEnd ℂ (Complex.exp (-(1/2 : ℂ) * freeCovarianceℂ_bilinear m fj fj)) *
@@ -853,14 +853,14 @@ private lemma gff_complexZ_entry_factor (fi fj : (TestFunctionℂ d)) :
              map_ofNat (starRingEnd ℂ)]
   ring
 
-/-- Star is antilinear on (TestFunctionℂ d): `star(∑ conj(vⱼ) fⱼ) = ∑ vⱼ star(fⱼ)`.
+/-- Star is antilinear on (SchwartzTestFunctionℂ d): `star(∑ conj(vⱼ) fⱼ) = ∑ vⱼ star(fⱼ)`.
     Proof: pointwise, `star(c • f)(x) = conj(c f(Θx)) = conj(c) conj(f(Θx))`,
     and `compTimeReflection` is a continuous linear map. -/
-private lemma star_apply (f : (TestFunctionℂ d)) (x : (SpaceTime d)) :
+private lemma star_apply (f : (SchwartzTestFunctionℂ d)) (x : (SpaceTime d)) :
     (star f) x = starRingEnd ℂ (f (QFT.timeReflection x)) := by
   rfl
 
-private lemma star_sum_antilinear {n : ℕ} (v : Fin n → ℂ) (g : Fin n → (TestFunctionℂ d)) :
+private lemma star_sum_antilinear {n : ℕ} (v : Fin n → ℂ) (g : Fin n → (SchwartzTestFunctionℂ d)) :
     star (∑ j, starRingEnd ℂ (v j) • g j) = ∑ j, v j • star (g j) := by
   ext x
   rw [star_apply]
@@ -871,7 +871,7 @@ private lemma star_sum_antilinear {n : ℕ} (v : Fin n → ℂ) (g : Fin n → (
 
 /-- Left-sum expansion for `freeCovarianceℂ_bilinear`. -/
 private lemma freeCovarianceℂ_bilinear_sum_left {n : ℕ}
-    (a : Fin n → (TestFunctionℂ d)) (u : Fin n → ℂ) (g : (TestFunctionℂ d)) :
+    (a : Fin n → (SchwartzTestFunctionℂ d)) (u : Fin n → ℂ) (g : (SchwartzTestFunctionℂ d)) :
     freeCovarianceℂ_bilinear m (∑ i, u i • a i) g =
     ∑ i, u i * freeCovarianceℂ_bilinear m (a i) g := by
   refine Finset.induction_on (Finset.univ : Finset (Fin n)) ?_ ?_
@@ -884,7 +884,7 @@ private lemma freeCovarianceℂ_bilinear_sum_left {n : ℕ}
 
 /-- Right-sum expansion for `freeCovarianceℂ_bilinear`. -/
 private lemma freeCovarianceℂ_bilinear_sum_right {n : ℕ}
-    (f : (TestFunctionℂ d)) (b : Fin n → (TestFunctionℂ d)) (w : Fin n → ℂ) :
+    (f : (SchwartzTestFunctionℂ d)) (b : Fin n → (SchwartzTestFunctionℂ d)) (w : Fin n → ℂ) :
     freeCovarianceℂ_bilinear m f (∑ j, w j • b j) =
     ∑ j, w j * freeCovarianceℂ_bilinear m f (b j) := by
   refine Finset.induction_on (Finset.univ : Finset (Fin n)) ?_ ?_
@@ -897,7 +897,7 @@ private lemma freeCovarianceℂ_bilinear_sum_right {n : ℕ}
 
 /-- Bilinearity of `freeCovarianceℂ_bilinear` on finite sums. -/
 private lemma freeCovarianceℂ_bilinear_sum_sum {n : ℕ}
-    (a b : Fin n → (TestFunctionℂ d)) (u w : Fin n → ℂ) :
+    (a b : Fin n → (SchwartzTestFunctionℂ d)) (u w : Fin n → ℂ) :
     freeCovarianceℂ_bilinear m (∑ i, u i • a i) (∑ j, w j • b j) =
     ∑ i, ∑ j, u i * w j * freeCovarianceℂ_bilinear m (a i) (b j) := by
   rw [freeCovarianceℂ_bilinear_sum_left]
@@ -916,13 +916,13 @@ private lemma reflection_matrix_IsRePSD
     IsRePSD fun i j => freeCovarianceℂ_bilinear m (f i).val (star (f j).val) := by
   intro v
   -- Define h = ∑ conj(v_j) f_j (positive-time test function)
-  set h : (TestFunctionℂ d) := ∑ j, starRingEnd ℂ (v j) • (f j).val with h_def
+  set h : (SchwartzTestFunctionℂ d) := ∑ j, starRingEnd ℂ (v j) • (f j).val with h_def
   -- h has positive-time support
   have hh_supp : ∀ x : (SpaceTime d), x 0 ≤ 0 → h x = 0 := by
     intro x hx
     -- Each (f j).val has positive-time support, so (c • f_j) x = 0 when x₀ ≤ 0
     -- and the sum of zeros is zero
-    have : ∀ j, (starRingEnd ℂ (v j) • (f j).val : (TestFunctionℂ d)) x = 0 := by
+    have : ∀ j, (starRingEnd ℂ (v j) • (f j).val : (SchwartzTestFunctionℂ d)) x = 0 := by
       intro j
       change starRingEnd ℂ (v j) * (f j).val x = 0
       rw [PositiveTimeTestFunctionℂ.zero_on_nonpositive (f j) hx, mul_zero]

@@ -88,7 +88,7 @@ noncomputable def spatialDot (k_spatial x_spatial : SpatialCoords d) : ℝ
 
 **Lean signature**
 ```lean
-noncomputable def weightedLaplaceFourier (m : ℝ) (f : TestFunctionℂ d) (k_spatial : SpatialCoords d) : ℂ
+noncomputable def weightedLaplaceFourier (m : ℝ) (f : SchwartzTestFunctionℂ d) (k_spatial : SpatialCoords d) : ℂ
 ```
 **Informal**: The weighted Laplace–Fourier transform $F_\omega(k_{sp}) = \int_{\mathbb{R}^d} f(x)\,e^{-\lvert x_0\rvert\,\omega}\,e^{i\,k_{sp}\cdot x_{sp}}\,dx$ with $\omega = \sqrt{\lVert k_{sp}\rVert^2 + m^2}$, the quantity appearing after contour integration in the reflection-positivity argument.
 
@@ -418,7 +418,7 @@ The `Fact (d ≤ 5)` hypothesis enters here through the dominating function.
 
 **Lean signature**
 ```lean
-def s_xy_swap_bound (f : TestFunctionℂ d) (m : ℝ) (p : ℝ × SpaceTime d × SpaceTime d) : ℝ
+def s_xy_swap_bound (f : SchwartzTestFunctionℂ d) (m : ℝ) (p : ℝ × SpaceTime d × SpaceTime d) : ℝ
 ```
 **Informal**: The dominating function for the $s \leftrightarrow (x,y)$ swap: $(s, x, y) \mapsto \sqrt{\pi/s}\,\lVert f(x)\rVert\,\lVert f(y)\rVert\,e^{-s m^2}$.
 

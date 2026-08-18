@@ -58,7 +58,7 @@ variable {d : ℕ} [Fact (2 ≤ d)]
                  = S₂(f,f) + 2·S₂(f,g) + S₂(g,g)  (by symmetry)
 
     This uses the bilinearity proved in Measure.IsGaussian. -/
-lemma schwinger2_sum_expansion (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : (TestFunctionℂ d)) :
+lemma schwinger2_sum_expansion (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : (SchwartzTestFunctionℂ d)) :
     SchwingerFunctionℂ₂ (gaussianFreeField_free m) (f + g) (f + g) =
       SchwingerFunctionℂ₂ (gaussianFreeField_free m) f f +
       2 * SchwingerFunctionℂ₂ (gaussianFreeField_free m) f g +
@@ -91,7 +91,7 @@ lemma schwinger2_sum_expansion (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g
 
     Compare with `gaussianFreeField_real_entry_factor` in OS.OS3_ReflectionPositivity which
     proves the analogous factorization for real test functions. -/
-lemma gff_generating_sum_factorization (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : (TestFunctionℂ d)) :
+lemma gff_generating_sum_factorization (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : (SchwartzTestFunctionℂ d)) :
     GJGeneratingFunctionalℂ (gaussianFreeField_free m) (f + g) =
       GJGeneratingFunctionalℂ (gaussianFreeField_free m) f *
       GJGeneratingFunctionalℂ (gaussianFreeField_free m) g *
@@ -131,7 +131,7 @@ omit [Fact (2 ≤ d)] in
 lemma generating_euclidean_invariant
     (dμ_config : ProbabilityMeasure (FieldConfiguration d))
     (h_inv : OS2_EuclideanInvariance dμ_config)
-    (g : (E d)) (f : (TestFunctionℂ d)) :
+    (g : (E d)) (f : (SchwartzTestFunctionℂ d)) :
     GJGeneratingFunctionalℂ dμ_config (euclidean_action g f) =
     GJGeneratingFunctionalℂ dμ_config f := by
   exact (h_inv g f).symm
@@ -150,7 +150,7 @@ lemma generating_euclidean_invariant
     Re C_bilin(f,f) = C(fRe,fRe) - C(fIm,fIm), which can be negative!
     The bound |Z[f]| ≤ 1 does NOT hold for general complex f.
     Instead, use gff_generating_L2_bound from OS.OS1_Regularity for the general case. -/
-lemma gff_generating_norm_le_one_real (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunction d)) :
+lemma gff_generating_norm_le_one_real (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (SchwartzTestFunction d)) :
     ‖GJGeneratingFunctionalℂ (gaussianFreeField_free m) (toComplex f)‖ ≤ 1 := by
   rw [gff_complex_generating m (toComplex f)]
   rw [Complex.norm_exp]
@@ -181,7 +181,7 @@ lemma gff_generating_norm_le_one_real (m : ℝ) [Fact (0 < m)] [GFFPropagator d 
     - Real test function bound: |Z[f]| ≤ 1 for real f (positive definite covariance)
     - Exponential estimate: |exp(-z) - 1| ≤ 2|z| for |z| ≤ 1 -/
 lemma GFF_OS4_from_small_decay_real (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f g : (TestFunction d)) (a : (SpaceTime d)) (δ : ℝ) (_hδ_pos : δ > 0) (hδ_small : δ ≤ 1)
+    (f g : (SchwartzTestFunction d)) (a : (SpaceTime d)) (δ : ℝ) (_hδ_pos : δ > 0) (hδ_small : δ ≤ 1)
     (h_decay : ‖SchwingerFunction₂ (gaussianFreeField_free m) f (g.translate a)‖ < δ) :
     ‖GJGeneratingFunctional (gaussianFreeField_free m) (f + g.translate a) -
      GJGeneratingFunctional (gaussianFreeField_free m) f *
@@ -309,7 +309,7 @@ lemma GFF_OS4_from_small_decay_real (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
     Uses the covariance representation:
     S₂(f, T_a g) = ∫∫ f(x) · C(x-y) · g(y-a) dx dy -/
 theorem schwartz_cross_covariance_decay_real (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f g : (TestFunction d)) (ε : ℝ) (hε : ε > 0) :
+    (f g : (SchwartzTestFunction d)) (ε : ℝ) (hε : ε > 0) :
     ∃ R > 0, ∀ a : (SpaceTime d), ‖a‖ > R →
       ‖SchwingerFunction₂ (gaussianFreeField_free m) f (g.translate a)‖ < ε := by
   -- Step 1: Get the kernel decay bound (already in the ≥ 1 form)
@@ -510,7 +510,7 @@ omit [Fact (2 ≤ d)] in
     The proof follows from:
     1. timeTranslationDistribution_apply: (T_s ω)(f) = ω(T_{-s} f) for real test functions
     2. Time translation commutes with taking real/imaginary parts of complex Schwartz functions -/
-lemma time_translation_pairing_duality (s : ℝ) (ω : (FieldConfiguration d)) (g : (TestFunctionℂ d)) :
+lemma time_translation_pairing_duality (s : ℝ) (ω : (FieldConfiguration d)) (g : (SchwartzTestFunctionℂ d)) :
     distributionPairingℂ_real (TimeTranslation.timeTranslationDistribution s ω) g =
     distributionPairingℂ_real ω (TimeTranslation.timeTranslationSchwartzℂ (-s) g) := by
   -- Use the proven lemma from OS4Ron
@@ -527,7 +527,7 @@ lemma timeShiftConst_norm (s : ℝ) : ‖TimeTranslation.timeShiftConst (d := d)
 
 omit [Fact (2 ≤ d)] in
 /-- Time translation of Schwartz function at a point equals function evaluated at shifted point. -/
-lemma timeTranslationSchwartzℂ_at_point (s : ℝ) (g : (TestFunctionℂ d)) (y : (SpaceTime d)) :
+lemma timeTranslationSchwartzℂ_at_point (s : ℝ) (g : (SchwartzTestFunctionℂ d)) (y : (SpaceTime d)) :
     TimeTranslation.timeTranslationSchwartzℂ s g y = g (TimeTranslation.timeShift s y) := by
   rfl
 
@@ -539,7 +539,7 @@ lemma timeShift_eq_add (s : ℝ) (y : (SpaceTime d)) :
 
 omit [Fact (2 ≤ d)] in
 /-- Time translation by -s gives g(y - timeShiftConst(s)). -/
-lemma timeTranslationSchwartzℂ_neg_eq_sub (s : ℝ) (g : (TestFunctionℂ d)) (y : (SpaceTime d)) :
+lemma timeTranslationSchwartzℂ_neg_eq_sub (s : ℝ) (g : (SchwartzTestFunctionℂ d)) (y : (SpaceTime d)) :
     TimeTranslation.timeTranslationSchwartzℂ (-s) g y = g (y - TimeTranslation.timeShiftConst s) := by
   rw [timeTranslationSchwartzℂ_at_point, timeShift_eq_add]
   congr 1
@@ -551,7 +551,7 @@ lemma timeTranslationSchwartzℂ_neg_eq_sub (s : ℝ) (g : (TestFunctionℂ d)) 
 
 /-- The Schwinger 2-point function for time-translated test function equals
     the bilinear integral with translated argument. -/
-lemma schwinger2_time_translated_eq_bilinear (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : (TestFunctionℂ d)) (s : ℝ) :
+lemma schwinger2_time_translated_eq_bilinear (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : (SchwartzTestFunctionℂ d)) (s : ℝ) :
     SchwingerFunctionℂ₂ (gaussianFreeField_free m) f (TimeTranslation.timeTranslationSchwartzℂ (-s) g) =
     ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
       f x * (freeCovarianceKernel d m (x - y) : ℂ) * g (y - TimeTranslation.timeShiftConst s) := by

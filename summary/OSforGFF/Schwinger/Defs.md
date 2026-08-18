@@ -11,8 +11,8 @@ framework. For a measure $\mu$ on $\mathscr{S}'(\mathbb{R}^d)$ the $n$-point fun
 $S_n(f_1,\dots,f_n) = \int \langle \omega, f_1\rangle \cdots \langle \omega, f_n\rangle\, d\mu(\omega)$,
 the $n$-th moment of the field operators $\varphi(f) = \langle \omega, f\rangle$. Everything is
 generic in the spacetime dimension: the section variables are `{d : ℕ}` (and `{𝕜 : Type} [RCLike 𝕜]`),
-and the field lives on `FieldConfiguration d` paired with real test functions `TestFunction d` or
-complex test functions `TestFunctionℂ d`. The file provides the real Schwinger functions and their
+and the field lives on `FieldConfiguration d` paired with real test functions `SchwartzTestFunction d` or
+complex test functions `SchwartzTestFunctionℂ d`. The file provides the real Schwinger functions and their
 1- and 2-point specializations, the complex-test-function versions, a bilinearity predicate for the
 complex 2-point function (with a proof that integrability implies bilinearity), a predicate
 `IsGaussianMeasure` capturing the exponential-of-quadratic generating functional, and a private
@@ -35,7 +35,7 @@ abbreviations for test functions on product spacetimes. No new axioms are declar
 **Lean signature**
 ```lean
 def SchwingerFunction (dμ_config : ProbabilityMeasure (FieldConfiguration d)) (n : ℕ)
-  (f : Fin n → (TestFunction d)) : ℝ :=
+  (f : Fin n → (SchwartzTestFunction d)) : ℝ :=
   ∫ ω, (∏ i, distributionPairing ω (f i)) ∂dμ_config.toMeasure
 ```
 
@@ -50,7 +50,7 @@ the fundamental object of constructive QFT.
 **Lean signature**
 ```lean
 def SchwingerFunction₁ (dμ_config : ProbabilityMeasure (FieldConfiguration d))
-  (f : (TestFunction d)) : ℝ :=
+  (f : (SchwartzTestFunction d)) : ℝ :=
   SchwingerFunction dμ_config 1 ![f]
 ```
 
@@ -63,7 +63,7 @@ def SchwingerFunction₁ (dμ_config : ProbabilityMeasure (FieldConfiguration d)
 **Lean signature**
 ```lean
 def SchwingerFunction₂ (dμ_config : ProbabilityMeasure (FieldConfiguration d))
-  (f g : (TestFunction d)) : ℝ :=
+  (f g : (SchwartzTestFunction d)) : ℝ :=
   SchwingerFunction dμ_config 2 ![f, g]
 ```
 
@@ -102,7 +102,7 @@ $$S_2(f, g) = \int \langle \omega, f\rangle\, \langle \omega, g\rangle \; d\mu(\
 **Lean signature**
 ```lean
 def SchwingerFunctionℂ (dμ_config : ProbabilityMeasure (FieldConfiguration d)) (n : ℕ)
-  (f : Fin n → (TestFunctionℂ d)) : ℂ :=
+  (f : Fin n → (SchwartzTestFunctionℂ d)) : ℂ :=
   ∫ ω, (∏ i, distributionPairingℂ_real ω (f i)) ∂dμ_config.toMeasure
 ```
 
@@ -116,7 +116,7 @@ complex-linear real pairing $\mathrm{distributionPairingℂ\_real}$ in place of 
 **Lean signature**
 ```lean
 def SchwingerFunctionℂ₂ (dμ_config : ProbabilityMeasure (FieldConfiguration d))
-  (φ ψ : (TestFunctionℂ d)) : ℂ :=
+  (φ ψ : (SchwartzTestFunctionℂ d)) : ℂ :=
   SchwingerFunctionℂ dμ_config 2 ![φ, ψ]
 ```
 
@@ -130,7 +130,7 @@ extension of `SchwingerFunction₂` to complex test functions.
 **Lean signature**
 ```lean
 def CovarianceBilinear (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
-  ∀ (c : ℂ) (φ₁ φ₂ ψ : (TestFunctionℂ d)),
+  ∀ (c : ℂ) (φ₁ φ₂ ψ : (SchwartzTestFunctionℂ d)),
     SchwingerFunctionℂ₂ dμ_config (c • φ₁) ψ = c * SchwingerFunctionℂ₂ dμ_config φ₁ ψ ∧
     SchwingerFunctionℂ₂ dμ_config (φ₁ + φ₂) ψ = SchwingerFunctionℂ₂ dμ_config φ₁ ψ + SchwingerFunctionℂ₂ dμ_config φ₂ ψ ∧
     SchwingerFunctionℂ₂ dμ_config φ₁ (c • ψ) = c * SchwingerFunctionℂ₂ dμ_config φ₁ ψ ∧
@@ -161,8 +161,8 @@ is integrable under $\mu$, then $S_2^{\mathbb{C}}$ is $\mathbb{C}$-bilinear, i.e
 **Lean signature**
 ```lean
 def IsGaussianMeasure (dμ : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
-  ∃ (Cov : (TestFunction d) → (TestFunction d) → ℝ),
-    ∀ J : (TestFunction d),
+  ∃ (Cov : (SchwartzTestFunction d) → (SchwartzTestFunction d) → ℝ),
+    ∀ J : (SchwartzTestFunction d),
       GJGeneratingFunctional dμ J = Complex.exp ((-(1 : ℂ) / 2) * (Cov J J : ℂ))
 ```
 
@@ -215,7 +215,7 @@ $$\prod_{i : \mathrm{Fin}\, n} x = x^n.$$
 
 ### [`schwinger_eq_integral_pow`](../../OSforGFF/Schwinger/Defs.lean#L379) — Lemma *(private)*
 
-**Statement**: For a measure on `FieldConfiguration 4` and test function `J : TestFunction 4`, the
+**Statement**: For a measure on `FieldConfiguration 4` and test function `J : SchwartzTestFunction 4`, the
 diagonal Schwinger function equals the integral of the $n$-th power of the pairing:
 $$S_n(J,\dots,J) = \int \langle \omega, J\rangle^n \; d\mu(\omega).$$
 (This private lemma is specialized to dimension $d = 4$.)

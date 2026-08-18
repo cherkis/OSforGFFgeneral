@@ -9,7 +9,7 @@
 This file provides analytic infrastructure for Gaussian measures constructed via the Minlos
 theorem, generically in the spacetime dimension (namespace `MinlosAnalytic`, section variable
 `{d : ℕ}`). It introduces `CovarianceForm d`, a bundled structure encoding a real symmetric
-positive-semidefinite bilinear form on `TestFunction d` together with the positive definiteness
+positive-semidefinite bilinear form on `SchwartzTestFunction d` together with the positive definiteness
 of the associated Gaussian characteristic functional. The main results are: (1) invariance of the
 Gaussian measure under the global sign flip $\omega \mapsto -\omega$, proved by showing the
 pushforward measure has the same characteristic functional and applying Minlos uniqueness;
@@ -31,14 +31,14 @@ sign-flip symmetry. No axioms are introduced in this file.
 **Lean signature**
 ```lean
 structure CovarianceForm (d : ℕ) where
-  Q : TestFunction d → TestFunction d → ℝ
+  Q : SchwartzTestFunction d → SchwartzTestFunction d → ℝ
   symm : ∀ f g, Q f g = Q g f
   psd  : ∀ f, 0 ≤ Q f f
   cont_diag : Continuous fun f => Q f f
   add_left : ∀ f₁ f₂ g, Q (f₁ + f₂) g = Q f₁ g + Q f₂ g
   smul_left : ∀ (c : ℝ) f g, Q (c • f) g = c * Q f g
   gaussian_cf_pd : IsPositiveDefinite
-    (fun f : TestFunction d => Complex.exp (-(1/2 : ℂ) * (Q f f : ℂ)))
+    (fun f : SchwartzTestFunction d => Complex.exp (-(1/2 : ℂ) * (Q f f : ℂ)))
 ```
 
 **Informal**: A bundled real symmetric positive-semidefinite bilinear covariance form $Q$ on
@@ -74,7 +74,7 @@ with respect to the cylinder $\sigma$-algebra.
 
 **Statement**: Let $\mu$ be a probability measure on `FieldConfiguration d` whose characteristic
 functional equals the Gaussian $\exp\!\bigl(-\tfrac{1}{2} Q(f,f)\bigr)$ of a `CovarianceForm d`
-for all test functions $f$ (with `TestFunction d` nuclear and separable). Then for every
+for all test functions $f$ (with `SchwartzTestFunction d` nuclear and separable). Then for every
 integrable function $\varphi$,
 $$\int \varphi(\omega)\, d\mu(\omega) = \int \varphi(-\omega)\, d\mu(\omega).$$
 

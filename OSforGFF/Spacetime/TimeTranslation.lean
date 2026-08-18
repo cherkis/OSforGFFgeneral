@@ -208,7 +208,7 @@ is a linear map on the Schwartz space.
     Uses mathlib's `compCLMOfAntilipschitz` which requires:
     1. The composition function has temperate growth
     2. The composition function is antilipschitz -/
-def timeTranslationSchwartzCLM (s : ℝ) : (TestFunction d) →L[ℝ] (TestFunction d) :=
+def timeTranslationSchwartzCLM (s : ℝ) : (SchwartzTestFunction d) →L[ℝ] (SchwartzTestFunction d) :=
   SchwartzMap.compCLMOfAntilipschitz ℝ (timeShift_hasTemperateGrowth s) (timeShift_antilipschitz s)
 
 /-- Time translation on real-valued Schwartz functions.
@@ -222,21 +222,21 @@ def timeTranslationSchwartzCLM (s : ℝ) : (TestFunction d) →L[ℝ] (TestFunct
     1. timeShift s has temperate growth (affine map)
     2. timeShift s is antilipschitz (isometry)
 -/
-def timeTranslationSchwartz (s : ℝ) (f : (TestFunction d)) : (TestFunction d) :=
+def timeTranslationSchwartz (s : ℝ) (f : (SchwartzTestFunction d)) : (SchwartzTestFunction d) :=
   timeTranslationSchwartzCLM s f
 
 /-- Time translation as a continuous linear map on complex-valued Schwartz functions. -/
-def timeTranslationSchwartzℂCLM (s : ℝ) : (TestFunctionℂ d) →L[ℂ] (TestFunctionℂ d) :=
+def timeTranslationSchwartzℂCLM (s : ℝ) : (SchwartzTestFunctionℂ d) →L[ℂ] (SchwartzTestFunctionℂ d) :=
   SchwartzMap.compCLMOfAntilipschitz ℂ (timeShift_hasTemperateGrowth s) (timeShift_antilipschitz s)
 
 /-- Time translation on complex-valued Schwartz functions. -/
-def timeTranslationSchwartzℂ (s : ℝ) (f : (TestFunctionℂ d)) : (TestFunctionℂ d) :=
+def timeTranslationSchwartzℂ (s : ℝ) (f : (SchwartzTestFunctionℂ d)) : (SchwartzTestFunctionℂ d) :=
   timeTranslationSchwartzℂCLM s f
 
 omit [Fact (2 ≤ d)] in
 /-- Time translation evaluated at a point. -/
 @[simp]
-lemma timeTranslationSchwartz_apply (s : ℝ) (f : (TestFunction d)) (u : (SpaceTime d)) :
+lemma timeTranslationSchwartz_apply (s : ℝ) (f : (SchwartzTestFunction d)) (u : (SpaceTime d)) :
     (timeTranslationSchwartz s f) u = f (timeShift s u) := by
   simp only [timeTranslationSchwartz, timeTranslationSchwartzCLM,
     SchwartzMap.compCLMOfAntilipschitz_apply, Function.comp_apply]
@@ -244,21 +244,21 @@ lemma timeTranslationSchwartz_apply (s : ℝ) (f : (TestFunction d)) (u : (Space
 omit [Fact (2 ≤ d)] in
 /-- Time translation on complex functions evaluated at a point. -/
 @[simp]
-lemma timeTranslationSchwartzℂ_apply (s : ℝ) (f : (TestFunctionℂ d)) (u : (SpaceTime d)) :
+lemma timeTranslationSchwartzℂ_apply (s : ℝ) (f : (SchwartzTestFunctionℂ d)) (u : (SpaceTime d)) :
     (timeTranslationSchwartzℂ s f) u = f (timeShift s u) := by
   simp only [timeTranslationSchwartzℂ, timeTranslationSchwartzℂCLM,
     SchwartzMap.compCLMOfAntilipschitz_apply, Function.comp_apply]
 
 omit [Fact (2 ≤ d)] in
 /-- Time translation is a group homomorphism: T_{s+t} = T_s ∘ T_t -/
-lemma timeTranslationSchwartz_add (s t : ℝ) (f : (TestFunction d)) :
+lemma timeTranslationSchwartz_add (s t : ℝ) (f : (SchwartzTestFunction d)) :
     timeTranslationSchwartz (s + t) f = timeTranslationSchwartz s (timeTranslationSchwartz t f) := by
   ext u
   simp only [timeTranslationSchwartz_apply, timeShift_add, timeShift_comm]
 
 omit [Fact (2 ≤ d)] in
 /-- Time translation on complex functions: T_{s+t} = T_s ∘ T_t -/
-lemma timeTranslationSchwartzℂ_add (s t : ℝ) (f : (TestFunctionℂ d)) :
+lemma timeTranslationSchwartzℂ_add (s t : ℝ) (f : (SchwartzTestFunctionℂ d)) :
     timeTranslationSchwartzℂ (s + t) f = timeTranslationSchwartzℂ s (timeTranslationSchwartzℂ t f) := by
   ext u
   simp only [timeTranslationSchwartzℂ_apply, timeShift_add, timeShift_comm]
@@ -266,7 +266,7 @@ lemma timeTranslationSchwartzℂ_add (s t : ℝ) (f : (TestFunctionℂ d)) :
 omit [Fact (2 ≤ d)] in
 /-- Time translation by zero is identity -/
 @[simp]
-lemma timeTranslationSchwartz_zero (f : (TestFunction d)) :
+lemma timeTranslationSchwartz_zero (f : (SchwartzTestFunction d)) :
     timeTranslationSchwartz 0 f = f := by
   ext u
   simp only [timeTranslationSchwartz_apply, timeShift_zero]
@@ -274,21 +274,21 @@ lemma timeTranslationSchwartz_zero (f : (TestFunction d)) :
 omit [Fact (2 ≤ d)] in
 /-- Time translation by zero is identity (complex) -/
 @[simp]
-lemma timeTranslationSchwartzℂ_zero (f : (TestFunctionℂ d)) :
+lemma timeTranslationSchwartzℂ_zero (f : (SchwartzTestFunctionℂ d)) :
     timeTranslationSchwartzℂ 0 f = f := by
   ext u
   simp only [timeTranslationSchwartzℂ_apply, timeShift_zero]
 
 omit [Fact (2 ≤ d)] in
 /-- Time translation preserves addition of Schwartz functions -/
-lemma timeTranslationSchwartz_add_fun (s : ℝ) (f g : (TestFunction d)) :
+lemma timeTranslationSchwartz_add_fun (s : ℝ) (f g : (SchwartzTestFunction d)) :
     timeTranslationSchwartz s (f + g) = timeTranslationSchwartz s f + timeTranslationSchwartz s g := by
   ext u
   simp only [timeTranslationSchwartz_apply, _root_.add_apply]
 
 omit [Fact (2 ≤ d)] in
 /-- Time translation preserves scalar multiplication of Schwartz functions -/
-lemma timeTranslationSchwartz_smul (s : ℝ) (c : ℝ) (f : (TestFunction d)) :
+lemma timeTranslationSchwartz_smul (s : ℝ) (c : ℝ) (f : (SchwartzTestFunction d)) :
     timeTranslationSchwartz s (c • f) = c • timeTranslationSchwartz s f := by
   ext u
   simp only [timeTranslationSchwartz_apply, _root_.smul_apply]
@@ -335,7 +335,7 @@ lemma peetre_weight_bound (x y : (SpaceTime d)) (k : ℕ) :
 
 /-- The iterated derivative commutes with time translation.
     D^n(T_h f)(x) = D^n f(x + h·e₀) -/
-lemma iteratedFDeriv_timeTranslationSchwartz (n : ℕ) (h : ℝ) (f : (TestFunction d)) (x : (SpaceTime d)) :
+lemma iteratedFDeriv_timeTranslationSchwartz (n : ℕ) (h : ℝ) (f : (SchwartzTestFunction d)) (x : (SpaceTime d)) :
     iteratedFDeriv ℝ n (timeTranslationSchwartz h f) x =
     iteratedFDeriv ℝ n f (x + h • unitTimeDir) := by
   -- timeTranslationSchwartz h f = f ∘ (· + h • unitTimeDir)
@@ -377,7 +377,7 @@ lemma iteratedFDeriv_timeTranslationSchwartz (n : ℕ) (h : ℝ) (f : (TestFunct
     4. Apply Peetre: ‖x‖^k ≤ (1+|h|)^k · (1+‖w‖)^k for path points w
     5. Bound (1+‖w‖)^k ≤ 2^k · max(1, ‖w‖^k) and use seminorms -/
 theorem schwartz_timeTranslation_lipschitz_seminorm
-    (k n : ℕ) (f : (TestFunction d)) (h : ℝ) :
+    (k n : ℕ) (f : (SchwartzTestFunction d)) (h : ℝ) :
     (SchwartzMap.seminorm ℝ k n) (timeTranslationSchwartz h f - f) ≤
     |h| * (1 + |h|) ^ k * (2 : ℝ) ^ k *
     ((SchwartzMap.seminorm ℝ k (n + 1)) f + (SchwartzMap.seminorm ℝ 0 (n + 1)) f + 1) := by
@@ -764,7 +764,7 @@ theorem schwartz_timeTranslation_lipschitz_seminorm
 
     ## References
     Reed-Simon V.3 (Schwartz distributions), Hörmander Ch. 7 (test functions) -/
-lemma continuous_timeTranslationSchwartz (f : (TestFunction d)) :
+lemma continuous_timeTranslationSchwartz (f : (SchwartzTestFunction d)) :
     Continuous (fun s => timeTranslationSchwartz s f) := by
   -- Strategy: Prove continuity at each point s₀ using the group action
   -- T_{s₀+h} f = T_{s₀}(T_h f), so if T_h f → f as h → 0, then T_{s₀+h} f → T_{s₀} f
@@ -813,9 +813,9 @@ lemma continuous_timeTranslationSchwartz (f : (TestFunction d)) :
   rw [nhds_iInf, Filter.tendsto_iInf]
   intro i
   -- For each seminorm i = (k, n), show T_h f → f in the seminorm topology
-  letI : SeminormedAddCommGroup (TestFunction d) :=
+  letI : SeminormedAddCommGroup (SchwartzTestFunction d) :=
     (schwartzSeminormFamily ℝ (SpaceTime d) ℝ i).toSeminormedAddCommGroup
-  letI : PseudoMetricSpace (TestFunction d) :=
+  letI : PseudoMetricSpace (SchwartzTestFunction d) :=
     (schwartzSeminormFamily ℝ (SpaceTime d) ℝ i).toSeminormedAddCommGroup.toPseudoMetricSpace
   rw [Metric.tendsto_nhds]
   intro ε hε
@@ -891,7 +891,7 @@ for all f ∈ S(ℝ × ℝ³).
     The action is defined by duality:
     ⟨T_s ω, f⟩ = ⟨ω, T_{-s} f⟩
 
-    Since (FieldConfiguration d) = WeakDual ℝ (TestFunction d), and timeTranslationSchwartzCLM (-s)
+    Since (FieldConfiguration d) = WeakDual ℝ (SchwartzTestFunction d), and timeTranslationSchwartzCLM (-s)
     is a continuous linear map, we can simply compose: T_s ω = ω ∘ T_{-s}.
 
     Continuity is automatic since composition of continuous linear maps is continuous.
@@ -902,7 +902,7 @@ def timeTranslationDistribution (s : ℝ) (ω : (FieldConfiguration d)) : (Field
 omit [Fact (2 ≤ d)] in
 /-- The defining property of time translation on distributions. -/
 @[simp]
-lemma timeTranslationDistribution_apply (s : ℝ) (ω : (FieldConfiguration d)) (f : (TestFunction d)) :
+lemma timeTranslationDistribution_apply (s : ℝ) (ω : (FieldConfiguration d)) (f : (SchwartzTestFunction d)) :
     (timeTranslationDistribution s ω) f = ω (timeTranslationSchwartz (-s) f) := rfl
 
 omit [Fact (2 ≤ d)] in

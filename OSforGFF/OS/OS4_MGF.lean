@@ -77,7 +77,7 @@ export TimeTranslation (
 
 omit [Fact (2 ≤ d)] in
 /-- Time translation commutes with real part extraction for complex Schwartz functions. -/
-lemma timeTranslationSchwartzℂ_decompose_fst (s : ℝ) (g : TestFunctionℂ d) :
+lemma timeTranslationSchwartzℂ_decompose_fst (s : ℝ) (g : SchwartzTestFunctionℂ d) :
     (complex_testfunction_decompose (timeTranslationSchwartzℂ s g)).1 =
     timeTranslationSchwartz s (complex_testfunction_decompose g).1 := by
   ext x
@@ -86,7 +86,7 @@ lemma timeTranslationSchwartzℂ_decompose_fst (s : ℝ) (g : TestFunctionℂ d)
 
 omit [Fact (2 ≤ d)] in
 /-- Time translation commutes with imaginary part extraction for complex Schwartz functions. -/
-lemma timeTranslationSchwartzℂ_decompose_snd (s : ℝ) (g : TestFunctionℂ d) :
+lemma timeTranslationSchwartzℂ_decompose_snd (s : ℝ) (g : SchwartzTestFunctionℂ d) :
     (complex_testfunction_decompose (timeTranslationSchwartzℂ s g)).2 =
     timeTranslationSchwartz s (complex_testfunction_decompose g).2 := by
   ext x
@@ -97,7 +97,7 @@ omit [Fact (2 ≤ d)] in
 /-- Time translation on distributions is compatible with complex pairing.
     ⟨T_s ω, g⟩_ℂ = ⟨ω, T_{-s} g⟩_ℂ -/
 lemma timeTranslationDistribution_pairingℂ (s : ℝ) (ω : FieldConfiguration d)
-    (g : TestFunctionℂ d) :
+    (g : SchwartzTestFunctionℂ d) :
     distributionPairingℂ_real (timeTranslationDistribution s ω) g =
     distributionPairingℂ_real ω (timeTranslationSchwartzℂ (-s) g) := by
   simp only [distributionPairingℂ_real]
@@ -114,7 +114,7 @@ lemma timeTranslationDistribution_pairingℂ (s : ℝ) (ω : FieldConfiguration 
 
 /-- s ↦ ⟨T_s ω, g⟩_ℂ is continuous. Uses the proved `continuous_timeTranslationSchwartz`. -/
 lemma continuous_distributionPairingℂ_timeTranslation (ω : FieldConfiguration d)
-    (g : TestFunctionℂ d) :
+    (g : SchwartzTestFunctionℂ d) :
     Continuous (fun s => distributionPairingℂ_real (timeTranslationDistribution s ω) g) := by
   have h_eq : (fun s => distributionPairingℂ_real (timeTranslationDistribution s ω) g)
       = (fun s => distributionPairingℂ_real ω (timeTranslationSchwartzℂ (-s) g)) := by
@@ -148,7 +148,7 @@ def timeTranslationE (t : ℝ) : QFT.E d := ⟨1, -timeShiftConst t⟩
 
 omit [Fact (2 ≤ d)] in
 /-- The Euclidean action of timeTranslationE equals timeTranslationSchwartzℂ. -/
-lemma euclidean_action_timeTranslationE (t : ℝ) (f : TestFunctionℂ d) :
+lemma euclidean_action_timeTranslationE (t : ℝ) (f : SchwartzTestFunctionℂ d) :
     QFT.euclidean_action (timeTranslationE t) f = timeTranslationSchwartzℂ t f := by
   ext x
   simp only [QFT.euclidean_action_apply, QFT.euclidean_pullback_eq_inv_act]
@@ -165,7 +165,7 @@ lemma euclidean_action_timeTranslationE (t : ℝ) (f : TestFunctionℂ d) :
 
 /-- The GFF covariance is invariant under simultaneous time translation. -/
 lemma freeCovarianceℂ_bilinear_timeTranslation_invariant (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (t : ℝ)
-    (f g : TestFunctionℂ d) :
+    (f g : SchwartzTestFunctionℂ d) :
     freeCovarianceℂ_bilinear m (timeTranslationSchwartzℂ t f) (timeTranslationSchwartzℂ t g) =
     freeCovarianceℂ_bilinear m f g := by
   rw [← euclidean_action_timeTranslationE t f, ← euclidean_action_timeTranslationE t g]
@@ -175,7 +175,7 @@ lemma freeCovarianceℂ_bilinear_timeTranslation_invariant (m : ℝ) [Fact (0 < 
 
 /-- MGF formula for GFF: ∫ exp(⟨ω,J⟩) dμ = exp(+(1/2) * C(J,J)).
     This follows from the characteristic function formula via substitution J → (-I)•J. -/
-lemma gff_mgf_formula (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (J : TestFunctionℂ d) :
+lemma gff_mgf_formula (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (J : SchwartzTestFunctionℂ d) :
     (∫ ω, Complex.exp (distributionPairingℂ_real ω J) ∂(gaussianFreeField_free m).toMeasure) =
     Complex.exp ((1/2 : ℂ) * freeCovarianceℂ_bilinear m J J) := by
   let negI : ℂ := -Complex.I
@@ -206,7 +206,7 @@ lemma gff_mgf_formula (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (J : TestFunc
   ring_nf
 
 /-- The GFF generating function is invariant under time translation. -/
-lemma gff_generating_time_invariant (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (s : ℝ) (f : TestFunctionℂ d) :
+lemma gff_generating_time_invariant (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (s : ℝ) (f : SchwartzTestFunctionℂ d) :
     ∫ ω, Complex.exp (distributionPairingℂ_real ω (timeTranslationSchwartzℂ s f))
       ∂(gaussianFreeField_free m).toMeasure =
     ∫ ω, Complex.exp (distributionPairingℂ_real ω f)
@@ -219,7 +219,7 @@ lemma gff_generating_time_invariant (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
 /-- Joint MGF factorization for GFF.
     E[e^{⟨ω,f⟩+⟨ω,g⟩}] = E[e^{⟨ω,f⟩}] E[e^{⟨ω,g⟩}] e^{C(f,g)}
     This follows from the GFF being Gaussian. -/
-lemma gff_joint_mgf_factorization (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : TestFunctionℂ d) :
+lemma gff_joint_mgf_factorization (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : SchwartzTestFunctionℂ d) :
     (∫ ω, Complex.exp (distributionPairingℂ_real ω f + distributionPairingℂ_real ω g)
       ∂(gaussianFreeField_free m).toMeasure) =
     (∫ ω, Complex.exp (distributionPairingℂ_real ω f) ∂(gaussianFreeField_free m).toMeasure) *

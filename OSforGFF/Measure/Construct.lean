@@ -71,7 +71,7 @@ noncomputable section
 variable {d : ℕ} [Fact (2 ≤ d)]
 
 omit [Fact (2 ≤ d)] in
-private lemma distributionPairingCLM_measurable (φ : TestFunction d) :
+private lemma distributionPairingCLM_measurable (φ : SchwartzTestFunction d) :
     Measurable (distributionPairingCLM φ) :=
   WeakDual.eval_measurable φ
 
@@ -80,26 +80,26 @@ private lemma distributionPairingCLM_measurable (φ : TestFunction d) :
 
 /-- A measure is centered (has zero mean) -/
 def isCenteredGJ (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
-  ∀ (f : TestFunction d), GJMean dμ_config f = 0
+  ∀ (f : SchwartzTestFunction d), GJMean dμ_config f = 0
 
 /-- A measure is Gaussian if its generating functional has the Gaussian form.
     For a centered Gaussian measure, Z[J] = exp(-½⟨J, CJ⟩) where C is the covariance. -/
 def isGaussianGJ (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
   isCenteredGJ dμ_config ∧
-  ∀ (J : TestFunctionℂ d),
+  ∀ (J : SchwartzTestFunctionℂ d),
     GJGeneratingFunctionalℂ dμ_config J =
     Complex.exp (-(1/2 : ℂ) * SchwingerFunctionℂ₂ dμ_config J J)
 
 /-! ## Construction via Minlos Theorem -/
 
 /-- Hilbert-nuclear structure for real test functions, from `schwartz_isHilbertNuclear`. -/
-instance instIsHilbertNuclear_TestFunction : IsHilbertNuclear (TestFunction d) := schwartz_isHilbertNuclear
+instance instIsHilbertNuclear_SchwartzTestFunction : IsHilbertNuclear (SchwartzTestFunction d) := schwartz_isHilbertNuclear
 
 /-- Separability of real test functions, from `schwartz_separableSpace`. -/
-instance instSeparableSpace_TestFunction : SeparableSpace (TestFunction d) := schwartz_separableSpace
+instance instSeparableSpace_SchwartzTestFunction : SeparableSpace (SchwartzTestFunction d) := schwartz_separableSpace
 
 /-- Nonemptiness of real test functions (the zero function). -/
-instance instNonempty_TestFunction : Nonempty (TestFunction d) := ⟨0⟩
+instance instNonempty_SchwartzTestFunction : Nonempty (SchwartzTestFunction d) := ⟨0⟩
 
 /-- Specialized Minlos construction for the free field using the square-root propagator embedding. -/
 noncomputable def constructGaussianMeasureMinlos_free (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
@@ -113,19 +113,19 @@ noncomputable def constructGaussianMeasureMinlos_free (m : ℝ) [Fact (0 < m)] [
   have ex3 := Classical.choose_spec ex2
   letI hInner : InnerProductSpace ℝ H := Classical.choose ex3
   have ex4 := Classical.choose_spec ex3
-  let T : TestFunction d →ₗ[ℝ] H := Classical.choose ex4
-  have h_eq : ∀ f : TestFunction d, freeCovarianceFormR m f f = ‖T f‖^2 := Classical.choose_spec ex4
+  let T : SchwartzTestFunction d →ₗ[ℝ] H := Classical.choose ex4
+  have h_eq : ∀ f : SchwartzTestFunction d, freeCovarianceFormR m f f = ‖T f‖^2 := Classical.choose_spec ex4
   -- Continuity, symmetry, and normalization
   have h_cont := freeCovarianceFormR_continuous (d := d) m
-  have h_symm : ∀ f : TestFunction d, freeCovarianceFormR m (-f) (-f) = freeCovarianceFormR m f f := by
+  have h_symm : ∀ f : SchwartzTestFunction d, freeCovarianceFormR m (-f) (-f) = freeCovarianceFormR m f f := by
     intro f
     have h1 : -f = (-1 : ℝ) • f := (neg_one_smul ℝ f).symm
     rw [h1, freeCovarianceFormR_smul_left, freeCovarianceFormR_smul_right]; ring
-  have h_zero : freeCovarianceFormR m (0 : TestFunction d) (0 : TestFunction d) = 0 := by simp [freeCovarianceFormR]
+  have h_zero : freeCovarianceFormR m (0 : SchwartzTestFunction d) (0 : SchwartzTestFunction d) = 0 := by simp [freeCovarianceFormR]
   -- Use Minlos: directly obtain a ProbabilityMeasure with the Gaussian characteristic functional
   have h_minlos :=
     gaussian_measure_characteristic_functional
-      (E := TestFunction d) (H := H) T (freeCovarianceFormR m)
+      (E := SchwartzTestFunction d) (H := H) T (freeCovarianceFormR m)
       (by intro f; simpa using h_eq f)
       h_symm h_zero h_cont
   exact Classical.choose h_minlos
@@ -142,7 +142,7 @@ noncomputable def gaussianFreeField_free (m : ℝ) [Fact (0 < m)] [GFFPropagator
 /-- Real characteristic functional of the free GFF: for real test functions f, the generating
     functional equals the Gaussian form with the real covariance. -/
 theorem gff_real_characteristic (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
-  ∀ f : TestFunction d,
+  ∀ f : SchwartzTestFunction d,
     GJGeneratingFunctional (gaussianFreeField_free m) f =
       Complex.exp (-(1/2 : ℂ) * (freeCovarianceFormR m f f : ℝ)) := by
   classical
@@ -154,17 +154,17 @@ theorem gff_real_characteristic (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
   have ex3 := Classical.choose_spec ex2
   letI hInner : InnerProductSpace ℝ H := Classical.choose ex3
   have ex4 := Classical.choose_spec ex3
-  let T : TestFunction d →ₗ[ℝ] H := Classical.choose ex4
-  have h_eq : ∀ f : TestFunction d, freeCovarianceFormR m f f = ‖T f‖^2 := Classical.choose_spec ex4
+  let T : SchwartzTestFunction d →ₗ[ℝ] H := Classical.choose ex4
+  have h_eq : ∀ f : SchwartzTestFunction d, freeCovarianceFormR m f f = ‖T f‖^2 := Classical.choose_spec ex4
   have h_cont := freeCovarianceFormR_continuous (d := d) m
-  have h_symm : ∀ f : TestFunction d, freeCovarianceFormR m (-f) (-f) = freeCovarianceFormR m f f := by
+  have h_symm : ∀ f : SchwartzTestFunction d, freeCovarianceFormR m (-f) (-f) = freeCovarianceFormR m f f := by
     intro f
     have h1 : -f = (-1 : ℝ) • f := (neg_one_smul ℝ f).symm
     rw [h1, freeCovarianceFormR_smul_left, freeCovarianceFormR_smul_right]; ring
-  have h_zero : freeCovarianceFormR m (0 : TestFunction d) (0 : TestFunction d) = 0 := by simp [freeCovarianceFormR]
+  have h_zero : freeCovarianceFormR m (0 : SchwartzTestFunction d) (0 : SchwartzTestFunction d) = 0 := by simp [freeCovarianceFormR]
   have h_minlos :=
     gaussian_measure_characteristic_functional
-      (E := TestFunction d) (H := H) T (freeCovarianceFormR m)
+      (E := SchwartzTestFunction d) (H := H) T (freeCovarianceFormR m)
       (by intro f; simpa using h_eq f)
       h_symm h_zero h_cont
   -- Unfold the definition of our chosen ProbabilityMeasure to reuse the spec
@@ -200,7 +200,7 @@ omit [Fact (2 ≤ d)] in
 /-- The characteristic function of a pushforward measure by `distributionPairingCLM φ`
     equals the generating functional at a scaled test function. -/
 private lemma charFun_eq_GJGeneratingFunctional
-  (μ : ProbabilityMeasure (FieldConfiguration d)) (φ : TestFunction d) (t : ℝ)
+  (μ : ProbabilityMeasure (FieldConfiguration d)) (φ : SchwartzTestFunction d) (t : ℝ)
   [IsProbabilityMeasure (μ.toMeasure.map (distributionPairingCLM φ))] :
   charFun (μ.toMeasure.map (distributionPairingCLM φ)) t =
     GJGeneratingFunctional μ (t • φ) := by
@@ -219,7 +219,7 @@ private lemma charFun_eq_GJGeneratingFunctional
 /-- For the GFF measure, the pushforward by `distributionPairingCLM φ` has
     the characteristic function of a centered Gaussian with variance `freeCovarianceFormR m φ φ`. -/
 private lemma gff_pushforward_charFun
-  (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (φ : TestFunction d) (t : ℝ) :
+  (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (φ : SchwartzTestFunction d) (t : ℝ) :
   charFun ((gaussianFreeField_free m).toMeasure.map (distributionPairingCLM φ)) t =
     Complex.exp (-(1/2 : ℂ) * t^2 * (freeCovarianceFormR m φ φ : ℝ)) := by
   haveI : IsProbabilityMeasure ((gaussianFreeField_free m).toMeasure.map (distributionPairingCLM φ)) :=
@@ -235,7 +235,7 @@ private lemma gff_pushforward_charFun
 /-- The pushforward of the GFF measure by pairing with a test function is a 1D Gaussian.
     Proven via characteristic functions and Lévy's uniqueness theorem. -/
 theorem gff_pairing_is_gaussian
-  (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (φ : TestFunction d) :
+  (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (φ : SchwartzTestFunction d) :
   (gaussianFreeField_free m).toMeasure.map (distributionPairingCLM φ)
     = gaussianReal 0 (freeCovarianceFormR m φ φ).toNNReal := by
   haveI : IsProbabilityMeasure ((gaussianFreeField_free m).toMeasure.map (distributionPairingCLM φ)) :=
@@ -258,7 +258,7 @@ theorem gff_pairing_is_gaussian
 
     Proven via the characteristic function bridge. -/
 theorem gaussianFreeField_pairing_memLp
-  (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (φ : TestFunction d) (p : ENNReal) (hp : p ≠ ⊤) :
+  (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (φ : SchwartzTestFunction d) (p : ENNReal) (hp : p ≠ ⊤) :
   MemLp (distributionPairingCLM φ) p (gaussianFreeField_free m).toMeasure := by
   -- The pushforward measure is a 1D Gaussian
   have h_gauss := gff_pairing_is_gaussian m φ
@@ -274,7 +274,7 @@ theorem gaussianFreeField_pairing_memLp
     This follows from the fact that the pushforward is a Gaussian measure,
     and Gaussian measures have finite moments of all orders. -/
 lemma gff_pairing_square_integrable
-  (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (φ : TestFunction d) :
+  (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (φ : SchwartzTestFunction d) :
   Integrable (fun ω => (distributionPairingCLM φ ω)^2) (gaussianFreeField_free m).toMeasure := by
   -- The pushforward measure is Gaussian
   have h_gauss := gff_pairing_is_gaussian m φ
@@ -292,7 +292,7 @@ lemma gff_pairing_square_integrable
     This follows from the fact that the pushforward is a Gaussian with variance
     equal to the covariance form, and for centered Gaussians, variance = second moment. -/
 lemma gff_second_moment_eq_covariance
-  (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (φ : TestFunction d) :
+  (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (φ : SchwartzTestFunction d) :
   ∫ ω, (distributionPairingCLM φ ω)^2 ∂(gaussianFreeField_free m).toMeasure =
     freeCovarianceFormR m φ φ := by
   -- The pushforward is a Gaussian measure
@@ -319,7 +319,7 @@ lemma gff_second_moment_eq_covariance
     via the square-root propagator embedding into a Hilbert space. -/
 lemma freeCovarianceFormR_gaussian_cf_pd (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
     IsPositiveDefinite
-      (fun f : TestFunction d => Complex.exp (-(1/2 : ℂ) * (freeCovarianceFormR m f f : ℂ))) := by
+      (fun f : SchwartzTestFunction d => Complex.exp (-(1/2 : ℂ) * (freeCovarianceFormR m f f : ℂ))) := by
   have ex1 := sqrtPropagatorEmbedding (d := d) m
   let H : Type := Classical.choose ex1
   have ex2 := Classical.choose_spec ex1
@@ -327,9 +327,9 @@ lemma freeCovarianceFormR_gaussian_cf_pd (m : ℝ) [Fact (0 < m)] [GFFPropagator
   have ex3 := Classical.choose_spec ex2
   letI hInner : InnerProductSpace ℝ H := Classical.choose ex3
   have ex4 := Classical.choose_spec ex3
-  let T : TestFunction d →ₗ[ℝ] H := Classical.choose ex4
-  have h_eq : ∀ f : TestFunction d, freeCovarianceFormR m f f = ‖T f‖^2 := Classical.choose_spec ex4
-  have h_symm : ∀ f : TestFunction d, freeCovarianceFormR m (-f) (-f) = freeCovarianceFormR m f f := by
+  let T : SchwartzTestFunction d →ₗ[ℝ] H := Classical.choose ex4
+  have h_eq : ∀ f : SchwartzTestFunction d, freeCovarianceFormR m f f = ‖T f‖^2 := Classical.choose_spec ex4
+  have h_symm : ∀ f : SchwartzTestFunction d, freeCovarianceFormR m (-f) (-f) = freeCovarianceFormR m f f := by
     intro f
     have h1 : -f = (-1 : ℝ) • f := (neg_one_smul ℝ f).symm
     rw [h1, freeCovarianceFormR_smul_left, freeCovarianceFormR_smul_right]; ring
@@ -358,7 +358,7 @@ theorem gaussianFreeField_free_centered (m : ℝ) [Fact (0 < m)] [GFFPropagator 
   intro φ
   unfold GJMean
   -- Step 1: Get the real CF hypothesis from gff_real_characteristic
-  have h_realCF : ∀ f : TestFunction d,
+  have h_realCF : ∀ f : SchwartzTestFunction d,
       ∫ ω, Complex.exp (Complex.I * (ω f)) ∂(gaussianFreeField_free m).toMeasure
         = Complex.exp (-(1/2 : ℂ) * ((freeCovarianceForm m).Q f f)) := by
     intro f
@@ -393,7 +393,7 @@ combined with Mathlib's `IsGaussian.exists_integrable_exp_sq` (Fernique's theore
 
 -/
 theorem gaussianFreeField_pairing_expSq_integrable
-  (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (φ : TestFunction d) :
+  (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (φ : SchwartzTestFunction d) :
   ∃ α : ℝ, 0 < α ∧
     Integrable
       (fun ω =>
@@ -423,7 +423,7 @@ theorem gaussianFreeField_pairing_expSq_integrable
     free Gaussian Free Field measure. This is the diagonal (f = g) case needed for
     establishing two-point integrability. -/
 lemma gaussian_pairing_square_integrable_real
-    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (φ : TestFunction d) :
+    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (φ : SchwartzTestFunction d) :
   Integrable (fun ω => (distributionPairing ω φ) ^ 2)
     (gaussianFreeField_free m).toMeasure := by
   -- Invoke the Fernique-type result giving Lᵖ moments for the pairing

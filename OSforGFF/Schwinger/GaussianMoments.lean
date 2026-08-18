@@ -51,7 +51,7 @@ variable {d : ℕ} [Fact (2 ≤ d)]
 /-- **Foundation**: The original 2-point case implemented directly.
     This provides the base case for the general n-point theorem. -/
 theorem gaussian_pairing_product_integrable_free_2point
-  (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (φ ψ : TestFunctionℂ d) :
+  (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (φ ψ : SchwartzTestFunctionℂ d) :
   Integrable (fun ω => distributionPairingℂ_real ω φ * distributionPairingℂ_real ω ψ)
     (gaussianFreeField_free m).toMeasure := by
   -- Strategy: Decompose both complex test functions into real and imaginary parts
@@ -59,10 +59,10 @@ theorem gaussian_pairing_product_integrable_free_2point
 
   classical
   -- Decompose φ and ψ into real and imaginary parts
-  set φRe : TestFunction d := (complex_testfunction_decompose φ).1
-  set φIm : TestFunction d := (complex_testfunction_decompose φ).2
-  set ψRe : TestFunction d := (complex_testfunction_decompose ψ).1
-  set ψIm : TestFunction d := (complex_testfunction_decompose ψ).2
+  set φRe : SchwartzTestFunction d := (complex_testfunction_decompose φ).1
+  set φIm : SchwartzTestFunction d := (complex_testfunction_decompose φ).2
+  set ψRe : SchwartzTestFunction d := (complex_testfunction_decompose ψ).1
+  set ψIm : SchwartzTestFunction d := (complex_testfunction_decompose ψ).2
 
   -- For each real component, we have L² integrability from the proven theorem
   have hφRe_mem : MemLp (distributionPairingCLM φRe) (2 : ENNReal) (gaussianFreeField_free m).toMeasure :=

@@ -31,7 +31,7 @@ the star operation (complex conjugation composed with time reflection) for test 
 
 ## Main results
 
-* `Star (TestFunctionℂ d)`: Star instance for complex test functions
+* `Star (SchwartzTestFunctionℂ d)`: Star instance for complex test functions
 -/
 
 noncomputable section
@@ -47,11 +47,11 @@ def HasPositiveTime (x : (SpaceTime d)) : Prop := getTimeComponent x > 0
 def positiveTimeSet : Set (SpaceTime d) := {x | HasPositiveTime x}
 
 /-- Submodule of **real-valued** test functions supported in the positive time region -/
-def PositiveTimeTestFunctions.submodule : Submodule ℝ (TestFunction d) where
-  carrier := { f : (TestFunction d) | tsupport f ⊆ positiveTimeSet }
+def PositiveTimeTestFunctions.submodule : Submodule ℝ (SchwartzTestFunction d) where
+  carrier := { f : (SchwartzTestFunction d) | tsupport f ⊆ positiveTimeSet }
   zero_mem' := by
     simp only [Set.mem_setOf_eq]
-    suffices h : tsupport (0 : (TestFunction d)) = ∅ by
+    suffices h : tsupport (0 : (SchwartzTestFunction d)) = ∅ by
       rw [h]
       apply Set.empty_subset
     rw [tsupport_eq_empty_iff]
@@ -79,11 +79,11 @@ lemma PositiveTimeTestFunction.sum_smul_mem
 
 /-- Submodule of **complex-valued** test functions supported in the positive time region.
     This is a ℂ-submodule since ℂ-scalar multiplication preserves support. -/
-def PositiveTimeTestFunctionsℂ.submodule : Submodule ℂ (TestFunctionℂ d) where
-  carrier := { f : (TestFunctionℂ d) | tsupport f ⊆ positiveTimeSet }
+def PositiveTimeTestFunctionsℂ.submodule : Submodule ℂ (SchwartzTestFunctionℂ d) where
+  carrier := { f : (SchwartzTestFunctionℂ d) | tsupport f ⊆ positiveTimeSet }
   zero_mem' := by
     simp only [Set.mem_setOf_eq]
-    suffices h : tsupport (0 : (TestFunctionℂ d)) = ∅ by
+    suffices h : tsupport (0 : (SchwartzTestFunctionℂ d)) = ∅ by
       rw [h]
       apply Set.empty_subset
     rw [tsupport_eq_empty_iff]
@@ -115,7 +115,7 @@ lemma PositiveTimeTestFunctionℂ.zero_on_nonpositive
 
 omit [Fact (2 ≤ d)] in
 /-- Helper lemma: starRingEnd ℂ commutes through derivatives and preserves norms -/
-lemma starRingEnd_iteratedFDeriv_norm_eq (g : (TestFunctionℂ d)) (n : ℕ) (x : (SpaceTime d)) :
+lemma starRingEnd_iteratedFDeriv_norm_eq (g : (SchwartzTestFunctionℂ d)) (n : ℕ) (x : (SpaceTime d)) :
   ‖iteratedFDeriv ℝ n (fun x => starRingEnd ℂ (g x)) x‖ = ‖iteratedFDeriv ℝ n g x‖ := by
   -- Use the fact that starRingEnd ℂ = Complex.conjLIE (as functions)
   have h : (fun x => starRingEnd ℂ (g x)) = Complex.conjLIE ∘ g := by
@@ -128,7 +128,7 @@ lemma starRingEnd_iteratedFDeriv_norm_eq (g : (TestFunctionℂ d)) (n : ℕ) (x 
   exact LinearIsometryEquiv.norm_iteratedFDeriv_comp_left Complex.conjLIE g x n
 
 /-- Star operation on test functions: time reflection followed by complex conjugation -/
-noncomputable def starTestFunction (f : (TestFunctionℂ d)) : (TestFunctionℂ d) :=
+noncomputable def starTestFunction (f : (SchwartzTestFunctionℂ d)) : (SchwartzTestFunctionℂ d) :=
   -- Apply time reflection then complex conjugation pointwise
   let f_reflected := compTimeReflection f
   -- Apply complex conjugation to each value
@@ -157,7 +157,7 @@ noncomputable def starTestFunction (f : (TestFunctionℂ d)) : (TestFunctionℂ 
        _ ≤ C := hC x⟩
 
 /-- Star instance for complex test functions -/
-noncomputable instance : Star (TestFunctionℂ d) where
+noncomputable instance : Star (SchwartzTestFunctionℂ d) where
   star f := starTestFunction f
 
 lemma PositiveTimeTestFunction.zero_on_nonpositive

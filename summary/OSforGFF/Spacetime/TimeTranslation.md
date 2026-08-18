@@ -170,7 +170,7 @@ def timeShiftConst (s : ℝ) : (SpaceTime d)
 
 **Lean signature**
 ```lean
-def timeTranslationSchwartzCLM (s : ℝ) : (TestFunction d) →L[ℝ] (TestFunction d)
+def timeTranslationSchwartzCLM (s : ℝ) : (SchwartzTestFunction d) →L[ℝ] (SchwartzTestFunction d)
 ```
 **Informal**: Time translation as a continuous $\mathbb{R}$-linear operator on real Schwartz functions, $f \mapsto f \circ \mathrm{timeShift}\,s$, built with `SchwartzMap.compCLMOfAntilipschitz` from temperate growth and the antilipschitz property of `timeShift s`.
 
@@ -180,7 +180,7 @@ def timeTranslationSchwartzCLM (s : ℝ) : (TestFunction d) →L[ℝ] (TestFunct
 
 **Lean signature**
 ```lean
-def timeTranslationSchwartz (s : ℝ) (f : (TestFunction d)) : (TestFunction d)
+def timeTranslationSchwartz (s : ℝ) (f : (SchwartzTestFunction d)) : (SchwartzTestFunction d)
 ```
 **Informal**: Time translation of a real Schwartz function, $(T_s f)(u) = f(\mathrm{timeShift}\,s\,u) = f(u_0 + s,\, \vec{u})$.
 
@@ -190,7 +190,7 @@ def timeTranslationSchwartz (s : ℝ) (f : (TestFunction d)) : (TestFunction d)
 
 **Lean signature**
 ```lean
-def timeTranslationSchwartzℂCLM (s : ℝ) : (TestFunctionℂ d) →L[ℂ] (TestFunctionℂ d)
+def timeTranslationSchwartzℂCLM (s : ℝ) : (SchwartzTestFunctionℂ d) →L[ℂ] (SchwartzTestFunctionℂ d)
 ```
 **Informal**: Time translation as a continuous $\mathbb{C}$-linear operator on complex Schwartz functions.
 
@@ -200,7 +200,7 @@ def timeTranslationSchwartzℂCLM (s : ℝ) : (TestFunctionℂ d) →L[ℂ] (Tes
 
 **Lean signature**
 ```lean
-def timeTranslationSchwartzℂ (s : ℝ) (f : (TestFunctionℂ d)) : (TestFunctionℂ d)
+def timeTranslationSchwartzℂ (s : ℝ) (f : (SchwartzTestFunctionℂ d)) : (SchwartzTestFunctionℂ d)
 ```
 **Informal**: Time translation of a complex Schwartz function.
 

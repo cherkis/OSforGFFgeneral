@@ -43,7 +43,7 @@ alias used by the headline theorems) is defined here alongside `gaussianFreeFiel
 **Lean signature**
 ```lean
 structure CovarianceFunction (d : ℕ) where
-  covar : TestFunctionℂ d → TestFunctionℂ d → ℂ
+  covar : SchwartzTestFunctionℂ d → SchwartzTestFunctionℂ d → ℂ
   symmetric : ∀ f g, covar f g = (starRingEnd ℂ) (covar g f)
   bilinear_left : ∀ c f₁ f₂ g, covar (c • f₁ + f₂) g = c * covar f₁ g + covar f₂ g
   bilinear_right : ∀ f c g₁ g₂, covar f (c • g₁ + g₂) = (starRingEnd ℂ) c * covar f g₁ + covar f g₂
@@ -83,11 +83,11 @@ $Z[J] = \exp\!\bigl(-\tfrac{1}{2}\langle J, CJ\rangle\bigr)$ for all complex tes
 
 ## Construction via Minlos Theorem
 
-### [`instIsHilbertNuclear_TestFunction`](../../OSforGFF/Measure/Construct.lean#L105) — Definition *(instance)*
+### [`instIsHilbertNuclear_SchwartzTestFunction`](../../OSforGFF/Measure/Construct.lean#L105) — Definition *(instance)*
 
 **Lean signature**
 ```lean
-instance instIsHilbertNuclear_TestFunction : IsHilbertNuclear (TestFunction d)
+instance instIsHilbertNuclear_SchwartzTestFunction : IsHilbertNuclear (SchwartzTestFunction d)
 ```
 
 **Informal**: The space of real test functions $\mathscr{S}(\mathbb{R}^d, \mathbb{R})$ is
@@ -95,22 +95,22 @@ Hilbert-nuclear, derived from [`schwartz_isHilbertNuclear`](../../OSforGFF/Measu
 
 ---
 
-### [`instSeparableSpace_TestFunction`](../../OSforGFF/Measure/Construct.lean#L108) — Definition *(instance)*
+### [`instSeparableSpace_SchwartzTestFunction`](../../OSforGFF/Measure/Construct.lean#L108) — Definition *(instance)*
 
 **Lean signature**
 ```lean
-instance instSeparableSpace_TestFunction : SeparableSpace (TestFunction d)
+instance instSeparableSpace_SchwartzTestFunction : SeparableSpace (SchwartzTestFunction d)
 ```
 
 **Informal**: The space of real test functions is separable, derived from [`schwartz_separableSpace`](../../OSforGFF/Measure/NuclearSpace.lean).
 
 ---
 
-### [`instNonempty_TestFunction`](../../OSforGFF/Measure/Construct.lean#L111) — Definition *(instance)*
+### [`instNonempty_SchwartzTestFunction`](../../OSforGFF/Measure/Construct.lean#L111) — Definition *(instance)*
 
 **Lean signature**
 ```lean
-instance instNonempty_TestFunction : Nonempty (TestFunction d)
+instance instNonempty_SchwartzTestFunction : Nonempty (SchwartzTestFunction d)
 ```
 
 **Informal**: The space of real test functions is nonempty (witnessed by the zero function).
