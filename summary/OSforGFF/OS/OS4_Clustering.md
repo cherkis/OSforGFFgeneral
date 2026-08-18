@@ -133,7 +133,7 @@ $\lVert a\rVert > R$, where $S_2(f, T_a g) = \iint f(x)\,K(x-y)\,g(y-a)\,dy\,dx$
 **Lean signature**
 ```lean
 def CovarianceClustering_real (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
-  ∀ (f g : (TestFunction d)) (ε : ℝ), ε > 0 →
+  ∀ (f g : (SchwartzTestFunction d)) (ε : ℝ), ε > 0 →
     ∃ R > 0, ∀ a : (SpaceTime d), ‖a‖ > R →
       ‖SchwingerFunction₂ dμ_config f (g.translate a)‖ < ε
 ```

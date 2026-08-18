@@ -13,7 +13,7 @@ complex submodules of Schwartz functions whose (topological) support lies in tha
 structure and the fact that such functions vanish where the time component is $\le 0$. It then
 defines the star operation `starTestFunction` — time reflection (`compTimeReflection`, from
 `DiscreteSymmetry`) followed by pointwise complex conjugation — and registers it as a `Star`
-instance on `TestFunctionℂ d`, using a helper lemma that conjugation preserves iterated-derivative
+instance on `SchwartzTestFunctionℂ d`, using a helper lemma that conjugation preserves iterated-derivative
 norms. These are the building blocks for the OS3 (reflection positivity) axiom.
 
 ## Status
@@ -61,7 +61,7 @@ continuous time-coordinate projection).
 
 **Lean signature**
 ```lean
-def PositiveTimeTestFunctions.submodule : Submodule ℝ (TestFunction d)
+def PositiveTimeTestFunctions.submodule : Submodule ℝ (SchwartzTestFunction d)
 ```
 
 **Informal**: The $\mathbb{R}$-submodule of real test functions whose topological support is
@@ -116,7 +116,7 @@ $g = \sum_i c_i\, f_i$ (as underlying test functions).
 
 **Lean signature**
 ```lean
-def PositiveTimeTestFunctionsℂ.submodule : Submodule ℂ (TestFunctionℂ d)
+def PositiveTimeTestFunctionsℂ.submodule : Submodule ℂ (SchwartzTestFunctionℂ d)
 ```
 
 **Informal**: The $\mathbb{C}$-submodule of complex test functions whose support lies in
@@ -182,7 +182,7 @@ $$\lVert D^n\bigl(x \mapsto \overline{g(x)}\bigr)(x)\rVert = \lVert D^n g(x)\rVe
 
 **Lean signature**
 ```lean
-noncomputable def starTestFunction (f : (TestFunctionℂ d)) : (TestFunctionℂ d)
+noncomputable def starTestFunction (f : (SchwartzTestFunctionℂ d)) : (SchwartzTestFunctionℂ d)
 ```
 
 **Informal**: The star operation on complex test functions: apply time reflection
@@ -192,11 +192,11 @@ preserved because conjugation is a linear isometry.
 
 ---
 
-### [`instance : Star (TestFunctionℂ d)`](../../OSforGFF/Spacetime/PositiveTimeTestFunction.lean#L165) — Definition *(instance)*
+### [`instance : Star (SchwartzTestFunctionℂ d)`](../../OSforGFF/Spacetime/PositiveTimeTestFunction.lean#L165) — Definition *(instance)*
 
 **Lean signature**
 ```lean
-noncomputable instance : Star (TestFunctionℂ d) where
+noncomputable instance : Star (SchwartzTestFunctionℂ d) where
   star f := starTestFunction f
 ```
 

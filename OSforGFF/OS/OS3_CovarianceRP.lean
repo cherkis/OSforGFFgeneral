@@ -47,13 +47,13 @@ avoids non-convergent pointwise integrals. -/
     ⟨Θf, f⟩_C = freeCovarianceℂ_bilinear m (star f) f
              = ∫∫ conj(f(Θx)) * C(x,y) * f(y) dx dy
 
-    The star operation on (TestFunctionℂ d) is defined as:
+    The star operation on (SchwartzTestFunctionℂ d) is defined as:
     (star f)(x) = conj(f(Θx))  (time reflection composed with conjugation)
 
     This is the distributional formulation that is mathematically well-defined
     for Schwartz test functions. -/
 noncomputable def rpInnerProduct (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f : (TestFunctionℂ d)) : ℂ :=
+    (f : (SchwartzTestFunctionℂ d)) : ℂ :=
   freeCovarianceℂ_bilinear m (star f) f
 
 /-! ## Direct Proof of Reflection Positivity
@@ -78,26 +78,26 @@ noncomputable def spatialDot (k_spatial x_spatial : (SpatialCoords d)) : ℝ :=
   ∑ i, k_spatial i * x_spatial i
 
 noncomputable def bilinearForm (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f g : (TestFunctionℂ d)) : ℂ :=
+    (f g : (SchwartzTestFunctionℂ d)) : ℂ :=
   ∫ x, ∫ y, (f x) * (_root_.freeCovariance d m x y) * (g y)
 
-noncomputable def weightedLaplaceFourier (m : ℝ) (f : (TestFunctionℂ d)) (k_sp : (SpatialCoords d)) : ℂ :=
+noncomputable def weightedLaplaceFourier (m : ℝ) (f : (SchwartzTestFunctionℂ d)) (k_sp : (SpatialCoords d)) : ℂ :=
   let ω := Real.sqrt (‖k_sp‖^2 + m^2)
   ∫ x : (SpaceTime d), f x * Complex.exp (-ω * x 0) *
     Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x))
 
 noncomputable def rpInnerProduct (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f : (TestFunctionℂ d)) : ℂ :=
+    (f : (SchwartzTestFunctionℂ d)) : ℂ :=
   bilinearForm m (star f) f
 
 /-! ## Part 2: Change of Variables -/
 
 variable (m : ℝ) [Fact (0 < m)]
 
-lemma star_apply (f : (TestFunctionℂ d)) (x : (SpaceTime d)) :
+lemma star_apply (f : (SchwartzTestFunctionℂ d)) (x : (SpaceTime d)) :
     (star f) x = starRingEnd ℂ (f (timeReflection x)) := rfl
 
-theorem rpInnerProduct_eq_bessel_reflected [GFFPropagator d m] (f : (TestFunctionℂ d)) :
+theorem rpInnerProduct_eq_bessel_reflected [GFFPropagator d m] (f : (SchwartzTestFunctionℂ d)) :
     rpInnerProduct m f =
       ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
         (starRingEnd ℂ (f x)) * (_root_.freeCovariance d m (timeReflection x) y : ℂ) * f y := by
@@ -119,7 +119,7 @@ theorem rpInnerProduct_eq_bessel_reflected [GFFPropagator d m] (f : (TestFunctio
 /-- The mixed representation from the Schwinger pathway.
     This is more direct than the k₀-inside form for proving reflection positivity,
     because `(1/ω) exp(-ω|t|)` already factorizes for positive-time test functions. -/
-theorem mixed_representation [GFFPropagator d m] (f : (TestFunctionℂ d))
+theorem mixed_representation [GFFPropagator d m] (f : (SchwartzTestFunctionℂ d))
     (hf_supp : ∀ x, x 0 ≤ 0 → f x = 0) :
     rpInnerProduct m f =
     (1 / (2 * (2 * Real.pi) ^ (d - 1)) : ℝ) *
@@ -163,11 +163,11 @@ lemma exp_spatial_phase_factor (k_sp : (SpatialCoords d)) (x_sp y_sp : (SpatialC
     Complex.exp (Complex.I * spatialDot k_sp y_sp) := by
   rw [← Complex.exp_add, spatialDot_sub]; congr 1; push_cast; ring
 
-noncomputable def xIntegralFactor (f : (TestFunctionℂ d)) (ω : ℝ) (k_sp : (SpatialCoords d)) : ℂ :=
+noncomputable def xIntegralFactor (f : (SchwartzTestFunctionℂ d)) (ω : ℝ) (k_sp : (SpatialCoords d)) : ℂ :=
   ∫ x : (SpaceTime d), (starRingEnd ℂ (f x)) *
     Complex.exp (-(ω * x 0)) * Complex.exp (-Complex.I * spatialDot k_sp (spatialPart x))
 
-noncomputable def yIntegralFactor (f : (TestFunctionℂ d)) (ω : ℝ) (k_sp : (SpatialCoords d)) : ℂ :=
+noncomputable def yIntegralFactor (f : (SchwartzTestFunctionℂ d)) (ω : ℝ) (k_sp : (SpatialCoords d)) : ℂ :=
   ∫ y : (SpaceTime d), f y *
     Complex.exp (-(ω * y 0)) * Complex.exp (Complex.I * spatialDot k_sp (spatialPart y))
 
@@ -185,7 +185,7 @@ lemma spatialDot_neg_left (k_sp x_sp : (SpatialCoords d)) :
   simp_rw [h, Finset.sum_neg_distrib]
 
 omit [Fact (0 < m)] in
-lemma xIntegralFactor_eq_conj_neg (f : (TestFunctionℂ d)) (k_sp : (SpatialCoords d))
+lemma xIntegralFactor_eq_conj_neg (f : (SchwartzTestFunctionℂ d)) (k_sp : (SpatialCoords d))
     (_hf_support : ∀ x : (SpaceTime d), x 0 < 0 → f x = 0) :
     xIntegralFactor f (Real.sqrt (‖k_sp‖^2 + m^2)) k_sp =
     starRingEnd ℂ (weightedLaplaceFourier m f (-k_sp)) := by
@@ -216,7 +216,7 @@ lemma xIntegralFactor_eq_conj_neg (f : (TestFunctionℂ d)) (k_sp : (SpatialCoor
   · simp only [map_mul, Complex.conj_I, Complex.conj_ofReal]
 
 omit [Fact (0 < m)] in
-lemma yIntegralFactor_eq_neg (f : (TestFunctionℂ d)) (k_sp : (SpatialCoords d)) :
+lemma yIntegralFactor_eq_neg (f : (SchwartzTestFunctionℂ d)) (k_sp : (SpatialCoords d)) :
     yIntegralFactor f (Real.sqrt (‖k_sp‖^2 + m^2)) k_sp =
     weightedLaplaceFourier m f (-k_sp) := by
   simp only [yIntegralFactor, weightedLaplaceFourier]
@@ -238,7 +238,7 @@ lemma yIntegralFactor_eq_neg (f : (TestFunctionℂ d)) (k_sp : (SpatialCoords d)
     - `exp(-ik_sp·r) = exp(-ik_sp·x_sp) · exp(+ik_sp·y_sp)`
 
     This avoids the round-trip through k₀ space that the old proof used. -/
-theorem factorization_to_squared_norm_direct (f : (TestFunctionℂ d)) (k_sp : (SpatialCoords d))
+theorem factorization_to_squared_norm_direct (f : (SchwartzTestFunctionℂ d)) (k_sp : (SpatialCoords d))
     (hf_support : ∀ x : (SpaceTime d), x 0 < 0 → f x = 0) :
     let ω := Real.sqrt (‖k_sp‖^2 + m^2)
     ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
@@ -332,7 +332,7 @@ theorem factorization_to_squared_norm_direct (f : (TestFunctionℂ d)) (k_sp : (
 
     This follows directly from the mixed representation + factorization,
     without going through the k₀-inside form. -/
-theorem rp_equals_squared_norm_integral [GFFPropagator d m] (f : (TestFunctionℂ d))
+theorem rp_equals_squared_norm_integral [GFFPropagator d m] (f : (SchwartzTestFunctionℂ d))
     (hf_supp : ∀ x : (SpaceTime d), x 0 ≤ 0 → f x = 0) :
     rpInnerProduct m f =
     (1 / (2 * (2 * Real.pi) ^ (d - 1)) : ℝ) *
@@ -357,7 +357,7 @@ theorem rp_equals_squared_norm_integral [GFFPropagator d m] (f : (TestFunction�
     Proof: By `rp_equals_squared_norm_integral`,
       ⟨Θf, f⟩_C = (1/(2(2π)^{d-1})) * ∫_{k_sp} (1/ω) |F_ω(-k_sp)|² dk_sp
     Both the prefactor and integrand are non-negative. -/
-theorem freeCovariance_reflection_positive_direct [GFFPropagator d m] (f : (TestFunctionℂ d))
+theorem freeCovariance_reflection_positive_direct [GFFPropagator d m] (f : (SchwartzTestFunctionℂ d))
     (hf_supp : ∀ x : (SpaceTime d), x 0 ≤ 0 → f x = 0) :
     0 ≤ (rpInnerProduct m f).re := by
   rw [rp_equals_squared_norm_integral m f hf_supp]
@@ -391,7 +391,7 @@ end RPProof
 
     Both are defined using the same Bessel kernel C(x,y) = (m/(4π²r)) K₁(mr),
     so this equality holds by definition (rfl). -/
-lemma rpInnerProduct_eq_rpProof (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunctionℂ d)) :
+lemma rpInnerProduct_eq_rpProof (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (SchwartzTestFunctionℂ d)) :
     rpInnerProduct m f = RPProof.rpInnerProduct m f := by
   -- Both sides expand to the same integral using freeCovariance d (Bessel)
   unfold rpInnerProduct RPProof.rpInnerProduct
@@ -409,7 +409,7 @@ lemma rpInnerProduct_eq_rpProof (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f 
 
     **Proof:** Bridge to RPProof, then apply the direct proof
     via momentum representation and non-negativity of the integrand. -/
-theorem freeCovariance_reflection_positive_bilinear (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunctionℂ d))
+theorem freeCovariance_reflection_positive_bilinear (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (SchwartzTestFunctionℂ d))
     (hf_supp : ∀ x : (SpaceTime d), x 0 ≤ 0 → f x = 0) :
   0 ≤ (rpInnerProduct m f).re := by
   rw [rpInnerProduct_eq_rpProof]
@@ -421,7 +421,7 @@ The result extends to real test functions via embedding. -/
 
 /-- For real test functions, `star (toComplex f) = compTimeReflection (toComplex f)`.
     This is because conjugation is identity for real-valued functions. -/
-lemma star_toComplex_eq_compTimeReflection (f : (TestFunction d)) :
+lemma star_toComplex_eq_compTimeReflection (f : (SchwartzTestFunction d)) :
     star (toComplex f) = compTimeReflection (toComplex f) := by
   ext x
   -- star f is defined as starTestFunction f
@@ -432,14 +432,14 @@ lemma star_toComplex_eq_compTimeReflection (f : (TestFunction d)) :
 
 /-- The rpInnerProduct of a real test function equals the complex bilinear form
     with compTimeReflection. -/
-lemma rpInnerProduct_toComplex_eq (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunction d)) :
+lemma rpInnerProduct_toComplex_eq (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (SchwartzTestFunction d)) :
     rpInnerProduct m (toComplex f) =
       freeCovarianceℂ_bilinear m (compTimeReflection (toComplex f)) (toComplex f) := by
   unfold rpInnerProduct
   rw [star_toComplex_eq_compTimeReflection]
 
 /-- For real test functions, the reflection positivity inner product is non-negative. -/
-theorem freeCovariance_reflection_positive_bilinear_real (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunction d))
+theorem freeCovariance_reflection_positive_bilinear_real (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (SchwartzTestFunction d))
     (hf_supp : ∀ x : (SpaceTime d), x 0 ≤ 0 → f x = 0) :
   0 ≤ ∫ x, ∫ y, (QFT.compTimeReflectionReal f) x * freeCovariance d m x y * f y := by
   -- Use the complex theorem for toComplex f
@@ -460,7 +460,7 @@ theorem freeCovariance_reflection_positive_bilinear_real (m : ℝ) [Fact (0 < m)
   exact h_complex
 
 /-- Alias for `freeCovariance_reflection_positive_bilinear_real` to match expected name. -/
-theorem freeCovariance_reflection_positive_real (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunction d))
+theorem freeCovariance_reflection_positive_real (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (SchwartzTestFunction d))
     (hf_supp : ∀ x : (SpaceTime d), x 0 ≤ 0 → f x = 0) :
   0 ≤ ∫ x, ∫ y, (QFT.compTimeReflectionReal f) x * freeCovariance d m x y * f y :=
   freeCovariance_reflection_positive_bilinear_real m f hf_supp

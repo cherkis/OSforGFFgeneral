@@ -63,7 +63,7 @@ Around this core the file provides: regularity of the proper-time kernel (measur
 **Lean signature**
 ```lean
 def freeCovarianceℂ_bilinear {d : ℕ} (m : ℝ) [Fact (0 < m)] [Fact (2 ≤ d)]
-    [GFFPropagator d m] (f g : TestFunctionℂ d) : ℂ
+    [GFFPropagator d m] (f g : SchwartzTestFunctionℂ d) : ℂ
 ```
 **Informal**: The complex covariance bilinear pairing $\langle f, Cg\rangle = \iint f(x)\,C(x,y)\,g(y)\,dx\,dy$ of two complex test functions against the free-covariance kernel.
 
@@ -74,7 +74,7 @@ def freeCovarianceℂ_bilinear {d : ℕ} (m : ℝ) [Fact (0 < m)] [Fact (2 ≤ d
 **Lean signature**
 ```lean
 def freeCovarianceℂ {d : ℕ} (m : ℝ) [Fact (0 < m)] [Fact (2 ≤ d)]
-    [GFFPropagator d m] (f g : TestFunctionℂ d) : ℂ
+    [GFFPropagator d m] (f g : SchwartzTestFunctionℂ d) : ℂ
 ```
 **Informal**: The complex covariance sesquilinear pairing $\langle f, C\bar g\rangle = \iint f(x)\,C(x,y)\,\overline{g(y)}\,dx\,dy$.
 
@@ -120,7 +120,7 @@ def freeCovarianceℂ {d : ℕ} (m : ℝ) [Fact (0 < m)] [Fact (2 ≤ d)]
 
 **Lean signature**
 ```lean
-def schwartzAutocorr {d : ℕ} (f : TestFunctionℂ d) (z : SpaceTime d) : ℂ
+def schwartzAutocorr {d : ℕ} (f : SchwartzTestFunctionℂ d) (z : SpaceTime d) : ℂ
 ```
 **Informal**: The autocorrelation of a Schwartz function: $A(z) = \int f(x)\,\overline{f(x-z)}\,dx$.
 

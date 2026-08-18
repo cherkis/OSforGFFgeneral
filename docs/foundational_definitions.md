@@ -32,9 +32,9 @@ fix `d = 2, 3, 4, 5`.
 | Name | Definition |
 |------|------------|
 | `SpaceTime d` | `EuclideanSpace ℝ (Fin d)` — Euclidean ℝ^d |
-| `TestFunction d` | `SchwartzMap (SpaceTime d) ℝ` — real Schwartz functions S(ℝ^d, ℝ) |
-| `TestFunctionℂ d` | `SchwartzMap (SpaceTime d) ℂ` — complex Schwartz functions S(ℝ^d, ℂ) |
-| `FieldConfiguration d` | `WeakDual ℝ (TestFunction d)` — tempered distributions S'(ℝ^d) |
+| `SchwartzTestFunction d` | `SchwartzMap (SpaceTime d) ℝ` — real Schwartz functions S(ℝ^d, ℝ) |
+| `SchwartzTestFunctionℂ d` | `SchwartzMap (SpaceTime d) ℂ` — complex Schwartz functions S(ℝ^d, ℂ) |
+| `FieldConfiguration d` | `WeakDual ℝ (SchwartzTestFunction d)` — tempered distributions S'(ℝ^d) |
 | `SpatialCoords d` | `EuclideanSpace ℝ (Fin (d - 1))` — spatial ℝ^{d−1} |
 | `SpatialL2 d` | `Lp ℝ 2 (volume : Measure (SpatialCoords d))` — L²(ℝ^{d−1}) |
 
@@ -141,7 +141,7 @@ consumes only the class and the lemmas derived once from its two fields.
 |------|------------|
 | `freeCovarianceFormR` | ∫∫ f(x) C(x,y) g(y) dx dy — real covariance bilinear form |
 | `sqrtPropagatorMap` | T: f ↦ FT(f)·(‖k‖²+m²)^{−1/2} — embedding into L² |
-| `embeddingMap` / `embeddingMapCLM` | ℝ-linear (resp. continuous) embedding T: TestFunction → L² |
+| `embeddingMap` / `embeddingMapCLM` | ℝ-linear (resp. continuous) embedding T: SchwartzTestFunction → L² |
 | `freePropagatorMomSqrt` | 1/√((2π)²‖k‖² + m²) — square-root propagator weight |
 
 ### Parseval and the complex bilinear form (`Covariance/ParsevalGeneric.lean`)

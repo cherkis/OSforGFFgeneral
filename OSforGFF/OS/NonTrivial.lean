@@ -64,7 +64,7 @@ namespace OSforGFF
 
 /-- The embedding `toComplex : S(ℝ^d,ℝ) → S(ℝ^d,ℂ)` is injective.
     Follows from injectivity of `ℝ → ℂ` applied pointwise. -/
-theorem toComplex_injective : Function.Injective (toComplex : TestFunction d → TestFunctionℂ d) := by
+theorem toComplex_injective : Function.Injective (toComplex : SchwartzTestFunction d → SchwartzTestFunctionℂ d) := by
   intro f g h
   ext x
   have : toComplex f x = toComplex g x := congr_fun (congr_arg _ h) x
@@ -77,12 +77,12 @@ theorem toComplex_injective : Function.Injective (toComplex : TestFunction d →
     Proof: `FourierPair` gives `𝓕⁻(𝓕 f) = f`, so `𝓕` has a left inverse. -/
 theorem fourierTransform_schwartz_injective :
     Function.Injective
-      (SchwartzMap.fourierTransformCLM ℂ : TestFunctionℂ d → TestFunctionℂ d) := by
+      (SchwartzMap.fourierTransformCLM ℂ : SchwartzTestFunctionℂ d → SchwartzTestFunctionℂ d) := by
   intro f g h
   -- SchwartzMap.fourierTransformCLM agrees with FourierTransform.fourier
-  have hf' : (SchwartzMap.fourierTransformCLM ℂ f : TestFunctionℂ d) =
+  have hf' : (SchwartzMap.fourierTransformCLM ℂ f : SchwartzTestFunctionℂ d) =
     FourierTransform.fourier f := rfl
-  have hg' : (SchwartzMap.fourierTransformCLM ℂ g : TestFunctionℂ d) =
+  have hg' : (SchwartzMap.fourierTransformCLM ℂ g : SchwartzTestFunctionℂ d) =
     FourierTransform.fourier g := rfl
   rw [hf', hg'] at h
   -- FourierPair gives 𝓕⁻ ∘ 𝓕 = id on Schwartz space
@@ -121,7 +121,7 @@ private lemma eq_zero_of_continuous_ae_zero
     `sqrtPropagatorMap m f k = 𝓕(toComplex f)(k) · w(k)` where `w(k) > 0`,
     so vanishing of the product forces `𝓕(toComplex f) = 0`, hence `f = 0`
     by Fourier injectivity. -/
-theorem sqrtPropagatorMap_eq_zero_iff (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : TestFunction d) :
+theorem sqrtPropagatorMap_eq_zero_iff (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : SchwartzTestFunction d) :
     (∀ k : SpaceTime d, sqrtPropagatorMap m f k = 0) ↔ f = 0 := by
   constructor
   · intro h
@@ -144,13 +144,13 @@ theorem sqrtPropagatorMap_eq_zero_iff (m : ℝ) [Fact (0 < m)] [GFFPropagator d 
         rw [h_ft_zero_fn, map_zero]
       exact fourierTransform_schwartz_injective this
     -- By toComplex injectivity, f = 0
-    have h_tc_0 : toComplex (0 : TestFunction d) = 0 := by ext x; simp [toComplex_apply]
+    have h_tc_0 : toComplex (0 : SchwartzTestFunction d) = 0 := by ext x; simp [toComplex_apply]
     exact toComplex_injective (h_tc_zero.trans h_tc_0.symm)
   · intro h; subst h; intro k
     unfold sqrtPropagatorMap
-    have h1 : toComplex (0 : TestFunction d) = 0 := by ext x; simp [toComplex_apply]
+    have h1 : toComplex (0 : SchwartzTestFunction d) = 0 := by ext x; simp [toComplex_apply]
     rw [h1]
-    have h2 : SchwartzMap.fourierTransformCLM ℂ (0 : TestFunctionℂ d) = 0 :=
+    have h2 : SchwartzMap.fourierTransformCLM ℂ (0 : SchwartzTestFunctionℂ d) = 0 :=
       ContinuousLinearMap.map_zero _
     simp only [h2, SchwartzMap.zero_apply, zero_mul]
 
@@ -201,7 +201,7 @@ theorem embeddingMap_injective (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
     Proof: `C(f,f) = ‖T f‖²` where `T` is injective, so `f ≠ 0 ⟹ T f ≠ 0
     ⟹ ‖T f‖ > 0 ⟹ ‖T f‖² > 0`. -/
 theorem freeCovarianceFormR_strictPos (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f : TestFunction d) (hf : f ≠ 0) :
+    (f : SchwartzTestFunction d) (hf : f ≠ 0) :
     0 < freeCovarianceFormR m f f := by
   rw [freeCovarianceFormR_eq_normSq m f]
   have h_ne : embeddingMap m f ≠ 0 := by
@@ -214,7 +214,7 @@ theorem freeCovarianceFormR_strictPos (m : ℝ) [Fact (0 < m)] [GFFPropagator d 
 /-- The variance of `⟨ω,f⟩` under the GFF is strictly positive for `f ≠ 0`.
     Equivalently, the pushforward by the pairing is a non-degenerate Gaussian. -/
 theorem gaussianFreeField_variance_pos (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f : TestFunction d) (hf : f ≠ 0) :
+    (f : SchwartzTestFunction d) (hf : f ≠ 0) :
     0 < ∫ ω, (distributionPairingCLM f ω) ^ 2 ∂(gaussianFreeField_free (d := d) m).toMeasure := by
   rw [gff_second_moment_eq_covariance]
   exact freeCovarianceFormR_strictPos m f hf
@@ -226,11 +226,11 @@ theorem gaussianFreeField_variance_pos (m : ℝ) [Fact (0 < m)] [GFFPropagator d
     Any nonzero Schwartz function witnesses this.  We use a standard bump
     function on ℝ^d, which exists by `ContDiff.exists_eq_one_of_isOpen`. -/
 theorem gaussianFreeField_not_dirac (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
-    ∃ f : TestFunction d, f ≠ 0 ∧
+    ∃ f : SchwartzTestFunction d, f ≠ 0 ∧
       0 < ∫ ω, (distributionPairingCLM f ω) ^ 2 ∂(gaussianFreeField_free (d := d) m).toMeasure := by
   -- Schwartz space on ℝ^d is nontrivial: exhibit a nonzero element.
   -- This uses the existence of smooth compactly-supported bump functions.
-  have ⟨f, hf⟩ : ∃ f : TestFunction d, f ≠ 0 := by
+  have ⟨f, hf⟩ : ∃ f : SchwartzTestFunction d, f ≠ 0 := by
     let φ : ContDiffBump (0 : SpaceTime d) := ⟨1, 2, by norm_num, by norm_num⟩
     refine ⟨φ.hasCompactSupport.toSchwartzMap φ.contDiff, fun h => ?_⟩
     have h1 : φ (0 : SpaceTime d) = 1 :=

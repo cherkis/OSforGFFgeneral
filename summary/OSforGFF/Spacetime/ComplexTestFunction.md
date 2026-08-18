@@ -98,7 +98,7 @@ $$\lVert D^n\bigl(x \mapsto (f(x) : \mathbb{C})\bigr)(x)\rVert = \lVert D^n f(x)
 
 **Lean signature**
 ```lean
-def toComplex (f : (TestFunction d)) : (TestFunctionℂ d)
+def toComplex (f : (SchwartzTestFunction d)) : (SchwartzTestFunctionℂ d)
 ```
 
 **Informal**: Embed a real test function as a complex-valued test function by coercing values via
@@ -141,7 +141,7 @@ coercion is a norm-preserving continuous linear map.
 
 **Lean signature**
 ```lean
-noncomputable def toComplexCLM : (TestFunction d) →L[ℝ] (TestFunctionℂ d)
+noncomputable def toComplexCLM : (SchwartzTestFunction d) →L[ℝ] (SchwartzTestFunctionℂ d)
 ```
 
 **Informal**: The continuous $\mathbb{R}$-linear map version of `toComplex`, built via

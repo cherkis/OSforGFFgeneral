@@ -45,7 +45,7 @@ None — file is sorry-free.
 **Lean signature**
 ```lean
 noncomputable def rpInnerProduct (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f : (TestFunctionℂ d)) : ℂ :=
+    (f : (SchwartzTestFunctionℂ d)) : ℂ :=
   freeCovarianceℂ_bilinear m (star f) f
 ```
 
@@ -92,7 +92,7 @@ noncomputable def spatialDot (k_spatial x_spatial : (SpatialCoords d)) : ℝ :=
 **Lean signature**
 ```lean
 noncomputable def bilinearForm (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f g : (TestFunctionℂ d)) : ℂ :=
+    (f g : (SchwartzTestFunctionℂ d)) : ℂ :=
   ∫ x, ∫ y, (f x) * (_root_.freeCovariance d m x y) * (g y)
 ```
 
@@ -104,7 +104,7 @@ noncomputable def bilinearForm (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
 
 **Lean signature**
 ```lean
-noncomputable def weightedLaplaceFourier (m : ℝ) (f : (TestFunctionℂ d)) (k_sp : (SpatialCoords d)) : ℂ
+noncomputable def weightedLaplaceFourier (m : ℝ) (f : (SchwartzTestFunctionℂ d)) (k_sp : (SpatialCoords d)) : ℂ
 ```
 
 **Informal**: The weighted Laplace–Fourier transform $F_\omega(\bar k) = \int f(x)\,e^{-\omega x_0}\,e^{-i\bar k\cdot\bar x}\,dx$, with $\omega = \sqrt{\lVert\bar k\rVert^2+m^2}$ — the amplitude whose squared norm gives the mixed representation.
@@ -116,7 +116,7 @@ noncomputable def weightedLaplaceFourier (m : ℝ) (f : (TestFunctionℂ d)) (k_
 **Lean signature**
 ```lean
 noncomputable def rpInnerProduct (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f : (TestFunctionℂ d)) : ℂ :=
+    (f : (SchwartzTestFunctionℂ d)) : ℂ :=
   bilinearForm m (star f) f
 ```
 
@@ -188,7 +188,7 @@ with $\omega = \sqrt{\lVert\bar k\rVert^2+m^2}$.
 
 **Lean signature**
 ```lean
-noncomputable def xIntegralFactor (f : (TestFunctionℂ d)) (ω : ℝ) (k_sp : (SpatialCoords d)) : ℂ
+noncomputable def xIntegralFactor (f : (SchwartzTestFunctionℂ d)) (ω : ℝ) (k_sp : (SpatialCoords d)) : ℂ
 ```
 
 **Informal**: The $x$-factor $\int \overline{f(x)}\,e^{-\omega x_0}\,e^{-i\bar k\cdot\bar x}\,dx$ appearing after the double integral separates.
@@ -199,7 +199,7 @@ noncomputable def xIntegralFactor (f : (TestFunctionℂ d)) (ω : ℝ) (k_sp : (
 
 **Lean signature**
 ```lean
-noncomputable def yIntegralFactor (f : (TestFunctionℂ d)) (ω : ℝ) (k_sp : (SpatialCoords d)) : ℂ
+noncomputable def yIntegralFactor (f : (SchwartzTestFunctionℂ d)) (ω : ℝ) (k_sp : (SpatialCoords d)) : ℂ
 ```
 
 **Informal**: The $y$-factor $\int f(y)\,e^{-\omega y_0}\,e^{+i\bar k\cdot\bar y}\,dy$ appearing after the double integral separates.

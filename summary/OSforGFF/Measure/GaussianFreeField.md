@@ -54,7 +54,7 @@ the double-sum expansion of a bilinear form.
 **Lean signature**
 ```lean
 def CovarianceContinuous (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
-  ∀ (J K : TestFunctionℂ d), Continuous (fun z : ℂ =>
+  ∀ (J K : SchwartzTestFunctionℂ d), Continuous (fun z : ℂ =>
     SchwingerFunctionℂ₂ dμ_config (z • J) K)
 ```
 
@@ -70,7 +70,7 @@ continuous for every pair of complex test functions $J, K$.
 **Lean signature**
 ```lean
 def GJcov_bilin (dμ_config : ProbabilityMeasure (FieldConfiguration d))
-  (h_bilinear : CovarianceBilinear dμ_config) : LinearMap.BilinMap ℂ (TestFunctionℂ d) ℂ
+  (h_bilinear : CovarianceBilinear dμ_config) : LinearMap.BilinMap ℂ (SchwartzTestFunctionℂ d) ℂ
 ```
 
 **Informal**: Packages the complex two-point Schwinger function
@@ -100,7 +100,7 @@ polynomial. (Alternative to the primary proof in `OS.OS0_Analyticity`.)
 **Lean signature**
 ```lean
 def CovarianceEuclideanInvariant (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
-  ∀ (g : QFT.E d) (f h : TestFunction d),
+  ∀ (g : QFT.E d) (f h : SchwartzTestFunction d),
     SchwingerFunction₂ dμ_config (QFT.euclidean_action_real g f) (QFT.euclidean_action_real g h) =
     SchwingerFunction₂ dμ_config f h
 ```
@@ -115,7 +115,7 @@ $S_2(g \cdot f, g \cdot h) = S_2(f, h)$ for all $g \in E(d)$ and real test funct
 **Lean signature**
 ```lean
 def CovarianceEuclideanInvariantℂ (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
-  ∀ (g : QFT.E d) (f h : TestFunctionℂ d),
+  ∀ (g : QFT.E d) (f h : SchwartzTestFunctionℂ d),
     SchwingerFunctionℂ₂ dμ_config (QFT.euclidean_action g f) (QFT.euclidean_action g h) =
     SchwingerFunctionℂ₂ dμ_config f h
 ```

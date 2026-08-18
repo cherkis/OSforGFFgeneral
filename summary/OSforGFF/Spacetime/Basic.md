@@ -7,7 +7,7 @@
 
 This file sets up the core type definitions of the formalization, all generic in the spacetime
 dimension `d : ℕ`. It introduces Euclidean spacetime `SpaceTime d = EuclideanSpace ℝ (Fin d)`,
-the real/complex Schwartz test functions `TestFunction d` / `TestFunctionℂ d`, and the
+the real/complex Schwartz test functions `SchwartzTestFunction d` / `SchwartzTestFunctionℂ d`, and the
 field-configuration space `FieldConfiguration d = WeakDual ℝ (SchwartzMap (SpaceTime d) ℝ)` of
 tempered distributions $\mathscr{S}'(\mathbb{R}^d)$. On top of these it builds the Glimm-Jaffe
 distribution framework: the real and complex pairings $\langle \omega, f\rangle$, the generating
@@ -75,33 +75,33 @@ abbrev getTimeComponent {d : ℕ} [Fact (2 ≤ d)] (x : SpaceTime d) : ℝ :=
 
 ---
 
-### [`TestFunction`](../../OSforGFF/Spacetime/Basic.lean#L80) — Definition *(abbrev)*
+### [`SchwartzTestFunction`](../../OSforGFF/Spacetime/Basic.lean#L80) — Definition *(abbrev)*
 
 **Lean signature**
 ```lean
-abbrev TestFunction (d : ℕ) : Type := SchwartzMap (SpaceTime d) ℝ
+abbrev SchwartzTestFunction (d : ℕ) : Type := SchwartzMap (SpaceTime d) ℝ
 ```
 
 **Informal**: Real-valued Schwartz test functions $\mathscr{S}(\mathbb{R}^d, \mathbb{R})$.
 
 ---
 
-### [`TestFunction𝕜`](../../OSforGFF/Spacetime/Basic.lean#L81) — Definition *(abbrev)*
+### [`SchwartzTestFunction𝕜`](../../OSforGFF/Spacetime/Basic.lean#L81) — Definition *(abbrev)*
 
 **Lean signature**
 ```lean
-abbrev TestFunction𝕜 (d : ℕ) : Type := SchwartzMap (SpaceTime d) 𝕜
+abbrev SchwartzTestFunction𝕜 (d : ℕ) : Type := SchwartzMap (SpaceTime d) 𝕜
 ```
 
 **Informal**: $𝕜$-valued Schwartz functions on $\mathbb{R}^d$, for a field `[RCLike 𝕜]`.
 
 ---
 
-### [`TestFunctionℂ`](../../OSforGFF/Spacetime/Basic.lean#L82) — Definition *(abbrev)*
+### [`SchwartzTestFunctionℂ`](../../OSforGFF/Spacetime/Basic.lean#L82) — Definition *(abbrev)*
 
 **Lean signature**
 ```lean
-abbrev TestFunctionℂ (d : ℕ) := TestFunction𝕜 (𝕜 := ℂ) d
+abbrev SchwartzTestFunctionℂ (d : ℕ) := SchwartzTestFunction𝕜 (𝕜 := ℂ) d
 ```
 
 **Informal**: Complex-valued Schwartz test functions $\mathscr{S}(\mathbb{R}^d, \mathbb{C})$.
@@ -123,7 +123,7 @@ def pointwiseMulCLM : ℂ →L[ℂ] ℂ →L[ℂ] ℂ := ContinuousLinearMap.mul
 
 **Lean signature**
 ```lean
-def schwartzMul (g : (TestFunctionℂ d)) : (TestFunctionℂ d) →L[ℂ] (TestFunctionℂ d) :=
+def schwartzMul (g : (SchwartzTestFunctionℂ d)) : (SchwartzTestFunctionℂ d) →L[ℂ] (SchwartzTestFunctionℂ d) :=
   (SchwartzMap.bilinLeftCLM pointwiseMulCLM (SchwartzMap.hasTemperateGrowth_general g))
 ```
 
@@ -150,7 +150,7 @@ library, and the weak-* topology makes evaluation maps continuous.
 
 **Lean signature**
 ```lean
-def distributionPairing (ω : (FieldConfiguration d)) (f : (TestFunction d)) : ℝ := ω f
+def distributionPairing (ω : (FieldConfiguration d)) (f : (SchwartzTestFunction d)) : ℝ := ω f
 ```
 
 **Informal**: The fundamental pairing $\langle \omega, f\rangle = \omega(f)$ between a
@@ -182,7 +182,7 @@ distribution and a real test function.
 
 **Lean signature**
 ```lean
-@[simp] def distributionPairingCLM (a : (TestFunction d)) : (FieldConfiguration d) →L[ℝ] ℝ
+@[simp] def distributionPairingCLM (a : (SchwartzTestFunction d)) : (FieldConfiguration d) →L[ℝ] ℝ
 ```
 
 **Informal**: The pairing with a fixed test function $a$, packaged as a continuous
@@ -202,7 +202,7 @@ $\mathbb{R}$-linear functional $\omega \mapsto \langle \omega, a\rangle$; contin
 **Lean signature**
 ```lean
 def GJGeneratingFunctional (dμ_config : ProbabilityMeasure (FieldConfiguration d))
-  (J : (TestFunction d)) : ℂ :=
+  (J : (SchwartzTestFunction d)) : ℂ :=
   ∫ ω, Complex.exp (Complex.I * (distributionPairing ω J : ℂ)) ∂dμ_config.toMeasure
 ```
 
@@ -216,7 +216,7 @@ the fundamental object in constructive QFT.
 
 **Lean signature**
 ```lean
-def schwartz_comp_clm (f : (TestFunctionℂ d)) (L : ℂ →L[ℝ] ℝ) : (TestFunction d)
+def schwartz_comp_clm (f : (SchwartzTestFunctionℂ d)) (L : ℂ →L[ℝ] ℝ) : (SchwartzTestFunction d)
 ```
 
 **Informal**: Post-composition of a complex test function $f$ with a continuous
@@ -236,7 +236,7 @@ $\lVert L(z)\rVert \le \lVert L\rVert\,\lVert z\rVert$.
 
 **Lean signature**
 ```lean
-def complex_testfunction_decompose (f : (TestFunctionℂ d)) : (TestFunction d) × (TestFunction d) :=
+def complex_testfunction_decompose (f : (SchwartzTestFunctionℂ d)) : (SchwartzTestFunction d) × (SchwartzTestFunction d) :=
   (schwartz_comp_clm f Complex.reCLM, schwartz_comp_clm f Complex.imCLM)
 ```
 
@@ -281,7 +281,7 @@ reducing to the identity $z = \mathrm{Re}\, z + i\,\mathrm{Im}\, z$.
 
 **Lean signature**
 ```lean
-def distributionPairingℂ_real (ω : (FieldConfiguration d)) (f : (TestFunctionℂ d)) : ℂ
+def distributionPairingℂ_real (ω : (FieldConfiguration d)) (f : (SchwartzTestFunctionℂ d)) : ℂ
 ```
 
 **Informal**: Complex pairing of a real field configuration with a complex test function,
@@ -295,7 +295,7 @@ $\langle\omega, f\rangle = \langle\omega, f_{\mathrm{re}}\rangle + i\,\langle\om
 **Lean signature**
 ```lean
 def GJGeneratingFunctionalℂ (dμ_config : ProbabilityMeasure (FieldConfiguration d))
-  (J : (TestFunctionℂ d)) : ℂ :=
+  (J : (SchwartzTestFunctionℂ d)) : ℂ :=
   ∫ ω, Complex.exp (Complex.I * (distributionPairingℂ_real ω J)) ∂dμ_config.toMeasure
 ```
 
@@ -309,7 +309,7 @@ $\exp(i\langle\omega, J\rangle_{\mathbb{C}})$ over field configurations.
 **Lean signature**
 ```lean
 def GJMean (dμ_config : ProbabilityMeasure (FieldConfiguration d))
-  (φ : (TestFunction d)) : ℝ :=
+  (φ : (SchwartzTestFunction d)) : ℝ :=
   ∫ ω, distributionPairing ω φ ∂dμ_config.toMeasure
 ```
 

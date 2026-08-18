@@ -161,13 +161,13 @@ end OSforGFF
 /-- The complex covariance bilinear pairing of two complex test functions against the
     free-covariance kernel: `⟨f, C g⟩ = ∫∫ f(x) · C(x, y) · g(y) dx dy`. -/
 def freeCovarianceℂ_bilinear {d : ℕ} (m : ℝ) [Fact (0 < m)] [Fact (2 ≤ d)]
-    [GFFPropagator d m] (f g : TestFunctionℂ d) : ℂ :=
+    [GFFPropagator d m] (f g : SchwartzTestFunctionℂ d) : ℂ :=
   ∫ x, ∫ y, f x * (freeCovariance d m x y : ℂ) * g y
 
 /-- The complex covariance sesquilinear pairing:
     `⟨f, C ḡ⟩ = ∫∫ f(x) · C(x, y) · conj (g y) dx dy`. -/
 def freeCovarianceℂ {d : ℕ} (m : ℝ) [Fact (0 < m)] [Fact (2 ≤ d)]
-    [GFFPropagator d m] (f g : TestFunctionℂ d) : ℂ :=
+    [GFFPropagator d m] (f g : SchwartzTestFunctionℂ d) : ℂ :=
   ∫ x, ∫ y, f x * (freeCovariance d m x y : ℂ) * (starRingEnd ℂ (g y))
 
 section ProperTimeKernel
@@ -206,7 +206,7 @@ omit [Fact (2 ≤ d)] in
 /-- The Schwartz-pair integrand against the proper-time kernel is integrable on the product
     space: the bound `‖f‖_∞ · C_S(‖x − y‖) · ‖g(y)‖` is a shear transport of a product of
     integrable functions. -/
-lemma properTime_bilinear_integrable (f g : TestFunctionℂ d) :
+lemma properTime_bilinear_integrable (f g : SchwartzTestFunctionℂ d) :
     Integrable (fun p : SpaceTime d × SpaceTime d =>
       f p.1 * (properTimeCovariance d m ‖p.1 - p.2‖ : ℂ) * g p.2)
       ((volume : Measure (SpaceTime d)).prod volume) := by
@@ -251,7 +251,7 @@ end ProperTimeKernel
 
 /-- The bilinear-pairing integrand is integrable on the product space. -/
 theorem freeCovarianceℂ_bilinear_integrable {d : ℕ} (m : ℝ) [Fact (0 < m)] [Fact (2 ≤ d)]
-    [GFFPropagator d m] (f g : TestFunctionℂ d) :
+    [GFFPropagator d m] (f g : SchwartzTestFunctionℂ d) :
     Integrable (fun p : SpaceTime d × SpaceTime d =>
       f p.1 * (freeCovariance d m p.1 p.2 : ℂ) * g p.2) volume := by
   rw [Measure.volume_eq_prod]
@@ -262,7 +262,7 @@ theorem freeCovarianceℂ_bilinear_integrable {d : ℕ} (m : ℝ) [Fact (0 < m)]
 /-! ### The autocorrelation and the momentum-space identity -/
 
 /-- The autocorrelation of a Schwartz function: `A(z) = ∫ f(x) · conj (f (x − z))`. -/
-def schwartzAutocorr {d : ℕ} (f : TestFunctionℂ d) (z : SpaceTime d) : ℂ :=
+def schwartzAutocorr {d : ℕ} (f : SchwartzTestFunctionℂ d) (z : SpaceTime d) : ℂ :=
   ∫ x : SpaceTime d, f x * starRingEnd ℂ (f (x - z))
 
 section Autocorr
@@ -271,7 +271,7 @@ variable {d : ℕ} {m : ℝ} [Fact (0 < m)] [Fact (2 ≤ d)]
 
 omit [Fact (0 < m)] [Fact (2 ≤ d)] in
 /-- Conjugated autocorrelation as an integral: `conj (A z) = ∫ conj (f x) · f (x − z)`. -/
-lemma schwartzAutocorr_conj (f : TestFunctionℂ d) (z : SpaceTime d) :
+lemma schwartzAutocorr_conj (f : SchwartzTestFunctionℂ d) (z : SpaceTime d) :
     starRingEnd ℂ (schwartzAutocorr f z)
       = ∫ x : SpaceTime d, starRingEnd ℂ (f x) * f (x - z) := by
   unfold schwartzAutocorr
@@ -282,7 +282,7 @@ lemma schwartzAutocorr_conj (f : TestFunctionℂ d) (z : SpaceTime d) :
 
 omit [Fact (0 < m)] [Fact (2 ≤ d)] in
 /-- Reflecting the autocorrelation argument conjugates its value: `A(−z) = conj (A z)`. -/
-lemma schwartzAutocorr_neg (f : TestFunctionℂ d) (z : SpaceTime d) :
+lemma schwartzAutocorr_neg (f : SchwartzTestFunctionℂ d) (z : SpaceTime d) :
     schwartzAutocorr f (-z) = starRingEnd ℂ (schwartzAutocorr f z) := by
   rw [schwartzAutocorr_conj]
   unfold schwartzAutocorr
@@ -307,7 +307,7 @@ private lemma fourierChar_coe_conj (r : ℝ) :
 omit [Fact (0 < m)] [Fact (2 ≤ d)] in
 /-- The squared-modulus function `k ↦ 𝓕f(k) · conj (𝓕f(k))` of the Fourier transform of a
     Schwartz function is integrable. -/
-lemma fourier_normSq_integrable (f : TestFunctionℂ d) :
+lemma fourier_normSq_integrable (f : SchwartzTestFunctionℂ d) :
     Integrable (fun k : SpaceTime d =>
       (SchwartzMap.fourierTransformCLM ℂ f) k
         * starRingEnd ℂ ((SchwartzMap.fourierTransformCLM ℂ f) k)) := by
@@ -323,7 +323,7 @@ omit [Fact (0 < m)] [Fact (2 ≤ d)] in
 /-- The Fourier transform of `k ↦ 𝓕f(k) · conj (𝓕f(k))` is the conjugated autocorrelation:
     `𝓕[𝓕f · conj (𝓕f)](z) = conj (A(z))` (Fubini against the character, then Fourier
     inversion of the Schwartz function). -/
-lemma fourier_normSq_eq_conj_autocorr (f : TestFunctionℂ d) (z : SpaceTime d) :
+lemma fourier_normSq_eq_conj_autocorr (f : SchwartzTestFunctionℂ d) (z : SpaceTime d) :
     FourierTransform.fourier (fun k : SpaceTime d =>
         (SchwartzMap.fourierTransformCLM ℂ f) k
           * starRingEnd ℂ ((SchwartzMap.fourierTransformCLM ℂ f) k)) z
@@ -423,7 +423,7 @@ lemma fourier_normSq_eq_conj_autocorr (f : TestFunctionℂ d) (z : SpaceTime d) 
 omit [Fact (2 ≤ d)] in
 /-- Fubini/shear form of the proper-time sesquilinear pairing: the pairing collapses against
     the autocorrelation, `∫∫ f(x) C_S(‖x−y‖) conj (f y) = ∫ C_S(‖z‖) · A(z)`. -/
-lemma properTime_pairing_eq_autocorr (f : TestFunctionℂ d) :
+lemma properTime_pairing_eq_autocorr (f : SchwartzTestFunctionℂ d) :
     (∫ x, ∫ y, f x * (properTimeCovariance d m ‖x - y‖ : ℂ) * starRingEnd ℂ (f y))
       = ∫ z, (properTimeCovariance d m ‖z‖ : ℂ) * schwartzAutocorr f z := by
   have hm : (0 : ℝ) < m := Fact.out
@@ -490,7 +490,7 @@ variable {d : ℕ} {m : ℝ} [Fact (0 < m)] [Fact (2 ≤ d)] [GFFPropagator d m]
 
 /-- The sesquilinear pairing with the `freeCovariance` kernel agrees with the proper-time
     kernel pairing (the kernels agree away from the null diagonal). -/
-lemma freeCovarianceℂ_self_eq_properTime (f : TestFunctionℂ d) :
+lemma freeCovarianceℂ_self_eq_properTime (f : SchwartzTestFunctionℂ d) :
     freeCovarianceℂ m f f
       = ∫ x, ∫ y, f x * (properTimeCovariance d m ‖x - y‖ : ℂ) * starRingEnd ℂ (f y) := by
   have hd : 0 < d := by have := (Fact.out : 2 ≤ d); omega
@@ -507,7 +507,7 @@ lemma freeCovarianceℂ_self_eq_properTime (f : TestFunctionℂ d) :
 /-- **The complex Parseval identity for the covariance pairing**: the quadratic pairing
     equals the (real, nonnegative) momentum-space integral of `‖𝓕f‖²` against the propagator,
     `⟨f, C f̄⟩ = ∫ ‖𝓕f(k)‖² · P(k) dk`. -/
-theorem freeCovarianceℂ_self_eq_momentum (f : TestFunctionℂ d) :
+theorem freeCovarianceℂ_self_eq_momentum (f : SchwartzTestFunctionℂ d) :
     freeCovarianceℂ m f f
       = ((∫ k : SpaceTime d, ‖(SchwartzMap.fourierTransformCLM ℂ f) k‖ ^ 2
           * freePropagatorMom d m k : ℝ) : ℂ) := by
@@ -574,7 +574,7 @@ theorem freeCovarianceℂ_self_eq_momentum (f : TestFunctionℂ d) :
 
 /-- **Parseval identity** for the covariance pairing, real form: the real part of the
     quadratic pairing is the momentum-space integral `∫ ‖𝓕f(k)‖² · P(k) dk`. -/
-theorem parseval_covariance_schwartz (f : TestFunctionℂ d) :
+theorem parseval_covariance_schwartz (f : SchwartzTestFunctionℂ d) :
     (freeCovarianceℂ m f f).re
       = ∫ k : SpaceTime d, ‖(SchwartzMap.fourierTransformCLM ℂ f) k‖ ^ 2
           * freePropagatorMom d m k := by
@@ -582,7 +582,7 @@ theorem parseval_covariance_schwartz (f : TestFunctionℂ d) :
   exact Complex.ofReal_re _
 
 /-- Positivity of the covariance pairing: `0 ≤ Re ⟨f, C f̄⟩`. -/
-theorem freeCovarianceℂ_positive (f : TestFunctionℂ d) :
+theorem freeCovarianceℂ_positive (f : SchwartzTestFunctionℂ d) :
     0 ≤ (freeCovarianceℂ m f f).re := by
   rw [parseval_covariance_schwartz f]
   refine integral_nonneg fun k => mul_nonneg (sq_nonneg _) ?_
@@ -598,7 +598,7 @@ section ReflectionBasics
 variable {d : ℕ}
 
 /-- The complexification of a real test function is fixed by complex conjugation. -/
-lemma toComplex_star_eq (f : TestFunction d) (x : SpaceTime d) :
+lemma toComplex_star_eq (f : SchwartzTestFunction d) (x : SpaceTime d) :
     starRingEnd ℂ ((toComplex f) x) = (toComplex f) x := by
   simp only [toComplex_apply]
   exact Complex.conj_ofReal (f x)
@@ -615,13 +615,13 @@ lemma re_integral_ofReal {α : Type*} [MeasurableSpace α] (μ : Measure α) (h 
 variable [Fact (2 ≤ d)]
 
 /-- Complexification commutes with composition by time reflection. -/
-lemma compTimeReflection_toComplex_eq_ofReal (f : TestFunction d) (x : SpaceTime d) :
+lemma compTimeReflection_toComplex_eq_ofReal (f : SchwartzTestFunction d) (x : SpaceTime d) :
     (QFT.compTimeReflection (toComplex f)) x = ((QFT.compTimeReflectionReal f) x : ℂ) := by
   simp only [QFT.compTimeReflection, QFT.compTimeReflectionReal,
     SchwartzMap.compCLM_apply, Function.comp_apply, toComplex_apply]
 
 /-- The time-reflected complexification of a real test function remains real-valued. -/
-lemma compTimeReflection_toComplex_star_eq (f : TestFunction d) (x : SpaceTime d) :
+lemma compTimeReflection_toComplex_star_eq (f : SchwartzTestFunction d) (x : SpaceTime d) :
     starRingEnd ℂ ((QFT.compTimeReflection (toComplex f)) x)
       = (QFT.compTimeReflection (toComplex f)) x := by
   simp only [QFT.compTimeReflection, SchwartzMap.compCLM_apply, Function.comp_apply]
@@ -679,7 +679,7 @@ lemma covariance_timeReflection_invariant (m : ℝ) [Fact (0 < m)] [GFFPropagato
 /-- Time-reflection change of variables for the covariance pairing: moving the reflection from
     the first test function to the kernel and the second test function. -/
 lemma double_integral_timeReflection_covariance
-    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : TestFunctionℂ d)
+    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : SchwartzTestFunctionℂ d)
     (hf : Integrable (fun p : SpaceTime d × SpaceTime d =>
         (QFT.compTimeReflection f) p.1 * (freeCovariance d m p.1 p.2 : ℂ) * g p.2)
         (volume.prod volume)) :
@@ -688,7 +688,7 @@ lemma double_integral_timeReflection_covariance
       = ∫ x, ∫ y,
           f x * (freeCovariance d m (QFT.timeReflection x) (QFT.timeReflection y) : ℂ)
             * (QFT.compTimeReflection g) y ∂volume ∂volume := by
-  have h_comp : ∀ h : TestFunctionℂ d, ∀ x,
+  have h_comp : ∀ h : SchwartzTestFunctionℂ d, ∀ x,
       (QFT.compTimeReflection h) x = h (QFT.timeReflection x) := by
     intro h x
     simp only [QFT.compTimeReflection, SchwartzMap.compCLM_apply, Function.comp_apply]
@@ -703,7 +703,7 @@ lemma double_integral_timeReflection_covariance
 
 /-- Integrability of the covariance pairing integrand with a time-reflected first argument. -/
 lemma integrable_compTimeReflection_covariance
-    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : TestFunctionℂ d) :
+    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : SchwartzTestFunctionℂ d) :
     Integrable (fun p : SpaceTime d × SpaceTime d =>
         (QFT.compTimeReflection f) p.1 * (freeCovariance d m p.1 p.2 : ℂ) * f p.2)
       (volume.prod volume) := by
@@ -712,7 +712,7 @@ lemma integrable_compTimeReflection_covariance
 
 /-- Integrability of the real covariance kernel pairing of a real test function. -/
 lemma integrable_real_covariance_kernel
-    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : TestFunction d) :
+    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : SchwartzTestFunction d) :
     Integrable (fun p : SpaceTime d × SpaceTime d =>
         (QFT.compTimeReflectionReal f) p.1 * freeCovariance d m p.1 p.2 * f p.2)
       (volume.prod volume) := by
@@ -743,7 +743,7 @@ lemma integrable_real_covariance_kernel
 
 /-- Fubini form of the real covariance kernel pairing over the product measure. -/
 lemma integral_prod_real_covariance_kernel
-    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : TestFunction d) :
+    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : SchwartzTestFunction d) :
     ∫ p : SpaceTime d × SpaceTime d,
         (QFT.compTimeReflectionReal f) p.1 * freeCovariance d m p.1 p.2 * f p.2
         ∂(volume.prod volume)
@@ -754,7 +754,7 @@ lemma integral_prod_real_covariance_kernel
 
 /-- Fubini form of the complex covariance kernel pairing over the product measure. -/
 lemma integral_prod_complex_covariance_kernel
-    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : TestFunction d) :
+    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : SchwartzTestFunction d) :
     ∫ p : SpaceTime d × SpaceTime d,
         (QFT.compTimeReflection (toComplex f)) p.1 * (freeCovariance d m p.1 p.2 : ℂ)
           * (toComplex f) p.2 ∂(volume.prod volume)
@@ -766,7 +766,7 @@ lemma integral_prod_complex_covariance_kernel
 
 /-- The real reflected pairing is the real part of the complexified reflected pairing. -/
 lemma real_integral_eq_complex_re
-    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : TestFunction d) :
+    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : SchwartzTestFunction d) :
     ∫ x, ∫ y,
         (QFT.compTimeReflectionReal f) x * freeCovariance d m x y * f y ∂volume ∂volume
       = (∫ x, ∫ y, (QFT.compTimeReflection (toComplex f)) x * (freeCovariance d m x y : ℂ)
@@ -796,7 +796,7 @@ variable {d : ℕ} {m : ℝ} [Fact (0 < m)] [Fact (2 ≤ d)] [GFFPropagator d m]
 
 /-- For each fixed `x`, the outer integrand of the bilinear pairing is integrable. -/
 lemma freeCovarianceℂ_bilinear_inner_integrable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f g : TestFunctionℂ d) :
+    (f g : SchwartzTestFunctionℂ d) :
     Integrable (fun x => ∫ y, f x * (freeCovariance d m x y : ℂ) * g y ∂volume) volume := by
   have h := freeCovarianceℂ_bilinear_integrable m f g
   rw [Measure.volume_eq_prod] at h
@@ -804,7 +804,7 @@ lemma freeCovarianceℂ_bilinear_inner_integrable (m : ℝ) [Fact (0 < m)] [GFFP
 
 /-- For almost every `x`, the inner integrand of the bilinear pairing is integrable in `y`. -/
 lemma freeCovarianceℂ_bilinear_slice_integrable (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f g : TestFunctionℂ d) :
+    (f g : SchwartzTestFunctionℂ d) :
     ∀ᵐ x ∂(volume : Measure (SpaceTime d)),
       Integrable (fun y => f x * (freeCovariance d m x y : ℂ) * g y) volume := by
   have h := freeCovarianceℂ_bilinear_integrable m f g
@@ -813,7 +813,7 @@ lemma freeCovarianceℂ_bilinear_slice_integrable (m : ℝ) [Fact (0 < m)] [GFFP
 
 /-- Bilinearity in the first argument: scalar multiplication and addition combined. -/
 theorem freeCovarianceℂ_bilinear_add_smul_left (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (c : ℂ) (f₁ f₂ g : TestFunctionℂ d) :
+    (c : ℂ) (f₁ f₂ g : SchwartzTestFunctionℂ d) :
     freeCovarianceℂ_bilinear m (c • f₁ + f₂) g
       = c * freeCovarianceℂ_bilinear m f₁ g + freeCovarianceℂ_bilinear m f₂ g := by
   classical
@@ -865,7 +865,7 @@ theorem freeCovarianceℂ_bilinear_add_smul_left (m : ℝ) [Fact (0 < m)] [GFFPr
         exact MeasureTheory.integral_const_mul _ _
 
 theorem freeCovarianceℂ_bilinear_add_left (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f₁ f₂ g : TestFunctionℂ d) :
+    (f₁ f₂ g : SchwartzTestFunctionℂ d) :
     freeCovarianceℂ_bilinear m (f₁ + f₂) g
       = freeCovarianceℂ_bilinear m f₁ g + freeCovarianceℂ_bilinear m f₂ g := by
   have h := freeCovarianceℂ_bilinear_add_smul_left m 1 f₁ f₂ g
@@ -873,16 +873,16 @@ theorem freeCovarianceℂ_bilinear_add_left (m : ℝ) [Fact (0 < m)] [GFFPropaga
   exact h
 
 theorem freeCovarianceℂ_bilinear_smul_left (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (c : ℂ) (f g : TestFunctionℂ d) :
+    (c : ℂ) (f g : SchwartzTestFunctionℂ d) :
     freeCovarianceℂ_bilinear m (c • f) g = c * freeCovarianceℂ_bilinear m f g := by
   have h := freeCovarianceℂ_bilinear_add_smul_left m c f 0 g
   rw [add_zero] at h
-  have zero_bilinear : freeCovarianceℂ_bilinear m (0 : TestFunctionℂ d) g = 0 := by
+  have zero_bilinear : freeCovarianceℂ_bilinear m (0 : SchwartzTestFunctionℂ d) g = 0 := by
     unfold freeCovarianceℂ_bilinear
     have h0 : ∀ x y : SpaceTime d,
-        (0 : TestFunctionℂ d) x * (freeCovariance d m x y : ℂ) * g y = 0 := by
+        (0 : SchwartzTestFunctionℂ d) x * (freeCovariance d m x y : ℂ) * g y = 0 := by
       intro x y
-      have hx : (0 : TestFunctionℂ d) x = 0 := rfl
+      have hx : (0 : SchwartzTestFunctionℂ d) x = 0 := rfl
       rw [hx]
       simp only [zero_mul]
     simp_rw [h0]
@@ -892,7 +892,7 @@ theorem freeCovarianceℂ_bilinear_smul_left (m : ℝ) [Fact (0 < m)] [GFFPropag
 
 /-- Symmetry of the bilinear pairing (Fubini plus symmetry of the kernel). -/
 theorem freeCovarianceℂ_bilinear_symm (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f g : TestFunctionℂ d) :
+    (f g : SchwartzTestFunctionℂ d) :
     freeCovarianceℂ_bilinear m f g = freeCovarianceℂ_bilinear m g f := by
   unfold freeCovarianceℂ_bilinear
   have h : ∫ x, ∫ y, (f x) * (freeCovariance d m x y : ℂ) * (g y) ∂volume ∂volume
@@ -906,14 +906,14 @@ theorem freeCovarianceℂ_bilinear_symm (m : ℝ) [Fact (0 < m)] [GFFPropagator 
   ring
 
 theorem freeCovarianceℂ_bilinear_smul_right (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (c : ℂ) (f g : TestFunctionℂ d) :
+    (c : ℂ) (f g : SchwartzTestFunctionℂ d) :
     freeCovarianceℂ_bilinear m f (c • g) = c * freeCovarianceℂ_bilinear m f g := by
   rw [freeCovarianceℂ_bilinear_symm m f (c • g),
     freeCovarianceℂ_bilinear_smul_left m c g f,
     freeCovarianceℂ_bilinear_symm m g f]
 
 theorem freeCovarianceℂ_bilinear_add_right (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f g₁ g₂ : TestFunctionℂ d) :
+    (f g₁ g₂ : SchwartzTestFunctionℂ d) :
     freeCovarianceℂ_bilinear m f (g₁ + g₂)
       = freeCovarianceℂ_bilinear m f g₁ + freeCovarianceℂ_bilinear m f g₂ := by
   rw [freeCovarianceℂ_bilinear_symm m f (g₁ + g₂),
@@ -1008,7 +1008,7 @@ lemma freePropagatorMomSqrt_mul_CLM_spec (m : ℝ) [Fact (0 < m)]
   exact linfty_mul_L2_CLM_spec _ _ _ _ f
 
 /-- Schwartz functions have integrable squared norm. -/
-lemma schwartz_normSq_integrable (f : TestFunctionℂ d) :
+lemma schwartz_normSq_integrable (f : SchwartzTestFunctionℂ d) :
     Integrable (fun k => ‖f k‖ ^ 2) volume := by
   have hf_memLp : MemLp f 2 volume := f.memLp 2 volume
   have hf_meas : AEStronglyMeasurable f volume := hf_memLp.1

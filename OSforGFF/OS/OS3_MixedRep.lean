@@ -226,7 +226,7 @@ lemma spatialPart_timeReflection_sub (x y : (SpaceTime d)) :
     where t = -x₀ - y₀ (time separation under reflection) and r̄ = x̄ - ȳ (spatial separation).
 
     The exp(-sm²) factor combines with exp(-s|p̄|²) to give exp(-s(|p̄|² + m²)). -/
-theorem heatKernel_bilinear_fourier_form (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d)) :
+theorem heatKernel_bilinear_fourier_form (m : ℝ) [Fact (0 < m)] (f : (SchwartzTestFunctionℂ d)) :
     ∫ s in Set.Ioi 0, (Real.exp (-s * m^2) : ℂ) *
       ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
         (starRingEnd ℂ (f x)) * f y * heatKernelProfile d s ‖timeReflection x - y‖ =
@@ -596,7 +596,7 @@ lemma s_integral_eval_complex (t : ℝ) (ω : ℝ) (hω : 0 < ω) :
 
     where all exponentials have real arguments (cast to ℂ). -/
 lemma s_integral_complex_eval (k_sp : (SpatialCoords d)) (x y : (SpaceTime d)) (m : ℝ) (hm : 0 < m)
-    (f : (TestFunctionℂ d)) :
+    (f : (SchwartzTestFunctionℂ d)) :
     ∫ s in Set.Ioi 0, (starRingEnd ℂ (f x)) * f y *
       (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
       Complex.exp (-(s : ℂ) * (‖k_sp‖^2 + m^2)) *
@@ -696,7 +696,7 @@ lemma s_integral_complex_eval (k_sp : (SpatialCoords d)) (x y : (SpaceTime d)) (
 
     **Proof:** Uses `fubini_s_xy_swap` to move s inside, then
     `s_integral_eval` to evaluate the Laplace transform. -/
-theorem laplace_s_integral_with_norm (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d)) :
+theorem laplace_s_integral_with_norm (m : ℝ) [Fact (0 < m)] (f : (SchwartzTestFunctionℂ d)) :
     (1 / (2 * π) ^ d : ℝ) *
     ∫ k_sp : (SpatialCoords d), ∫ s in Set.Ioi 0, ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
       (starRingEnd ℂ (f x)) * f y *
@@ -835,7 +835,7 @@ theorem laplace_s_integral_with_norm (m : ℝ) [Fact (0 < m)] (f : (TestFunction
     Uses `Integrable.mono'` with the bound from `schwinger_bound_integrable`.
     The pointwise bound |integrand| ≤ bound is verified for s > 0,
     and the set s ≤ 0 has measure zero under the restricted measure. -/
-theorem schwinger_bilinear_integrable (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d)) :
+theorem schwinger_bilinear_integrable (m : ℝ) [Fact (0 < m)] (f : (SchwartzTestFunctionℂ d)) :
     Integrable (fun (p : ℝ × (SpaceTime d) × (SpaceTime d)) =>
       (starRingEnd ℂ (f p.2.1)) * f p.2.2 *
       Real.exp (-p.1 * m^2) * heatKernelProfile d p.1 ‖timeReflection p.2.1 - p.2.2‖)
@@ -1055,7 +1055,7 @@ private lemma measurePreserving_schwinger_tripleReorder :
     Both sides equal ∫∫∫ F over (Ioi 0) × (SpaceTime d) × (SpaceTime d) by Fubini-Tonelli.
     The proof uses `integral_prod` to convert iterated integrals to product integrals,
     and the measure-preserving map `schwinger_tripleReorder` to connect them. -/
-theorem schwinger_fubini_core (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d)) :
+theorem schwinger_fubini_core (m : ℝ) [Fact (0 < m)] (f : (SchwartzTestFunctionℂ d)) :
     ∫ x : (SpaceTime d), ∫ y : (SpaceTime d), ∫ s in Set.Ioi 0,
       (starRingEnd ℂ (f x)) * f y *
         (Real.exp (-s * m^2) : ℂ) * heatKernelProfile d s ‖timeReflection x - y‖ =
@@ -1135,7 +1135,7 @@ theorem schwinger_fubini_core (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d))
     1. Rewrite both sides as integrals over ℝ × (SpaceTime d) × (SpaceTime d)
     2. Apply Fubini to swap the order of integration
     3. Use the integrability hypothesis to justify the swap -/
-theorem schwinger_fubini_swap (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d)) :
+theorem schwinger_fubini_swap (m : ℝ) [Fact (0 < m)] (f : (SchwartzTestFunctionℂ d)) :
     ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
       (starRingEnd ℂ (f x)) * f y *
         (∫ s in Set.Ioi 0, (Real.exp (-s * m^2) : ℂ) *
@@ -1250,7 +1250,7 @@ lemma freeCovariance_eq_schwingerRep (m : ℝ) [Fact (0 < m)] [GFFPropagator d m
     **Mathematical statement:**
     ∫∫ conj(f(x)) C(Θx,y) f(y) dx dy = ∫₀^∞ e^{-sm²} [∫∫ conj(f) f H(s,|Θx-y|) dx dy] ds
 -/
-theorem bilinear_schwinger_eq_heatKernel (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunctionℂ d)) :
+theorem bilinear_schwinger_eq_heatKernel (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (SchwartzTestFunctionℂ d)) :
     ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
       (starRingEnd ℂ (f x)) * (freeCovariance d m (timeReflection x) y : ℂ) * f y =
     ∫ s in Set.Ioi 0, (Real.exp (-s * m^2) : ℂ) *
@@ -1360,7 +1360,7 @@ theorem bilinear_schwinger_eq_heatKernel (m : ℝ) [Fact (0 < m)] [GFFPropagator
     - `laplace_integral_half_power` (THEOREM, line 135)
     - Fubini applications (require integrability - uses Schwartz decay)
 -/
-theorem heatKernel_bilinear_to_mixed_rep (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d))
+theorem heatKernel_bilinear_to_mixed_rep (m : ℝ) [Fact (0 < m)] (f : (SchwartzTestFunctionℂ d))
     (hf_supp : ∀ x, x 0 ≤ 0 → f x = 0) :
     ∫ s in Set.Ioi 0, (Real.exp (-s * m^2) : ℂ) *
       ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
@@ -1640,7 +1640,7 @@ theorem heatKernel_bilinear_to_mixed_rep (m : ℝ) [Fact (0 < m)] (f : (TestFunc
 
     **Note**: Working directly at bilinear level ensures absolute convergence
     (Schwartz test functions provide decay even when t = 0). -/
-theorem bessel_bilinear_eq_mixed_representation (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (TestFunctionℂ d))
+theorem bessel_bilinear_eq_mixed_representation (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : (SchwartzTestFunctionℂ d))
     (hf_supp : ∀ x, x 0 ≤ 0 → f x = 0) :
   ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
     (starRingEnd ℂ (f x)) *

@@ -40,7 +40,7 @@ variable {d : ℕ} [Fact (2 ≤ d)] (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
 
 omit [Fact (2 ≤ d)] in
 /-- The Euclidean action satisfies (g • f)(x) = f(g⁻¹ • x). -/
-lemma euclidean_action_apply (g : E d) (f : TestFunctionℂ d) (x : SpaceTime d) :
+lemma euclidean_action_apply (g : E d) (f : SchwartzTestFunctionℂ d) (x : SpaceTime d) :
     euclidean_action g f x = f (euclidean_pullback g x) := by
   unfold euclidean_action
   simp only [SchwartzMap.compCLM_apply]
@@ -109,7 +109,7 @@ set_option linter.unusedSectionVars false in
     for the product integral ∫ F(e p.1, e p.2) d(p) where e = actEquiv g⁻¹.
 
     Need to carefully apply integral_prod and MeasurePreserving.prod to complete. -/
-theorem freeCovarianceℂ_bilinear_euclidean_invariant (g : E d) (f h : TestFunctionℂ d) :
+theorem freeCovarianceℂ_bilinear_euclidean_invariant (g : E d) (f h : SchwartzTestFunctionℂ d) :
     freeCovarianceℂ_bilinear m (euclidean_action g f) (euclidean_action g h) =
     freeCovarianceℂ_bilinear m f h := by
   unfold freeCovarianceℂ_bilinear

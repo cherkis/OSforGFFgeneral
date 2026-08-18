@@ -74,7 +74,7 @@ open scoped MeasureTheory Complex BigOperators SchwartzMap
 
 /-- OS0 (Analyticity): The generating functional is analytic in the test functions. -/
 def OS0_Analyticity (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
-  ∀ (n : ℕ) (J : Fin n → TestFunctionℂ d),
+  ∀ (n : ℕ) (J : Fin n → SchwartzTestFunctionℂ d),
     AnalyticOn ℂ (fun z : Fin n → ℂ =>
       GJGeneratingFunctionalℂ dμ_config (∑ i, z i • J i)) Set.univ
 
@@ -85,14 +85,14 @@ def TwoPointIntegrable (dμ_config : ProbabilityMeasure (FieldConfiguration d)) 
 /-- OS1 (Regularity): The complex generating functional satisfies exponential bounds. -/
 def OS1_Regularity (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
   ∃ (p : ℝ) (c : ℝ), 1 ≤ p ∧ p ≤ 2 ∧ c > 0 ∧
-    (∀ (f : TestFunctionℂ d),
+    (∀ (f : SchwartzTestFunctionℂ d),
       ‖GJGeneratingFunctionalℂ dμ_config f‖ ≤
         Real.exp (c * (∫ x, ‖f x‖ ∂volume + ∫ x, ‖f x‖^p ∂volume))) ∧
     (p = 2 → TwoPointIntegrable dμ_config)
 
 /-- OS2 (Euclidean Invariance): The measure is invariant under Euclidean transformations. -/
 def OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
-  ∀ (g : QFT.E d) (f : TestFunctionℂ d),
+  ∀ (g : QFT.E d) (f : SchwartzTestFunctionℂ d),
     GJGeneratingFunctionalℂ dμ_config f =
     GJGeneratingFunctionalℂ dμ_config (QFT.euclidean_action g f)
 
@@ -101,7 +101,7 @@ def OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure (FieldConfiguration
     (Osterwalder–Schrader 1975, axiom E2) using complex-valued test functions and complex
     coefficients with conjugation, compatible with OS reconstruction.
 
-    The `star` operation on `TestFunctionℂ d` is `(star f)(x) = conj(f(Θx))`, combining
+    The `star` operation on `SchwartzTestFunctionℂ d` is `(star f)(x) = conj(f(Θx))`, combining
     time reflection with complex conjugation.  This is required by the `i` factor in the
     characteristic function `Z[J] = ∫ exp(i⟨ω,J⟩) dμ` so that
     `Z[f − star g] = ∫ exp(i⟨ω,f⟩) · conj(exp(i⟨ω,Θg⟩)) dμ`.
@@ -143,7 +143,7 @@ def OS3_ReflectionPositivity_real (dμ_config : ProbabilityMeasure (FieldConfigu
     analyticity (OS0) and regularity (OS1).
 -/
 def OS4_Clustering (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
-  ∀ (f g : TestFunction d) (ε : ℝ), ε > 0 → ∃ (R : ℝ), R > 0 ∧ ∀ (a : SpaceTime d),
+  ∀ (f g : SchwartzTestFunction d) (ε : ℝ), ε > 0 → ∃ (R : ℝ), R > 0 ∧ ∀ (a : SpaceTime d),
     ‖a‖ > R →
     ‖GJGeneratingFunctional dμ_config (f + g.translate a) -
      GJGeneratingFunctional dμ_config f * GJGeneratingFunctional dμ_config g‖ < ε
@@ -156,7 +156,7 @@ def OS4_Clustering (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Pr
     This is the standard ergodicity formulation from Glimm-Jaffe.
 -/
 def OS4_Ergodicity (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Prop :=
-  ∀ (n : ℕ) (z : Fin n → ℂ) (f : Fin n → TestFunctionℂ d),
+  ∀ (n : ℕ) (z : Fin n → ℂ) (f : Fin n → SchwartzTestFunctionℂ d),
     let μ := dμ_config.toMeasure
     let A : FieldConfiguration d → ℂ := fun ω =>
       ∑ j, z j * Complex.exp (distributionPairingℂ_real ω (f j))
@@ -179,7 +179,7 @@ def OS4_Ergodicity (dμ_config : ProbabilityMeasure (FieldConfiguration d)) : Pr
 -/
 def OS4_PolynomialClustering (dμ_config : ProbabilityMeasure (FieldConfiguration d))
     (α : ℝ) (_hα : α > 0) : Prop :=
-  ∀ (f g : TestFunctionℂ d), ∃ (c : ℝ), c ≥ 0 ∧
+  ∀ (f g : SchwartzTestFunctionℂ d), ∃ (c : ℝ), c ≥ 0 ∧
     let μ := dμ_config.toMeasure
     ∀ s : ℝ, s ≥ 0 →
       ‖∫ ω, Complex.exp (distributionPairingℂ_real ω f +

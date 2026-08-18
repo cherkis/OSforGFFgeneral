@@ -59,7 +59,7 @@ omit [Fact (2 ≤ d)] in
 /-- Plancherel (Schwartz): L² norm preservation for the Fourier transform.
     This follows directly from Mathlib's `SchwartzMap.integral_norm_sq_fourier`.
     Mathlib's Fourier transform is unitary-normalized, so no multiplicative constant is needed. -/
-theorem fourier_plancherel_schwartz (g : TestFunctionℂ d) :
+theorem fourier_plancherel_schwartz (g : SchwartzTestFunctionℂ d) :
     ∫ k, ‖(SchwartzMap.fourierTransformCLM ℂ g) k‖^2 ∂volume =
       ∫ x, ‖g x‖^2 ∂volume :=
   SchwartzMap.integral_norm_sq_fourier g
@@ -89,7 +89,7 @@ theorem schwingerTwoPointFunction_eq_GFF (m : ℝ) [Fact (0 < m)] [GFFPropagator
     = SchwingerTwoPointFunction_GFF m x := by
   have h_cont : ContinuousOn (freeCovarianceKernel d m)
       {y : SpaceTime d | y ≠ 0} := freeCovarianceKernel_continuousOn
-  have h_S₂ : ∀ (f g : TestFunction d),
+  have h_S₂ : ∀ (f g : SchwartzTestFunction d),
       SchwingerFunction₂ (gaussianFreeField_free (d := d) m) f g =
       ∫ u, ∫ v, f u * freeCovarianceKernel d m (u - v) * g v := by
     -- Chain: S₂(f,g) = ∫ω (ωf)(ωg) dμ = freeCovarianceFormR m f g = ∫∫ f(u) C(u,v) g(v)
@@ -147,7 +147,7 @@ Elementary bound on the GFF generating function using complex exponential proper
 /-- The norm of the GFF generating function equals the exponential of minus one-half
     the real part of the covariance. This is an elementary property of complex exponentials:
     |exp(z)| = exp(Re z). -/
-lemma gff_generating_norm_eq (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : TestFunctionℂ d) :
+lemma gff_generating_norm_eq (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : SchwartzTestFunctionℂ d) :
   ‖GJGeneratingFunctionalℂ (gaussianFreeField_free (d := d) m) f‖ =
     Real.exp (-(1/2) * (freeCovarianceℂ_bilinear m f f).re) := by
   rw [gff_complex_generating, gff_two_point_equals_covarianceℂ_free, Complex.norm_exp]
@@ -158,7 +158,7 @@ lemma gff_generating_norm_eq (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : T
     satisfies Re C(f,f) = C(Re f, Re f) - C(Im f, Im f). Combined with monotonicity
     of exp, this gives the bound exp(-1/2 Re C(f,f)) ≤ exp(1/2 C(Im f, Im f)). -/
 lemma gff_generating_bound_by_imaginary (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f : TestFunctionℂ d) :
+    (f : SchwartzTestFunctionℂ d) :
   Real.exp (-(1/2) * (freeCovarianceℂ_bilinear m f f).re) ≤
     Real.exp ((1/2) * (freeCovarianceℂ_bilinear m (toComplex (complex_testfunction_decompose f).2)
                                                     (toComplex (complex_testfunction_decompose f).2)).re) := by
@@ -234,7 +234,7 @@ This uses the momentum space representation and the bound 1/((2π)²‖k‖² + 
 plus Plancherel and the pointwise bound |Im f| ≤ |f|.
 -/
 lemma covariance_imaginary_L2_bound (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f : TestFunctionℂ d) :
+    (f : SchwartzTestFunctionℂ d) :
   (freeCovarianceℂ_bilinear m (toComplex (complex_testfunction_decompose f).2)
                               (toComplex (complex_testfunction_decompose f).2)).re ≤
     (1 / m^2) * ∫ x, ‖f x‖^2 ∂volume := by
@@ -365,7 +365,7 @@ lemma covariance_imaginary_L2_bound (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
 /-- The GFF generating functional satisfies the exponential bound
     |Z[f]| ≤ exp((1/2m²)||f||²_{L²}). This combines the norm equality,
     the bound by imaginary part, and the L² bound to give the final OS1 estimate. -/
-lemma gff_generating_L2_bound (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : TestFunctionℂ d) :
+lemma gff_generating_L2_bound (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : SchwartzTestFunctionℂ d) :
   ‖GJGeneratingFunctionalℂ (gaussianFreeField_free (d := d) m) f‖ ≤
     Real.exp ((1 / (2 * m^2)) * ∫ x, ‖f x‖^2 ∂volume) := by
   set fIm := (complex_testfunction_decompose f).2

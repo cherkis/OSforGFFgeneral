@@ -1,8 +1,8 @@
 # Definitions Entering the OS Axiom Statements
 
 The library is **dimension-generic**: every definition below is parameterized by the spacetime
-dimension `d : ℕ` (a `variable {d}` in scope), so `SpaceTime`, `TestFunction`, `E`, `O4`,
-`FieldConfiguration` in the snippets mean `SpaceTime d`, `TestFunction d`, `E d`, `O4 d`,
+dimension `d : ℕ` (a `variable {d}` in scope), so `SpaceTime`, `SchwartzTestFunction`, `E`, `O4`,
+`FieldConfiguration` in the snippets mean `SpaceTime d`, `SchwartzTestFunction d`, `E d`, `O4 d`,
 `FieldConfiguration d`. The master theorem is:
 
 ```lean
@@ -30,7 +30,7 @@ assessments below hold uniformly in `d`.)
 **Definition** ([Spacetime/Basic.lean:163](../OSforGFF/Spacetime/Basic.lean#L163)):
 ```lean
 def GJGeneratingFunctional (dμ_config : ProbabilityMeasure FieldConfiguration)
-  (J : TestFunction) : ℂ :=
+  (J : SchwartzTestFunction) : ℂ :=
   ∫ ω, Complex.exp (Complex.I * (distributionPairing ω J : ℂ)) ∂dμ_config.toMeasure
 ```
 
@@ -47,12 +47,12 @@ matrix would be conjugate-transposed). **Correct.**
 
 **Definitions** ([Spacetime/Basic.lean:249,256](../OSforGFF/Spacetime/Basic.lean#L249)):
 ```lean
-def distributionPairingℂ_real (ω : FieldConfiguration) (f : TestFunctionℂ) : ℂ :=
+def distributionPairingℂ_real (ω : FieldConfiguration) (f : SchwartzTestFunctionℂ) : ℂ :=
   let ⟨f_re, f_im⟩ := complex_testfunction_decompose f
   (ω f_re : ℂ) + Complex.I * (ω f_im : ℂ)
 
 def GJGeneratingFunctionalℂ (dμ_config : ProbabilityMeasure FieldConfiguration)
-  (J : TestFunctionℂ) : ℂ :=
+  (J : SchwartzTestFunctionℂ) : ℂ :=
   ∫ ω, Complex.exp (Complex.I * (distributionPairingℂ_real ω J)) ∂dμ_config.toMeasure
 ```
 
@@ -71,7 +71,7 @@ standard construction. **Correct.**
 
 **Definition** ([Spacetime/Basic.lean:122](../OSforGFF/Spacetime/Basic.lean#L122)):
 ```lean
-def distributionPairing (ω : FieldConfiguration) (f : TestFunction) : ℝ := ω f
+def distributionPairing (ω : FieldConfiguration) (f : SchwartzTestFunction) : ℝ := ω f
 ```
 
 **Assessment**: Just the WeakDual evaluation map. No convention choices. **Trivially correct.**
@@ -99,7 +99,7 @@ complex generating functional `GJGeneratingFunctionalℂ` and complex time refle
 `compTimeReflection`.
 
 **(b) Complex coefficients and test functions**: This formulation now uses complex-valued
-test functions (`PositiveTimeTestFunctionℂ = Submodule ℂ TestFunctionℂ`) with complex
+test functions (`PositiveTimeTestFunctionℂ = Submodule ℂ SchwartzTestFunctionℂ`) with complex
 coefficients (`c : Fin n → ℂ`) and explicit conjugation (`starRingEnd ℂ`). This is the
 standard Osterwalder–Schrader formulation (1975, axiom E2) restricted to the 1-particle
 sector of the generating functional.
@@ -123,7 +123,7 @@ compatibility and as a stepping stone in the GFF proof.
 
 **(c) `compTimeReflection`**: This is the complex version `(Θf)(x) = f(Θx) = f(−t, x̄)`
 acting on complex-valued test functions. It is an ℝ-linear (not ℂ-linear) map on
-`TestFunctionℂ`. For the OS star operation f★ = conj(Θf), complex conjugation is
+`SchwartzTestFunctionℂ`. For the OS star operation f★ = conj(Θf), complex conjugation is
 handled separately via `starRingEnd ℂ` in the coefficients.  **Correct.**
 
 ---
@@ -147,7 +147,7 @@ is index 0 throughout the project (`getTimeComponent x = x ⟨0, _⟩` in Basic.
 
 **Definition** ([Spacetime/Euclidean.lean:350](../OSforGFF/Spacetime/Euclidean.lean#L350)):
 ```lean
-noncomputable def euclidean_action (g : E) (f : TestFunctionℂ) : TestFunctionℂ :=
+noncomputable def euclidean_action (g : E) (f : SchwartzTestFunctionℂ) : SchwartzTestFunctionℂ :=
   SchwartzMap.compCLM ... f    -- composes f with euclidean_pullback g = act g⁻¹
 ```
 
@@ -183,7 +183,7 @@ inverse) are all proved in Lean. **Correct.**
 **Definition** ([OS/Axioms.lean:123](../OSforGFF/OS/Axioms.lean#L123)):
 ```lean
 def OS4_Clustering (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∀ (f g : TestFunction) (ε : ℝ), ε > 0 → ∃ (R : ℝ), R > 0 ∧ ∀ (a : SpaceTime),
+  ∀ (f g : SchwartzTestFunction) (ε : ℝ), ε > 0 → ∃ (R : ℝ), R > 0 ∧ ∀ (a : SpaceTime),
     ‖a‖ > R →
     ‖GJGeneratingFunctional dμ_config (f + g.translate a) -
      GJGeneratingFunctional dμ_config f * GJGeneratingFunctional dμ_config g‖ < ε
@@ -207,7 +207,7 @@ which is standard: translating the function by +a means evaluating at x − a. *
 **Definition** ([OS/Axioms.lean:136](../OSforGFF/OS/Axioms.lean#L136)):
 ```lean
 def OS4_Ergodicity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∀ (n : ℕ) (z : Fin n → ℂ) (f : Fin n → TestFunctionℂ),
+  ∀ (n : ℕ) (z : Fin n → ℂ) (f : Fin n → SchwartzTestFunctionℂ),
     let μ := dμ_config.toMeasure
     let A : FieldConfiguration → ℂ := fun ω =>
       ∑ j, z j * Complex.exp (distributionPairingℂ_real ω (f j))
@@ -238,8 +238,8 @@ The sign convention (positive s = forward time) is correct.
 
 **Definition** ([Spacetime/PositiveTimeTestFunction.lean:52](../OSforGFF/Spacetime/PositiveTimeTestFunction.lean#L52)):
 ```lean
-def PositiveTimeTestFunctions.submodule : Submodule ℝ TestFunction where
-  carrier := { f : TestFunction | tsupport f ⊆ positiveTimeSet }
+def PositiveTimeTestFunctions.submodule : Submodule ℝ SchwartzTestFunction where
+  carrier := { f : SchwartzTestFunction | tsupport f ⊆ positiveTimeSet }
 ```
 
 where `positiveTimeSet = {x | getTimeComponent x > 0}` is open.
@@ -258,7 +258,7 @@ support inside an open set implies support inside that set). **Correct.**
 **Definition** ([OS/Axioms.lean:73](../OSforGFF/OS/Axioms.lean#L73)):
 ```lean
 def OS0_Analyticity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∀ (n : ℕ) (J : Fin n → TestFunctionℂ),
+  ∀ (n : ℕ) (J : Fin n → SchwartzTestFunctionℂ),
     AnalyticOn ℂ (fun z : Fin n → ℂ =>
       GJGeneratingFunctionalℂ dμ_config (∑ i, z i • J i)) Set.univ
 ```
@@ -276,7 +276,7 @@ subspaces of the test function space. **Correct.**
 ```lean
 def OS1_Regularity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∃ (p : ℝ) (c : ℝ), 1 ≤ p ∧ p ≤ 2 ∧ c > 0 ∧
-    (∀ (f : TestFunctionℂ),
+    (∀ (f : SchwartzTestFunctionℂ),
       ‖GJGeneratingFunctionalℂ dμ_config f‖ ≤
         Real.exp (c * (∫ x, ‖f x‖ ∂volume + ∫ x, ‖f x‖^p ∂volume))) ∧
     (p = 2 → TwoPointIntegrable dμ_config)
@@ -293,7 +293,7 @@ encodes temperedness: Z extends continuously to Lp. The subsidiary condition
 **Definition** ([OS/Axioms.lean:91](../OSforGFF/OS/Axioms.lean#L91)):
 ```lean
 def OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∀ (g : QFT.E) (f : TestFunctionℂ),
+  ∀ (g : QFT.E) (f : SchwartzTestFunctionℂ),
     GJGeneratingFunctionalℂ dμ_config f =
     GJGeneratingFunctionalℂ dμ_config (QFT.euclidean_action g f)
 ```

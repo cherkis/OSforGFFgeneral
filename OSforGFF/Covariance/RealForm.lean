@@ -56,11 +56,11 @@ variable {d : ℕ} [Fact (2 ≤ d)]
 
 /-- Real covariance bilinear form induced by the free covariance kernel. -/
 noncomputable def freeCovarianceFormR (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f g : TestFunction d) : ℝ :=
+    (f g : SchwartzTestFunction d) : ℝ :=
   ∫ x, ∫ y, (f x) * (freeCovariance d m x y) * (g y) ∂volume ∂volume
 
 theorem freeCovarianceℂ_bilinear_agrees_on_reals
-  (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : TestFunction d) :
+  (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : SchwartzTestFunction d) :
     freeCovarianceℂ_bilinear m (toComplex f) (toComplex g)
       = (freeCovarianceFormR m f g : ℂ) := by
   unfold freeCovarianceℂ_bilinear freeCovarianceFormR
@@ -105,7 +105,7 @@ private lemma lp_real_smul_eq_complex (c : ℝ) (g : Lp ℂ 2 (volume : Measure 
 Note: we build this manually instead of using `restrictScalars` because the
 `LinearMap.CompatibleSMul` instance is not found automatically in mathlib v4.29. -/
 noncomputable def fourierTransformCLM_real :
-    TestFunctionℂ d →L[ℝ] TestFunctionℂ d where
+    SchwartzTestFunctionℂ d →L[ℝ] SchwartzTestFunctionℂ d where
   toLinearMap :=
     { toFun := SchwartzMap.fourierTransformCLM ℂ
       map_add' := fun x y => map_add _ x y
@@ -120,7 +120,7 @@ noncomputable def fourierTransformCLM_real :
 
 /-- ℝ-linear view of the Schwartz-to-`L²` embedding. -/
 noncomputable def schwartzToL2CLM_real (_m : ℝ) :
-    TestFunctionℂ d →L[ℝ] Lp ℂ 2 (volume : Measure (SpaceTime d)) where
+    SchwartzTestFunctionℂ d →L[ℝ] Lp ℂ 2 (volume : Measure (SpaceTime d)) where
   toLinearMap :=
     { toFun := SchwartzMap.toLpCLM ℂ ℂ 2 (volume : Measure (SpaceTime d))
       map_add' := fun x y => map_add _ x y
@@ -137,14 +137,14 @@ noncomputable def schwartzToL2CLM_real (_m : ℝ) :
 
 /-- The embedding T maps a test function to a weighted function in momentum space.
     Conceptually: T f = FourierTransform(f) * (‖k‖² + m²)^(-1/2). -/
-noncomputable def sqrtPropagatorMap (m : ℝ) (f : TestFunction d) : SpaceTime d → ℂ :=
+noncomputable def sqrtPropagatorMap (m : ℝ) (f : SchwartzTestFunction d) : SpaceTime d → ℂ :=
   fun k =>
     (SchwartzMap.fourierTransformCLM ℂ (toComplex f)) k
       * freePropagatorMomSqrt d m k
 
 omit [Fact (2 ≤ d)] in
 /-- The sqrtPropagatorMap is square-integrable. -/
-lemma sqrtPropagatorMap_sq_integrable (m : ℝ) [Fact (0 < m)] (f : TestFunction d) :
+lemma sqrtPropagatorMap_sq_integrable (m : ℝ) [Fact (0 < m)] (f : SchwartzTestFunction d) :
     Integrable (fun k => ‖sqrtPropagatorMap m f k‖ ^ 2) volume := by
   classical
   set F := SchwartzMap.fourierTransformCLM ℂ (toComplex f)
@@ -199,7 +199,7 @@ lemma sqrtPropagatorMap_sq_integrable (m : ℝ) [Fact (0 < m)] (f : TestFunction
 
 omit [Fact (2 ≤ d)] in
 /-- The weighted Fourier representative lies in L². -/
-lemma sqrtPropagatorMap_memLp (m : ℝ) [Fact (0 < m)] (f : TestFunction d) :
+lemma sqrtPropagatorMap_memLp (m : ℝ) [Fact (0 < m)] (f : SchwartzTestFunction d) :
     MemLp (sqrtPropagatorMap m f) 2 volume := by
   classical
   set F := SchwartzMap.fourierTransformCLM ℂ (toComplex f)
@@ -218,12 +218,12 @@ lemma sqrtPropagatorMap_memLp (m : ℝ) [Fact (0 < m)] (f : TestFunction d) :
   exact (memLp_two_iff_integrable_sq_norm h_meas).2 h_sq
 
 /-- The squared L² norm of the mapped function. -/
-noncomputable def sqrtPropagatorMap_norm_sq (m : ℝ) (f : TestFunction d) : ℝ :=
+noncomputable def sqrtPropagatorMap_norm_sq (m : ℝ) (f : SchwartzTestFunction d) : ℝ :=
   ∫ k, ‖sqrtPropagatorMap m f k‖ ^ 2 ∂volume
 
 omit [Fact (2 ≤ d)] in
 /-- The map is linear in f (additive). -/
-lemma sqrtPropagatorMap_linear_add (m : ℝ) [Fact (0 < m)] (f g : TestFunction d) :
+lemma sqrtPropagatorMap_linear_add (m : ℝ) [Fact (0 < m)] (f g : SchwartzTestFunction d) :
     sqrtPropagatorMap m (f + g) = sqrtPropagatorMap m f + sqrtPropagatorMap m g := by
   ext k
   unfold sqrtPropagatorMap
@@ -236,7 +236,7 @@ lemma sqrtPropagatorMap_linear_add (m : ℝ) [Fact (0 < m)] (f g : TestFunction 
 
 omit [Fact (2 ≤ d)] in
 /-- The map is ℝ-linear (scalar multiplication). -/
-lemma sqrtPropagatorMap_linear_smul (m : ℝ) [Fact (0 < m)] (c : ℝ) (f : TestFunction d) :
+lemma sqrtPropagatorMap_linear_smul (m : ℝ) [Fact (0 < m)] (c : ℝ) (f : SchwartzTestFunction d) :
     sqrtPropagatorMap m (c • f) = c • sqrtPropagatorMap m f := by
   ext k
   unfold sqrtPropagatorMap
@@ -251,13 +251,13 @@ lemma sqrtPropagatorMap_linear_smul (m : ℝ) [Fact (0 < m)] (c : ℝ) (f : Test
 
 omit [Fact (2 ≤ d)] in
 /-- For real test functions, the star (conjugation) of toComplex is the identity. -/
-lemma toComplex_star (f : TestFunction d) (x : SpaceTime d) :
+lemma toComplex_star (f : SchwartzTestFunction d) (x : SpaceTime d) :
     starRingEnd ℂ (toComplex f x) = toComplex f x := by
   simp [toComplex_apply]
 
 /-- For real test functions, freeCovarianceℂ agrees with freeCovarianceℂ_bilinear. -/
 lemma freeCovarianceℂ_eq_bilinear_on_reals (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
-    (f g : TestFunction d) :
+    (f g : SchwartzTestFunction d) :
     freeCovarianceℂ m (toComplex f) (toComplex g)
       = freeCovarianceℂ_bilinear m (toComplex f) (toComplex g) := by
   unfold freeCovarianceℂ freeCovarianceℂ_bilinear
@@ -266,7 +266,7 @@ lemma freeCovarianceℂ_eq_bilinear_on_reals (m : ℝ) [Fact (0 < m)] [GFFPropag
   rw [toComplex_star]
 
 /-- Key lemma: The squared norm equals the covariance form. -/
-lemma sqrtPropagatorMap_norm_eq_covariance (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : TestFunction d) :
+lemma sqrtPropagatorMap_norm_eq_covariance (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : SchwartzTestFunction d) :
     sqrtPropagatorMap_norm_sq m f = freeCovarianceFormR m f f := by
   classical
   set F := SchwartzMap.fourierTransformCLM ℂ (toComplex f)
@@ -329,9 +329,9 @@ lemma sqrtPropagatorMap_norm_eq_covariance (m : ℝ) [Fact (0 < m)] [GFFPropagat
 abbrev TargetHilbertSpace (d : ℕ) (_m : ℝ) : Type :=
   Lp (E := ℂ) 2 (volume : Measure (SpaceTime d))
 
-/-- The linear map T: TestFunction d → L². -/
+/-- The linear map T: SchwartzTestFunction d → L². -/
 noncomputable def embeddingMap (m : ℝ) [Fact (0 < m)] :
-    TestFunction d →ₗ[ℝ] TargetHilbertSpace d m :=
+    SchwartzTestFunction d →ₗ[ℝ] TargetHilbertSpace d m :=
   { toFun := fun f =>
       (sqrtPropagatorMap_memLp (m := m) (f := f)).toLp (sqrtPropagatorMap m f)
     map_add' := by
@@ -375,12 +375,12 @@ private noncomputable def freePropagatorMomSqrt_mul_CLM_real (m : ℝ) [Fact (0 
 
 /-- Continuous linear map obtained by composing the proven building blocks. -/
 noncomputable def embeddingMapCLM (m : ℝ) [Fact (0 < m)] :
-    TestFunction d →L[ℝ] Lp ℂ 2 (volume : Measure (SpaceTime d)) :=
+    SchwartzTestFunction d →L[ℝ] Lp ℂ 2 (volume : Measure (SpaceTime d)) :=
   ((freePropagatorMomSqrt_mul_CLM_real m).comp (schwartzToL2CLM_real m)).comp
     ((fourierTransformCLM_real).comp toComplexCLM)
 
 omit [Fact (2 ≤ d)] in
-lemma embeddingMapCLM_apply (m : ℝ) [Fact (0 < m)] (f : TestFunction d) :
+lemma embeddingMapCLM_apply (m : ℝ) [Fact (0 < m)] (f : SchwartzTestFunction d) :
     embeddingMapCLM m f = embeddingMap m f := by
   classical
   set g := SchwartzMap.fourierTransformCLM ℂ (toComplex f) with hg
@@ -419,8 +419,8 @@ lemma embeddingMapCLM_apply (m : ℝ) [Fact (0 < m)] (f : TestFunction d) :
     Note: InnerProductSpace ℝ H implies NormedSpace ℝ H via InnerProductSpace.toNormedSpace. -/
 theorem sqrtPropagatorEmbedding (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
   ∃ (H : Type) (_ : NormedAddCommGroup H) (_ : InnerProductSpace ℝ H)
-    (T : TestFunction d →ₗ[ℝ] H),
-    ∀ f : TestFunction d, freeCovarianceFormR m f f = ‖T f‖^2 := by
+    (T : SchwartzTestFunction d →ₗ[ℝ] H),
+    ∀ f : SchwartzTestFunction d, freeCovarianceFormR m f f = ‖T f‖^2 := by
   refine ⟨TargetHilbertSpace d m, inferInstance, inferInstance, embeddingMap m, ?_⟩
   intro f
   rw [← sqrtPropagatorMap_norm_eq_covariance]
@@ -465,7 +465,7 @@ theorem sqrtPropagatorEmbedding (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
 
 omit [Fact (2 ≤ d)] in
 /-- Squared L² norm of the embedded function in terms of the pointwise integral. -/
-lemma embeddingMap_norm_sq (m : ℝ) [Fact (0 < m)] (f : TestFunction d) :
+lemma embeddingMap_norm_sq (m : ℝ) [Fact (0 < m)] (f : SchwartzTestFunction d) :
     ‖embeddingMap m f‖ ^ 2 = ∫ (k : SpaceTime d), ‖sqrtPropagatorMap m f k‖ ^ 2 ∂volume := by
   have h_memLp := sqrtPropagatorMap_memLp (m := m) (f := f)
   change ‖h_memLp.toLp (sqrtPropagatorMap m f)‖ ^ 2 = _
@@ -508,19 +508,19 @@ lemma embeddingMap_norm_sq (m : ℝ) [Fact (0 < m)] (f : TestFunction d) :
             conv_rhs => arg 1; rw [← coe_nnnorm, ENNReal.ofReal_coe_nnreal]
             conv_rhs => arg 2; rw [← coe_nnnorm, ENNReal.ofReal_coe_nnreal]
 
-lemma freeCovarianceFormR_eq_normSq (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : TestFunction d) :
+lemma freeCovarianceFormR_eq_normSq (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : SchwartzTestFunction d) :
     freeCovarianceFormR m f f = ‖embeddingMap m f‖ ^ 2 := by
   have h_cov := sqrtPropagatorMap_norm_eq_covariance (m := m) (f := f)
   have h_norm := embeddingMap_norm_sq (m := m) (f := f)
   simpa [sqrtPropagatorMap_norm_sq, h_norm] using h_cov.symm
 
 omit [Fact (2 ≤ d)] in
-/-- The embedding map TestFunction d → L² is continuous. -/
+/-- The embedding map SchwartzTestFunction d → L² is continuous. -/
 lemma embeddingMap_continuous (m : ℝ) [Fact (0 < m)] :
     Continuous (embeddingMap (d := d) m) := by
   classical
   have h := (embeddingMapCLM (d := d) (m := m)).continuous
-  have h_fun_eq : (fun f : TestFunction d => embeddingMapCLM m f)
+  have h_fun_eq : (fun f : SchwartzTestFunction d => embeddingMapCLM m f)
       = (fun f => embeddingMap m f) := by
     funext f
     simp [embeddingMapCLM_apply]
@@ -528,8 +528,8 @@ lemma embeddingMap_continuous (m : ℝ) [Fact (0 < m)] :
 
 /-- Continuity of the real covariance quadratic form f ↦ C(f,f). -/
 theorem freeCovarianceFormR_continuous (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
-    Continuous (fun f : TestFunction d => freeCovarianceFormR m f f) := by
-  have h_eq : (fun f : TestFunction d => freeCovarianceFormR m f f)
+    Continuous (fun f : SchwartzTestFunction d => freeCovarianceFormR m f f) := by
+  have h_eq : (fun f : SchwartzTestFunction d => freeCovarianceFormR m f f)
       = (fun f => ‖embeddingMap m f‖ ^ 2) := by
     ext f
     exact freeCovarianceFormR_eq_normSq (m := m) (f := f)
@@ -542,7 +542,7 @@ theorem freeCovarianceFormR_continuous (m : ℝ) [Fact (0 < m)] [GFFPropagator d
 
 /-- Positivity of the real covariance quadratic form. -/
 theorem freeCovarianceFormR_pos (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
-    ∀ f : TestFunction d, 0 ≤ freeCovarianceFormR m f f := by
+    ∀ f : SchwartzTestFunction d, 0 ≤ freeCovarianceFormR m f f := by
   intro f
   have h1 : freeCovarianceℂ_bilinear m (toComplex f) (toComplex f) = (freeCovarianceFormR m f f : ℂ) :=
     freeCovarianceℂ_bilinear_agrees_on_reals m f f
@@ -555,7 +555,7 @@ theorem freeCovarianceFormR_pos (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] :
   simpa using h3
 
 /-- Symmetry of the real covariance bilinear form. -/
-theorem freeCovarianceFormR_symm (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : TestFunction d) :
+theorem freeCovarianceFormR_symm (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : SchwartzTestFunction d) :
     freeCovarianceFormR m f g = freeCovarianceFormR m g f := by
   apply Complex.ofReal_injective
   calc (freeCovarianceFormR m f g : ℂ)
@@ -567,7 +567,7 @@ theorem freeCovarianceFormR_symm (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f
           rw [freeCovarianceℂ_bilinear_agrees_on_reals m g f]
 
 /-- Linearity in the first argument of the real covariance bilinear form. -/
-lemma freeCovarianceFormR_add_left (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f₁ f₂ g : TestFunction d) :
+lemma freeCovarianceFormR_add_left (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f₁ f₂ g : SchwartzTestFunction d) :
     freeCovarianceFormR m (f₁ + f₂) g = freeCovarianceFormR m f₁ g + freeCovarianceFormR m f₂ g := by
   apply Complex.ofReal_injective
   have h :=
@@ -591,7 +591,7 @@ lemma freeCovarianceFormR_add_left (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] 
   simpa [Complex.ofReal_add] using h'
 
 /-- Scalar multiplication in the first argument of the real covariance bilinear form. -/
-lemma freeCovarianceFormR_smul_left (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (c : ℝ) (f g : TestFunction d) :
+lemma freeCovarianceFormR_smul_left (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (c : ℝ) (f g : SchwartzTestFunction d) :
     freeCovarianceFormR m (c • f) g = c * freeCovarianceFormR m f g := by
   apply Complex.ofReal_injective
   have h :=
@@ -617,7 +617,7 @@ lemma freeCovarianceFormR_smul_left (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
   simpa [Complex.ofReal_mul] using h'
 
 /-- Addition in the second argument of the real covariance bilinear form. -/
-lemma freeCovarianceFormR_add_right (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g₁ g₂ : TestFunction d) :
+lemma freeCovarianceFormR_add_right (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g₁ g₂ : SchwartzTestFunction d) :
     freeCovarianceFormR m f (g₁ + g₂) = freeCovarianceFormR m f g₁ + freeCovarianceFormR m f g₂ := by
   apply Complex.ofReal_injective
   have h :=
@@ -641,7 +641,7 @@ lemma freeCovarianceFormR_add_right (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
   simpa [Complex.ofReal_add] using h'
 
 /-- Scalar multiplication in the second argument of the real covariance bilinear form. -/
-lemma freeCovarianceFormR_smul_right (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (c : ℝ) (f g : TestFunction d) :
+lemma freeCovarianceFormR_smul_right (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (c : ℝ) (f g : SchwartzTestFunction d) :
     freeCovarianceFormR m f (c • g) = c * freeCovarianceFormR m f g := by
   apply Complex.ofReal_injective
   have h :=
@@ -667,7 +667,7 @@ lemma freeCovarianceFormR_smul_right (m : ℝ) [Fact (0 < m)] [GFFPropagator d m
   simpa [Complex.ofReal_mul] using h'
 
 /-- Zero in the first argument gives zero. -/
-lemma freeCovarianceFormR_zero_left (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (g : TestFunction d) :
+lemma freeCovarianceFormR_zero_left (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (g : SchwartzTestFunction d) :
     freeCovarianceFormR m 0 g = 0 := by
   have h := freeCovarianceFormR_smul_left m (0 : ℝ) 0 g
   simp only [zero_smul] at h
@@ -675,25 +675,25 @@ lemma freeCovarianceFormR_zero_left (m : ℝ) [Fact (0 < m)] [GFFPropagator d m]
   simp only [zero_mul]
 
 /-- Zero in the second argument gives zero. -/
-lemma freeCovarianceFormR_zero_right (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : TestFunction d) :
+lemma freeCovarianceFormR_zero_right (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f : SchwartzTestFunction d) :
     freeCovarianceFormR m f 0 = 0 := by
   rw [freeCovarianceFormR_symm]
   exact freeCovarianceFormR_zero_left m f
 
 lemma freeCovarianceFormR_reflection_invariant
-    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : TestFunction d) :
+    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : SchwartzTestFunction d) :
     freeCovarianceFormR m (QFT.compTimeReflectionReal f)
       (QFT.compTimeReflectionReal g) = freeCovarianceFormR m f g := by
   classical
-  set fc : TestFunctionℂ d := toComplex f
-  set gc : TestFunctionℂ d := toComplex g
-  have h_comp_invol (h : TestFunctionℂ d) :
+  set fc : SchwartzTestFunctionℂ d := toComplex f
+  set gc : SchwartzTestFunctionℂ d := toComplex g
+  have h_comp_invol (h : SchwartzTestFunctionℂ d) :
       QFT.compTimeReflection (QFT.compTimeReflection h) = h := by
     ext x
     simp only [QFT.compTimeReflection, SchwartzMap.compCLM_apply, Function.comp_apply]
     congr 1
     exact QFT.timeReflectionLE.right_inv x
-  have h_toComplex_comp (h : TestFunction d) :
+  have h_toComplex_comp (h : SchwartzTestFunction d) :
       toComplex (QFT.compTimeReflectionReal h)
         = QFT.compTimeReflection (toComplex h) := by
     ext x
@@ -734,7 +734,7 @@ lemma freeCovarianceFormR_reflection_invariant
                 fc x * (freeCovariance d m x y : ℂ) * gc y ∂volume ∂volume := by
               exact
                 congrArg
-                  (fun h : TestFunctionℂ d =>
+                  (fun h : SchwartzTestFunctionℂ d =>
                     ∫ x, ∫ y,
                         fc x * (freeCovariance d m x y : ℂ) * h y ∂volume ∂volume)
                   (h_comp_invol gc)
@@ -762,7 +762,7 @@ lemma freeCovarianceFormR_reflection_invariant
 
 /-- Mixed-time-reflection identity for the real free covariance. -/
 lemma freeCovarianceFormR_reflection_cross
-    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : TestFunction d) :
+    (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] (f g : SchwartzTestFunction d) :
     freeCovarianceFormR m (QFT.compTimeReflectionReal f) g
       = freeCovarianceFormR m (QFT.compTimeReflectionReal g) f := by
   classical
@@ -771,7 +771,7 @@ lemma freeCovarianceFormR_reflection_cross
     ext x
     change
         (QFT.compTimeReflectionReal
-            (QFT.compTimeReflectionReal f) : TestFunction d) x = f x
+            (QFT.compTimeReflectionReal f) : SchwartzTestFunction d) x = f x
     have h_time :
         QFT.timeReflectionLinear (QFT.timeReflectionLinear x) = x :=
       QFT.timeReflection_involutive x
@@ -782,7 +782,7 @@ lemma freeCovarianceFormR_reflection_cross
     ext x
     change
         (QFT.compTimeReflectionReal
-            (QFT.compTimeReflectionReal g) : TestFunction d) x = g x
+            (QFT.compTimeReflectionReal g) : SchwartzTestFunction d) x = g x
     have h_time :
         QFT.timeReflectionLinear (QFT.timeReflectionLinear x) = x :=
       QFT.timeReflection_involutive x
@@ -803,7 +803,7 @@ lemma freeCovarianceFormR_reflection_cross
 /-- Left linearity of freeCovarianceFormR for any fixed right argument. -/
 lemma freeCovarianceFormR_left_linear_any_right
     (m : ℝ) [Fact (0 < m)] [GFFPropagator d m] {n : ℕ} (f : Fin n → PositiveTimeTestFunction d) (c : Fin n → ℝ)
-    (s : Finset (Fin n)) (g : TestFunction d) :
+    (s : Finset (Fin n)) (g : SchwartzTestFunction d) :
     ∑ i ∈ s, c i * freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) g =
     freeCovarianceFormR m (∑ i ∈ s, c i • QFT.compTimeReflectionReal (f i).val) g := by
   induction' s using Finset.induction with k t hk ih

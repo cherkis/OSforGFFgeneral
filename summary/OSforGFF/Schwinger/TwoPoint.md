@@ -9,7 +9,7 @@
 Defines the two-point Schwinger function $S_2(x) = \langle\phi(x)\phi(0)\rangle$ as the
 limit of smeared correlations as the smearing mollifiers shrink to Dirac deltas, generically
 in the spacetime dimension (section variables `{d : ℕ} [Fact (2 ≤ d)]`; everything is stated
-on `SpaceTime d` and `TestFunction d`).
+on `SpaceTime d` and `SchwartzTestFunction d`).
 For a bump function sequence $\phi_\varepsilon$ with outer radius $\varepsilon \to 0$,
 $S_2(x) := \lim_{\varepsilon\to 0} S_2(\phi_\varepsilon(\cdot - x), \phi_\varepsilon)$.
 The main theorem `schwingerTwoPointFunction_eq_kernel` shows that for any measure
@@ -32,7 +32,7 @@ kernel $C$, the limit-based definition recovers $C(x)$ for $x \neq 0$.
 
 **Lean signature**
 ```lean
-noncomputable def bumpToSchwartz (φ : ContDiffBump (0 : SpaceTime d)) : TestFunction d
+noncomputable def bumpToSchwartz (φ : ContDiffBump (0 : SpaceTime d)) : SchwartzTestFunction d
 ```
 **Informal**: Converts a compactly supported smooth bump function $\phi$ centered at $0$ into a (real-valued) Schwartz test function by using its $L^1$-normalized version $\phi/\lVert\phi\rVert_1$.
 
@@ -50,7 +50,7 @@ noncomputable def bumpToSchwartz (φ : ContDiffBump (0 : SpaceTime d)) : TestFun
 
 **Lean signature**
 ```lean
-noncomputable def translateSchwartz (f : TestFunction d) (a : SpaceTime d) : TestFunction d
+noncomputable def translateSchwartz (f : SchwartzTestFunction d) (a : SpaceTime d) : SchwartzTestFunction d
 ```
 **Informal**: The translate of a Schwartz test function $f$ by a vector $a \in \mathbb{R}^d$, defined as $(\tau_a f)(x) = f(x - a)$; an alias for `SchwartzMap.translate`.
 

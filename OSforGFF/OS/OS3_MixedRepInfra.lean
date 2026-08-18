@@ -114,7 +114,7 @@ lemma spacetime_inner_decompose (k z : (SpaceTime d)) :
     This is the key quantity that appears after contour integration. For functions
     supported on positive time (x₀ ≥ 0), this becomes a product of two Fourier-Laplace
     transforms, leading to the squared norm factorization. -/
-noncomputable def weightedLaplaceFourier (m : ℝ) (f : (TestFunctionℂ d)) (k_spatial : (SpatialCoords d)) : ℂ :=
+noncomputable def weightedLaplaceFourier (m : ℝ) (f : (SchwartzTestFunctionℂ d)) (k_spatial : (SpatialCoords d)) : ℂ :=
   let ω := Real.sqrt (‖k_spatial‖^2 + m^2)
   ∫ x : (SpaceTime d), f x * Complex.exp (-|x 0| * ω) *
     Complex.exp (Complex.I * spatialDot k_spatial (spatialPart x))
@@ -430,7 +430,7 @@ lemma heatKernelPositionSpace_integrable (s : ℝ) (hs : 0 < s) (a : (SpaceTime 
 
 /-- Nonnegativity of the Schwinger bound integrand (fixed s > 0). -/
 lemma schwinger_bound_integrand_nonneg (s : ℝ) (hs : 0 < s)
-    (f : (TestFunctionℂ d)) (Cf : ℝ) (hCf_nonneg : 0 ≤ Cf) (m : ℝ) (x y : (SpaceTime d)) :
+    (f : (SchwartzTestFunctionℂ d)) (Cf : ℝ) (hCf_nonneg : 0 ≤ Cf) (m : ℝ) (x y : (SpaceTime d)) :
     0 ≤ ‖f x‖ * Cf * Real.exp (-s * m^2) *
       heatKernelProfile d s ‖timeReflection x - y‖ := by
   apply mul_nonneg
@@ -443,7 +443,7 @@ lemma schwinger_bound_integrand_nonneg (s : ℝ) (hs : 0 < s)
 
 /-- Integrability in `y` of the Schwinger bound integrand for fixed `s > 0`, `x`. -/
 lemma schwinger_bound_integrand_integrable_y (s : ℝ) (hs : 0 < s)
-    (f : (TestFunctionℂ d)) (Cf : ℝ) (m : ℝ) (x : (SpaceTime d)) :
+    (f : (SchwartzTestFunctionℂ d)) (Cf : ℝ) (m : ℝ) (x : (SpaceTime d)) :
     Integrable (fun y : (SpaceTime d) =>
       (‖f x‖ * Cf * Real.exp (-s * m^2)) *
         heatKernelProfile d s ‖timeReflection x - y‖)
@@ -455,7 +455,7 @@ lemma schwinger_bound_integrand_integrable_y (s : ℝ) (hs : 0 < s)
 
 /-- Evaluate the `y`-integral of the Schwinger bound integrand for fixed `s > 0`, `x`. -/
 lemma schwinger_bound_integrand_integral_y (s : ℝ) (hs : 0 < s)
-    (f : (TestFunctionℂ d)) (Cf : ℝ) (m : ℝ) (x : (SpaceTime d)) :
+    (f : (SchwartzTestFunctionℂ d)) (Cf : ℝ) (m : ℝ) (x : (SpaceTime d)) :
     ∫ y : (SpaceTime d),
         (‖f x‖ * Cf * Real.exp (-s * m^2)) *
           heatKernelProfile d s ‖timeReflection x - y‖ =
@@ -474,7 +474,7 @@ lemma schwinger_bound_integrand_integral_y (s : ℝ) (hs : 0 < s)
 omit [Fact (2 ≤ d)] in
 /-- Integrability in `x` of the Schwinger bound integrand (after integrating in `y`). -/
 lemma schwinger_bound_integrand_integrable_x (s : ℝ)
-    (f : (TestFunctionℂ d)) (Cf : ℝ) (m : ℝ)
+    (f : (SchwartzTestFunctionℂ d)) (Cf : ℝ) (m : ℝ)
     (h_f_int : Integrable (fun x => ‖f x‖) (volume : Measure (SpaceTime d))) :
     Integrable (fun x : (SpaceTime d) => ‖f x‖ * Cf * Real.exp (-s * m^2))
       (volume : Measure (SpaceTime d)) := by
@@ -483,7 +483,7 @@ lemma schwinger_bound_integrand_integrable_x (s : ℝ)
 
 /-- Integrability of the Schwinger bound integrand on `(x,y)` for fixed `s > 0`. -/
 lemma schwinger_bound_integrable_xy (s : ℝ) (hs : 0 < s)
-    (f : (TestFunctionℂ d)) (Cf : ℝ) (m : ℝ) (hCf_nonneg : 0 ≤ Cf)
+    (f : (SchwartzTestFunctionℂ d)) (Cf : ℝ) (m : ℝ) (hCf_nonneg : 0 ≤ Cf)
     (h_f_int : Integrable (fun x => ‖f x‖) (volume : Measure (SpaceTime d))) :
     Integrable
       (fun p : (SpaceTime d) × (SpaceTime d) =>
@@ -566,7 +566,7 @@ lemma schwinger_bound_integrable_xy (s : ℝ) (hs : 0 < s)
 
 /-- Compute the (x,y)-integral of the Schwinger bound integrand for fixed `s > 0`. -/
 lemma schwinger_bound_integrand_integral_xy (s : ℝ) (hs : 0 < s)
-    (f : (TestFunctionℂ d)) (Cf : ℝ) (m : ℝ) (hCf_nonneg : 0 ≤ Cf)
+    (f : (SchwartzTestFunctionℂ d)) (Cf : ℝ) (m : ℝ) (hCf_nonneg : 0 ≤ Cf)
     (h_f_int : Integrable (fun x => ‖f x‖) (volume : Measure (SpaceTime d))) :
     ∫ p : (SpaceTime d) × (SpaceTime d),
       ‖f p.1‖ * Cf * Real.exp (-s * m^2) *
@@ -600,7 +600,7 @@ lemma schwinger_bound_integrand_integral_xy (s : ℝ) (hs : 0 < s)
           simpa [r, mul_comm, mul_left_comm, mul_assoc] using h_eq
 
 /-- Fubini/Tonelli step for Schwinger bound integrability. -/
-theorem schwinger_bound_integrable_fubini (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d))
+theorem schwinger_bound_integrable_fubini (m : ℝ) [Fact (0 < m)] (f : (SchwartzTestFunctionℂ d))
     (Cf : ℝ) (hCf : ∀ x, ‖f x‖ ≤ Cf)
     (h_f_int : Integrable (fun x => ‖f x‖) (volume : Measure (SpaceTime d)))
     (hCf_nonneg : 0 ≤ Cf)
@@ -714,7 +714,7 @@ theorem schwinger_bound_integrable_fubini (m : ℝ) [Fact (0 < m)] (f : (TestFun
     - `integral_exp_neg_mul_Ioi_eq_inv` for exponential integral
 
     The proof delegates to `schwinger_bound_integrable_fubini` for the technical Tonelli step. -/
-theorem schwinger_bound_integrable (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d))
+theorem schwinger_bound_integrable (m : ℝ) [Fact (0 < m)] (f : (SchwartzTestFunctionℂ d))
     (Cf : ℝ) (hCf : ∀ x, ‖f x‖ ≤ Cf) :
     Integrable
       (fun p : ℝ × (SpaceTime d) × (SpaceTime d) =>
@@ -1096,7 +1096,7 @@ lemma spatialPart_measurable : Measurable (spatialPart : (SpaceTime d) → (Spat
     represented as `x : (ℝ × (SpatialCoords d)) × (SpaceTime d)`, `y : (SpaceTime d)`.
 
     This is a product of continuous/measurable functions, hence measurable. -/
-lemma fubini_s_ksp_integrand_stronglyMeasurable (m : ℝ) (f : (TestFunctionℂ d)) :
+lemma fubini_s_ksp_integrand_stronglyMeasurable (m : ℝ) (f : (SchwartzTestFunctionℂ d)) :
     StronglyMeasurable (Function.uncurry fun (x : (ℝ × (SpatialCoords d)) × (SpaceTime d)) (y : (SpaceTime d)) =>
       (starRingEnd ℂ (f x.2)) * f y *
         (Real.sqrt (π / x.1.1) : ℂ) * Complex.exp (-((-(x.2.ofLp 0) - y.ofLp 0)^2 / (4 * x.1.1) : ℝ)) *
@@ -1791,7 +1791,7 @@ lemma heatKernelMoment_setIntegral_integrableOn (n : ℕ) (s : ℝ) (hs : 0 < s)
 
     **Reference**: Rudin "Real and Complex Analysis" Ch.8 (Fubini);
                   Standard heat kernel estimates. -/
-lemma spacetime_fubini_vanishing_bound (f : (TestFunctionℂ d))
+lemma spacetime_fubini_vanishing_bound (f : (SchwartzTestFunctionℂ d))
     (hf_supp : ∀ x : (SpaceTime d), x 0 ≤ 0 → f x = 0) :
     ∃ K : ℝ, 0 < K ∧ ∀ (s : ℝ) (_hs : 0 < s),
       ∫ x : (SpaceTime d), ∫ y : (SpaceTime d), ‖f x‖ * ‖f y‖ * Real.sqrt (π / s) *
@@ -2169,7 +2169,7 @@ lemma spacetime_fubini_vanishing_bound (f : (TestFunctionℂ d))
 
     **Reference**: Rudin "Real and Complex Analysis" Ch.1 (measurable functions);
                   Folland "Real Analysis" Ch.2. -/
-lemma schwartz_heat_product_aestronglymeasurable (f : (TestFunctionℂ d))
+lemma schwartz_heat_product_aestronglymeasurable (f : (SchwartzTestFunctionℂ d))
     (x : (SpaceTime d)) (c₁ c₂ : ℝ) (s : ℝ) (_hs : 0 < s) :
     AEStronglyMeasurable (fun a : (SpaceTime d) =>
       ‖f x‖ * ‖f a‖ * c₁ * Real.exp (-(x 0 + a 0)^2 / (4 * s)) * c₂) volume := by
@@ -2208,7 +2208,7 @@ lemma schwartz_heat_product_aestronglymeasurable (f : (TestFunctionℂ d))
 
     **Reference**: Rudin "Real and Complex Analysis" Ch.8 (Fubini);
                   Folland "Real Analysis" Ch.2 (Tonelli). -/
-lemma schwartz_iterated_integral_integrable (f : (TestFunctionℂ d))
+lemma schwartz_iterated_integral_integrable (f : (SchwartzTestFunctionℂ d))
     (hf_int_norm : Integrable (fun x => ‖f x‖) volume)
     (c₁ c₂ : ℝ) (s : ℝ) (hs : 0 < s) :
     Integrable (fun x : (SpaceTime d) => ∫ y : (SpaceTime d),
@@ -2320,7 +2320,7 @@ lemma schwartz_iterated_integral_integrable (f : (TestFunctionℂ d))
 
     The heavy lifting (steps 2–4 through the time/space Tonelli factorization) is
     `spacetime_fubini_vanishing_bound`. -/
-lemma F_norm_bound_via_vanishing (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d))
+lemma F_norm_bound_via_vanishing (m : ℝ) [Fact (0 < m)] (f : (SchwartzTestFunctionℂ d))
     (hf_supp : ∀ x : (SpaceTime d), x 0 ≤ 0 → f x = 0) :
     ∃ C_bound : ℝ, 0 < C_bound ∧ ∀ (s : ℝ) (_hs : 0 < s) (k_sp : (SpatialCoords d)),
       let F_val := ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
@@ -2647,7 +2647,7 @@ lemma F_norm_bound_via_vanishing (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ 
 
     **Key integrability lemma:** Uses `integrable_s_inv_sq_exp_neg_inv_s` to
     handle the s^{-1/2} * exp(-t²/(4s)) term via substitution z = 1/s. -/
-theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d))
+theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] (f : (SchwartzTestFunctionℂ d))
     (hf_supp : ∀ x, x 0 ≤ 0 → f x = 0) :
     ∫ s in Set.Ioi 0, ∫ k_sp : (SpatialCoords d), ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
       (starRingEnd ℂ (f x)) * f y *
@@ -2775,13 +2775,13 @@ theorem fubini_s_ksp_swap (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d))
 
 omit [Fact (2 ≤ d)] in
 /-- Schwartz function norm is integrable. -/
-lemma schwartz_norm_integrable (f : (TestFunctionℂ d)) :
+lemma schwartz_norm_integrable (f : (SchwartzTestFunctionℂ d)) :
     MeasureTheory.Integrable (fun x : (SpaceTime d) => ‖f x‖) := by
   exact (SchwartzMap.integrable f).norm
 
 omit [Fact (2 ≤ d)] in
 /-- Product of Schwartz norms is integrable on (SpaceTime d) × (SpaceTime d). -/
-lemma schwartz_norm_prod_integrable (f : (TestFunctionℂ d)) :
+lemma schwartz_norm_prod_integrable (f : (SchwartzTestFunctionℂ d)) :
     MeasureTheory.Integrable
       (fun p : (SpaceTime d) × (SpaceTime d) => ‖f p.1‖ * ‖f p.2‖)
       (MeasureTheory.volume.prod MeasureTheory.volume) := by
@@ -2791,11 +2791,11 @@ lemma schwartz_norm_prod_integrable (f : (TestFunctionℂ d)) :
   exact hf1.mul_prod hf2
 
 /-- Bound function for s_xy_swap. -/
-def s_xy_swap_bound (f : (TestFunctionℂ d)) (m : ℝ) (p : ℝ × (SpaceTime d) × (SpaceTime d)) : ℝ :=
+def s_xy_swap_bound (f : (SchwartzTestFunctionℂ d)) (m : ℝ) (p : ℝ × (SpaceTime d) × (SpaceTime d)) : ℝ :=
   Real.sqrt (π / p.1) * ‖f p.2.1‖ * ‖f p.2.2‖ * Real.exp (-p.1 * m^2)
 
 omit [Fact (2 ≤ d)] in
-lemma s_xy_swap_bound_integrable (f : (TestFunctionℂ d)) (m : ℝ) [Fact (0 < m)] :
+lemma s_xy_swap_bound_integrable (f : (SchwartzTestFunctionℂ d)) (m : ℝ) [Fact (0 < m)] :
     Integrable (s_xy_swap_bound f m)
       ((volume.restrict (Set.Ioi 0)).prod (volume.prod volume)) := by
   let g_s : ℝ → ℝ := fun s => Real.sqrt π * s ^ (-(1:ℝ)/2) * Real.exp (-m^2 * s)
@@ -2866,7 +2866,7 @@ lemma s_xy_swap_bound_integrable (f : (TestFunctionℂ d)) (m : ℝ) [Fact (0 < 
     **Proof:** Uses `MeasureTheory.integral_integral_swap` with
     integrability on `(Set.Ioi 0) × (SpaceTime d) × (SpaceTime d)`.
     The bound function is `s^{-1/2} * exp(-s*m^2) * |f(x)| * |f(y)|`. -/
-theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : (TestFunctionℂ d)) (k_sp : (SpatialCoords d)) :
+theorem fubini_s_xy_swap (m : ℝ) [Fact (0 < m)] (f : (SchwartzTestFunctionℂ d)) (k_sp : (SpatialCoords d)) :
     ∫ s in Set.Ioi 0, ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *
@@ -3210,7 +3210,7 @@ omit [Fact (2 ≤ d)] in
     1. ∫_{k_sp} exp(-s‖k_sp‖²) dk_sp = (π/s)^{3/2} < ∞
     2. ∫∫_{x,y} |f(x)| |f(y)| dx dy = ‖f‖₁² < ∞
     3. The product factorizes on independent spaces -/
-lemma fubini_ksp_xy_integrand_integrable (s : ℝ) (hs : 0 < s) (f : (TestFunctionℂ d)) :
+lemma fubini_ksp_xy_integrand_integrable (s : ℝ) (hs : 0 < s) (f : (SchwartzTestFunctionℂ d)) :
     MeasureTheory.Integrable
       (fun p : (SpatialCoords d) × (SpaceTime d) × (SpaceTime d) =>
         ‖f p.2.1‖ * ‖f p.2.2‖ * Real.exp (-s * ‖p.1‖^2))
@@ -3245,7 +3245,7 @@ lemma fubini_ksp_xy_integrand_integrable (s : ℝ) (hs : 0 < s) (f : (TestFuncti
     - |ofReal (√(π/s))| = √(π/s) (non-negative)
     - |exp(negative real)| ≤ 1
     - |exp(pure imaginary)| = 1 -/
-lemma fubini_ksp_xy_full_integrand_integrable (s : ℝ) (hs : 0 < s) (f : (TestFunctionℂ d)) :
+lemma fubini_ksp_xy_full_integrand_integrable (s : ℝ) (hs : 0 < s) (f : (SchwartzTestFunctionℂ d)) :
     MeasureTheory.Integrable
       (fun p : (SpatialCoords d) × (SpaceTime d) × (SpaceTime d) =>
         (starRingEnd ℂ (f p.2.1)) * f p.2.2 *
@@ -3352,7 +3352,7 @@ lemma fubini_ksp_xy_full_integrand_integrable (s : ℝ) (hs : 0 < s) (f : (TestF
     **Proof:** Two steps:
     1. Pull the k_sp integral out: A(x,y) * ∫_{k_sp} B = ∫_{k_sp} A(x,y) * B
     2. Apply Fubini (integral_integral_swap) to swap x,y,k_sp to k_sp,x,y -/
-theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : (TestFunctionℂ d)) :
+theorem fubini_ksp_xy_swap (s : ℝ) (hs : 0 < s) (f : (SchwartzTestFunctionℂ d)) :
     ∫ x : (SpaceTime d), ∫ y : (SpaceTime d),
       (starRingEnd ℂ (f x)) * f y *
         (Real.sqrt (π / s) : ℂ) * Complex.exp (-((-(x 0) - y 0)^2 / (4 * s) : ℝ)) *

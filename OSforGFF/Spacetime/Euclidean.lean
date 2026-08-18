@@ -348,18 +348,18 @@ lemma euclidean_pullback_polynomial_bounds (g : (E d)) :
         linarith [mul_nonneg h2 h1]
 
 /-- Action of Euclidean group on test functions via pullback.
-    For g ∈ (E d) and f ∈ (TestFunctionℂ d), define (g • f)(x) = f(g⁻¹ • x).
+    For g ∈ (E d) and f ∈ (SchwartzTestFunctionℂ d), define (g • f)(x) = f(g⁻¹ • x).
     This is the standard pullback action: to evaluate the transformed function
     at x, we evaluate the original function at the inverse-transformed point. -/
-noncomputable def euclidean_action (g : (E d)) (f : (TestFunctionℂ d)) : (TestFunctionℂ d) :=
+noncomputable def euclidean_action (g : (E d)) (f : (SchwartzTestFunctionℂ d)) : (SchwartzTestFunctionℂ d) :=
   SchwartzMap.compCLM (𝕜 := ℂ)
     (hg := euclidean_pullback_temperate_growth g)
     (hg_upper := euclidean_pullback_polynomial_bounds g) f
 
 /-- Action of Euclidean group on real test functions via pullback.
-    For g ∈ (E d) and f ∈ (TestFunction d), define (g • f)(x) = f(g⁻¹ • x).
-    This is the real version of euclidean_action for (TestFunction d) = SchwartzMap (SpaceTime d) ℝ. -/
-noncomputable def euclidean_action_real (g : (E d)) (f : (TestFunction d)) : (TestFunction d) :=
+    For g ∈ (E d) and f ∈ (SchwartzTestFunction d), define (g • f)(x) = f(g⁻¹ • x).
+    This is the real version of euclidean_action for (SchwartzTestFunction d) = SchwartzMap (SpaceTime d) ℝ. -/
+noncomputable def euclidean_action_real (g : (E d)) (f : (SchwartzTestFunction d)) : (SchwartzTestFunction d) :=
   SchwartzMap.compCLM (𝕜 := ℝ)
     (hg := euclidean_pullback_temperate_growth g)
     (hg_upper := euclidean_pullback_polynomial_bounds g) f
@@ -386,7 +386,7 @@ noncomputable def euclidean_action_L2 (g : (E d))
 
 /-- The Euclidean action as a continuous linear map on test functions.
     This leverages the Schwartz space structure and temperate growth bounds. -/
-noncomputable def euclidean_action_CLM (g : (E d)) : (TestFunctionℂ d) →L[ℂ] (TestFunctionℂ d) :=
+noncomputable def euclidean_action_CLM (g : (E d)) : (SchwartzTestFunctionℂ d) →L[ℂ] (SchwartzTestFunctionℂ d) :=
   SchwartzMap.compCLM (𝕜 := ℂ)
     (hg := euclidean_pullback_temperate_growth g)
     (hg_upper := euclidean_pullback_polynomial_bounds g)

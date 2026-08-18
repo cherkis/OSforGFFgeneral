@@ -44,7 +44,7 @@ None — file is sorry-free.
 
 ### [`toComplex_injective`](../../OSforGFF/OS/NonTrivial.lean#L66) — Theorem
 
-**Statement**: The embedding `toComplex : TestFunction d → TestFunctionℂ d` is injective (dimension-generic), following from pointwise injectivity of $\mathbb{R} \hookrightarrow \mathbb{C}$.
+**Statement**: The embedding `toComplex : SchwartzTestFunction d → SchwartzTestFunctionℂ d` is injective (dimension-generic), following from pointwise injectivity of $\mathbb{R} \hookrightarrow \mathbb{C}$.
 
 **Proof uses**: `Complex.ofReal_inj`
 

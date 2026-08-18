@@ -162,7 +162,7 @@ private lemma timeReflection_hg_upper :
     ‖x‖ ≤ 1 + ‖x‖ := hx
     _ = 1 * (1 + ‖x‖) ^ (1 : ℕ) := by simp [pow_one]
 
-noncomputable def compTimeReflection : (TestFunctionℂ d) →L[ℝ] (TestFunctionℂ d) :=
+noncomputable def compTimeReflection : (SchwartzTestFunctionℂ d) →L[ℝ] (SchwartzTestFunctionℂ d) :=
   SchwartzMap.compCLM (𝕜 := ℝ)
     (hg := timeReflectionCLM.hasTemperateGrowth)
     (hg_upper := timeReflection_hg_upper)
@@ -171,13 +171,13 @@ noncomputable def compTimeReflection : (TestFunctionℂ d) →L[ℝ] (TestFuncti
     test functions. This version will be used when working with positive-time
     subspaces defined over ℝ, so that reflection positivity can be formulated
     without passing through complex scalars. -/
-noncomputable def compTimeReflectionReal : (TestFunction d) →L[ℝ] (TestFunction d) := by
+noncomputable def compTimeReflectionReal : (SchwartzTestFunction d) →L[ℝ] (SchwartzTestFunction d) := by
   exact SchwartzMap.compCLM (𝕜 := ℝ)
     (hg := timeReflectionCLM.hasTemperateGrowth)
     (hg_upper := timeReflection_hg_upper)
 
 /-- Time reflection is linear on real test functions. -/
-lemma compTimeReflectionReal_linear_combination {n : ℕ} (f : Fin n → (TestFunction d)) (c : Fin n → ℝ) :
+lemma compTimeReflectionReal_linear_combination {n : ℕ} (f : Fin n → (SchwartzTestFunction d)) (c : Fin n → ℝ) :
     compTimeReflectionReal (∑ i, c i • f i) = ∑ i, c i • compTimeReflectionReal (f i) := by
   -- This follows directly from the linearity of the continuous linear map compTimeReflectionReal
   simp only [map_sum, map_smul]
