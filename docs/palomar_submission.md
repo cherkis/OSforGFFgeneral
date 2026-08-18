@@ -147,6 +147,13 @@ ever failed. It is wrong in the sense that OSforGFF elaborated terms differently
 rest of the Mathlib ecosystem — which is invisible until something compares terms
 structurally. Comparator is the first thing that ever did.
 
+Both instances date from the `d`-parameterization work of 2026-07-02 and were reasonable to
+write at the time: once `d` became a parameter, `NeZero d` is what makes `Fin d` indexing go
+through. The reach into numeral elaboration was not foreseeable without a tool that compares
+terms structurally. **PR #11** deletes the five redundant instances and gives `NeZero`
+`priority := low`, keeping it available where it is genuinely wanted while restoring
+Mathlib's resolution everywhere else.
+
 **This is why the work is worth doing regardless of Palomar.** It is what stops a Mathlib
 import-graph change from breaking us, and we were one import edge away from exactly that.
 
