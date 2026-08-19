@@ -165,15 +165,15 @@ import-graph change from breaking us, and we were one import edge away from exac
 |---|---|---|
 | **#8** | CI: `lake build` + guardrails + `leanchecker` on every push and PR | **merged** |
 | **#10** | `TestFunction` → `SchwartzTestFunction` (570 sites, 50 files; no mathematical change) | **merged** |
-| **#11** | delete 5 redundant instances; `NeZero` named and given `priority := low` | **open, CI green** — retarget to `main`, then merge |
-| **#9** | Sergey's guardrail-script repair + `AXIOM_AUDIT.md` | **open, conflicting** — superseded, see §6 |
-| **#13** | `AXIOM_AUDIT.md` taken from #9, authored to Sergey | **open** |
-| **#12** | this document | **open** |
-| — | naming the 3 anonymous instances in `Challenge.lean`/`Solution.lean` | on branch `palomar-passing` |
+| **#11** | delete 5 redundant instances; `NeZero` named and given `priority := low` | **merged** |
+| **#13** | `AXIOM_AUDIT.md` taken from #9, authored to Sergey | **merged** |
+| **#9** | Sergey's guardrail-script repair + `AXIOM_AUDIT.md` | **closed** in favour of #13 — see §6 |
+| — | naming the 3 anonymous instances in `Challenge.lean`/`Solution.lean` | adopted on Sergey's rebased `palomar` branch |
 
-`main` now also requires a PR with both CI checks green; branch protection no longer demands
-an approval that no one could give (Michael is the sole collaborator, and GitHub forbids
-self-approval).
+`main` now requires a PR with both CI checks green. The approval requirement was dropped
+because it was unsatisfiable — Michael was the only collaborator and GitHub forbids
+self-approval. Sergey and Anna have since been added with write access, so it could be
+restored if we want a second pair of eyes on every change.
 
 Branch **`palomar-passing`** is the exact configuration in which Comparator passes.
 
@@ -181,7 +181,7 @@ Branch **`palomar-passing`** is the exact configuration in which Comparator pass
 
 ## 6. What is left
 
-**PR #9 — resolved, pending Sergey's call.** Sergey opened it against the two follow-ups from
+**PR #9 — resolved.** Sergey opened it against the two follow-ups from
 the #7 review: a repair to `scripts/check-guardrails.sh`, and `AXIOM_AUDIT.md`. It now
 conflicts, because #8 fixed the same script defect and merged first. Both diagnosed the same
 real bug — the original silently `exit 0`s when its baseline tag is missing, so it reported
@@ -207,30 +207,27 @@ Resolution: **take `AXIOM_AUDIT.md` from #9, drop its script change.** The audit
 wanted by project convention and its claims check out against current `main` — zero `axiom`
 declarations in the build graph, all six headline theorems present. Done in **#13**, with
 authorship kept to Sergey; the one paragraph there describing the source-level check has been
-updated to match the script now on `main`. #9 is left open for Sergey to close in favour of
-#13, or to rebase and land himself if he prefers.
+updated to match the script now on `main`. Sergey closed #9 in favour of #13, and has
+rebuilt the pair-specific checks on top of the absolute-scan script on his branch.
 
 (A *later* version of Sergey's script, on his `palomar` branch, does add checks specific to
 the Challenge/Solution pair — Challenge must carry exactly one `sorry`, Solution none. Those
 are genuinely not in #8 and are worth keeping when that branch is reconciled. They are not
 part of PR #9.)
 
-**Two `formalization.yaml` violations.** Sergey closed the maintainer, relationship and
-classification gaps Kim listed. Remaining:
+**`formalization.yaml` — done.** Sergey has dropped `cs.LO` (Palomar allows one or two arXiv
+codes, and the policy says to classify the mathematics rather than the use of Lean) and
+changed both OS papers from `type: article` to `paper`. That second one was a real trap: the
+*upstream* v0.4 schema describes the field as "article, book, web post, …", so `article`
+looks right and Palomar rejects it.
 
-1. `classification.arxiv` has three codes (`hep-th`, `cs.LO`, `math-ph`); Palomar allows
-   **one or two**. Drop `cs.LO` — the policy says to classify the mathematics, not the use of
-   Lean or AI.
-2. Both OS papers carry `type: article`. Palomar's enum is `paper`, `book`, `web discussion`,
-   `folklore`, `original-proof`, `other`. A real trap: the *upstream* v0.4 schema describes
-   the field as "article, book, web post, …", so `article` looks right and Palomar rejects it.
+**Rebase — done.** The `palomar` branch is rebased onto current `main`.
 
-**`Challenge` and `Solution` are not default build targets.** They are `lean_lib`s outside
-`@[default_target]`, so plain `lake build` skips them (3863 jobs vs 8742). Nothing catches it
-if they break — which matters, since machine-checking is the point. Add them to the default
-target or to CI.
-
-**Rebase.** The palomar branch is based on PR #7's head rather than current `main`.
+**`Challenge` and `Solution` are still not built by anything automatic.** They are `lean_lib`s
+outside `@[default_target]`, so plain `lake build` skips them (3863 jobs vs 8742) — and CI
+runs plain `lake build` via `lean-action`. Nothing catches it if they break, which matters
+since machine-checking is the point. Whichever way §7 is decided, they need to be a default
+target or an explicit CI step in whichever repository ends up holding them.
 
 **Run Comparator on Linux with real `landrun`.** Ours used the macOS `fake-landrun` shim,
 which preserves the kernel-acceptance and axiom-whitelist guarantees but not the sandbox.
