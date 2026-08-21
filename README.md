@@ -270,6 +270,13 @@ compiled.
 Both checks run in CI on every push and pull request ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)),
 which also replays the built environment through an external kernel check (`leanchecker`).
 
+## Registry verification
+
+The headline theorem is independently verifiable through the thin Comparator wrapper
+[mrdouglasny/OSforGFF-comparator](https://github.com/mrdouglasny/OSforGFF-comparator), which
+carries a Mathlib-only `Challenge.lean` restating it, a `Solution.lean` proving it from this
+library at a pinned commit, and CI that replays the proof through independent kernel checks.
+
 ## Related Work
 
 - [or4nge19/OSforGFF](https://github.com/or4nge19/OSforGFF) — A fork by Matteo Cipollina pursuing a different measure construction pipeline: finite-dimensional Gaussians → Kolmogorov extension on test functions → nuclear support → pushforward to distribution space, avoiding the Minlos theorem. Develops coordinate-free Euclidean time-direction and dimension-agnostic Hermite APIs.
@@ -286,7 +293,7 @@ Sergey A. Cherkis, Michael R. Douglas, Sarah Hoback, Anna Mei, Ron Nissim
 
 ### Coding Assistance
 
-Claude Opus 4.6, Gemini 3 Pro, GPT-5.2 Codex
+Claude Opus 4.6, Claude Fable 5, Gemini 3 Pro, GPT-5.2 Codex
 
 ## License
 
@@ -294,6 +301,7 @@ This project is licensed under the Apache License, Version 2.0. See [LICENSE](LI
 
 ## References
 
+- Douglas, Hoback, Mei, Nissim: *Formalization of QFT* ([arXiv:2603.15770](https://arxiv.org/abs/2603.15770)) — the companion paper describing this library at its original four-dimensional stage
 - Glimm, Jaffe: *Quantum Physics* (Springer, 1987), pp. 89–90
 - Osterwalder, Schrader: *Axioms for Euclidean Green's functions* I & II (1973, 1975)
 - Gel'fand, Vilenkin: *Generalized Functions*, Vol. 4 (Academic Press, 1964)
